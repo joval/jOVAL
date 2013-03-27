@@ -79,8 +79,11 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	return RegkeyeffectiverightsItem.class;
     }
 
-    protected Collection<RegkeyeffectiverightsItem> getItems(ObjectType obj, ItemType base, IKey key, IRequestContext rc)
-		throws Exception {
+    protected Collection<RegkeyeffectiverightsItem> getItems(Arguments args) throws Exception {
+	ObjectType obj = args.obj;
+	ItemType base = args.base;
+	IKey key = args.key;
+	IRequestContext rc = args.rc;
 
 	if (directory == null) {
 	    directory = session.getDirectory();

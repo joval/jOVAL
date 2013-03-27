@@ -13,6 +13,7 @@ import java.util.regex.PatternSyntaxException;
 
 import jsaf.intf.system.ISession;
 import jsaf.intf.windows.wmi.IWmiProvider;
+import jsaf.intf.windows.identity.IDirectory;
 import jsaf.intf.windows.identity.IGroup;
 import jsaf.intf.windows.identity.IUser;
 import jsaf.intf.windows.system.IWindowsSession;
@@ -31,6 +32,7 @@ import scap.oval.systemcharacteristics.core.FlagEnumeration;
 import scap.oval.systemcharacteristics.core.StatusEnumeration;
 import scap.oval.systemcharacteristics.windows.UserSidItem;
 
+import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
@@ -41,10 +43,12 @@ import org.joval.util.JOVALMsg;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UserSid55Adapter extends UserAdapter {
+public class UserSid55Adapter implements IAdapter {
+    protected IWindowsSession session;
+    private IDirectory directory;
+
     // Implement IAdapter
 
-    @Override
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
@@ -56,7 +60,6 @@ public class UserSid55Adapter extends UserAdapter {
 	return classes;
     }
 
-    @Override
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	directory = session.getDirectory();
 	Collection<UserSidItem> items = new ArrayList<UserSidItem>();

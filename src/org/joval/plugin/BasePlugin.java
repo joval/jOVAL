@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URL;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,7 +35,9 @@ import scap.oval.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.scap.oval.IBatch;
 import org.joval.intf.scap.oval.IProvider;
+import org.joval.scap.oval.Batch;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.sysinfo.SysinfoFactory;
@@ -47,7 +50,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public abstract class BasePlugin implements IPlugin, IProvider {
+public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
     //
     // Extend the JOVALMsg logging enumeration with the jsaf.Message logging enumeration. This makes it possible
     // for the LocalPlugin to route jSAF log messages to a JOVALMsg-provided logger.
@@ -97,6 +100,7 @@ public abstract class BasePlugin implements IPlugin, IProvider {
     private PropertyResourceBundle resources;
     private Map<Class, IAdapter> adapters;
     private Collection<Class> notapplicable;
+    private Collection<IBatch> pending;
 
     protected LocLogger logger;
     protected ISession session;
@@ -189,7 +193,7 @@ public abstract class BasePlugin implements IPlugin, IProvider {
 	return SysinfoFactory.createSystemInfo(session);
     }
 
-    // Implement org.joval.intf.oval.IProvider
+    // Implement IProvider
 
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	if (adapters.containsKey(obj.getClass())) {
@@ -201,6 +205,43 @@ public abstract class BasePlugin implements IPlugin, IProvider {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
 	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
+    }
+
+    // Implement IBatch
+
+    public boolean queue(IRequest request) {
+	Class clazz = request.getObject().getClass();
+	if (adapters.containsKey(clazz)) {
+	    IAdapter adapter = adapters.get(clazz);
+	    if (!notapplicable.contains(clazz) && adapter instanceof IBatch) {
+		IBatch batch = (IBatch)adapter;
+		if (batch.queue(request)) {
+		    if (pending == null) {
+			pending = new HashSet<IBatch>();
+		    }
+		    if (!pending.contains(batch)) {
+			pending.add(batch);
+		    }
+		    return true;
+		}
+	    }
+	}
+	return false;
+    }
+
+    /**
+     * Iterate through and execute any pending batches.
+     */
+    public Collection<IResult> exec() {
+	Collection<IResult> results = new ArrayList<IResult>();
+	if (pending == null) {
+	    return results;
+	}
+	for (IBatch batch : pending) {
+	    results.addAll(batch.exec());
+	}
+	pending = null;
+	return results;
     }
 
     // Private

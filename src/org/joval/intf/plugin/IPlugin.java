@@ -106,7 +106,8 @@ public interface IPlugin extends ILoggable {
     ISession getSession();
 
     /**
-     * Get the org.joval.intf.oval.IProvider
+     * Get the IProvider for OVAL processing. The object returned may also implement IBatch.
+     * @see org.joval.intf.scap.oval.IBatch
      */
     IProvider getOvalProvider();
 

@@ -17,14 +17,17 @@ import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Stack;
@@ -58,6 +61,7 @@ import scap.oval.definitions.core.DateTimeFormatEnumeration;
 import scap.oval.definitions.core.DefinitionType;
 import scap.oval.definitions.core.DefinitionsType;
 import scap.oval.definitions.core.EndFunctionType;
+import scap.oval.definitions.core.EntityComplexBaseType;
 import scap.oval.definitions.core.EntityObjectFieldType;
 import scap.oval.definitions.core.EntityObjectRecordType;
 import scap.oval.definitions.core.EntityObjectStringType;
@@ -94,6 +98,7 @@ import scap.oval.definitions.core.VariablesType;
 import scap.oval.definitions.independent.EntityObjectVariableRefType;
 import scap.oval.definitions.independent.UnknownTest;
 import scap.oval.definitions.independent.VariableObject;
+import scap.oval.definitions.independent.VariableTest;
 import scap.oval.results.ResultEnumeration;
 import scap.oval.results.TestedItemType;
 import scap.oval.results.TestedVariableType;
@@ -111,6 +116,7 @@ import scap.oval.systemcharacteristics.independent.VariableItem;
 import scap.oval.variables.OvalVariables;
 
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.scap.oval.IBatch;
 import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.intf.scap.oval.IEngine;
@@ -121,6 +127,7 @@ import org.joval.intf.scap.oval.IType;
 import org.joval.intf.scap.oval.IVariables;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
+import org.joval.scap.oval.Batch;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.DefinitionFilter;
 import org.joval.scap.oval.Definitions;
@@ -164,6 +171,7 @@ public class Engine implements IEngine, IProvider {
     private ISystemCharacteristics sc = null;
     private IDefinitionFilter filter = null;
     private IEngine.Mode mode;
+    private Map<String, ObjectGroup> scanQueue = null;
     private Exception error;
     private Results results;
     private State state;
@@ -190,6 +198,9 @@ public class Engine implements IEngine, IProvider {
     // Implement IProvider
 
     public Collection<? extends ItemType> getItems(ObjectType obj, IProvider.IRequestContext rc) throws CollectException {
+	if (abort) {
+	    throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
+	}
 	if (obj instanceof VariableObject) {
 	    VariableObject vObj = (VariableObject)obj;
 	    Collection<VariableItem> items = new ArrayList<VariableItem>();
@@ -339,7 +350,8 @@ public class Engine implements IEngine, IProvider {
      * The engine runs differently depending on the mode that was used to initialize it:
      *
      * DIRECTED:
-     *   The Engine will iterate through the [filtered] definitions and probe objects as they are encountered/required.
+     *   The Engine will iterate through the [filtered] definitions and probe only the objects that must be collected in
+     *   order to evaluate them.
      *
      * EXHAUSTIVE:
      *   First the Engine probes all the objects in the OVAL definitions, or it uses the supplied ISystemCharacteristics.
@@ -374,30 +386,79 @@ public class Engine implements IEngine, IProvider {
 		this.sc = sc;
 	    }
 
-	    switch(mode) {
-	      case EXHAUSTIVE:
+	    //
+	    // Use the filter to separate the definitions into allowed and disallowed lists.
+	    //
+	    Collection<DefinitionType>allowed = new ArrayList<DefinitionType>();
+	    Collection<DefinitionType>disallowed = new ArrayList<DefinitionType>();
+	    definitions.filterDefinitions(filter, allowed, disallowed);
+
+	    if (scanRequired) {
 		//
-		// Perform an exhaustive scan of all objects, and disconnect if permitted
+		// First analyze the definitions:
+		//  - Determine which objects will be scanned (depending on the mode)
+		//  - Determine which of those objects relate to variables (so they can be scanned first)
 		//
-		if (scanRequired) {
-		    producer.sendNotify(Message.OBJECT_PHASE_START, null);
+		HashSet<String> allowedObjectIds = new HashSet<String>();
+		HashSet<String> variableObjectIds = new HashSet<String>();
+		switch(mode) {
+		  case EXHAUSTIVE:
 		    for (ObjectType obj : definitions.getObjects()) {
-			if (!sc.containsObject(obj.getId())) {
-			    scanObject(new RequestContext(definitions.getObject(obj.getId())));
+			allowedObjectIds.add(obj.getId());
+		    }
+		    for (VariableType var : definitions.getVariables()) {
+			variableObjectIds.addAll(getObjectReferences(var));
+		    }
+		    break;
+
+		  case DIRECTED:
+		  default:
+		    for (DefinitionType def : allowed) {
+			allowedObjectIds.addAll(getObjectReferences(def));
+		    }
+		    for (VariableType var : definitions.getVariables()) {
+			for (String id : getObjectReferences(var)) {
+			    if (allowedObjectIds.contains(id)) {
+				variableObjectIds.add(id);
+			    }
 			}
 		    }
-		    producer.sendNotify(Message.OBJECT_PHASE_END, null);
-		    if (doDisconnect) {
-			plugin.disconnect();
-			doDisconnect = false;
-		    }
-		    producer.sendNotify(Message.SYSTEMCHARACTERISTICS, sc);
+		    break;
 		}
-		break;
 
-	      default:
+		//
+		// Scan all the allowed objects. First, by collecting all the items for objects that are referenced by
+		// variables. Then, by collecting all the remaining objects by batching (which is potentially faster).
+		// Sets are deferred until the end, and run singly, since they cannot be batched easily.
+		//
+		// We could simply iterate through all the objects without this analysis, and objects and sets would be
+		// resolved when they're encountered, but proceeding methodically should be faster.
+		//
 		producer.sendNotify(Message.OBJECT_PHASE_START, null);
-		break;
+		for (String objectId : variableObjectIds) {
+		    scanObject(new RequestContext(definitions.getObject(objectId)));
+		}
+		HashSet<ObjectType> deferred = new HashSet<ObjectType>();
+		for (String id : allowedObjectIds) {
+		    ObjectType obj = definitions.getObject(id);
+		    if (getObjectSet(obj) == null) {
+			queueObject(new RequestContext(definitions.getObject(id)));
+		    } else {
+			deferred.add(obj);
+		    }
+		}
+		scanQueue();
+		for (ObjectType obj : deferred) {
+		    scanObject(new RequestContext(obj));
+		}
+
+		producer.sendNotify(Message.OBJECT_PHASE_END, null);
+		producer.sendNotify(Message.SYSTEMCHARACTERISTICS, sc);
+
+		if (doDisconnect) {
+		    plugin.disconnect();
+		    doDisconnect = false;
+		}
 	    }
 
 	    results = new Results(definitions, sc);
@@ -405,29 +466,17 @@ public class Engine implements IEngine, IProvider {
 	    producer.sendNotify(Message.DEFINITION_PHASE_START, null);
 
 	    //
-	    // Use the filter to separate the definitions into allowed and disallowed lists.  First evaluate all the allowed
-	    // definitions, then go through the disallowed definitions.  This makes it possible to cache both test and
-	    // definition results without having to double-check if they were previously intentionally skipped.
+	    // First evaluate all the allowed definitions, then go through the disallowed definitions.  This makes it
+	    // possible to cache both test and definition results without having to double-check if they were previously
+	    // intentionally skipped.
 	    //
-	    Collection<DefinitionType>allowed = new ArrayList<DefinitionType>();
-	    Collection<DefinitionType>disallowed = new ArrayList<DefinitionType>();
-	    definitions.filterDefinitions(filter, allowed, disallowed);
-
 	    evalEnabled = true;
 	    for (DefinitionType definition : allowed) {
 		evaluateDefinition(definition);
 	    }
-
 	    evalEnabled = false;
 	    for (DefinitionType definition : disallowed) {
 		evaluateDefinition(definition);
-	    }
-
-	    switch(mode) {
-	      case DIRECTED:
-		producer.sendNotify(Message.OBJECT_PHASE_END, null);
-		producer.sendNotify(Message.SYSTEMCHARACTERISTICS, sc);
-		break;
 	    }
 
 	    producer.sendNotify(Message.DEFINITION_PHASE_END, null);
@@ -452,8 +501,8 @@ public class Engine implements IEngine, IProvider {
     }
 
     /**
-     * Scan an object live using an adapter, including crawling down any encountered Sets.  Items are stored in the
-     * system-characteristics as they are collected.
+     * Scan an object immediately using an adapter, including crawling down any encountered Sets, variables, etc.  Items
+     * are stored in the system-characteristics as they are collected.
      *
      * If for some reason (like an error) no items can be obtained, this method just returns an empty list so processing
      * can continue.
@@ -463,6 +512,9 @@ public class Engine implements IEngine, IProvider {
     private Collection<ItemType> scanObject(RequestContext rc) {
 	ObjectType obj = rc.getObject();
 	String objectId = obj.getId();
+	if (sc.containsObject(objectId)) {
+	    return sc.getItemsByObjectId(objectId);
+	}
 	logger.debug(JOVALMsg.STATUS_OBJECT, objectId);
 	producer.sendNotify(Message.OBJECT, objectId);
 	Collection<ItemType> items = new ArrayList<ItemType>();
@@ -526,6 +578,115 @@ public class Engine implements IEngine, IProvider {
     }
 
     /**
+     * Attempt to queue an object request for batched scanning. If the object cannot be queued in a batch, then
+     * it is scanned immediately.
+     */
+    private void queueObject(RequestContext rc) {
+	ObjectType obj = rc.getObject();
+	String id = obj.getId();
+	if (sc.containsObject(id)) {
+	    // object has already been scanned
+	} else if (obj instanceof VariableObject) {
+	    scanObject(rc);
+	} else if (getObjectSet(obj) == null) {
+	    if (scanQueue == null) {
+		scanQueue = new HashMap<String, ObjectGroup>();
+	    }
+	    try {
+		IBatch batch = (IBatch)plugin.getOvalProvider();
+		ObjectGroup group = new ObjectGroup(rc);
+		boolean queued = false;
+		for (IBatch.IRequest request : group.getRequests()) {
+		    if (batch.queue(request)) {
+			queued = true;
+		    } else {
+			queued = false;
+			break;
+		    }
+		}
+		if (queued) {
+		    logger.info(JOVALMsg.STATUS_OBJECT_QUEUE, id);
+		    scanQueue.put(id, group);
+		} else {
+		    scanObject(rc);
+		}
+	    } catch (ResolveException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		sc.setObject(id, obj.getComment(), obj.getVersion(), FlagEnumeration.ERROR, msg);
+	    } catch (OvalException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_OVAL, e.getMessage()));
+		sc.setObject(id, obj.getComment(), obj.getVersion(), FlagEnumeration.ERROR, msg);
+	    }
+	} else {
+	    //
+	    // Set objects cannot be batched.
+	    //
+	    scanObject(rc);
+	}
+    }
+
+    /**
+     * Scan all the objects in the request queue in batch.
+     */
+    private synchronized void scanQueue() throws OvalException {
+	if (scanQueue != null) {
+	    //
+	    // Organize results by object ID
+	    //
+	    Map<String, Collection<IBatch.IResult>> results = new HashMap<String, Collection<IBatch.IResult>>();
+	    for (IBatch.IResult result : ((IBatch)plugin.getOvalProvider()).exec()) {
+		String id = ((RequestContext)result.getContext()).getObject().getId();
+		if (!results.containsKey(id)) {
+		    results.put(id, new ArrayList<IBatch.IResult>());
+		}
+		results.get(id).add(result);
+	    }
+	    //
+	    // Recombine result sets into discrete object item lists
+	    //
+	    for (Map.Entry<String, Collection<IBatch.IResult>> entry : results.entrySet()) {
+		String objectId = entry.getKey();
+		RequestContext rc = scanQueue.get(objectId).getContext();
+		ObjectType obj = rc.getObject();
+		if (!sc.containsObject(objectId)) {
+		    Collection<ItemType> items = new ArrayList<ItemType>();
+		    List<MessageType> messages = new ArrayList<MessageType>();
+		    FlagData flags = new FlagData();
+		    items = scanQueue.get(objectId).combineItems(entry.getValue(), flags);
+		    messages.addAll(rc.getMessages());
+		    sc.setObject(objectId, null, null, null, null);
+		    for (VariableValueType var : rc.getVars()) {
+			sc.storeVariable(var);
+			sc.relateVariable(objectId, var.getVariableId());
+		    }
+		    for (MessageType msg : messages) {
+			sc.setObject(objectId, null, null, null, msg);
+			switch(msg.getLevel()) {
+			  case FATAL:
+			  case ERROR:
+			    flags.add(FlagEnumeration.INCOMPLETE);
+			    break;
+			}
+		    }
+		    if (flags.getFlag() == FlagEnumeration.COMPLETE && items.size() == 0) {
+			sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, null);
+		    } else {
+			sc.setObject(objectId, obj.getComment(), obj.getVersion(), flags.getFlag(), null);
+		    }
+		    for (ItemType item : items) {
+			sc.relateItem(objectId, sc.storeItem(item));
+		    }
+		}
+	    }
+	    scanQueue = null;
+	}
+    }
+
+    /**
      * An ObjectGroup is a container for ObjectType information, where the constituent entities of the ObjectType
      * may be formed by references to multi-valued variables.
      */
@@ -536,6 +697,7 @@ public class Engine implements IEngine, IProvider {
 	Object behaviors = null, factory;
 	Method create;
 	int size = 1;
+	Map<Collection<ObjectType>, CheckEnumeration> objects = null;
 
 	/**
 	 * Lists of entity values, indexed by getter method name.
@@ -599,6 +761,21 @@ public class Engine implements IEngine, IProvider {
 			}
 		    }
 		}
+
+		//
+		// For any NONE_SATISFY var_checks, invert all its entities, so it can be treated like an ALL.
+		//
+		for (String methodName : varChecks.keySet()) {
+		    if (varChecks.get(methodName) == CheckEnumeration.NONE_SATISFY) {
+			for (Object entity : entities.get(methodName)) {
+			    try {
+				invertEntity(rc.getObject(), methodName, entity);
+			    } catch (Exception e) {
+				throw new ResolveException(e);
+			    }
+			}
+		    }
+		}
 	    } catch (ClassNotFoundException e) {
 		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id));
@@ -618,101 +795,157 @@ public class Engine implements IEngine, IProvider {
 	}
 
 	/**
-	 * Retrieve all the items associated with this object group.
+	 * Get the object ID.
 	 */
-	Collection<ItemType> getItems(FlagData flags) throws ResolveException, OvalException {
+	String getId() {
+	    return id;
+	}
+
+	RequestContext getContext() {
+	    return rc;
+	}
+
+	/**
+	 * Get all the items for this object group (immediately).
+	 */
+	Collection<ItemType> getItems(FlagData flags) throws OvalException {
 	    if (varChecks.size() == 0) {
 		//
-		// There are no variables in the object entity definitions
+		// There are no variables, so the group only contains the input object from the initializing context.
 		//
-		return getItems(rc.getObject(), flags);
+		try {
+		    @SuppressWarnings("unchecked")
+		    Collection<ItemType> unfiltered = (Collection<ItemType>)Engine.this.getItems(rc.getObject(), rc);
+		    List<Filter> filters = getObjectFilters(rc.getObject());
+		    Collection<ItemType> filtered = filterItems(filters, unfiltered, rc);
+		    flags.add(FlagEnumeration.COMPLETE);
+		    return filtered;
+		} catch (CollectException e) {
+		    MessageType msg = Factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.INFO);
+		    String err = JOVALMsg.getMessage(JOVALMsg.STATUS_ADAPTER_COLLECTION, e.getMessage());
+		    msg.setValue(err);
+		    rc.addMessage(msg);
+		    flags.add(e.getFlag());
+		} catch (AbortException e) {
+		    throw e;
+		} catch (Exception e) {
+		    //
+		    // Handle an uncaught, unexpected exception emanating from the adapter
+		    //
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    MessageType msg = Factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.ERROR);
+		    if (e.getMessage() == null) {
+			msg.setValue(e.getClass().getName());
+		    } else {
+			msg.setValue(e.getMessage());
+		    }
+		    rc.addMessage(msg);
+		    flags.add(FlagEnumeration.ERROR);
+		}
 	    } else if (size > 0) {
 		//
-		// There are variable references in the object entity definitions, so implement var_check using sets.
+		// Collect results from the object permutations, then combine them into a single result.
 		//
-		// First, we go through the varChecks, and if any matches NONE_SATISFY, we invert all its entities.
-		//
-		for (String methodName : varChecks.keySet()) {
-		    if (varChecks.get(methodName) == CheckEnumeration.NONE_SATISFY) {
-			for (Object entity : entities.get(methodName)) {
-			    try {
-				invertEntity(rc.getObject(), methodName, entity);
-			    } catch (Exception e) {
-				throw new ResolveException(e);
-			    }
+		Collection<IBatch.IResult> results = new ArrayList<IBatch.IResult>();
+		for (IBatch.IRequest request : getRequests()) {
+		    ObjectType obj = request.getObject();
+		    RequestContext ctx = (RequestContext)request.getContext();
+		    try {
+			@SuppressWarnings("unchecked")
+			Collection<ItemType> unfiltered = (Collection<ItemType>)Engine.this.getItems(obj, ctx);
+			List<Filter> filters = getObjectFilters(obj);
+			Collection<ItemType> filtered = filterItems(filters, unfiltered, ctx);
+			flags.add(FlagEnumeration.COMPLETE);
+			results.add(new Batch.Result(filtered, ctx));
+		    } catch (CollectException e) {
+			results.add(new Batch.Result(e, ctx));
+		    } catch (Exception e) {
+			results.add(new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), ctx));
+		    }
+		}
+		return combineItems(results, flags);
+	    }
+	    @SuppressWarnings("unchecked")
+	    Collection<ItemType> empty = (Collection<ItemType>)Collections.EMPTY_LIST;
+	    return empty;
+	}
+
+	/**
+	 * Get all the requests needed to determine the matching items for this object group.
+	 */
+	Collection<IBatch.IRequest> getRequests() throws OvalException {
+	    if (varChecks.size() == 0) {
+		Collection<IBatch.IRequest> requests = new ArrayList<IBatch.IRequest>();
+		requests.add(new Batch.Request(rc.getObject(), rc));
+		return requests;
+	    } else if (size > 0) {
+		Collection<IBatch.IRequest> requests = new ArrayList<IBatch.IRequest>();
+		for (Map.Entry<String, CheckEnumeration> entry : varChecks.entrySet()) {
+		    RequestContext vrc = rc.variant(entry.getKey(), entry.getValue());
+		    for (Object value : entities.get(entry.getKey())) {
+			for (ObjectType obj : getPermutations(entry.getKey(), value)) {
+			    requests.add(new Batch.Request(obj, vrc));
 			}
 		    }
 		}
-
-		//
-		// Next, implement var_check using sets.
-		//
-		ItemSet<ItemType> items = new ItemSet<ItemType>();
-		for (String methodName : varChecks.keySet()) {
-		    CheckEnumeration check = varChecks.get(methodName);
-
-		    List<Object> values = entities.get(methodName);
-		    ArrayList<ItemSet<ItemType>> sets = new ArrayList<ItemSet<ItemType>>(values.size());
-		    for (Object value : values) {
-			for (ObjectType obj : getPermutations(methodName, value)) {
-			    Collection<ItemType> permutationItems = getItems(obj, flags);
-			    sets.add(new ItemSet<ItemType>(permutationItems));
-			}
-		    }
-		    ItemSet<ItemType> checked = null;
-		    for (ItemSet<ItemType> set : sets) {
-			if (checked == null) {
-			    checked = set;
-			} else {
-			    switch(check) {
-			      case NONE_SATISFY:
-				// In this case, we have inverted all the entity operations, so performing the ALL
-				// check will yield the equivalent results.
-			      case ALL:
-				checked = checked.intersection(set);
-				break;
-
-			      case AT_LEAST_ONE:
-				checked = checked.union(set);
-				break;
-
-			      case ONLY_ONE:
-				checked = checked.complement(set).union(set.complement(checked));
-				break;
-
-			      default:
-				throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_CHECK, check));
-			    }
-			}
-		    }
-		    items = items.union(checked);
-		}
-		return items.toList();
+		return requests;
 	    } else {
 		@SuppressWarnings("unchecked")
-		Collection<ItemType> empty = (Collection<ItemType>)Collections.EMPTY_LIST;
+		Collection<IBatch.IRequest> empty = (Collection<IBatch.IRequest>)Collections.EMPTY_LIST;
 		return empty;
 	    }
 	}
 
 	/**
-	 * Gather (and filter) items for a single resolved object.
+	 * Combine batched permutation results into a single item list.
 	 */
-	private Collection<ItemType> getItems(ObjectType obj, FlagData flags) throws ResolveException {
-	    //
-	    // As the lowest level scan operation, this is a good place to check if the engine is being destroyed.
-	    //
-	    if (abort) {
-		throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
-	    }
-
+	Collection<ItemType> combineItems(Collection<IBatch.IResult> results, FlagData flags) {
 	    try {
-		@SuppressWarnings("unchecked")
-		Collection<ItemType> unfiltered = (Collection<ItemType>)Engine.this.getItems(obj, rc);
-		List<Filter> filters = getObjectFilters(rc.getObject());
-		Collection<ItemType> filtered = filterItems(filters, unfiltered, rc);
-		flags.add(FlagEnumeration.COMPLETE);
-		return filtered;
+		if (size > 0) {
+		    Map<RequestContext, Collection<ItemSet<ItemType>>> sets = null;
+		    sets = new HashMap<RequestContext, Collection<ItemSet<ItemType>>>();
+		    for (IBatch.IResult result : results) {
+			RequestContext ctx = (RequestContext)result.getContext();
+			if (!sets.containsKey(ctx)) {
+			    sets.put(ctx, new ArrayList<ItemSet<ItemType>>());
+			}
+			@SuppressWarnings("unchecked")
+			Collection<ItemType> unfiltered = (Collection<ItemType>)result.getItems();
+			List<Filter> filters = getObjectFilters(rc.getObject());
+			Collection<ItemType> filtered = filterItems(filters, unfiltered, rc);
+			flags.add(FlagEnumeration.COMPLETE);
+			sets.get(ctx).add(new ItemSet<ItemType>(filtered));
+		    }
+		    ItemSet<ItemType> items = new ItemSet<ItemType>();
+		    for (Map.Entry<RequestContext, Collection<ItemSet<ItemType>>> entry : sets.entrySet()) {
+			ItemSet<ItemType> checked = null;
+			for (ItemSet<ItemType> set : entry.getValue()) {
+			    if (checked == null) {
+				checked = set;
+			    } else {
+				CheckEnumeration check = entry.getKey().getVariant().getCheck();
+				switch(check) {
+				  case NONE_SATISFY:
+				  case ALL:
+				    checked = checked.intersection(set);
+				    break;
+				  case AT_LEAST_ONE:
+				    checked = checked.union(set);
+				    break;
+				  case ONLY_ONE:
+				    checked = checked.complement(set).union(set.complement(checked));
+				    break;
+				  default:
+				    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_CHECK, check));
+				}
+			    }
+			}
+			items = items.union(checked);
+		    }
+		    return items.toList();
+		}
 	    } catch (CollectException e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
@@ -739,6 +972,8 @@ public class Engine implements IEngine, IProvider {
 	    Collection<ItemType> empty = (Collection<ItemType>)Collections.EMPTY_LIST;
 	    return empty;
 	}
+
+	// Private
 
 	/**
 	 * Given a particular value of an entity, create a collection of all the possible resulting ObjectTypes.
@@ -810,6 +1045,137 @@ public class Engine implements IEngine, IProvider {
 		setObj.invoke(obj, entity);
 	    }
 	    return obj;
+	}
+    }
+
+    class Variant {
+	private String name;
+	private CheckEnumeration check;
+
+	Variant(String name, CheckEnumeration check) {
+	    this.name = name;
+	    this.check = check;
+	}
+
+	String getName() {
+	    return name;
+	}
+
+	CheckEnumeration getCheck() {
+	    return check;
+	}
+    }
+
+    /**
+     * Implementation of IProvider.IRequestContext.
+     */
+    class RequestContext implements IRequestContext {
+	private Stack<Level> levels;
+	private Map<Variant, RequestContext> variants;
+	private Variant variant = null;
+
+	RequestContext(ObjectType object) {
+	    levels = new Stack<Level>();
+	    levels.push(new Level(object));
+	}
+
+	Collection<VariableValueType> getVars() {
+	    return getVars(levels.peek().vars);
+	}
+
+	Collection<MessageType> getMessages() {
+	    return levels.peek().messages;
+	}
+
+	void addVar(VariableValueType var) {
+	    String id = var.getVariableId();
+	    String value = (String)var.getValue();
+	    Hashtable<String, HashSet<String>> vars = levels.peek().vars;
+	    if (vars.containsKey(id)) {
+		vars.get(id).add(value);
+	    } else {
+		HashSet<String> vals = new HashSet<String>();
+		vals.add(value);
+		vars.put(id, vals);
+	    }
+	}
+
+	ObjectType getObject() {
+	    return levels.peek().object;
+	}
+
+	void pushObject(ObjectType obj) {
+	    levels.push(new Level(obj));
+	}
+
+	ObjectType popObject() {
+	    Level level = levels.pop();
+	    for (VariableValueType var : getVars(level.vars)) {
+		addVar(var);
+	    }
+	    levels.peek().messages.addAll(level.messages);
+	    return level.object;
+	}
+
+	RequestContext variant(String name, CheckEnumeration varCheck) {
+	    if (variants == null) {
+		variants = new HashMap<Variant, RequestContext>();
+	    }
+	    Variant v = new Variant(name, varCheck);
+	    RequestContext ctx = new RequestContext(levels.peek(), v);
+	    variants.put(v, ctx);
+	    return ctx;
+	}
+
+	Variant getVariant() {
+	    return variant;
+	}
+
+	Collection<Map.Entry<Variant, RequestContext>> variants() {
+	    if (variants == null) {
+		return null;
+	    } else {
+		return variants.entrySet();
+	    }
+	}
+
+	// Implement IRequestContext
+
+	public void addMessage(MessageType msg) {
+	    levels.peek().messages.add(msg);
+	}
+
+	// Private
+
+	private RequestContext(Level level, Variant variant) {
+	    levels = new Stack<Level>();
+	    levels.push(level);
+	    this.variant = variant;
+	}
+
+	private Collection<VariableValueType> getVars(Hashtable<String, HashSet<String>> vars) {
+	    Collection<VariableValueType> result = new ArrayList<VariableValueType>();
+	    for (String id : vars.keySet()) {
+		for (String value : vars.get(id)) {
+		    VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
+		    variableValueType.setVariableId(id);
+		    variableValueType.setValue(value);
+		    result.add(variableValueType);
+		}
+	    }
+	    return result;
+	}
+
+	private class Level {
+	    ObjectType object;
+	    Hashtable<String, HashSet<String>> vars;
+	    Collection<MessageType> messages;
+
+	    Level(ObjectType object) {
+		this.object = object;
+		this.vars = new Hashtable<String, HashSet<String>>();
+		this.messages = new ArrayList<MessageType>();
+	    }
 	}
     }
 
@@ -1416,22 +1782,6 @@ public class Engine implements IEngine, IProvider {
 	String objectId = getObjectRef(testDefinition);
 	List<String> stateIds = getStateRef(testDefinition);
 
-	if (!sc.containsObject(objectId)) {
-	    switch(mode) {
-	      //
-	      // In EXHAUSTIVE mode all the objects have already been scanned, so, if the object is not found in the
-	      // SystemCharacteristics, the test cannot be evaluated.
-	      //
-	      case EXHAUSTIVE:
-		testResult.setResult(ResultEnumeration.NOT_EVALUATED);
-		return;
-
-	      default:
-		scanObject(new RequestContext(definitions.getObject(objectId)));
-		break;
-	    }
-	}
-
 	//
 	// Create all the structures we'll need to store information about the evaluation of the test.
 	//
@@ -1940,15 +2290,15 @@ public class Engine implements IEngine, IProvider {
 	switch(op) {
 	  case EQUALS:
 	    if (item.equals(base)) {
-	        return ResultEnumeration.TRUE;
+		return ResultEnumeration.TRUE;
 	    } else {
-	        return ResultEnumeration.FALSE;
+		return ResultEnumeration.FALSE;
 	    }
 	  case NOT_EQUAL:
 	    if (item.equals(base)) {
-	        return ResultEnumeration.FALSE;
+		return ResultEnumeration.FALSE;
 	    } else {
-	        return ResultEnumeration.TRUE;
+		return ResultEnumeration.TRUE;
 	    }
 	}
 	throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
@@ -1961,27 +2311,27 @@ public class Engine implements IEngine, IProvider {
 	switch(op) {
 	  case GREATER_THAN:
 	    if (item.compareTo(base) > 0) {
-	        return ResultEnumeration.TRUE;
+		return ResultEnumeration.TRUE;
 	    } else {
-	        return ResultEnumeration.FALSE;
+		return ResultEnumeration.FALSE;
 	    }
 	  case GREATER_THAN_OR_EQUAL:
 	    if (item.compareTo(base) >= 0) {
-	        return ResultEnumeration.TRUE;
+		return ResultEnumeration.TRUE;
 	    } else {
-	        return ResultEnumeration.FALSE;
+		return ResultEnumeration.FALSE;
 	    }
 	  case LESS_THAN:
 	    if (item.compareTo(base) < 0) {
-	        return ResultEnumeration.TRUE;
+		return ResultEnumeration.TRUE;
 	    } else {
-	        return ResultEnumeration.FALSE;
+		return ResultEnumeration.FALSE;
 	    }
 	  case LESS_THAN_OR_EQUAL:
 	    if (item.compareTo(base) <= 0) {
-	        return ResultEnumeration.TRUE;
+		return ResultEnumeration.TRUE;
 	    } else {
-	        return ResultEnumeration.FALSE;
+		return ResultEnumeration.FALSE;
 	    }
 	  default:
 	    return trivialComparison(base, item, op);
@@ -2518,6 +2868,122 @@ public class Engine implements IEngine, IProvider {
     }
 
     /**
+     * Recursively determine all the Object IDs referred to by the specified definition, extend_definition, criteria,
+     * criterion, test, object, state, filter, set, variable or component.
+     */
+    private Collection<String> getObjectReferences(Object obj) throws OvalException {
+	Collection<String> results = new HashSet<String>();
+	String reflectionId = null;
+	try {
+	    if (obj instanceof DefinitionType) {
+		for (Object sub : ((DefinitionType)obj).getCriteria().getCriteriaOrCriterionOrExtendDefinition()) {
+		    results.addAll(getObjectReferences(sub));
+		}
+	    } else if (obj instanceof CriteriaType) {
+		for (Object sub : ((CriteriaType)obj).getCriteriaOrCriterionOrExtendDefinition()) {
+		    results.addAll(getObjectReferences(sub));
+		}
+	    } else if (obj instanceof ExtendDefinitionType) {
+		return getObjectReferences(definitions.getDefinition(((ExtendDefinitionType)obj).getDefinitionRef()));
+	    } else if (obj instanceof CriterionType) {
+		return getObjectReferences(definitions.getTest(((CriterionType)obj).getTestRef()));
+	    } else if (obj instanceof scap.oval.definitions.core.TestType) {
+		ObjectRefType oRef = (ObjectRefType)safeInvokeMethod(obj, "getObject");
+		if (oRef != null) {
+		    results.addAll(getObjectReferences(definitions.getObject(oRef.getObjectRef())));
+		}
+		Object oRefs = safeInvokeMethod(obj, "getState");
+		@SuppressWarnings("unchecked")
+		List<StateRefType> sRefs = (List<StateRefType>)oRefs;
+		if (sRefs != null) {
+		    for (StateRefType sRef : sRefs) {
+			results.addAll(getObjectReferences(definitions.getState(sRef.getStateRef())));
+		    }
+		}
+	    } else if (obj instanceof ObjectType) {
+		ObjectType ot = (ObjectType)obj;
+		reflectionId = ot.getId();
+		results.add(ot.getId());
+		results.addAll(getObjectReferences(getObjectFilters(ot)));
+		results.addAll(getObjectReferences(getObjectSet(ot)));
+		if (ot instanceof VariableObject) {
+		    VariableObject vo = (VariableObject)ot;
+		    if (vo.isSetVarRef()) {
+			results.addAll(getObjectReferences(definitions.getVariable((String)vo.getVarRef().getValue())));
+		    }
+		} else {
+		    for (Method method : getMethods(ot.getClass()).values()) {
+			String methodName = method.getName();
+			if (methodName.startsWith("get") && !objectBaseMethodNames.contains(methodName)) {
+			    results.addAll(getObjectReferences(method.invoke(ot)));
+			}
+		    }
+		}
+	    } else if (obj instanceof StateType) {
+		StateType st = (StateType)obj;
+		reflectionId = st.getId();
+		for (Method method : getMethods(obj.getClass()).values()) {
+		    String methodName = method.getName();
+		    if (methodName.startsWith("get") && !stateBaseMethodNames.contains(methodName)) {
+			results.addAll(getObjectReferences(method.invoke(st)));
+		    }
+		}
+	    } else if (obj instanceof Filter) {
+		return getObjectReferences(definitions.getState(((Filter)obj).getValue()));
+	    } else if (obj instanceof Set) {
+		Set set = (Set)obj;
+		if (set.isSetObjectReference()) {
+		    for (String id : set.getObjectReference()) {
+			results.addAll(getObjectReferences(definitions.getObject(id)));
+		    }
+		    results.addAll(getObjectReferences(set.getFilter()));
+		} else {
+		    return getObjectReferences(set.getSet());
+		}
+	    } else if (obj instanceof EntitySimpleBaseType) {
+		EntitySimpleBaseType simple = (EntitySimpleBaseType)obj;
+		if (simple.isSetVarRef()) {
+		    return getObjectReferences(definitions.getVariable(simple.getVarRef()));
+		}
+	    } else if (obj instanceof EntityComplexBaseType) {
+		EntityComplexBaseType complex = (EntityComplexBaseType)obj;
+		if (complex.isSetVarRef()) {
+		    return getObjectReferences(definitions.getVariable(complex.getVarRef()));
+		}
+	    } else if (obj instanceof List) {
+		for (Object elt : (List)obj) {
+		    results.addAll(getObjectReferences(elt));
+		}
+	    } else if (obj instanceof ObjectComponentType) {
+		return getObjectReferences(definitions.getObject(((ObjectComponentType)obj).getObjectRef()));
+	    } else if (obj instanceof VariableComponentType) {
+		VariableType var = definitions.getVariable(((VariableComponentType)obj).getVarRef());
+		if (var instanceof LocalVariable) {
+		    return getObjectReferences(var);
+		}
+	    } else if (obj != null) {
+		try {
+		    return getObjectReferences(getComponent(obj));
+		} catch (OvalException e) {
+		    // not a component
+		}
+	    }
+	} catch (NoSuchElementException e) {
+	    // this will lead to an error evaluating the definition later on
+	} catch (ClassCastException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), reflectionId));
+	} catch (IllegalAccessException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), reflectionId));
+	} catch (InvocationTargetException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), reflectionId));
+	}
+	return results;
+    }
+
+    /**
      * Use reflection to get the child component of a function type.  Since there is no base class for all the OVAL function
      * types, this method accepts any Object.
      */
@@ -2589,8 +3055,8 @@ public class Engine implements IEngine, IProvider {
     private static Hashtable<Class, Hashtable<String, Method>> methodRegistry;
     private static HashSet<String> objectBaseMethodNames;
     static {
-        methodRegistry = new Hashtable<Class, Hashtable<String, Method>>();
-        objectBaseMethodNames = getNames(getMethods(ObjectType.class).values());
+	methodRegistry = new Hashtable<Class, Hashtable<String, Method>>();
+	objectBaseMethodNames = getNames(getMethods(ObjectType.class).values());
 	objectBaseMethodNames.add("getBehaviors");
 	objectBaseMethodNames.add("getFilter");
 	objectBaseMethodNames.add("getSet");

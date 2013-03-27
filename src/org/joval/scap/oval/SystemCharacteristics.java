@@ -3,6 +3,7 @@
 
 package org.joval.scap.oval;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -218,57 +219,60 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 
     public synchronized BigInteger storeItem(ItemType item) throws OvalException {
 	BigInteger itemId = null;
-	if (item.isSetId() && !itemTable.containsKey(item.getId())) {
-	    itemId = item.getId();
-	    itemTable.put(itemId, item);
-	} else {
-	    byte[] data = toCanonicalBytes(item);
-	    Adler32 adler = new Adler32();
-	    adler.update(data);
-	    String cs = Long.toString(adler.getValue());
-	    if (itemChecksums.containsKey(cs)) {
-		//
-		// If another item with the same Adler32 checksum has been stored previously, that doesn't mean
-		// it contains the same data.  So, we compare it to all the previously-stored items with the
-		// same checksum.
-		//
-		boolean match = true;
-		for (BigInteger id : itemChecksums.get(cs)) {
-		    byte[] candidate = toCanonicalBytes(itemTable.get(id));
-		    if (candidate.length == data.length) {
-			match = true;
-			for (int i=0; i < data.length; i++) {
-			    if (candidate[i] != data[i]) {
-				match = false;
-				break;
-			    }
+	if (item.isSetId()) {
+	    // The item has been stored previously someplace else, so store a copy of it.
+	    Object obj = parse(new ByteArrayInputStream(toCanonicalBytes(item)));
+	    if (obj instanceof JAXBElement) {
+		obj = ((JAXBElement)obj).getValue();
+	    }
+	    item = (ItemType)obj;
+	}
+	byte[] data = toCanonicalBytes(item);
+	Adler32 adler = new Adler32();
+	adler.update(data);
+	String cs = Long.toString(adler.getValue());
+	if (itemChecksums.containsKey(cs)) {
+	    //
+	    // If another item with the same Adler32 checksum has been stored previously, that doesn't mean
+	    // it contains the same data.  So, we compare it to all the previously-stored items with the
+	    // same checksum.
+	    //
+	    boolean match = true;
+	    for (BigInteger id : itemChecksums.get(cs)) {
+		byte[] candidate = toCanonicalBytes(itemTable.get(id));
+		if (candidate.length == data.length) {
+		    match = true;
+		    for (int i=0; i < data.length; i++) {
+			if (candidate[i] != data[i]) {
+			    match = false;
+			    break;
 			}
-		    } else {
-			match = false;
 		    }
-		    if (match) {
-			itemId = id;
-			item.setId(itemId);
-			break;
-		    }
+		} else {
+		    match = false;
 		}
-		//
-		// Having determined that the item is indeed new, we store it.
-		//
-		if (!match) {
-		    itemId = new BigInteger(Integer.toString(itemCounter++));
+		if (match) {
+		    itemId = id;
 		    item.setId(itemId);
-		    itemTable.put(itemId, item);
-		    itemChecksums.get(cs).add(itemId);
+		    break;
 		}
-	    } else {
+	    }
+	    //
+	    // Having determined that the item is indeed new, we store it.
+	    //
+	    if (!match) {
 		itemId = new BigInteger(Integer.toString(itemCounter++));
 		item.setId(itemId);
 		itemTable.put(itemId, item);
-		Collection<BigInteger> set = new HashSet<BigInteger>();
-		set.add(itemId);
-		itemChecksums.put(cs, set);
+		itemChecksums.get(cs).add(itemId);
 	    }
+	} else {
+	    itemId = new BigInteger(Integer.toString(itemCounter++));
+	    item.setId(itemId);
+	    itemTable.put(itemId, item);
+	    Collection<BigInteger> set = new HashSet<BigInteger>();
+	    set.add(itemId);
+	    itemChecksums.put(cs, set);
 	}
 	return itemId;
     }

@@ -206,7 +206,9 @@ public class ItemSet<T extends ItemType> implements Iterable<T> {
     private ItemSet<T> addItems(Collection<T> items) {
 	for (T item : items) {
 	    if (item.isSetId()) {
-		table.put(item.getId().toString(), Arrays.asList(item));
+		@SuppressWarnings("unchecked")
+		List<T> list = Arrays.asList(item);
+		table.put(item.getId().toString(), list);
 	    } else {
 		byte[] data = toBytes(item);
 		Adler32 adler = new Adler32();

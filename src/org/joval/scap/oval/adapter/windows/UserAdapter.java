@@ -51,8 +51,8 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class UserAdapter implements IAdapter {
-    protected IWindowsSession session;
-    protected IDirectory directory;
+    private IWindowsSession session;
+    private IDirectory directory;
     private Hashtable<String, Date> logons;
 
     // Implement IAdapter
@@ -189,8 +189,8 @@ public class UserAdapter implements IAdapter {
 	    }
 	}
 	EntityItemIntType lastLogonType = Factories.sc.core.createEntityItemIntType();
+	lastLogonType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	if (logons.containsKey(user.getNetbiosName())) {
-	    lastLogonType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    long secs = logons.get(user.getNetbiosName()).getTime()/1000L;
 	    lastLogonType.setValue(Long.toString(secs));
 	} else {

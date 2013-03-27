@@ -5,6 +5,7 @@ CLASSES=\
 	org.joval.intf.scap.cpe.IDictionary			\
 	org.joval.intf.scap.datastream.IDatastream		\
 	org.joval.intf.scap.datastream.IDatastreamCollection	\
+	org.joval.intf.scap.oval.IBatch				\
 	org.joval.intf.scap.ocil.IChecklist			\
 	org.joval.intf.scap.ocil.IVariables			\
 	org.joval.intf.scap.oval.IDefinitionFilter		\
@@ -41,6 +42,7 @@ CLASSES=\
 	org.joval.scap.ocil.Factories				\
 	org.joval.scap.ocil.OcilException			\
 	org.joval.scap.ocil.Variables				\
+	org.joval.scap.oval.Batch				\
 	org.joval.scap.oval.CollectException			\
 	org.joval.scap.oval.DefinitionFilter			\
 	org.joval.scap.oval.Definitions				\
@@ -58,7 +60,6 @@ CLASSES=\
 	org.joval.scap.oval.engine.ExistenceData		\
 	org.joval.scap.oval.engine.FlagData			\
 	org.joval.scap.oval.engine.OperatorData			\
-	org.joval.scap.oval.engine.RequestContext		\
 	org.joval.scap.oval.engine.ResolveException		\
 	org.joval.scap.oval.engine.TestException		\
 	org.joval.scap.oval.types.AbstractType			\

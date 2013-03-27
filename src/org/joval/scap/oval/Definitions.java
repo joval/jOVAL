@@ -178,6 +178,10 @@ public class Definitions implements IDefinitions, ILoggable {
 	return objects.values();
     }
 
+    public Collection<VariableType> getVariables() {
+	return variables.values();
+    }
+
     public StateType getState(String id) throws NoSuchElementException {
 	StateType state = states.get(id);
 	if (state == null) {

@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -23,12 +24,14 @@ import jsaf.intf.windows.registry.IExpandStringValue;
 import jsaf.intf.windows.registry.IKey;
 import jsaf.intf.windows.registry.IMultiStringValue;
 import jsaf.intf.windows.registry.IQwordValue;
+import jsaf.intf.windows.registry.IRegistry;
 import jsaf.intf.windows.registry.IStringValue;
 import jsaf.intf.windows.registry.IValue;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.io.LittleEndian;
 import jsaf.util.Base64;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageLevelEnumeration;
 import scap.oval.common.MessageType;
@@ -49,6 +52,7 @@ import scap.oval.systemcharacteristics.windows.EntityItemWindowsViewType;
 import scap.oval.systemcharacteristics.windows.RegistryItem;
 
 import org.joval.intf.plugin.IAdapter;
+import org.joval.scap.oval.Batch;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
@@ -75,6 +79,84 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	    notapplicable.add(RegistryObject.class);
 	}
 	return classes;
+    }
+
+    // Implement IBatch
+
+    Collection<IRequest> queue;
+
+    @Override
+    public boolean queue(IRequest request) {
+	if (batchable(request)) {
+	    if (queue == null) {
+		queue = new ArrayList<IRequest>();
+	    }
+	    queue.add(request);
+	    return true;
+	} else {
+	    return false;
+	}
+    }
+
+    @Override
+    public Collection<IResult> exec() {
+	Collection<IResult> results = new ArrayList<IResult>();
+	if (queue != null) {
+	    HashSet<String> subkeys = new HashSet<String>();
+	    for (IRequest request : queue) {
+		RegistryObject rObj = (RegistryObject)request.getObject();
+		subkeys.add((String)rObj.getKey().getValue().getValue());
+	    }
+	    StringBuffer sb = new StringBuffer();
+	    for (String subkey : subkeys) {
+		if (sb.length() > 0) {
+		    sb.append(",");
+		}
+		sb.append("\"").append(subkey).append("\"");
+	    }
+	    sb.append(" | Get-RegKeyLastWriteTime | Transfer-Encode");
+	    try {
+		//
+		// Cache all the last_write_times all at once
+		//
+		byte[] buff = Base64.decode(getRunspace(session.getNativeView()).invoke(sb.toString()));
+		String data = new String(buff, StringTools.UTF8);
+		for (String line : data.split("\r\n")) {
+		    int ptr = line.lastIndexOf(":");
+		    if (ptr > 0) {
+			try {
+			    String fullPath = line.substring(0,ptr).trim().toUpperCase();
+			    writeTimes.put(fullPath, new BigInteger(line.substring(ptr+1).trim()));
+			} catch (IllegalArgumentException e) {
+			}
+		    }
+		}
+
+		//
+		// Now, iterate through the requests normally
+		//
+		for (IRequest request : queue) {
+		    IRequestContext rc = request.getContext();
+		    try {
+			Collection<ItemType> items = new ArrayList<ItemType>();
+			for (Arguments args : getArguments(request.getObject(), rc)) {
+			    items.addAll(getItems(args));
+			}
+			results.add(new Batch.Result(items, rc));
+		    } catch (CollectException e) {
+			results.add(new Batch.Result(e, rc));
+		    } catch (Exception e) {
+			results.add(new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), rc));
+		    }
+		}
+	    } catch (Exception e) {
+		for (IRequest request : queue) {
+		    results.add(new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), request.getContext()));
+		}
+	    }
+	}
+	queue = null;
+	return results;
     }
 
     // Protected
@@ -115,7 +197,12 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	return conditions;
     }
 
-    protected Collection<RegistryItem> getItems(ObjectType obj, ItemType it, IKey key, IRequestContext rc) throws Exception {
+    protected Collection<RegistryItem> getItems(Arguments args) throws Exception {
+	ObjectType obj = args.obj;
+	ItemType it = args.base;
+	IKey key = args.key;
+	IRequestContext rc = args.rc;
+
 	if (it instanceof RegistryItem) {
 	    RegistryItem base = (RegistryItem)it;
 	    RegistryObject rObj = (RegistryObject)obj;
@@ -162,6 +249,18 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
     }
 
     // Private
+
+    /**
+     * Any exact (EQUALS) native subkey of HKLM is batchable.
+     */
+    private boolean batchable(IRequest request) {
+	RegistryObject rObj = (RegistryObject)request.getObject();
+	return	!rObj.isSetBehaviors() &&
+		rObj.getHive().getOperation() == OperationEnumeration.EQUALS &&
+		IRegistry.Hive.HKLM.getName().equals(rObj.getHive().getValue()) &&
+		!XSITools.isNil(rObj.getKey()) &&
+		rObj.getKey().getValue().getOperation() == OperationEnumeration.EQUALS;
+    }
 
     private RegistryItem getItem(RegistryItem base, IKey key) throws Exception {
 	RegistryItem item = Factories.sc.windows.createRegistryItem();
@@ -289,15 +388,21 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
     }
 
     private BigInteger getLastWriteTime(IKey key, boolean win32) throws Exception {
-	String fullPath = key.toString();
+	String fullPath = new StringBuffer(win32 ? "32:" : "").append(key.toString()).toString().toUpperCase();
 	if (!writeTimes.containsKey(fullPath)) {
 	    StringBuffer sb = new StringBuffer("Get-RegKeyLastWriteTime -Hive ").append(key.getHive().getName());
 	    if (key.getPath() != null) {
 		sb.append(" -Subkey \"").append(key.getPath()).append("\"");
 	    }
-	    sb.append(" | %{$_.ToFileTimeUtc()}");
 	    IWindowsSession.View view = win32 ? IWindowsSession.View._32BIT : session.getNativeView();
-	    writeTimes.put(fullPath, new BigInteger(getRunspace(view).invoke(sb.toString())));
+	    String data = getRunspace(view).invoke(sb.toString());
+	    int ptr = data.lastIndexOf(":");
+	    if (ptr > 0) {
+		BigInteger ticks = new BigInteger(data.substring(ptr+1).trim());
+		writeTimes.put(fullPath, ticks);
+	    } else {
+		throw new IllegalArgumentException(data);
+	    }
 	}
 	return writeTimes.get(fullPath);
     }

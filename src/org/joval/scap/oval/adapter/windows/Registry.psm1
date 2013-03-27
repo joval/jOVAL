@@ -3,22 +3,24 @@
 #
 function Get-RegKeyLastWriteTime {
   param (
-    [string] $Hive,
-    [string] $SubKey
+    [Parameter(ValueFromPipeline=$true)]
+    [string]$Subkey = $null,
+    [string]$Hive = "HKEY_LOCAL_MACHINE"
   )
 
-  switch ($Hive) {
-    "HKEY_CLASSES_ROOT" { $hKey = 0x80000000}
-    "HKEY_CURRENT_USER" { $hKey = 0x80000001}
-    "HKEY_LOCAL_MACHINE" { $hKey = 0x80000002}
-    "HKEY_USERS"  { $hKey = 0x80000003}
-    "HKEY_CURRENT_CONFIG" { $hKey = 0x80000005}
-    default { 
-      throw "Invalid Hive: $($Hive)"
+  BEGIN {
+    switch ($Hive) {
+      "HKEY_CLASSES_ROOT" { $hKey = 0x80000000}
+      "HKEY_CURRENT_USER" { $hKey = 0x80000001}
+      "HKEY_LOCAL_MACHINE" { $hKey = 0x80000002}
+      "HKEY_USERS"  { $hKey = 0x80000003}
+      "HKEY_CURRENT_CONFIG" { $hKey = 0x80000005}
+      default { 
+        throw "Invalid Hive: $($Hive)"
+      }
     }
-  }
 
-  $code = @"
+    $code = @"
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -87,6 +89,17 @@ namespace jOVAL.Registry {
     if($type -eq $null){
       add-type $code
     }
+  }
 
-    [jOVAL.Registry.Probe]::GetLastWriteTime($hKey, $Subkey)
+  PROCESS {
+    if ($Subkey -eq $null -or $Subkey -eq "") {
+      $Path = $Hive
+    } else {
+      $Path = "$($Hive)\$($Subkey)"
+    }
+    if (Test-Path -LiteralPath "Registry::$($Path)") {
+      $LastWrite = [jOVAL.Registry.Probe]::GetLastWriteTime($hKey, $Subkey)
+      Write-Output "$($Path): $($LastWrite.ToFileTimeUtc())"
+    }
+  }
 }

@@ -449,7 +449,9 @@ public class Main implements IObserver<IEngine.Message> {
 	      case ERR:
 		throw engine.getError();
 	    }
-	    state.plugin.dispose();
+	    if (state.plugin != null) {
+		state.plugin.dispose();
+	    }
 
 	    IResults results = engine.getResults();
 	    if (state.directivesFile.exists() && state.directivesFile.isFile()) {

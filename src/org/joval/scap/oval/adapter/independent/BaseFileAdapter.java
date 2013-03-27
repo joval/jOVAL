@@ -45,6 +45,8 @@ import scap.oval.systemcharacteristics.core.ItemType;
 import scap.oval.systemcharacteristics.core.StatusEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
+import org.joval.intf.scap.oval.IBatch;
+import org.joval.scap.oval.Batch;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
@@ -57,7 +59,7 @@ import org.joval.xml.XSITools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
+public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, IBatch {
     protected static final int TYPE_EQUALITY		= ISearchable.TYPE_EQUALITY;
     protected static final int TYPE_INEQUALITY		= ISearchable.TYPE_INEQUALITY;
     protected static final int TYPE_PATTERN		= ISearchable.TYPE_PATTERN;
@@ -152,69 +154,71 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 
 	Collection<T> items = new ArrayList<T>();
 	for (IFile f : getFiles(fObj, behaviors, rc, fs)) {
-	    String path = f.getPath();
-	    try {
-		String dirPath = null;
-		boolean isDirectory = f.isDirectory();
-		if (isDirectory) {
-		    dirPath = path;
-		} else {
-		    dirPath = f.getParent();
-		}
-		ReflectedFileItem fItem = new ReflectedFileItem();
-		fItem.setWindowsView(view);
-		if (isDirectory) {
-		    if (fObj.isFilenameNil()) {
-			EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
-			pathType.setValue(dirPath);
-			fItem.setPath(pathType);
-			items.addAll(getItems(obj, fItem.it, f, rc));
-		    }
-		} else {
-		    EntityItemStringType filepathType = Factories.sc.core.createEntityItemStringType();
-		    filepathType.setValue(path);
-		    fItem.setFilepath(filepathType);
-		    EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
-		    pathType.setValue(f.getParent());
-		    fItem.setPath(pathType);
-		    EntityItemStringType filenameType = Factories.sc.core.createEntityItemStringType();
-		    filenameType.setValue(f.getName());
-		    fItem.setFilename(filenameType);
-		    items.addAll(getItems(obj, fItem.it, f, rc));
-		}
-	    } catch (FileNotFoundException e) {
-		// skip it
-	    } catch (ClassNotFoundException e) {
-		session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
-	    } catch (InstantiationException e) {
-		session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
-	    } catch (NoSuchMethodException e) {
-		session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
-	    } catch (IllegalAccessException e) {
-		session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
-	    } catch (InvocationTargetException e) {
-		session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
-	    } catch (IllegalArgumentException e) {
-		session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		session.getLogger().warn(Message.ERROR_IO, path, e.getMessage());
-	    } catch (IOException e) {
-		session.getLogger().warn(Message.ERROR_IO, path, e.getMessage());
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		if (f == null) {
-		    msg.setValue(e.getMessage());
-		} else {
-		    msg.setValue(JOVALMsg.getMessage(Message.ERROR_IO, path, e.getMessage()));
-		}
-		rc.addMessage(msg);
-	    }
+	    items.addAll(processFile(obj, fObj, rc, f, view));
 	}
 	return items;
+    }
+
+    // Implement IBatch
+
+    private List<IRequest> queue;
+
+    public boolean queue(IRequest request) {
+	if (batchable(request)) {
+	    if (queue == null) {
+		queue = new ArrayList<IRequest>();
+	    }
+	    queue.add(request);
+	    return true;
+	} else {
+	    return false;
+	}
+    }
+
+    public Collection<IResult> exec() {
+	ArrayList<String> paths = new ArrayList<String>(queue.size());
+	for (IRequest request : queue) {
+	    ReflectedFileObject fObj = new ReflectedFileObject(request.getObject());
+	    if (fObj.isSetFilepath()) {
+		paths.add((String)fObj.getFilepath().getValue());
+	    } else {
+		StringBuffer sb = new StringBuffer((String)fObj.getPath().getValue());
+		if (!sb.toString().endsWith(session.getFilesystem().getDelimiter())) {
+		    sb.append(session.getFilesystem().getDelimiter());
+		}
+		sb.append((String)fObj.getFilename().getValue());
+		paths.add(sb.toString());
+	    }
+	}
+	IWindowsSession.View view = ((IWindowsSession)session).getNativeView();
+	Collection<IResult> results = new ArrayList<IResult>();
+	try {
+	    IFile[] files = session.getFilesystem().getFiles(paths.toArray(new String[paths.size()]));
+	    for (int i=0; i < paths.size(); i++) {
+		IRequestContext rc = queue.get(i).getContext();
+		ObjectType obj = queue.get(i).getObject();
+		ReflectedFileObject fObj = new ReflectedFileObject(obj);
+		IFile f = files[i];
+		if (f == null) {
+		    results.add(new Batch.Result(new ArrayList<T>(), rc));
+		} else {
+		    try {
+			results.add(new Batch.Result(processFile(obj, fObj, rc, f, view), rc));
+		    } catch (CollectException e) {
+			results.add(new Batch.Result(e, rc));
+		    } catch (Exception e) {
+			results.add(new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), rc));
+		    }
+		}
+	    }
+	} catch (IOException e) {
+	    for (IRequest request : queue) {
+		IRequestContext rc = request.getContext();
+		results.add(new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), rc));
+	    }
+	}
+	queue = null;
+	return results;
     }
 
     // Protected
@@ -304,6 +308,102 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
     }
 
     // Private
+
+    /**
+     * Determine whether or not a request can be batched. Only requests about regular files on Windows are batchable.
+     */
+    private boolean batchable(IRequest request) {
+	if (session instanceof IWindowsSession) {
+	    ReflectedFileObject fObj = new ReflectedFileObject(request.getObject());
+	    return  (
+			fObj.isSetFilepath() &&
+			fObj.getFilepath().getOperation() == OperationEnumeration.EQUALS
+		    )
+		    ||
+		    (
+			!fObj.isSetBehaviors() &&
+			fObj.isSetFilename() &&
+			!fObj.isFilenameNil() &&
+			fObj.getFilename().getOperation() == OperationEnumeration.EQUALS &&
+			fObj.getPath().getOperation() == OperationEnumeration.EQUALS
+		    );
+	} else {
+	    return false;
+	}
+    }
+
+    /**
+     * Process a single file.
+     */
+    private Collection<T> processFile(ObjectType obj, ReflectedFileObject fObj, IRequestContext rc, IFile f,
+				      IWindowsSession.View view) throws CollectException {
+
+	String id = obj.getId();
+	String path = f.getPath();
+	try {
+	    String dirPath = null;
+	    boolean isDirectory = f.isDirectory();
+	    if (isDirectory) {
+		dirPath = path;
+	    } else {
+		dirPath = f.getParent();
+	    }
+	    ReflectedFileItem fItem = new ReflectedFileItem();
+	    fItem.setWindowsView(view);
+	    if (isDirectory) {
+		if (fObj.isFilenameNil()) {
+		    EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
+		    pathType.setValue(dirPath);
+		    fItem.setPath(pathType);
+		    return getItems(obj, fItem.it, f, rc);
+		}
+	    } else {
+		EntityItemStringType filepathType = Factories.sc.core.createEntityItemStringType();
+		filepathType.setValue(path);
+		fItem.setFilepath(filepathType);
+		EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
+		pathType.setValue(f.getParent());
+		fItem.setPath(pathType);
+		EntityItemStringType filenameType = Factories.sc.core.createEntityItemStringType();
+		filenameType.setValue(f.getName());
+		fItem.setFilename(filenameType);
+		return getItems(obj, fItem.it, f, rc);
+	    }
+	} catch (FileNotFoundException e) {
+	    // skip it
+	} catch (ClassNotFoundException e) {
+	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
+	} catch (InstantiationException e) {
+	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
+	} catch (NoSuchMethodException e) {
+	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
+	} catch (IllegalAccessException e) {
+	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
+	} catch (InvocationTargetException e) {
+	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
+	} catch (IllegalArgumentException e) {
+	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(Message.ERROR_IO, path, e.getMessage());
+	} catch (IOException e) {
+	    session.getLogger().warn(Message.ERROR_IO, path, e.getMessage());
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    if (f == null) {
+		msg.setValue(e.getMessage());
+	    } else {
+		msg.setValue(JOVALMsg.getMessage(Message.ERROR_IO, path, e.getMessage()));
+	    }
+	    rc.addMessage(msg);
+	}
+	@SuppressWarnings("unchecked")
+	List<T> empty = (List<T>)Collections.EMPTY_LIST;
+	return empty;
+    }
 
     /**
      * Create a runspace with the specified view. Modules supplied by getPowershellModules() will be auto-loaded before

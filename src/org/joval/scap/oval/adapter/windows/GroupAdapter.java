@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import jsaf.intf.system.ISession;
+import jsaf.intf.windows.identity.IDirectory;
 import jsaf.intf.windows.identity.IGroup;
 import jsaf.intf.windows.identity.IUser;
 import jsaf.intf.windows.system.IWindowsSession;
@@ -41,10 +42,12 @@ import org.joval.util.JOVALMsg;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class GroupAdapter extends UserAdapter {
+public class GroupAdapter implements IAdapter {
+    private  IWindowsSession session;
+    private  IDirectory directory;
+
     // Implement IAdapter
 
-    @Override
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
@@ -56,7 +59,6 @@ public class GroupAdapter extends UserAdapter {
 	return classes;
     }
 
-    @Override
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	directory = session.getDirectory();
 	Collection<GroupItem> items = new ArrayList<GroupItem>();
