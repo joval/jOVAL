@@ -143,6 +143,9 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 			    items.addAll(getItems(args));
 			}
 			results.add(new Batch.Result(items, rc));
+		    } catch (NoSuchElementException e) {
+			// no results
+			results.add(new Batch.Result(new ArrayList<ItemType>(), rc));
 		    } catch (CollectException e) {
 			results.add(new Batch.Result(e, rc));
 		    } catch (Exception e) {
