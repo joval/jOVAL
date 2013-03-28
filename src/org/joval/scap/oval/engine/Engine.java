@@ -2085,8 +2085,8 @@ public class Engine implements IEngine, IProvider {
 		throws TestException, OvalException {
 
 	if (item == null) {
-	    // Absence of the item is equivalent to a status of DOES_NOT_EXIST
-	    return ResultEnumeration.FALSE;
+	    // Absence of the item translates to UNKNOWN per D. Haynes
+	    return ResultEnumeration.UNKNOWN;
 	} else {
 	    switch(item.getStatus()) {
 	      case NOT_COLLECTED:
