@@ -102,17 +102,19 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
     public Collection<IResult> exec() {
 	Collection<IResult> results = new ArrayList<IResult>();
 	if (queue != null) {
-	    HashSet<String> subkeys = new HashSet<String>();
+	    Map<IRequest, String> subkeys = new HashMap<IRequest, String>();
 	    for (IRequest request : queue) {
 		RegistryObject rObj = (RegistryObject)request.getObject();
-		subkeys.add((String)rObj.getKey().getValue().getValue());
+		subkeys.put(request, (String)rObj.getKey().getValue().getValue());
 	    }
+	    HashSet<String> paths = new HashSet<String>();
+	    paths.addAll(subkeys.values());
 	    StringBuffer sb = new StringBuffer();
-	    for (String subkey : subkeys) {
+	    for (String path : paths) {
 		if (sb.length() > 0) {
 		    sb.append(",");
 		}
-		sb.append("\"").append(subkey).append("\"");
+		sb.append("\"").append(path).append("\"");
 	    }
 	    sb.append(" | Get-RegKeyLastWriteTime | Transfer-Encode");
 	    try {
@@ -133,23 +135,41 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 		}
 
 		//
+		// Get all the subkeys at once, which should cause them to be cached for later retrieval.
+		//
+		IRegistry registry = session.getRegistry(session.getNativeView());
+		String[] sa = paths.toArray(new String[paths.size()]);
+		IKey[] keys = registry.getKeys(IRegistry.Hive.HKLM, sa);
+		HashSet<String> notfound = new HashSet<String>();
+		for (int i=0; i < keys.length; i++) {
+		    if (keys[i] == null) {
+			notfound.add(sa[i].toUpperCase());
+		    }
+		}
+
+		//
 		// Now, iterate through the requests normally
 		//
 		for (IRequest request : queue) {
 		    IRequestContext rc = request.getContext();
-		    try {
-			Collection<ItemType> items = new ArrayList<ItemType>();
-			for (Arguments args : getArguments(request.getObject(), rc)) {
-			    items.addAll(getItems(args));
-			}
-			results.add(new Batch.Result(items, rc));
-		    } catch (NoSuchElementException e) {
-			// no results
+		    if (notfound.contains(subkeys.get(request).toUpperCase())) {
+			// Avoid processing any keys that we already know don't exist
 			results.add(new Batch.Result(new ArrayList<ItemType>(), rc));
-		    } catch (CollectException e) {
-			results.add(new Batch.Result(e, rc));
-		    } catch (Exception e) {
-			results.add(new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), rc));
+		    } else {
+			try {
+			    Collection<ItemType> items = new ArrayList<ItemType>();
+			    for (Arguments args : getArguments(request.getObject(), rc)) {
+				items.addAll(getItems(args));
+			    }
+			    results.add(new Batch.Result(items, rc));
+			} catch (NoSuchElementException e) {
+			    // The value must not exist 
+			    results.add(new Batch.Result(new ArrayList<ItemType>(), rc));
+			} catch (CollectException e) {
+			    results.add(new Batch.Result(e, rc));
+			} catch (Exception e) {
+			    results.add(new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), rc));
+			}
 		    }
 		}
 	    } catch (Exception e) {
