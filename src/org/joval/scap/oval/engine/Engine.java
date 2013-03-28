@@ -638,6 +638,7 @@ public class Engine implements IEngine, IProvider {
 	    // Organize results by object ID
 	    //
 	    Map<String, Collection<IBatch.IResult>> results = new HashMap<String, Collection<IBatch.IResult>>();
+	    logger.info(JOVALMsg.STATUS_OBJECT_BATCH, scanQueue.size());
 	    for (IBatch.IResult result : ((IBatch)plugin.getOvalProvider()).exec()) {
 		String id = ((RequestContext)result.getContext()).getObject().getId();
 		if (!results.containsKey(id)) {
@@ -645,6 +646,7 @@ public class Engine implements IEngine, IProvider {
 		}
 		results.get(id).add(result);
 	    }
+
 	    //
 	    // Recombine result sets into discrete object item lists
 	    //

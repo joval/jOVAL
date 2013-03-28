@@ -20,11 +20,6 @@ import jsaf.intf.io.IRandomAccess;
 import jsaf.intf.system.ISession;
 import jsaf.intf.windows.io.IWindowsFileInfo;
 import jsaf.intf.windows.system.IWindowsSession;
-import jsaf.intf.windows.wmi.ISWbemObject;
-import jsaf.intf.windows.wmi.ISWbemObjectSet;
-import jsaf.intf.windows.wmi.ISWbemProperty;
-import jsaf.intf.windows.wmi.ISWbemPropertySet;
-import jsaf.intf.windows.wmi.IWmiProvider;
 import jsaf.provider.windows.Timestamp;
 import jsaf.util.StringTools;
 
@@ -56,9 +51,6 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public class FileAdapter extends BaseFileAdapter<FileItem> {
-    private static final String OWNER_WQL = "ASSOCIATORS OF {Win32_LogicalFileSecuritySetting='$path'} " +
-					    "WHERE AssocClass=Win32_LogicalFileOwner ResultRole=Owner";
-
     private IWindowsSession ws;
 
     // Implement IAdapter
@@ -149,37 +141,8 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	}
 	item.setMTime(mTimeType);
 
-	//
-	// Use WMI to retrieve owner information for the file
-	//
 	EntityItemStringType ownerType = Factories.sc.core.createEntityItemStringType();
-	IWmiProvider wmi = ws.getWmiProvider();
-	try {
-	    String wql = OWNER_WQL.replaceAll("(?i)\\$path", Matcher.quoteReplacement(f.getPath()));
-	    ISWbemObjectSet objSet = wmi.execQuery(IWmiProvider.CIMv2, wql);
-	    if (objSet.getSize() == 1) {
-		ISWbemObject ownerObj = objSet.iterator().next();
-		ISWbemPropertySet ownerPropSet = ownerObj.getProperties();
-		ISWbemProperty usernameProp = ownerPropSet.getItem("AccountName");
-		String username = usernameProp.getValueAsString();
-		ISWbemProperty domainProp = ownerPropSet.getItem("ReferencedDomainName"); 
-		String domain = domainProp.getValueAsString();
-		String ownerAccount = new StringBuffer(domain).append("\\").append(username).toString();
-		ownerType.setValue(ownerAccount);
-	    } else {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.INFO);
-		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINFILE_OWNER, objSet.getSize()));
-		item.getMessage().add(msg);
-		ownerType.setStatus(StatusEnumeration.ERROR);
-	    }
-	} catch (Exception e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.INFO);
-	    msg.setValue(e.getMessage());
-	    item.getMessage().add(msg);
-	    ownerType.setStatus(StatusEnumeration.ERROR);
-	}
+	ownerType.setValue(((IWindowsFileInfo)f.getExtended()).getOwner().getNetbiosName());
 	item.setOwner(ownerType);
 
 	//

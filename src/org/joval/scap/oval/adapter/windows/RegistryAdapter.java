@@ -103,9 +103,14 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	Collection<IResult> results = new ArrayList<IResult>();
 	if (queue != null) {
 	    Map<IRequest, String> subkeys = new HashMap<IRequest, String>();
+	    Map<IRequest, String> valkeys = new HashMap<IRequest, String>();
 	    for (IRequest request : queue) {
 		RegistryObject rObj = (RegistryObject)request.getObject();
-		subkeys.put(request, (String)rObj.getKey().getValue().getValue());
+		String subkey = (String)rObj.getKey().getValue().getValue();
+		subkeys.put(request, subkey);
+		if (!XSITools.isNil(rObj.getName())) {
+		    valkeys.put(request, subkey);
+		}
 	    }
 	    HashSet<String> paths = new HashSet<String>();
 	    paths.addAll(subkeys.values());
@@ -135,24 +140,37 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 		}
 
 		//
-		// Get all the subkeys at once, which should cause them to be cached for later retrieval.
+		// Get all the subkeys at once, which will cause them to be cached for later retrieval.
 		//
 		IRegistry registry = session.getRegistry(session.getNativeView());
 		String[] sa = paths.toArray(new String[paths.size()]);
 		IKey[] keys = registry.getKeys(IRegistry.Hive.HKLM, sa);
-		HashSet<String> notfound = new HashSet<String>();
+		HashSet<String> notKeys = new HashSet<String>();
 		for (int i=0; i < keys.length; i++) {
 		    if (keys[i] == null) {
-			notfound.add(sa[i].toUpperCase());
+			notKeys.add(sa[i].toUpperCase());
 		    }
 		}
+
+		//
+		// Get all the values at once, which will cause then to be cached for later retrieval.
+		//
+		Map<String, Collection<String>> notValues = new HashMap<String, Collection<String>>();
+		List<String> keyList = new ArrayList<String>();
+		for (String path : valkeys.values()) {
+		    if (!notKeys.contains(path.toUpperCase())) {
+			keyList.add(path);
+		    }
+		}
+		String[] saKeys = keyList.toArray(new String[keyList.size()]);
+		IValue[] values = registry.enumValues(IRegistry.Hive.HKLM, saKeys);
 
 		//
 		// Now, iterate through the requests normally
 		//
 		for (IRequest request : queue) {
 		    IRequestContext rc = request.getContext();
-		    if (notfound.contains(subkeys.get(request).toUpperCase())) {
+		    if (notKeys.contains(subkeys.get(request).toUpperCase())) {
 			// Avoid processing any keys that we already know don't exist
 			results.add(new Batch.Result(new ArrayList<ItemType>(), rc));
 		    } else {
@@ -163,7 +181,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 			    }
 			    results.add(new Batch.Result(items, rc));
 			} catch (NoSuchElementException e) {
-			    // The value must not exist 
+			    // Value was not found
 			    results.add(new Batch.Result(new ArrayList<ItemType>(), rc));
 			} catch (CollectException e) {
 			    results.add(new Batch.Result(e, rc));
