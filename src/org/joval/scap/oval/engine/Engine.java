@@ -435,8 +435,8 @@ public class Engine implements IEngine, IProvider {
 		// resolved when they're encountered, but proceeding methodically should be faster.
 		//
 		producer.sendNotify(Message.OBJECT_PHASE_START, null);
-		for (String objectId : variableObjectIds) {
-		    scanObject(new RequestContext(definitions.getObject(objectId)));
+		for (String id : variableObjectIds) {
+		    scanObject(new RequestContext(definitions.getObject(id)));
 		}
 		HashSet<ObjectType> deferred = new HashSet<ObjectType>();
 		for (String id : allowedObjectIds) {
