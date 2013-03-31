@@ -396,6 +396,7 @@ public class XPERT {
 			XccdfObserver observer = new XccdfObserver(ocilDir);
 			engine.getNotificationProducer().addObserver(observer);
 			engine.run();
+			plugin.dispose();
 			engine.getNotificationProducer().removeObserver(observer);
 			switch(engine.getResult()) {
 			  case OK:
