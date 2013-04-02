@@ -2070,14 +2070,16 @@ public class Engine implements IEngine, IProvider {
 	    itemFields.get(name).add(itemField);
 	}
 	OperatorData od = new OperatorData(false);
-	for (String fieldName : stateFields.keySet()) {
-	    if (itemFields.containsKey(fieldName)) {
-		EntityStateSimpleBaseType state = new StateFieldBridge(stateFields.get(fieldName));
+	for (Map.Entry<String, EntityStateFieldType> entry : stateFields.entrySet()) {
+	    String name = entry.getKey();
+	    String stateField = entry.getValue();
+	    if (itemFields.containsKey(name)) {
+		EntityStateSimpleBaseType state = new StateFieldBridge(stateField);
 		CheckData cd = new CheckData();
-		for (EntityItemFieldType item : itemFields.get(fieldName)) {
-		    cd.addResult(compare(state, new ItemFieldBridge(item), rc));
+		for (EntityItemFieldType itemField : itemFields.get(name)) {
+		    cd.addResult(compare(state, new ItemFieldBridge(itemField), rc));
 		}
-		od.addResult(cd.getResult(stateRecord.getEntityCheck()));
+		od.addResult(cd.getResult(stateField.getEntityCheck()));
 	    } else {
 		od.addResult(ResultEnumeration.FALSE);
 	    }
