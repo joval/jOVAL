@@ -2057,25 +2057,32 @@ public class Engine implements IEngine, IProvider {
     private ResultEnumeration compare(EntityStateRecordType stateRecord, EntityItemRecordType itemRecord, RequestContext rc)
 	    throws TestException, OvalException {
 
-	Hashtable<String, EntityStateFieldType> stateFields = new Hashtable<String, EntityStateFieldType>();
+	Map<String, EntityStateFieldType> stateFields = new HashMap<String, EntityStateFieldType>();
 	for (EntityStateFieldType stateField : stateRecord.getField()) {
 	    stateFields.put(stateField.getName(), stateField);
 	}
-	Hashtable<String, EntityItemFieldType> itemFields = new Hashtable<String, EntityItemFieldType>();
+	Map<String, Collection<EntityItemFieldType>> itemFields = new HashMap<String, Collection<EntityItemFieldType>>();
 	for (EntityItemFieldType itemField : itemRecord.getField()) {
-	    itemFields.put(itemField.getName(), itemField);
+	    String name = itemField.getName();
+	    if (!itemFields.containsKey(name)) {
+		itemFields.put(name, new ArrayList<EntityItemFieldType>());
+	    }
+	    itemFields.get(name).add(itemField);
 	}
-	CheckData cd = new CheckData();
+	OperatorData od = new OperatorData(false);
 	for (String fieldName : stateFields.keySet()) {
 	    if (itemFields.containsKey(fieldName)) {
 		EntityStateSimpleBaseType state = new StateFieldBridge(stateFields.get(fieldName));
-		EntityItemSimpleBaseType item = new ItemFieldBridge(itemFields.get(fieldName));
-		cd.addResult(compare(state, item, rc));
+		CheckData cd = new CheckData();
+		for (EntityItemFieldType item : itemFields.get(fieldName)) {
+		    cd.addResult(compare(state, new ItemFieldBridge(item), rc));
+		}
+		od.addResult(cd.getResult(stateRecord.getEntityCheck()));
 	    } else {
-		cd.addResult(ResultEnumeration.FALSE);
+		od.addResult(ResultEnumeration.FALSE);
 	    }
 	}
-	return cd.getResult(stateRecord.getEntityCheck());
+	return od.getResult(OperatorEnumeration.AND);
     }
 
     /**
