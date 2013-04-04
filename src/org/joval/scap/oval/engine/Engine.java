@@ -2072,7 +2072,7 @@ public class Engine implements IEngine, IProvider {
 	OperatorData od = new OperatorData(false);
 	for (Map.Entry<String, EntityStateFieldType> entry : stateFields.entrySet()) {
 	    String name = entry.getKey();
-	    String stateField = entry.getValue();
+	    EntityStateFieldType stateField = entry.getValue();
 	    if (itemFields.containsKey(name)) {
 		EntityStateSimpleBaseType state = new StateFieldBridge(stateField);
 		CheckData cd = new CheckData();
