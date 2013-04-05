@@ -276,7 +276,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 	    int len = 0;
 	    StringBuffer sb = new StringBuffer();
 	    while ((len = in.read(buff)) > 0) {
-		sb.append(StringTools.toASCIICharArray(buff), 0, len);
+		sb.append(StringTools.toChars(buff, 0, len, StringTools.ASCII));
 	    }
 	    return sb.toString();
 	} finally {
