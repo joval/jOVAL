@@ -633,7 +633,7 @@ public class Engine implements IEngine, IProvider {
      * Scan all the objects in the request queue in batch.
      */
     private synchronized void scanQueue() throws OvalException {
-	if (scanQueue != null) {
+	if (scanQueue != null && scanQueue.size() > 0) {
 	    //
 	    // Organize results by object ID
 	    //
