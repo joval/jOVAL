@@ -127,7 +127,7 @@ public class PasswordpolicyAdapter implements IAdapter {
 			    EntityItemBoolType type = Factories.sc.core.createEntityItemBoolType();
 			    type.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 			    type.setValue(prop.getProperty(key));
-			    item.setReversibleEncryption(type);
+			    item.setPasswordComplexity(type);
 			}
 		    }
 		    items.add(item);
