@@ -12,16 +12,23 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFileEx;
 import jsaf.intf.io.IRandomAccess;
 import jsaf.intf.system.ISession;
+import jsaf.intf.unix.io.IUnixFileInfo;
 import jsaf.intf.windows.io.IWindowsFileInfo;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.provider.windows.Timestamp;
 import jsaf.util.StringTools;
+
+import jpe.header.Header;
+import jpe.resource.version.VsFixedFileInfo;
+import jpe.resource.version.VsVersionInfo;
+import jpe.util.LanguageConstants;
 
 import scap.oval.common.MessageLevelEnumeration;
 import scap.oval.common.MessageType;
@@ -51,17 +58,14 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public class FileAdapter extends BaseFileAdapter<FileItem> {
-    private IWindowsSession ws;
-
     // Implement IAdapter
 
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
-	if (session instanceof IWindowsSession) {
+	try {
 	    baseInit(session);
-	    ws = (IWindowsSession)session;
 	    classes.add(FileObject.class);
-	} else {
+	} catch (UnsupportedOperationException e) {
 	    notapplicable.add(FileObject.class);
 	}
 	return classes;
@@ -79,37 +83,11 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	FileObject fObj = (FileObject)obj;
 	FileItem baseItem = (FileItem)base;
 	FileItem item = Factories.sc.windows.createFileItem();
+	item.setStatus(StatusEnumeration.EXISTS);
 	item.setPath(baseItem.getPath());
 	item.setFilename(baseItem.getFilename());
 	item.setFilepath(baseItem.getFilepath());
 	item.setWindowsView(baseItem.getWindowsView());
-
-	//
-	// Get some information from the IFile
-	//
-	item.setStatus(StatusEnumeration.EXISTS);
-	EntityItemFileTypeType typeType = Factories.sc.windows.createEntityItemFileTypeType();
-	switch(((IWindowsFileInfo)f.getExtended()).getWindowsFileType()) {
-	  case IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY:
-	    typeType.setValue("FILE_ATTRIBUTE_DIRECTORY");
-	    break;
-	  case IWindowsFileInfo.FILE_TYPE_DISK:
-	    typeType.setValue("FILE_TYPE_DISK");
-	    break;
-	  case IWindowsFileInfo.FILE_TYPE_REMOTE:
-	    typeType.setValue("FILE_TYPE_REMOTE");
-	    break;
-	  case IWindowsFileInfo.FILE_TYPE_PIPE:
-	    typeType.setValue("FILE_TYPE_PIPE");
-	    break;
-	  case IWindowsFileInfo.FILE_TYPE_CHAR:
-	    typeType.setValue("FILE_TYPE_CHAR");
-	    break;
-	  default:
-	    typeType.setValue("FILE_TYPE_UNKNOWN");
-	    break;
-	}
-	item.setType(typeType);
 
 	EntityItemIntType aTimeType = Factories.sc.core.createEntityItemIntType();
 	Date temp = f.getAccessTime();
@@ -141,20 +119,23 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	}
 	item.setMTime(mTimeType);
 
-	EntityItemStringType ownerType = Factories.sc.core.createEntityItemStringType();
-	ownerType.setValue(((IWindowsFileInfo)f.getExtended()).getOwner().getNetbiosName());
-	item.setOwner(ownerType);
-
-	//
-	// If possible, read the PE header information
-	//
+	addExtendedInfo(fObj, f.getExtended(), item);
 	if (f.isFile()) {
 	    EntityItemIntType sizeType = Factories.sc.core.createEntityItemIntType();
 	    sizeType.setValue(new Long(f.length()).toString());
 	    sizeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    item.setSize(sizeType);
+
 	    if (f.length() > 0) {
+		//
+		// Read PE header information
+		//
+try {
 		addHeaderInfo(fObj, f, item);
+} catch (IOException e) {
+    e.printStackTrace();
+    throw e;
+}
 	    } else {
 		session.getLogger().info(JOVALMsg.STATUS_EMPTY_FILE, f.toString());
 
@@ -176,11 +157,111 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
     // Private
 
     /**
-     * Read the Portable Execution format header information and extract data from it.
+     * Interrogate the IFileEx.
+     */
+    private void addExtendedInfo(FileObject fObj, IFileEx extended, FileItem item) throws IOException {
+	if (extended instanceof IWindowsFileInfo) {
+	    EntityItemFileTypeType typeType = Factories.sc.windows.createEntityItemFileTypeType();
+	    switch(((IWindowsFileInfo)extended).getWindowsFileType()) {
+	      case IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY:
+		typeType.setValue("FILE_ATTRIBUTE_DIRECTORY");
+		break;
+	      case IWindowsFileInfo.FILE_TYPE_DISK:
+		typeType.setValue("FILE_TYPE_DISK");
+		break;
+	      case IWindowsFileInfo.FILE_TYPE_REMOTE:
+		typeType.setValue("FILE_TYPE_REMOTE");
+		break;
+	      case IWindowsFileInfo.FILE_TYPE_PIPE:
+		typeType.setValue("FILE_TYPE_PIPE");
+		break;
+	      case IWindowsFileInfo.FILE_TYPE_CHAR:
+		typeType.setValue("FILE_TYPE_CHAR");
+		break;
+	      default:
+		typeType.setValue("FILE_TYPE_UNKNOWN");
+		break;
+	    }
+	    item.setType(typeType);
+
+	    EntityItemStringType ownerType = Factories.sc.core.createEntityItemStringType();
+	    ownerType.setValue(((IWindowsFileInfo)extended).getOwner().getNetbiosName());
+	    item.setOwner(ownerType);
+	} else if (extended instanceof IUnixFileInfo) {
+	    EntityItemFileTypeType typeType = Factories.sc.windows.createEntityItemFileTypeType();
+	    String type = ((IUnixFileInfo)extended).getUnixFileType();
+	    if (IUnixFileInfo.FILE_TYPE_DIR.equals(type)) {
+		typeType.setValue("FILE_ATTRIBUTE_DIRECTORY");
+	    } else if (IUnixFileInfo.FILE_TYPE_REGULAR.equals(type)) {
+		typeType.setValue("FILE_TYPE_DISK");
+	    } else if (IUnixFileInfo.FILE_TYPE_FIFO.equals(type)) {
+		typeType.setValue("FILE_TYPE_PIPE");
+	    } else if (IUnixFileInfo.FILE_TYPE_CHAR.equals(type)) {
+		typeType.setValue("FILE_TYPE_CHAR");
+	    } else {
+		typeType.setValue("FILE_TYPE_UNKNOWN");
+	    }
+	    item.setType(typeType);
+	}
+    }
+
+    /**
+     * Read the Portable Execution format header information from the IFileEx, or directly from the file itself, and
+     * convey it to the item.
      */
     private void addHeaderInfo(FileObject fObj, IFile file, FileItem item) throws IOException {
 	session.getLogger().trace(JOVALMsg.STATUS_PE_READ, file.toString());
-	Map<String, String> peHeaders = ((IWindowsFileInfo)file.getExtended()).getPEHeaders();
+	IFileEx extended = file.getExtended();
+	Map<String, String> peHeaders = null;
+	if (extended instanceof IWindowsFileInfo) {
+	    peHeaders = ((IWindowsFileInfo)extended).getPEHeaders();
+	} else {
+	    //
+	    // Read the headers directly from the file using jPE
+	    //
+	    peHeaders = new HashMap<String, String>();
+	    Header header = new Header(file);
+	    String cs = Integer.toString(header.getNTHeader().getImageOptionalHeader().getChecksum());
+	    peHeaders.put(IWindowsFileInfo.PE_MS_CHECKSUM, cs);
+	    String key = VsVersionInfo.LANGID_KEY;
+	    VsVersionInfo versionInfo = header.getVersionInfo();
+	    VsFixedFileInfo value = null;
+	    if (versionInfo != null) {
+		value = versionInfo.getValue();
+		key = versionInfo.getDefaultTranslation();
+	    }
+	    if (value != null) {
+		String version = versionInfo.getValue().getFileVersion().toString();
+		peHeaders.put(IWindowsFileInfo.PE_VERSION, version);
+		StringTokenizer tok = new StringTokenizer(version, ".");
+		if (tok.countTokens() == 4) {
+		    peHeaders.put(IWindowsFileInfo.PE_VERSION_MAJOR_PART, tok.nextToken());
+		    peHeaders.put(IWindowsFileInfo.PE_VERSION_MINOR_PART, tok.nextToken());
+		    peHeaders.put(IWindowsFileInfo.PE_VERSION_BUILD_PART, tok.nextToken());
+		    peHeaders.put(IWindowsFileInfo.PE_VERSION_PRIVATE_PART, tok.nextToken());
+		}
+		String locale = LanguageConstants.getLocaleString(key);
+		if (locale != null) {
+		    peHeaders.put(IWindowsFileInfo.PE_LANGUAGE, LanguageConstants.getLocaleString(key));
+		}
+		Map<String, String> stringTable = versionInfo.getStringTable(key);
+		if (stringTable.containsKey("CompanyName")) {
+		    peHeaders.put(IWindowsFileInfo.PE_COMPANY_NAME, stringTable.get("CompanyName"));
+		}
+		if (stringTable.containsKey("InternalName")) {
+		    peHeaders.put(IWindowsFileInfo.PE_INTERNAL_NAME, stringTable.get("InternalName"));
+		}
+		if (stringTable.containsKey("ProductName")) {
+		    peHeaders.put(IWindowsFileInfo.PE_PRODUCT_NAME, stringTable.get("ProductName"));
+		}
+		if (stringTable.containsKey("OriginalFilename")) {
+		    peHeaders.put(IWindowsFileInfo.PE_ORIGINAL_NAME, stringTable.get("OriginalFilename"));
+		}
+		if (stringTable.containsKey("ProductVersion")) {
+		    peHeaders.put(IWindowsFileInfo.PE_PRODUCT_VERSION, stringTable.get("ProductVersion"));
+		}
+	    }
+	}
 	if (peHeaders != null) {
 	    if (peHeaders.containsKey(IWindowsFileInfo.PE_MS_CHECKSUM)) {
 		EntityItemStringType msChecksumType = Factories.sc.core.createEntityItemStringType();
