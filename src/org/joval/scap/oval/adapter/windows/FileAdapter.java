@@ -119,37 +119,17 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	}
 	item.setMTime(mTimeType);
 
-	addExtendedInfo(fObj, f.getExtended(), item);
+	EntityItemIntType sizeType = Factories.sc.core.createEntityItemIntType();
 	if (f.isFile()) {
-	    EntityItemIntType sizeType = Factories.sc.core.createEntityItemIntType();
 	    sizeType.setValue(new Long(f.length()).toString());
 	    sizeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	    item.setSize(sizeType);
-
-	    if (f.length() > 0) {
-		//
-		// Read PE header information
-		//
-try {
-		addHeaderInfo(fObj, f, item);
-} catch (IOException e) {
-    e.printStackTrace();
-    throw e;
-}
-	    } else {
-		session.getLogger().info(JOVALMsg.STATUS_EMPTY_FILE, f.toString());
-
-		EntityItemVersionType versionType = Factories.sc.core.createEntityItemVersionType();
-		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
-		versionType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		item.setFileVersion(versionType);
-
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.INFO);
-		msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_PE_EMPTY));
-		item.getMessage().add(msg);
-	    }
+	} else {
+	    sizeType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	}
+	item.setSize(sizeType);
+
+	addExtendedInfo(fObj, f.getExtended(), item);
+	addHeaderInfo(fObj, f, item);
 
 	return Arrays.asList(item);
     }
@@ -213,128 +193,161 @@ try {
 	session.getLogger().trace(JOVALMsg.STATUS_PE_READ, file.toString());
 	IFileEx extended = file.getExtended();
 	Map<String, String> peHeaders = null;
-	if (extended instanceof IWindowsFileInfo) {
+	if (file.isFile() && file.length() == 0) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.INFO);
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_PE_EMPTY));
+	    item.getMessage().add(msg);
+	} else if (extended instanceof IWindowsFileInfo) {
 	    peHeaders = ((IWindowsFileInfo)extended).getPEHeaders();
+	} else if (file.isFile()) {
+	    try {
+		Header header = new Header(file);
+		peHeaders = new HashMap<String, String>();
+		String cs = Integer.toString(header.getNTHeader().getImageOptionalHeader().getChecksum());
+		peHeaders.put(IWindowsFileInfo.PE_MS_CHECKSUM, cs);
+		String key = VsVersionInfo.LANGID_KEY;
+		VsVersionInfo versionInfo = header.getVersionInfo();
+		VsFixedFileInfo value = null;
+		if (versionInfo != null) {
+		    value = versionInfo.getValue();
+		    key = versionInfo.getDefaultTranslation();
+		}
+		if (value != null) {
+		    String version = versionInfo.getValue().getFileVersion().toString();
+		    peHeaders.put(IWindowsFileInfo.PE_VERSION, version);
+		    StringTokenizer tok = new StringTokenizer(version, ".");
+		    if (tok.countTokens() == 4) {
+			peHeaders.put(IWindowsFileInfo.PE_VERSION_MAJOR_PART, tok.nextToken());
+			peHeaders.put(IWindowsFileInfo.PE_VERSION_MINOR_PART, tok.nextToken());
+			peHeaders.put(IWindowsFileInfo.PE_VERSION_BUILD_PART, tok.nextToken());
+			peHeaders.put(IWindowsFileInfo.PE_VERSION_PRIVATE_PART, tok.nextToken());
+		    }
+		    String locale = LanguageConstants.getLocaleString(key);
+		    if (locale != null) {
+			peHeaders.put(IWindowsFileInfo.PE_LANGUAGE, LanguageConstants.getLocaleString(key));
+		    }
+		    Map<String, String> stringTable = versionInfo.getStringTable(key);
+		    if (stringTable.containsKey("CompanyName")) {
+			peHeaders.put(IWindowsFileInfo.PE_COMPANY_NAME, stringTable.get("CompanyName"));
+		    }
+		    if (stringTable.containsKey("InternalName")) {
+			peHeaders.put(IWindowsFileInfo.PE_INTERNAL_NAME, stringTable.get("InternalName"));
+		    }
+		    if (stringTable.containsKey("ProductName")) {
+			peHeaders.put(IWindowsFileInfo.PE_PRODUCT_NAME, stringTable.get("ProductName"));
+		    }
+		    if (stringTable.containsKey("OriginalFilename")) {
+			peHeaders.put(IWindowsFileInfo.PE_ORIGINAL_NAME, stringTable.get("OriginalFilename"));
+		    }
+		    if (stringTable.containsKey("ProductVersion")) {
+			peHeaders.put(IWindowsFileInfo.PE_PRODUCT_VERSION, stringTable.get("ProductVersion"));
+		    }
+		}
+	    } catch (IllegalArgumentException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		item.getMessage().add(msg);
+	    }
+	}
+
+	EntityItemStringType msChecksumType = Factories.sc.core.createEntityItemStringType();
+	if (peHeaders != null && peHeaders.containsKey(IWindowsFileInfo.PE_MS_CHECKSUM)) {
+	    msChecksumType.setValue(peHeaders.get(IWindowsFileInfo.PE_MS_CHECKSUM));
 	} else {
-	    //
-	    // Read the headers directly from the file using jPE
-	    //
-	    peHeaders = new HashMap<String, String>();
-	    Header header = new Header(file);
-	    String cs = Integer.toString(header.getNTHeader().getImageOptionalHeader().getChecksum());
-	    peHeaders.put(IWindowsFileInfo.PE_MS_CHECKSUM, cs);
-	    String key = VsVersionInfo.LANGID_KEY;
-	    VsVersionInfo versionInfo = header.getVersionInfo();
-	    VsFixedFileInfo value = null;
-	    if (versionInfo != null) {
-		value = versionInfo.getValue();
-		key = versionInfo.getDefaultTranslation();
-	    }
-	    if (value != null) {
-		String version = versionInfo.getValue().getFileVersion().toString();
-		peHeaders.put(IWindowsFileInfo.PE_VERSION, version);
-		StringTokenizer tok = new StringTokenizer(version, ".");
-		if (tok.countTokens() == 4) {
-		    peHeaders.put(IWindowsFileInfo.PE_VERSION_MAJOR_PART, tok.nextToken());
-		    peHeaders.put(IWindowsFileInfo.PE_VERSION_MINOR_PART, tok.nextToken());
-		    peHeaders.put(IWindowsFileInfo.PE_VERSION_BUILD_PART, tok.nextToken());
-		    peHeaders.put(IWindowsFileInfo.PE_VERSION_PRIVATE_PART, tok.nextToken());
-		}
-		String locale = LanguageConstants.getLocaleString(key);
-		if (locale != null) {
-		    peHeaders.put(IWindowsFileInfo.PE_LANGUAGE, LanguageConstants.getLocaleString(key));
-		}
-		Map<String, String> stringTable = versionInfo.getStringTable(key);
-		if (stringTable.containsKey("CompanyName")) {
-		    peHeaders.put(IWindowsFileInfo.PE_COMPANY_NAME, stringTable.get("CompanyName"));
-		}
-		if (stringTable.containsKey("InternalName")) {
-		    peHeaders.put(IWindowsFileInfo.PE_INTERNAL_NAME, stringTable.get("InternalName"));
-		}
-		if (stringTable.containsKey("ProductName")) {
-		    peHeaders.put(IWindowsFileInfo.PE_PRODUCT_NAME, stringTable.get("ProductName"));
-		}
-		if (stringTable.containsKey("OriginalFilename")) {
-		    peHeaders.put(IWindowsFileInfo.PE_ORIGINAL_NAME, stringTable.get("OriginalFilename"));
-		}
-		if (stringTable.containsKey("ProductVersion")) {
-		    peHeaders.put(IWindowsFileInfo.PE_PRODUCT_VERSION, stringTable.get("ProductVersion"));
-		}
-	    }
+	    msChecksumType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	}
-	if (peHeaders != null) {
-	    if (peHeaders.containsKey(IWindowsFileInfo.PE_MS_CHECKSUM)) {
-		EntityItemStringType msChecksumType = Factories.sc.core.createEntityItemStringType();
-		msChecksumType.setValue(peHeaders.get(IWindowsFileInfo.PE_MS_CHECKSUM));
-		item.setMsChecksum(msChecksumType);
-	    }
+	item.setMsChecksum(msChecksumType);
 
-	    if (peHeaders.containsKey(IWindowsFileInfo.PE_LANGUAGE)) {
-		EntityItemStringType languageType = Factories.sc.core.createEntityItemStringType();
-		languageType.setValue(peHeaders.get(IWindowsFileInfo.PE_LANGUAGE));
-		item.setLanguage(languageType);
-	    }
-
-	    if (peHeaders.containsKey(IWindowsFileInfo.PE_VERSION_MAJOR_PART)) {
-		int major = Integer.parseInt(peHeaders.get(IWindowsFileInfo.PE_VERSION_MAJOR_PART));
-		int minor = 0, build = 0, priv = 0;
-		if (peHeaders.containsKey(IWindowsFileInfo.PE_VERSION_MINOR_PART)) {
-		    minor = Integer.parseInt(peHeaders.get(IWindowsFileInfo.PE_VERSION_MINOR_PART));
-		}
-		if (peHeaders.containsKey(IWindowsFileInfo.PE_VERSION_BUILD_PART)) {
-		    build = Integer.parseInt(peHeaders.get(IWindowsFileInfo.PE_VERSION_BUILD_PART));
-		}
-		if (peHeaders.containsKey(IWindowsFileInfo.PE_VERSION_PRIVATE_PART)) {
-		    priv = Integer.parseInt(peHeaders.get(IWindowsFileInfo.PE_VERSION_PRIVATE_PART));
-		}
-		if (major != 0 || minor != 0 || build != 0 || priv != 0) {
-		    EntityItemVersionType versionType = Factories.sc.core.createEntityItemVersionType();
-		    versionType.setValue(new Version(major, minor, build, priv).toString());
-		    versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
-		    item.setFileVersion(versionType);
-		}
-	    }
-
-	    if (peHeaders.containsKey(IWindowsFileInfo.PE_COMPANY_NAME)) {
-		EntityItemStringType companyType = Factories.sc.core.createEntityItemStringType();
-		companyType.setValue(peHeaders.get(IWindowsFileInfo.PE_COMPANY_NAME));
-		item.setCompany(companyType);
-	    }
-
-	    if (peHeaders.containsKey(IWindowsFileInfo.PE_INTERNAL_NAME)) {
-		EntityItemStringType internalNameType = Factories.sc.core.createEntityItemStringType();
-		internalNameType.setValue(peHeaders.get(IWindowsFileInfo.PE_INTERNAL_NAME));
-		item.setInternalName(internalNameType);
-	    }
-
-	    if (peHeaders.containsKey(IWindowsFileInfo.PE_PRODUCT_NAME)) {
-	 	EntityItemStringType productNameType = Factories.sc.core.createEntityItemStringType();
-		productNameType.setValue(peHeaders.get(IWindowsFileInfo.PE_PRODUCT_NAME));
-		item.setProductName(productNameType);
-	    }
-
-	    if (peHeaders.containsKey(IWindowsFileInfo.PE_ORIGINAL_NAME)) {
-		EntityItemStringType originalFilenameType = Factories.sc.core.createEntityItemStringType();
-		originalFilenameType.setValue(peHeaders.get(IWindowsFileInfo.PE_ORIGINAL_NAME));
-		item.setOriginalFilename(originalFilenameType);
-	    }
-
-	    if (peHeaders.containsKey(IWindowsFileInfo.PE_PRODUCT_VERSION)) {
-		EntityItemVersionType productVersionType = Factories.sc.core.createEntityItemVersionType();
-		productVersionType.setValue(peHeaders.get(IWindowsFileInfo.PE_PRODUCT_VERSION));
-		productVersionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
-		item.setProductVersion(productVersionType);
-	    }
-
-	    if (peHeaders.containsKey(IWindowsFileInfo.PE_VERSION)) {
-		try {
-		    EntityItemStringType developmentClassType = Factories.sc.core.createEntityItemStringType();
-		    developmentClassType.setValue(getDevelopmentClass(peHeaders.get(IWindowsFileInfo.PE_VERSION)));
-		    item.setDevelopmentClass(developmentClassType);
-		} catch (IllegalArgumentException e) {
-		}
-	    }
+	EntityItemStringType languageType = Factories.sc.core.createEntityItemStringType();
+	if (peHeaders != null && peHeaders.containsKey(IWindowsFileInfo.PE_LANGUAGE)) {
+	    languageType.setValue(peHeaders.get(IWindowsFileInfo.PE_LANGUAGE));
+	} else {
+	    languageType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	}
+	item.setLanguage(languageType);
+
+	EntityItemVersionType versionType = Factories.sc.core.createEntityItemVersionType();
+	if (peHeaders != null && peHeaders.containsKey(IWindowsFileInfo.PE_VERSION_MAJOR_PART)) {
+	    int major = Integer.parseInt(peHeaders.get(IWindowsFileInfo.PE_VERSION_MAJOR_PART));
+	    int minor = 0, build = 0, priv = 0;
+	    if (peHeaders.containsKey(IWindowsFileInfo.PE_VERSION_MINOR_PART)) {
+		minor = Integer.parseInt(peHeaders.get(IWindowsFileInfo.PE_VERSION_MINOR_PART));
+	    }
+	    if (peHeaders.containsKey(IWindowsFileInfo.PE_VERSION_BUILD_PART)) {
+		build = Integer.parseInt(peHeaders.get(IWindowsFileInfo.PE_VERSION_BUILD_PART));
+	    }
+	    if (peHeaders.containsKey(IWindowsFileInfo.PE_VERSION_PRIVATE_PART)) {
+		priv = Integer.parseInt(peHeaders.get(IWindowsFileInfo.PE_VERSION_PRIVATE_PART));
+	    }
+	    if (major == 0 && minor == 0 && build == 0 && priv == 0) {
+		versionType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	    } else {
+		versionType.setValue(new Version(major, minor, build, priv).toString());
+		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
+	    }
+	} else {
+	    versionType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	}
+	item.setFileVersion(versionType);
+
+	EntityItemStringType companyType = Factories.sc.core.createEntityItemStringType();
+	if (peHeaders != null && peHeaders.containsKey(IWindowsFileInfo.PE_COMPANY_NAME)) {
+	    companyType.setValue(peHeaders.get(IWindowsFileInfo.PE_COMPANY_NAME));
+	} else {
+	    companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	}
+	item.setCompany(companyType);
+
+	EntityItemStringType internalNameType = Factories.sc.core.createEntityItemStringType();
+	if (peHeaders != null && peHeaders.containsKey(IWindowsFileInfo.PE_INTERNAL_NAME)) {
+	    internalNameType.setValue(peHeaders.get(IWindowsFileInfo.PE_INTERNAL_NAME));
+	} else {
+	    internalNameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	}
+	item.setInternalName(internalNameType);
+
+	EntityItemStringType productNameType = Factories.sc.core.createEntityItemStringType();
+	if (peHeaders != null && peHeaders.containsKey(IWindowsFileInfo.PE_PRODUCT_NAME)) {
+	    productNameType.setValue(peHeaders.get(IWindowsFileInfo.PE_PRODUCT_NAME));
+	} else {
+	    productNameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	}
+	item.setProductName(productNameType);
+
+	EntityItemStringType originalFilenameType = Factories.sc.core.createEntityItemStringType();
+	if (peHeaders != null && peHeaders.containsKey(IWindowsFileInfo.PE_ORIGINAL_NAME)) {
+	    originalFilenameType.setValue(peHeaders.get(IWindowsFileInfo.PE_ORIGINAL_NAME));
+	} else {
+	    originalFilenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	}
+	item.setOriginalFilename(originalFilenameType);
+
+	EntityItemVersionType productVersionType = Factories.sc.core.createEntityItemVersionType();
+	if (peHeaders != null && peHeaders.containsKey(IWindowsFileInfo.PE_PRODUCT_VERSION)) {
+	    productVersionType.setValue(peHeaders.get(IWindowsFileInfo.PE_PRODUCT_VERSION));
+	    productVersionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
+	} else {
+	    productVersionType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	}
+	item.setProductVersion(productVersionType);
+
+	EntityItemStringType developmentClassType = Factories.sc.core.createEntityItemStringType();
+	if (peHeaders != null && peHeaders.containsKey(IWindowsFileInfo.PE_VERSION)) {
+	    try {
+		developmentClassType.setValue(getDevelopmentClass(peHeaders.get(IWindowsFileInfo.PE_VERSION)));
+	    } catch (IllegalArgumentException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.INFO);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_PE_DEVCLASS, e.getMessage()));
+		item.getMessage().add(msg);
+		developmentClassType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	    }
+	} else {
+	    developmentClassType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	}
+	item.setDevelopmentClass(developmentClassType);
     }
 
     /**
