@@ -384,7 +384,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	    byte[] data = ((IBinaryValue)value).getData();
 	    StringBuffer sb = new StringBuffer();
 	    for (int i=0; i < data.length; i++) {
-			sb.append(LittleEndian.toHexString(data[i]));
+		sb.append(LittleEndian.toHexString(data[i]));
 	    }
 	    valueType.setValue(sb.toString());
 	    valueType.setDatatype(SimpleDatatypeEnumeration.BINARY.value());
@@ -435,8 +435,9 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	    if (key.getPath() != null) {
 		sb.append(" -Subkey \"").append(key.getPath()).append("\"");
 	    }
+	    sb.append(" | Transfer-Encode");
 	    IWindowsSession.View view = win32 ? IWindowsSession.View._32BIT : session.getNativeView();
-	    String data = getRunspace(view).invoke(sb.toString());
+	    String data = new String(Base64.decode(getRunspace(view).invoke(sb.toString())), StringTools.UTF8);
 	    int ptr = data.lastIndexOf(":");
 	    if (ptr > 0) {
 		BigInteger ticks = new BigInteger(data.substring(ptr+1).trim());

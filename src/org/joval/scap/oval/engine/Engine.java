@@ -568,6 +568,7 @@ public class Engine implements IEngine, IProvider {
 		sc.relateItem(objectId, sc.storeItem(item));
 	    }
 	} catch (OvalException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    String err = JOVALMsg.getMessage(JOVALMsg.ERROR_OVAL, e.getMessage());
@@ -611,11 +612,13 @@ public class Engine implements IEngine, IProvider {
 		    scanObject(rc);
 		}
 	    } catch (ResolveException e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(e.getMessage());
 		sc.setObject(id, obj.getComment(), obj.getVersion(), FlagEnumeration.ERROR, msg);
 	    } catch (OvalException e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_OVAL, e.getMessage()));

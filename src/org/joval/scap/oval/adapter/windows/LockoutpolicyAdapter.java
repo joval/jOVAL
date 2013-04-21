@@ -10,6 +10,8 @@ import java.util.Collection;
 import jsaf.intf.system.ISession;
 import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.util.Base64;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -85,8 +87,8 @@ public class LockoutpolicyAdapter implements IAdapter {
 	    // Run the Get-LockoutPolicy module and parse the output
 	    //
 	    LockoutpolicyItem item = Factories.sc.windows.createLockoutpolicyItem();
-	    for (String line : runspace.invoke("Get-LockoutPolicy").split("\n")) {
-		line = line.trim();
+	    String cmd = "Get-LockoutPolicy | Transfer-Encode";
+	    for (String line : new String(Base64.decode(runspace.invoke(cmd)), StringTools.UTF8).split("\r\n")) {
 		int ptr = line.indexOf("=");
 		String key=null, val=null;
 		if (ptr > 0) {

@@ -26,6 +26,7 @@ import jsaf.intf.system.ISession;
 import jsaf.intf.system.IEnvironment;
 import jsaf.intf.unix.io.IUnixFilesystem;
 import jsaf.intf.unix.system.IUnixSession;
+import jsaf.io.LittleEndian;
 import jsaf.io.StreamTool;
 import jsaf.util.SafeCLI;
 import jsaf.util.StringTools;
@@ -247,10 +248,18 @@ public class SysctlAdapter implements IAdapter {
 
 	EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
 	String value = line.substring(ptr + offset);
-	if (session.getFlavor() == IUnixSession.Flavor.MACOSX && value.startsWith("Format:S,")) {
-	    valueType.setDatatype(SimpleDatatypeEnumeration.BINARY.value());
-	    ptr = value.indexOf("Dump:0x");
-	    value = value.substring(ptr + 7);
+	if (session.getFlavor() == IUnixSession.Flavor.MACOSX) {
+	    if (name.equals("kern.threadname")) {
+		//
+		// This value is often not a printable character, so we convert it to BINARY
+		//
+		valueType.setDatatype(SimpleDatatypeEnumeration.BINARY.value());
+		value = LittleEndian.toHexString(value.getBytes());
+	    } else if (value.startsWith("Format:S,")) {
+		valueType.setDatatype(SimpleDatatypeEnumeration.BINARY.value());
+		ptr = value.indexOf("Dump:0x");
+		value = value.substring(ptr + 7);
+	    }
 	}
 	valueType.setValue(value);
 	item.getValue().add(valueType);
