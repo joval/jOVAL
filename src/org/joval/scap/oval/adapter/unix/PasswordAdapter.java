@@ -105,7 +105,7 @@ public class PasswordAdapter implements IAdapter {
 		break;
 
 	      case PATTERN_MATCH: {
-		Pattern p = Pattern.compile(username);
+		Pattern p = StringTools.pattern(username);
 		for (String s : getUsernames()) {
 		    if (p.matcher(s).find()) {
 			items.add(getPasswordItem(s, rc));

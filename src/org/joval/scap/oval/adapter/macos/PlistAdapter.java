@@ -23,6 +23,7 @@ import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
+import jsaf.util.StringTools;
 
 import com.dd.plist.NSArray;
 import com.dd.plist.NSData;
@@ -124,7 +125,7 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 		  case PATTERN_MATCH: {
 		    IFile dir = session.getFilesystem().getFile(prefs);
 		    if (dir.isDirectory()) {
-			Pattern p = Pattern.compile(appid);
+			Pattern p = StringTools.pattern(appid);
 			for (IFile f : dir.listFiles(Pattern.compile(".+\\.plist$"))) {
 			    String fname = dir.getName();
 			    String id = fname.substring(0, fname.length() - 6);
@@ -293,7 +294,7 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 		break;
 
 	      case PATTERN_MATCH:
-		Pattern p = Pattern.compile(key);
+		Pattern p = StringTools.pattern(key);
 		for (String value : listKeys(obj)) {
 		    if (p.matcher(value).find()) {
 			keys.add(value);

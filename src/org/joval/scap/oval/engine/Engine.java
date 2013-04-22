@@ -2281,7 +2281,7 @@ public class Engine implements IEngine, IProvider {
 		}
 	      case PATTERN_MATCH:
 		try {
-		    if (Pattern.compile(sStr).matcher(iStr).find()) {
+		    if (StringTools.pattern(sStr).matcher(iStr).find()) {
 			return ResultEnumeration.TRUE;
 		    } else {
 			return ResultEnumeration.FALSE;
@@ -2581,7 +2581,7 @@ public class Engine implements IEngine, IProvider {
 	//
 	} else if (object instanceof RegexCaptureFunctionType) {
 	    RegexCaptureFunctionType regexCapture = (RegexCaptureFunctionType)object;
-	    Pattern p = Pattern.compile(regexCapture.getPattern());
+	    Pattern p = StringTools.pattern(regexCapture.getPattern());
 	    Collection<IType> values = new ArrayList<IType>();
 	    for (IType value : resolveComponent(getComponent(regexCapture), rc)) {
 		Matcher m = p.matcher(value.getString());

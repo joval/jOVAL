@@ -11,6 +11,7 @@ import java.util.regex.PatternSyntaxException;
 
 import jsaf.intf.system.IEnvironment;
 import jsaf.intf.system.ISession;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -87,7 +88,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
 
 	  case PATTERN_MATCH:
 	    try {
-		Pattern p = Pattern.compile(name);
+		Pattern p = StringTools.pattern(name);
 		for (String varName : env) {
 		    if (p.matcher(varName).find()) {
 			items.add((EnvironmentvariableItem)makeItem(varName, env.getenv(varName)));

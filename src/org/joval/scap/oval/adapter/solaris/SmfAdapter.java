@@ -93,7 +93,7 @@ public class SmfAdapter implements IAdapter {
 	  case PATTERN_MATCH:
 	    loadFullServiceMap();
 	    try {
-		Pattern p = Pattern.compile((String)sObj.getFmri().getValue());
+		Pattern p = StringTools.pattern((String)sObj.getFmri().getValue());
 		for (Map.Entry<String, SmfItem> entry : serviceMap.entrySet()) {
 		    if (p.matcher(entry.getKey()).find()) {
 			items.add(entry.getValue());

@@ -83,7 +83,7 @@ public class XinetdAdapter implements IAdapter {
 	    OperationEnumeration op = xObj.getProtocol().getOperation();
 	    Pattern p = null;
 	    if (op == OperationEnumeration.PATTERN_MATCH) {
-		p = Pattern.compile(protocol);
+		p = StringTools.pattern(protocol);
 	    }
 	    for (Service service : services.values()) {
 		String serviceProtocol = "";
@@ -121,7 +121,7 @@ public class XinetdAdapter implements IAdapter {
 	    String name = (String)xObj.getServiceName().getValue();
 	    op = xObj.getServiceName().getOperation();
 	    if (op == OperationEnumeration.PATTERN_MATCH) {
-		p = Pattern.compile(name);
+		p = StringTools.pattern(name);
 	    }
 	    for (Service service : list) {
 		String serviceName = service.getName();

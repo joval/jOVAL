@@ -16,6 +16,7 @@ import java.util.regex.PatternSyntaxException;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -125,7 +126,7 @@ public class PatchAdapter implements IAdapter {
 		break;
 
 	      case PATTERN_MATCH:
-		Pattern p = Pattern.compile((String)pObj.getBase().getValue());
+		Pattern p = StringTools.pattern((String)pObj.getBase().getValue());
 		for (String base : revisions.keySet()) {
 		    if (p.matcher(base).find()) {
 			items.addAll(getItems(base));

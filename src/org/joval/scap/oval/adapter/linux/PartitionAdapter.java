@@ -67,7 +67,7 @@ public class PartitionAdapter implements IAdapter {
 	    OperationEnumeration op = pObj.getMountPoint().getOperation();
 	    Pattern p = null;
 	    if (op == OperationEnumeration.PATTERN_MATCH) {
-		p = Pattern.compile(mountPoint);
+		p = StringTools.pattern(mountPoint);
 	    }
 	    for (String mount : partitions.keySet()) {
 		switch(op) {

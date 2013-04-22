@@ -17,6 +17,7 @@ import jsaf.Message;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -85,7 +86,7 @@ public class DpkginfoAdapter implements IAdapter {
 
 	  case PATTERN_MATCH:
 	    try {
-		Pattern p = Pattern.compile(pkgName);
+		Pattern p = StringTools.pattern(pkgName);
 		for (Map.Entry<String, DpkginfoItem> entry : packages.entrySet()) {
 		    if (p.matcher(entry.getKey()).find()) {
 			items.add(entry.getValue());

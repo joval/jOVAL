@@ -78,7 +78,7 @@ public class InetdAdapter implements IAdapter {
 	    OperationEnumeration op = iObj.getProtocol().getOperation();
 	    Pattern p = null;
 	    if (op == OperationEnumeration.PATTERN_MATCH) {
-		p = Pattern.compile(protocol);
+		p = StringTools.pattern(protocol);
 	    }
 	    for (Service service : services) {
 		switch(op) {
@@ -111,7 +111,7 @@ public class InetdAdapter implements IAdapter {
 	    String serviceName = (String)iObj.getServiceName().getValue();
 	    op = iObj.getServiceName().getOperation();
 	    if (op == OperationEnumeration.PATTERN_MATCH) {
-		p = Pattern.compile(serviceName);
+		p = StringTools.pattern(serviceName);
 	    }
 	    for (Service service : list) {
 		switch(op) {

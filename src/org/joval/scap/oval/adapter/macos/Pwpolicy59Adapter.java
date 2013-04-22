@@ -81,7 +81,7 @@ public class Pwpolicy59Adapter implements IAdapter {
 	    break;
 
 	  case PATTERN_MATCH:
-	    for (String username : dscl.getUsers(Pattern.compile(value))) {
+	    for (String username : dscl.getUsers(StringTools.pattern(value))) {
 		items.add(getItem(pObj, username));
 	    }
 	    break;

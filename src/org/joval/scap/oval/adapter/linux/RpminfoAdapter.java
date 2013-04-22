@@ -17,6 +17,7 @@ import java.util.regex.PatternSyntaxException;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -87,7 +88,7 @@ public class RpminfoAdapter implements IAdapter {
 	  case PATTERN_MATCH:
 	    loadFullPackageMap();
 	    try {
-		Pattern p = Pattern.compile((String)rObj.getName().getValue());
+		Pattern p = StringTools.pattern((String)rObj.getName().getValue());
 		for (String packageName : packageMap.keySet()) {
 		    if (p.matcher(packageName).find()) {
 			items.add(packageMap.get(packageName));

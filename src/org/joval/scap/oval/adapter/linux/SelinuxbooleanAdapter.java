@@ -14,6 +14,7 @@ import java.util.regex.PatternSyntaxException;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -77,7 +78,7 @@ public class SelinuxbooleanAdapter implements IAdapter {
 	  case PATTERN_MATCH:
 	    loadBooleans();
 	    try {
-		Pattern p = Pattern.compile((String)bObj.getName().getValue());
+		Pattern p = StringTools.pattern((String)bObj.getName().getValue());
 		for (String booleanName : booleanMap.keySet()) {
 		    if (p.matcher(booleanName).find()) {
 			items.add(booleanMap.get(booleanName));

@@ -30,6 +30,7 @@ import jsaf.io.LittleEndian;
 import jsaf.io.StreamTool;
 import jsaf.util.Base64;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageLevelEnumeration;
 import scap.oval.common.MessageType;
@@ -138,7 +139,7 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 
 	  case PATTERN_MATCH:
 	    try {
-		Pattern p = Pattern.compile(hash);
+		Pattern p = StringTools.pattern(hash);
 		for (Algorithm alg : Algorithm.values()) {
 		    if (p.matcher(alg.ovalId).find()) {
 			algorithms.add(alg);

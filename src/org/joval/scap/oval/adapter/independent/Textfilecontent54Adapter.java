@@ -89,7 +89,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 	    } else {
 		flags = Pattern.MULTILINE;
 	    }
-	    Pattern pattern = Pattern.compile(StringTools.regexPosix2Java((String)tfcObj.getPattern().getValue()), flags);
+	    Pattern pattern = StringTools.pattern((String)tfcObj.getPattern().getValue(), flags);
 
 	    String s = null;
 	    switch(session.getType()) {
@@ -208,6 +208,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw e;
 	} catch (Exception e) {
+e.printStackTrace();
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());

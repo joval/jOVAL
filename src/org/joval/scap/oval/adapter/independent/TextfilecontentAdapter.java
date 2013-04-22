@@ -103,7 +103,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem>
 		    break;
 		}
 		if (handled) {
-		    Pattern p = Pattern.compile((String)tfcObj.getLine().getValue());
+		    Pattern p = StringTools.pattern((String)tfcObj.getLine().getValue());
 		    sb.append("\"").append(p.pattern().replace("\"","\\\"")).append("\"");
 		    try {
 			lines = SafeCLI.multiLine(sb.toString(), session, IUnixSession.Timeout.M);
@@ -123,7 +123,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem>
 		try {
 		    reader = new BufferedReader(new InputStreamReader(f.getInputStream(), StringTools.ASCII));
 		    String line = null;
-		    Pattern p = Pattern.compile(StringTools.regexPosix2Java((String)tfcObj.getLine().getValue()));
+		    Pattern p = StringTools.pattern((String)tfcObj.getLine().getValue());
 		    while ((line = reader.readLine()) != null) {
 			if (p.matcher(line).find()) {
 			    lines.add(line);
@@ -144,7 +144,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem>
 	    OperationEnumeration op = tfcObj.getLine().getOperation();
 	    switch (op) {
 	      case PATTERN_MATCH: {
-		Pattern p = Pattern.compile(StringTools.regexPosix2Java((String)tfcObj.getLine().getValue()));
+		Pattern p = StringTools.pattern((String)tfcObj.getLine().getValue());
 		items.addAll(getItems(p, baseItem, lines));
 		break;
 	      }

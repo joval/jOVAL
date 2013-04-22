@@ -223,7 +223,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 		    }
 		    break;
 		  case PATTERN_MATCH:
-		    Pattern p = Pattern.compile(name);
+		    Pattern p = StringTools.pattern(name);
 		    for (Map.Entry<String, IEnvironment> env : environments.entrySet()) {
 			String pid = env.getKey();
 			for (String var : env.getValue()) {

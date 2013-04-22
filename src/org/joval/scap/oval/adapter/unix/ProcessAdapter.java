@@ -24,6 +24,7 @@ import jsaf.intf.io.IFile;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -181,7 +182,7 @@ public class ProcessAdapter implements IAdapter {
 
 	  case PATTERN_MATCH:
 	    for (ProcessData process : processes) {
-		if (Pattern.compile(command).matcher((String)process.command.getValue()).find()) {
+		if (StringTools.pattern(command).matcher((String)process.command.getValue()).find()) {
 		    result.add(process);
 		}
 	    }

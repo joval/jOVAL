@@ -16,6 +16,7 @@ import jsaf.intf.io.IFilesystem;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -80,7 +81,7 @@ public class RunlevelAdapter implements IAdapter {
 
 	  case PATTERN_MATCH:
 	    try {
-		Pattern p = Pattern.compile(runlevel);
+		Pattern p = StringTools.pattern(runlevel);
 		for (String rl : runlevels.keySet()) {
 		    if (p.matcher(rl).find()) {
 			items.addAll(getItems(rObj, rc, rl));
@@ -132,7 +133,7 @@ public class RunlevelAdapter implements IAdapter {
 
               case PATTERN_MATCH:
                 try {
-                    Pattern p = Pattern.compile(serviceName);
+                    Pattern p = StringTools.pattern(serviceName);
                     for (String sn : runlevel.keySet()) {
                         if(p.matcher(sn).find()) {
                             items.add(makeItem(rl, sn, runlevel.get(sn)));

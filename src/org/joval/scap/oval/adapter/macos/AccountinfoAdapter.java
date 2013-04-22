@@ -14,6 +14,7 @@ import javax.xml.bind.JAXBElement;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageLevelEnumeration;
 import scap.oval.common.MessageType;
@@ -80,7 +81,7 @@ public class AccountinfoAdapter implements IAdapter {
 		break;
 
 	      case PATTERN_MATCH:
-		Pattern p = Pattern.compile(username);
+		Pattern p = StringTools.pattern(username);
 		for (String s : infoMap.keySet()) {
 		    if (p.matcher(s).find()) {
 			items.add(infoMap.get(s));

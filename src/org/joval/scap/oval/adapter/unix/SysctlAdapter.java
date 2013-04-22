@@ -91,7 +91,7 @@ public class SysctlAdapter implements IAdapter {
 
 	  case PATTERN_MATCH:
 	    try {
-		Pattern p = Pattern.compile(name);
+		Pattern p = StringTools.pattern(name);
 		for (Map.Entry<String, SysctlItem> entry : parameters.entrySet()) {
 		    if (p.matcher(entry.getKey()).find()) {
 			items.add(entry.getValue());
