@@ -113,7 +113,7 @@ namespace jOVAL.AccessToken {
   $Type = [jOVAL.AccessToken.Probe]
   $ErrorActionPreference = "Stop" 
   if ($Type -eq $null){
-    Add-Type $Source
+    New-Type -TypeDefinition $Source
   }
   $ErrorActionPreference = "Continue" 
   foreach ($SID in $input) {

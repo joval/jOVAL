@@ -2,7 +2,7 @@
 # This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 #
 function Get-SystemMetrics {
-  $code = @"
+  $Source = @"
     using System;
     using System.Collections.Generic;
     using System.Runtime.InteropServices;
@@ -53,7 +53,7 @@ function Get-SystemMetrics {
 
   $ErrorActionPreference = "Stop"
   if ($type -eq $null) {
-    add-type $code
+    New-Type -TypeDefinition $Source
   }
 
   $ErrorActionPreference = "Continue"

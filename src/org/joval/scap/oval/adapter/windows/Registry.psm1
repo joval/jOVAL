@@ -20,7 +20,7 @@ function Get-RegKeyLastWriteTime {
       }
     }
 
-    $code = @"
+    $Source = @"
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -87,7 +87,7 @@ namespace jOVAL.Registry {
 
     $ErrorActionPreference = "Stop" 
     if($type -eq $null){
-      add-type $code
+      New-Type -TypeDefinition $Source
     }
   }
 

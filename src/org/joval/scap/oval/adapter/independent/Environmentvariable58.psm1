@@ -281,7 +281,7 @@ namespace jOVAL.Environment58 {
   $Type = [jOVAL.Environment58.Probe]
   $ErrorActionPreference = "Stop"
   if($Type -eq $null){
-    Add-Type $Source
+    New-Type -TypeDefinition $Source
   }
   $ErrorActionPreference = "Continue"
   $Dictionary = [jOVAL.Environment58.Probe]::GetEnvironmentVariables($ProcessId)

@@ -741,7 +741,7 @@ public class Engine implements IEngine, IProvider {
 		varChecks = new Hashtable<String, CheckEnumeration>();
 		for (Method method : getMethods(clazz).values()) {
 		    String methodName = method.getName();
-		    if (methodName.startsWith("get") && !objectBaseMethodNames.contains(methodName)) {
+		    if (methodName.startsWith("get") && !OBJECT_METHOD_NAMES.contains(methodName)) {
 			Object entity = method.invoke(obj);
 			if (entity == null) {
 			    //
@@ -1975,7 +1975,7 @@ public class Engine implements IEngine, IProvider {
 	    OperatorData result = new OperatorData(false);
 	    for (Method method : getMethods(state.getClass()).values()) {
 		String methodName = method.getName();
-		if (methodName.startsWith("get") && !stateBaseMethodNames.contains(methodName)) {
+		if (methodName.startsWith("get") && !STATE_METHOD_NAMES.contains(methodName)) {
 		    Object stateEntityObj = method.invoke(state);
 		    if (stateEntityObj == null) {
 			// continue
@@ -2928,7 +2928,7 @@ public class Engine implements IEngine, IProvider {
 		} else {
 		    for (Method method : getMethods(ot.getClass()).values()) {
 			String methodName = method.getName();
-			if (methodName.startsWith("get") && !objectBaseMethodNames.contains(methodName)) {
+			if (methodName.startsWith("get") && !OBJECT_METHOD_NAMES.contains(methodName)) {
 			    results.addAll(getObjectReferences(method.invoke(ot)));
 			}
 		    }
@@ -2938,7 +2938,7 @@ public class Engine implements IEngine, IProvider {
 		reflectionId = st.getId();
 		for (Method method : getMethods(obj.getClass()).values()) {
 		    String methodName = method.getName();
-		    if (methodName.startsWith("get") && !stateBaseMethodNames.contains(methodName)) {
+		    if (methodName.startsWith("get") && !STATE_METHOD_NAMES.contains(methodName)) {
 			results.addAll(getObjectReferences(method.invoke(st)));
 		    }
 		}
@@ -3066,23 +3066,22 @@ public class Engine implements IEngine, IProvider {
 	throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_COMPONENT, unknown.getClass().getName()));
     }
 
-    private static Hashtable<Class, Hashtable<String, Method>> methodRegistry;
-    private static HashSet<String> objectBaseMethodNames;
+    private static Map<String, Map<String, Method>> METHOD_REGISTRY;
+    private static java.util.Set<String> OBJECT_METHOD_NAMES;
     static {
-	methodRegistry = new Hashtable<Class, Hashtable<String, Method>>();
-	objectBaseMethodNames = getNames(getMethods(ObjectType.class).values());
-	objectBaseMethodNames.add("getBehaviors");
-	objectBaseMethodNames.add("getFilter");
-	objectBaseMethodNames.add("getSet");
+	METHOD_REGISTRY = new HashMap<String, Map<String, Method>>();
+	OBJECT_METHOD_NAMES = getNames(getMethods(ObjectType.class).values());
+	OBJECT_METHOD_NAMES.add("getBehaviors");
+	OBJECT_METHOD_NAMES.add("getFilter");
+	OBJECT_METHOD_NAMES.add("getSet");
     }
-    private static HashSet<String> stateBaseMethodNames = getNames(getMethods(StateType.class).values());
-    private static HashSet<String> itemBaseMethodNames = getNames(getMethods(ItemType.class).values());
+    private static java.util.Set<String> STATE_METHOD_NAMES = getNames(getMethods(StateType.class).values());
 
     /**
      * List the unique names of all the no-argument methods. This is not necessarily a fast method.
      */
-    private static HashSet<String> getNames(Collection<Method> methods) {
-	HashSet<String> names = new HashSet<String>();
+    private static java.util.Set<String> getNames(Collection<Method> methods) {
+	java.util.Set<String> names = new HashSet<String>();
 	for (Method m : methods) {
 	    names.add(m.getName());
 	}
@@ -3092,24 +3091,26 @@ public class Engine implements IEngine, IProvider {
     /**
      * Use introspection to list all the no-argument methods of the specified Class, organized by name.
      */
-    private static Hashtable<String, Method> getMethods(Class clazz) {
-	Hashtable<String, Method> methods = methodRegistry.get(clazz);
-	if (methods == null) {
-	    methods = new Hashtable<String, Method>();
-	    methodRegistry.put(clazz, methods);
+    private static Map<String, Method> getMethods(Class clazz) {
+	String className = clazz.getName();
+	if (METHOD_REGISTRY.containsKey(className)) {
+	    return METHOD_REGISTRY.get(className);
+	} else {
+	    Map<String, Method> methods = new HashMap<String, Method>();
 	    Method[] m = clazz.getMethods();
 	    for (int i=0; i < m.length; i++) {
 		methods.put(m[i].getName(), m[i]);
 	    }
+	    METHOD_REGISTRY.put(className, methods);
+	    return methods;
 	}
-	return methods;
     }
 
     /**
      * Use introspection to get the no-argument method of the specified Class, with the specified name.
      */
     private static Method getMethod(Class clazz, String name) throws NoSuchMethodException {
-	Hashtable<String, Method> methods = getMethods(clazz);
+	Map<String, Method> methods = getMethods(clazz);
 	if (methods.containsKey(name)) {
 	    return methods.get(name);
 	} else {

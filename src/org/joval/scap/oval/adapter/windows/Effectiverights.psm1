@@ -8,7 +8,7 @@ function Get-EffectiveRights {
     [string]$SID = $(throw "Mandatory parameter -SID")
   )
 
-  $code = @"
+  $Source = @"
 using System;
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -103,7 +103,7 @@ namespace jOVAL.Security {
 
   $ErrorActionPreference = "Stop"
   if($type -eq $null){
-    add-type $code
+    New-Type -TypeDefinition $Source
   }
 
   $ErrorActionPreference = "Continue"
