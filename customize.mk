@@ -10,8 +10,8 @@
 #
 # JAVA_HOME is where you've installed your JDK.
 #
-#JAVA_HOME=$(TOP)/../../tools/jdk1.6.0_26
-JAVA_HOME=$(TOP)/../../tools/jdk1.7.0_03
+JAVA_HOME=$(TOP)/../../tools/jdk1.6.0_26
+#JAVA_HOME=$(TOP)/../../tools/jdk1.7.0_03
 
 #
 # JSAF_HOME is the location of the jSAF FOSS git repository
@@ -26,16 +26,8 @@ JSAF_HOME=$(TOP)/../jSAF
 JAXB_HOME=$(TOP)/../../tools/jaxb-ri-2.2.6
 
 #
-# ARCH defines the distribution target architecture.  It should correspond to your platform
-# architecture. Left unset, it will be determined automatically.
+# JRE[ARCH]_HOME is the install path for the JRE that will be bundled with the distribution of
+# architecture ARCH.
 #
-#ARCH=x86
-#ARCH=AMD64
-#ARCH=x86_64
-
-#
-# JRE_HOME is the install path for the JRE that will be bundled with the distribution. Left
-# unset, the JRE included with the JDK will be used. If you are overriding ARCH, you will
-# need to set this to a JRE of the desired architecture.
-#
-#JRE_HOME=$(TOP)/../../tools/jre170_03_x86
+JRE32_HOME=$(TOP)/../../tools/jre170_03_x86
+JRE64_HOME=$(TOP)/../../tools/jre170_03_x64

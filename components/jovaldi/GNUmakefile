@@ -6,8 +6,6 @@ TOP=../..
 include $(TOP)/common.mk
 
 PRODUCTNAME=jovaldi
-DIST_DIR=$(DIST)/$(ARCH)
-BIN_DIR=$(RSRC)/bin/$(PLATFORM)-$(ARCH)
 
 API=$(JSAF_CORE_LIB)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCAP_LIB)$(CLN)$(SVRL)
 CLASSPATH="$(CLASSLIB)$(CLN)$LIBS)$(CLN)$(API)$(CLN)$(SRC)"
@@ -41,38 +39,74 @@ $(BUILD)/%.class: $(SRC)/%.java
 $(BUILD)/%/:
 	mkdir -p $(subst PKG,,$@)
 
-dist-clean: clean
-	rm -rf $(DIST_DIR)
+dist: $(DIST)/$(ARCH)
 
-$(DIST_DIR)/jre: $(JRE_HOME)
-	mkdir -p $(DIST_DIR)
+dist-all: $(DIST)/32 $(DIST)/64
+
+dist-clean: clean
+	rm -rf $(DIST)/32
+	rm -rf $(DIST)/64
+
+$(DIST)/32: all $(DIST)/32/jre
+	cp $(RSRC)/bin/$(PLATFORM)-32/* $@
+	sed 's/\[VERSION\]/$(JOVAL_VERSION)/g' $(RSRC)/docs/Readme.txt > $(DIST)/32/Readme.txt
+	cp -R $(RSRC)/lib $(DIST)/32
+	cp -R $(RSRC)/licenses $(DIST)/32
+	cp -R $(RSRC)/xml $(DIST)/32
+	cp -R $(SCAP)/schemas/oval-$(OVAL_VERSION)/*.xsd $(DIST)/32/xml
+	cp -R $(SCAP)/schemas/xml/xmldsig-core-schema.xsd $(DIST)/32/xml
+	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST)/32/xml
+	cp $(PRODUCTNAME).jar $(DIST)/32/lib
+	cp $(SCAP_LIB) $(DIST)/32/lib
+	cp $(SVRL) $(DIST)/32/lib
+	cp $(JOVAL_CORE_LIB) $(DIST)/32/lib
+	cp $(JOVAL_CORE)/$(LIBDIR)/*.jar $(DIST)/32/lib
+	cp $(XPERT)/$(LIBDIR)/*.jar $(DIST)/32/lib
+	cp $(XPERT_LIB) $(DIST)/32/lib
+	cp -R $(XPERT)/$(RSRC)/licenses/* $(DIST)/32/licenses
+	cp $(JSAF_CORE_LIB) $(DIST)/32/lib
+	mkdir -p $(DIST)/32/security
+	cp $(XPERT)/$(RSRC)/security/cacerts.jks $(DIST)/32/security
+	rm -rf $(DIST)/32/plugin/default
+	mkdir -p $(DIST)/32/plugin/default/lib
+	cp -R $(JSAF_PROVIDER)/$(LIBDIR)/* $(DIST)/32/plugin/default/lib
+	cp $(JSAF_PROVIDER_LIB) $(DIST)/32/plugin/default/lib
+	cp -R $(PLUGIN_LOCAL)/$(RSRC)/plugin.properties $(DIST)/32/plugin/default/plugin.properties
+	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST)/32/plugin/default/lib
+
+$(DIST)/32/jre: $(JRE32_HOME)
+	mkdir -p $@
 	rm -rf $@
 	cp -R $< $@
 
-dist: all $(DIST_DIR)/jre
-	cp -R $(BIN_DIR)/* $(DIST_DIR)
-	sed 's/\[VERSION\]/$(JOVAL_VERSION)/g' $(RSRC)/docs/Readme.txt > $(DIST_DIR)/Readme.txt
-	cp -R $(RSRC)/lib $(DIST_DIR)
-	cp -R $(RSRC)/licenses $(DIST_DIR)
-	cp -R $(RSRC)/xml $(DIST_DIR)
-	cp -R $(SCAP)/schemas/oval-$(OVAL_VERSION)/*.xsd $(DIST_DIR)/xml
-	cp -R $(SCAP)/schemas/xml/xmldsig-core-schema.xsd $(DIST_DIR)/xml
-	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST_DIR)/xml
-	cp $(PRODUCTNAME).jar $(DIST_DIR)/lib
-	cp $(SCAP_LIB) $(DIST_DIR)/lib
-	cp $(SVRL) $(DIST_DIR)/lib
-	cp $(JOVAL_CORE_LIB) $(DIST_DIR)/lib
-	cp $(JOVAL_CORE)/$(LIBDIR)/*.jar $(DIST_DIR)/lib
-	cp $(XPERT)/$(LIBDIR)/*.jar $(DIST_DIR)/lib
-	cp $(XPERT_LIB) $(DIST_DIR)/lib
-	cp -R $(XPERT)/$(RSRC)/licenses/* $(DIST_DIR)/licenses
-	cp $(JSAF_CORE_LIB) $(DIST_DIR)/lib
-	mkdir -p $(DIST_DIR)/security
-	cp $(XPERT)/$(RSRC)/security/cacerts.jks $(DIST_DIR)/security
-	rm -rf $(DIST_DIR)/plugin/default
-	mkdir -p $(DIST_DIR)/plugin/default/lib
-	cp -R $(JSAF_PROVIDER)/$(LIBDIR)/* $(DIST_DIR)/plugin/default/lib
-	cp $(JSAF_PROVIDER_LIB) $(DIST_DIR)/plugin/default/lib
-	cp -R $(PLUGIN_LOCAL)/$(RSRC)/plugin.properties $(DIST_DIR)/plugin/default/plugin.properties
-	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST_DIR)/plugin/default/lib
-	cp $(PLUGIN_LOCAL_LIB) $(DIST_DIR)/plugin/default/lib
+$(DIST)/64: all $(DIST)/64/jre
+	cp $(RSRC)/bin/$(PLATFORM)-64/* $@
+	sed 's/\[VERSION\]/$(JOVAL_VERSION)/g' $(RSRC)/docs/Readme.txt > $(DIST)/64/Readme.txt
+	cp -R $(RSRC)/lib $(DIST)/64
+	cp -R $(RSRC)/licenses $(DIST)/64
+	cp -R $(RSRC)/xml $(DIST)/64
+	cp -R $(SCAP)/schemas/oval-$(OVAL_VERSION)/*.xsd $(DIST)/64/xml
+	cp -R $(SCAP)/schemas/xml/xmldsig-core-schema.xsd $(DIST)/64/xml
+	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST)/64/xml
+	cp $(PRODUCTNAME).jar $(DIST)/64/lib
+	cp $(SCAP_LIB) $(DIST)/64/lib
+	cp $(SVRL) $(DIST)/64/lib
+	cp $(JOVAL_CORE_LIB) $(DIST)/64/lib
+	cp $(JOVAL_CORE)/$(LIBDIR)/*.jar $(DIST)/64/lib
+	cp $(XPERT)/$(LIBDIR)/*.jar $(DIST)/64/lib
+	cp $(XPERT_LIB) $(DIST)/64/lib
+	cp -R $(XPERT)/$(RSRC)/licenses/* $(DIST)/64/licenses
+	cp $(JSAF_CORE_LIB) $(DIST)/64/lib
+	mkdir -p $(DIST)/64/security
+	cp $(XPERT)/$(RSRC)/security/cacerts.jks $(DIST)/64/security
+	rm -rf $(DIST)/64/plugin/default
+	mkdir -p $(DIST)/64/plugin/default/lib
+	cp -R $(JSAF_PROVIDER)/$(LIBDIR)/* $(DIST)/64/plugin/default/lib
+	cp $(JSAF_PROVIDER_LIB) $(DIST)/64/plugin/default/lib
+	cp -R $(PLUGIN_LOCAL)/$(RSRC)/plugin.properties $(DIST)/64/plugin/default/plugin.properties
+	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST)/64/plugin/default/lib
+
+$(DIST)/64/jre: $(JRE64_HOME)
+	mkdir -p $@
+	rm -rf $@
+	cp -R $< $@

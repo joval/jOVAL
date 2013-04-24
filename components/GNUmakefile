@@ -5,7 +5,12 @@ TOP=..
 
 include $(TOP)/common.mk
 
-all: _jovaldi
+all: _engine _plugin _schematron _xpert
+	@$(MAKE) --keep-going --directory=jovaldi dist
+
+full: _engine _plugin _schematron _xpert
+	@$(MAKE) --keep-going --directory=jovaldi dist-all
+
 
 # Target to build everything but the data models
 rebuild:
@@ -25,9 +30,6 @@ clean: logic-clean
 	@$(MAKE) --keep-going --directory=$(JSAF_COMPONENTS) clean
 	@$(MAKE) --keep-going --directory=scap clean
 	@$(MAKE) --keep-going --directory=schematron clean
-
-_jovaldi: _engine _plugin _schematron _xpert
-	@$(MAKE) --keep-going --directory=jovaldi dist
 
 _engine: _jsaf-core _scap
 	@$(MAKE) --keep-going --directory=engine all
