@@ -17,7 +17,7 @@ ifeq (Windows, $(findstring Windows,$(OS)))
   JAVACFLAGS=-Xlint:unchecked
   ifeq (x, x$(ARCH))
     ifeq (x, x$(PROCESSOR_ARCHITEW6432))
-      ifeq (x86, $(findstring x86,$(PROCESSOR_ARCHITECTURE))
+      ifeq (x86, $(findstring x86,$(PROCESSOR_ARCHITECTURE)))
         ARCH=32
       else
         ARCH=64
@@ -30,7 +30,7 @@ else
   OS=$(shell uname)
   CLN=:
   JAVACFLAGS=-Xlint:unchecked -XDignore.symbol.file=true -Xbootclasspath/p:$(JAXB_HOME)/lib/jaxb-api.jar:$(JAXB_HOME)/lib/jaxb-impl.jar
-  ifeq (64, $(findstring 64,$(shell uname -p))
+  ifeq (64, $(findstring 64,$(shell uname -p)))
     ARCH=64
   else
     ARCH=32
