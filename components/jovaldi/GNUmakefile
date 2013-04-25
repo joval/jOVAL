@@ -73,6 +73,7 @@ $(DIST)/32: all $(DIST)/32/jre
 	cp $(JSAF_PROVIDER_LIB) $(DIST)/32/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL)/$(RSRC)/plugin.properties $(DIST)/32/plugin/default/plugin.properties
 	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST)/32/plugin/default/lib
+	cp $(PLUGIN_LOCAL_LIB) $(DIST)/32/plugin/default/lib
 
 $(DIST)/32/jre: $(JRE32_HOME)
 	mkdir -p $@
@@ -105,6 +106,7 @@ $(DIST)/64: all $(DIST)/64/jre
 	cp $(JSAF_PROVIDER_LIB) $(DIST)/64/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL)/$(RSRC)/plugin.properties $(DIST)/64/plugin/default/plugin.properties
 	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST)/64/plugin/default/lib
+	cp $(PLUGIN_LOCAL_LIB) $(DIST)/64/plugin/default/lib
 
 $(DIST)/64/jre: $(JRE64_HOME)
 	mkdir -p $@
