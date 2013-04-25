@@ -35,6 +35,7 @@ import javax.xml.transform.stream.StreamSource;
 import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
+import scap.oval.common.GeneratorType;
 import scap.oval.common.MessageType;
 import scap.oval.systemcharacteristics.core.CollectedObjectsType;
 import scap.oval.systemcharacteristics.core.FlagEnumeration;
@@ -89,6 +90,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     }
 
     private LocLogger logger = JOVALMsg.getLogger();
+    private GeneratorType generator;
     private SystemInfoType systemInfo;
     private Map<String, ObjectData> objectTable;
     private Map<BigInteger, ItemType> itemTable;
@@ -105,10 +107,20 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     SystemCharacteristics() {
 	objectTable = new HashMap<String, ObjectData>();
 	itemTable = new HashMap<BigInteger, ItemType>();
+	itemChecksums = new HashMap<String, Collection<BigInteger>>();
 	variableTable = new HashMap<String, Collection<VariableValueType>>();
 	objectItemTable = new HashMap<String, Collection<BigInteger>>();
 	objectVariableTable = new HashMap<String, Collection<String>>();
 	variableTable = new HashMap<String, Collection<VariableValueType>>();
+	try {
+	    marshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext().createMarshaller();
+	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.SC);
+	} catch (JAXBException e) {
+	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (FactoryConfigurationError e) {
+	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	generator = OvalFactory.getGenerator();
     }
 
     /**
@@ -124,15 +136,6 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     public SystemCharacteristics(SystemInfoType systemInfo) {
 	this();
 	this.systemInfo = systemInfo;
-	itemChecksums = new HashMap<String, Collection<BigInteger>>();
-	try {
-	    marshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext().createMarshaller();
-	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.SC);
-	} catch (JAXBException e) {
-	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (FactoryConfigurationError e) {
-	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
     }
 
     /**
@@ -140,10 +143,12 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
      */
     public SystemCharacteristics(OvalSystemCharacteristics osc) throws OvalException {
 	this();
+	generator = osc.getGenerator();
 	systemInfo = osc.getSystemInfo();
 
 	for (JAXBElement<? extends ItemType> item : osc.getSystemData().getItem()) {
-	    storeItem(item.getValue());
+	    itemTable.put(item.getValue().getId(), item.getValue());
+	    itemCounter++;
 	}
 
 	for (ObjectType obj : osc.getCollectedObjects().getObject()) {
@@ -199,7 +204,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     //
     public OvalSystemCharacteristics getOvalSystemCharacteristics(boolean mask) {
 	OvalSystemCharacteristics sc = Factories.sc.core.createOvalSystemCharacteristics();
-	sc.setGenerator(OvalFactory.getGenerator());
+	sc.setGenerator(generator);
 	sc.setSystemInfo(systemInfo);
 
 	CollectedObjectsType objects = Factories.sc.core.createCollectedObjectsType();
