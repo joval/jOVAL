@@ -37,6 +37,7 @@ import jsaf.util.StringTools;
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
 import scap.oval.common.OperationEnumeration;
+import scap.oval.common.SimpleDatatypeEnumeration;
 import scap.oval.definitions.core.ObjectType;
 import scap.oval.definitions.independent.Environmentvariable58Object;
 import scap.oval.systemcharacteristics.core.ItemType;
@@ -66,11 +67,16 @@ public class Environmentvariable58Adapter implements IAdapter {
 
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
-	try {
+	switch(session.getType()) {
+	  case UNIX:
+	  case WINDOWS:
 	    this.session = session;
 	    classes.add(Environmentvariable58Object.class);
-	} catch (UnsupportedOperationException e) {
+	    break;
+
+	  default:
 	    notapplicable.add(Environmentvariable58Object.class);
+	    break;
 	}
 	return classes;
     }
@@ -92,7 +98,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 	//
 	Environmentvariable58Object eObj = (Environmentvariable58Object)obj;
 	HashMap<String, IEnvironment> environments = new HashMap<String, IEnvironment>();
-	if (eObj.isSetPid() && !XSITools.isNil(eObj.getPid())) {
+	if (!XSITools.isNil(eObj.getPid())) {
 	    OperationEnumeration op = eObj.getPid().getValue().getOperation();
 	    String pid = (String)eObj.getPid().getValue().getValue();
 	    try {
@@ -172,6 +178,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 	    msg.setLevel(MessageLevelEnumeration.INFO);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_NO_PROCESS, session.getHostname()));
 	    rc.addMessage(msg);
+	    environments.put("", session.getEnvironment());
 	}
 
 	//
@@ -261,6 +268,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 
 	if (pid.length() > 0) { // handle the special case with no PID
 	    EntityItemIntType pidType = Factories.sc.core.createEntityItemIntType();
+	    pidType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    pidType.setValue(pid);
 	    item.setPid(pidType);
 	}
