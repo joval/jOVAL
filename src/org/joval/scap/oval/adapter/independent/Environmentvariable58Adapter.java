@@ -98,7 +98,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 	//
 	Environmentvariable58Object eObj = (Environmentvariable58Object)obj;
 	HashMap<String, IEnvironment> environments = new HashMap<String, IEnvironment>();
-	if (!XSITools.isNil(eObj.getPid())) {
+	if (!XSITools.isNil(eObj.getPid()) && ((String)eObj.getPid().getValue().getValue()).length() > 0) {
 	    OperationEnumeration op = eObj.getPid().getValue().getOperation();
 	    String pid = (String)eObj.getPid().getValue().getValue();
 	    try {
