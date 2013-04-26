@@ -194,69 +194,70 @@ public class Environmentvariable58Adapter implements IAdapter {
 	// Then, filter the environment data according to the specified variable name.
 	//
 	Collection<Environmentvariable58Item> items = new ArrayList<Environmentvariable58Item>();
-	if (eObj.isSetName() && eObj.getName().getValue() != null) {
-	    OperationEnumeration op = eObj.getName().getOperation();
-	    String name = (String)eObj.getName().getValue();
-	    try {
-		switch(op) {
-		  case EQUALS:
-		    for (Map.Entry<String, IEnvironment> env : environments.entrySet()) {
-			String pid = env.getKey();
-			for (String var : env.getValue()) {
-			    if (name.equals(var)) {
-				items.add(makeItem(pid, var, env.getValue().getenv(var)));
-			    }
-			}
+	OperationEnumeration op = eObj.getName().getOperation();
+	String name = (String)eObj.getName().getValue();
+	try {
+	    switch(op) {
+	      case EQUALS:
+		for (Map.Entry<String, IEnvironment> env : environments.entrySet()) {
+		    String pid = env.getKey();
+		    String value = env.getValue().getenv(name);
+		    if (value != null) {
+			items.add(makeItem(pid, name, value));
 		    }
-		    break;
-		  case CASE_INSENSITIVE_EQUALS:
-		    for (Map.Entry<String, IEnvironment> env : environments.entrySet()) {
-			String pid = env.getKey();
-			for (String var : env.getValue()) {
-			    if (name.equalsIgnoreCase(var)) {
-				items.add(makeItem(pid, var, env.getValue().getenv(var)));
-			    }
-			}
-		    }
-		    break;
-		  case NOT_EQUAL:
-		    for (Map.Entry<String, IEnvironment> env : environments.entrySet()) {
-			String pid = env.getKey();
-			for (String var : env.getValue()) {
-			    if (!name.equals(var)) {
-				items.add(makeItem(pid, var, env.getValue().getenv(var)));
-			    }
-			}
-		    }
-		    break;
-		  case PATTERN_MATCH:
-		    Pattern p = StringTools.pattern(name);
-		    for (Map.Entry<String, IEnvironment> env : environments.entrySet()) {
-			String pid = env.getKey();
-			for (String var : env.getValue()) {
-			    if (p.matcher(var).find()) {
-				items.add(makeItem(pid, var, env.getValue().getenv(var)));
-			    }
-			}
-		    }
-		    break;
-		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
-	    } catch (PatternSyntaxException e) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-		rc.addMessage(msg);
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-	} else {
-	    for (Map.Entry<String, IEnvironment> env : environments.entrySet()) {
-		for (String var : env.getValue()) {
-		    items.add(makeItem(env.getKey(), var, env.getValue().getenv(var)));
+		break;
+	      case CASE_INSENSITIVE_EQUALS:
+		for (Map.Entry<String, IEnvironment> env : environments.entrySet()) {
+		    String pid = env.getKey();
+		    for (String var : env.getValue()) {
+			if (name.equalsIgnoreCase(var)) {
+			    items.add(makeItem(pid, var, env.getValue().getenv(var)));
+			}
+		    }
 		}
+		break;
+	      case NOT_EQUAL:
+		for (Map.Entry<String, IEnvironment> env : environments.entrySet()) {
+		    String pid = env.getKey();
+		    for (String var : env.getValue()) {
+			if (!name.equals(var)) {
+			    items.add(makeItem(pid, var, env.getValue().getenv(var)));
+			}
+		    }
+		}
+		break;
+	      case CASE_INSENSITIVE_NOT_EQUAL:
+		for (Map.Entry<String, IEnvironment> env : environments.entrySet()) {
+		    String pid = env.getKey();
+		    for (String var : env.getValue()) {
+			if (!name.equalsIgnoreCase(var)) {
+			    items.add(makeItem(pid, var, env.getValue().getenv(var)));
+			}
+		    }
+		}
+		break;
+	      case PATTERN_MATCH:
+		Pattern p = StringTools.pattern(name);
+		for (Map.Entry<String, IEnvironment> env : environments.entrySet()) {
+		    String pid = env.getKey();
+		    for (String var : env.getValue()) {
+			if (p.matcher(var).find()) {
+			    items.add(makeItem(pid, var, env.getValue().getenv(var)));
+			}
+		    }
+		}
+		break;
+	      default:
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
+	} catch (PatternSyntaxException e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
+	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return items;
     }
@@ -511,7 +512,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 		    }
 		}
 	    }
-	    return new Environment(processEnv);
+	    return new Environment(processEnv, true);
 	}
     }
 }

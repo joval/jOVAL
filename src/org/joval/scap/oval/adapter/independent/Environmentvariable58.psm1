@@ -287,7 +287,7 @@ namespace jOVAL.Environment58 {
   $Dictionary = [jOVAL.Environment58.Probe]::GetEnvironmentVariables($ProcessId)
   foreach ($Entry in $Dictionary) {
     if ($Entry -ne $null) {
-      Write-Output "$($Entry.Key.ToUpper())=$($Entry.Value)"
+      Write-Output "$($Entry.Key)=$($Entry.Value)"
     }
   }
 }

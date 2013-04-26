@@ -81,7 +81,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	  case NOT_EQUAL:
 	    for (String varName : env) {
 		if (!name.equals(varName)) {
-		    items.add((EnvironmentvariableItem)makeItem(name, env.getenv(varName)));
+		    items.add((EnvironmentvariableItem)makeItem(varName, env.getenv(varName)));
 		}
 	    }
 	    break;
