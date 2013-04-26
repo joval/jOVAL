@@ -30,6 +30,8 @@ import javax.xml.datatype.DatatypeConfigurationException;
 
 import org.slf4j.cal10n.LocLogger;
 import jsaf.intf.system.ISession;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.intf.windows.system.IWindowsSession;
 
 import scap.cpe.dictionary.ListType;
 import scap.cpe.language.LogicalTestType;
@@ -636,7 +638,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	if (user != null) {
 	    IdentityType identity = FACTORY.createIdentityType();
 	    identity.setValue(user);
-	    if ("root".equals(user) || "Administrator".equals(user)) {
+	    if (IUnixSession.ROOT.equals(user) || IWindowsSession.ADMINISTRATOR.equalsIgnoreCase(user)) {
 		identity.setPrivileged(true);
 	    }
 	    identity.setAuthenticated(true);

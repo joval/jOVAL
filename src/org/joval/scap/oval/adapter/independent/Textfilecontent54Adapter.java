@@ -90,63 +90,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 		flags = Pattern.MULTILINE;
 	    }
 	    Pattern pattern = StringTools.pattern((String)tfcObj.getPattern().getValue(), flags);
-
-	    String s = null;
-	    switch(session.getType()) {
-	      //
-	      // On Unix, leverage cat, gzip and uuencode or base64 to read the file contents from the command-line. This
-	      // makes it possible to leverage elevated privileges, if they're set.
-	      //
-	      case UNIX: {
-		IUnixSession us = (IUnixSession)session;
-		for (int attempt=1; attempt < 3; attempt++) {
-		    try {
-			StringBuffer sb = new StringBuffer();
-			StringBuffer cmd = new StringBuffer("cat '").append(f.getPath()).append("' | gzip -c");
-			switch(us.getFlavor()) {
-			  //
-			  // Use entire output of base64
-			  //
-			  case LINUX:
-			    cmd.append(" | base64 -");
-			    for (String line : SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.M)) {
-				sb.append(line);
-			    }
-			    break;
-
-			  //
-			  // Skip first and last line of uuencode output
-			  //
-			  case AIX:
-			  case MACOSX:
-			  case SOLARIS:
-			    cmd.append(" | uuencode -m -");
-			    List<String> output = SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.M);
-			    int end = output.size() - 1;
-			    for (int i=1; i < end; i++) {
-				sb.append(output.get(i));
-			    }
-			    break;
-			}
-			s = readASCIIString(new ByteArrayInputStream(Base64.decode(sb.toString())));
-			break;
-		    } catch (IOException e) {
-			session.getLogger().warn(e.getMessage());
-		    }
-		}
-		if (s != null) {
-		    break;
-		}
-		// else fall-thru
-	      }
-
-	      //
-	      // By default, use the IFile to read the contents into the String.
-	      //
-	      default:
-		s = readASCIIString(f.getInputStream());
-		break;
-	    }
+	    String s = readASCIIString(f.getInputStream());
 
 	    //
 	    // Find all the matching items
