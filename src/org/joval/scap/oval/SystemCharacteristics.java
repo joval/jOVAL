@@ -398,8 +398,6 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     public void writeXML(File f) {
 	OutputStream out = null;
 	try {
-	    Marshaller marshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext().createMarshaller();
-	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.SC);
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(getOvalSystemCharacteristics(false), out);
 	} catch (JAXBException e) {
