@@ -538,6 +538,10 @@
     <jxb:bindings node="xs:element[@name='accesstoken_state']//xs:element[@name='security_principle']">
         <jxb:property name="security_principal" />
     </jxb:bindings>
+    <!-- Compensate for confusion between setrustedcredmanaccessnameright and setrustedcredmanaccessnameprivilege -->
+    <jxb:bindings node="xs:element[@name='accesstoken_state']//xs:element[@name='setrustedcredmanaccessnameright']">
+        <jxb:property name="setrustedcredmanaccessnameprivilege" />
+    </jxb:bindings>
     <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='file_state']//xs:element[@name='version']">
         <jxb:property name="file_version" />
@@ -570,6 +574,10 @@
     <!-- Compensate for confusion between principle and principal -->
     <jxb:bindings node="xs:element[@name='accesstoken_item']//xs:element[@name='security_principle']">
         <jxb:property name="security_principal" />
+    </jxb:bindings>
+    <!-- Compensate for confusion between setrustedcredmanaccessnameright and setrustedcredmanaccessnameprivilege -->
+    <jxb:bindings node="xs:element[@name='accesstoken_item']//xs:element[@name='setrustedcredmanaccessnameright']">
+        <jxb:property name="setrustedcredmanaccessnameprivilege" />
     </jxb:bindings>
     <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='file_item']//xs:element[@name='version']">

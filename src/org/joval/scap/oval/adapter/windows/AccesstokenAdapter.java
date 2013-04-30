@@ -269,7 +269,7 @@ public class AccesstokenAdapter implements IAdapter {
 	item.setSedenynetworklogonright(FALSE);
 	item.setSedenyremoteInteractivelogonright(FALSE);
 	item.setSedenyservicelogonright(FALSE);
-	item.setSetrustedcredmanaccessnameright(FALSE);
+	item.setSetrustedcredmanaccessnameprivilege(FALSE);
 
 	//
 	// Set discoverd tokens to TRUE
@@ -364,7 +364,7 @@ public class AccesstokenAdapter implements IAdapter {
 	    } else if ("sedenyservicelogonright".equalsIgnoreCase(privilege)) {
 		item.setSedenyservicelogonright(TRUE);
 	    } else if ("setrustedcredmanaccessprivilege".equalsIgnoreCase(privilege)) {
-		item.setSetrustedcredmanaccessnameright(TRUE);
+		item.setSetrustedcredmanaccessnameprivilege(TRUE);
 	    } else {
 		session.getLogger().warn(JOVALMsg.ERROR_WIN_ACCESSTOKEN_TOKEN, privilege);
 	    }
