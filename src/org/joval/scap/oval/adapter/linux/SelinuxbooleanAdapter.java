@@ -38,21 +38,17 @@ import org.joval.util.JOVALMsg;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SelinuxbooleanAdapter implements IAdapter {
+class SelinuxbooleanAdapter implements IAdapter {
     private IUnixSession session;
     private Hashtable<String, SelinuxbooleanItem> booleanMap;
 
     // Implement IAdapter
 
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	this.session = (IUnixSession)session;
+	booleanMap = new Hashtable<String, SelinuxbooleanItem>();
 	Collection<Class> classes = new ArrayList<Class>();
-	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.LINUX) {
-	    this.session = (IUnixSession)session;
-	    booleanMap = new Hashtable<String, SelinuxbooleanItem>();
-	    classes.add(SelinuxbooleanObject.class);
-	} else {
-	    notapplicable.add(SelinuxbooleanObject.class);
-	}
+	classes.add(SelinuxbooleanObject.class);
 	return classes;
     }
 

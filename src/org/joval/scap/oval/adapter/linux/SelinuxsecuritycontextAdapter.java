@@ -9,7 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 import java.util.StringTokenizer;
@@ -49,26 +50,22 @@ import org.joval.util.JOVALMsg;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SelinuxsecuritycontextAdapter extends BaseFileAdapter<SelinuxsecuritycontextItem> {
+class SelinuxsecuritycontextAdapter extends BaseFileAdapter<SelinuxsecuritycontextItem> {
     private IUnixSession us;
-    private Hashtable<Integer, SelinuxsecuritycontextItem> processMap;
+    private Map<Integer, SelinuxsecuritycontextItem> processMap;
 
     // Implement IAdapter
 
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	baseInit(session);
+	us = (IUnixSession)session;
+	processMap = new HashMap<Integer, SelinuxsecuritycontextItem>();
 	Collection<Class> classes = new ArrayList<Class>();
-	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.LINUX) {
-	    baseInit(session);
-	    us = (IUnixSession)session;
-	    processMap = new Hashtable<Integer, SelinuxsecuritycontextItem>();
-	    classes.add(SelinuxsecuritycontextObject.class);
-	} else {
-	    notapplicable.add(SelinuxsecuritycontextObject.class);
-	}
+	classes.add(SelinuxsecuritycontextObject.class);
 	return classes;
     }
 
-    // Implement IAdapter
+    // Implement IProvider
 
     @Override
     public Collection<SelinuxsecuritycontextItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
@@ -106,6 +103,7 @@ public class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecuri
 		parseSecurityContextData(baseItem, info.getExtendedData(IUnixFileInfo.SELINUX_DATA));
 		return Arrays.asList(baseItem);
 	    } catch (NoSuchElementException e) {
+		// this should never happen!
 	    }
 	}
 
