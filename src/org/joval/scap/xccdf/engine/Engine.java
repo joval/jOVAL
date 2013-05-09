@@ -477,14 +477,18 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	// Note - only selected rules will be in the resultMap at this point
 	BenchmarkType bt = ctx.getBenchmark().getBenchmark();
 	for (Model model : bt.getModel()) {
-	    ScoreKeeper sk = computeScore(resultMap, bt, ScoringModel.fromModel(model));
-	    ScoreType scoreType = FACTORY.createScoreType();
-	    scoreType.setSystem(model.getSystem());
-	    String score = Float.toString(sk.getScore());
-	    scoreType.setValue(new BigDecimal(score));
-	    scoreType.setMaximum(new BigDecimal(Float.toString(sk.getMaxScore())));
-	    testResult.getScore().add(scoreType);
-	    logger.info(JOVALMsg.STATUS_XCCDF_SCORE, model.getSystem(), score);
+	    try {
+		ScoreKeeper sk = computeScore(resultMap, bt, ScoringModel.fromModel(model));
+		ScoreType scoreType = FACTORY.createScoreType();
+		scoreType.setSystem(model.getSystem());
+		String score = Float.toString(sk.getScore());
+		scoreType.setValue(new BigDecimal(score));
+		scoreType.setMaximum(new BigDecimal(Float.toString(sk.getMaxScore())));
+		testResult.getScore().add(scoreType);
+		logger.info(JOVALMsg.STATUS_XCCDF_SCORE, model.getSystem(), score);
+	    } catch (IllegalArgumentException e) {
+		logger.warn(JOVALMsg.ERROR_XCCDF_MODEL, e.getMessage());
+	    }
 	}
     }
 
