@@ -82,7 +82,6 @@ import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.intf.xml.ITransformable;
-import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
 import org.joval.scap.arf.ArfException;
 import org.joval.scap.arf.Report;

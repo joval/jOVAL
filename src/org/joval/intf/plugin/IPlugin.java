@@ -120,4 +120,9 @@ public interface IPlugin extends ILoggable {
      * When you're completely finished using the plugin, call this method to clean up caches and other resources.
      */
     void dispose();
+
+    /**
+     * Get a named service of the plugin.
+     */
+    Object getService(String name);
 }

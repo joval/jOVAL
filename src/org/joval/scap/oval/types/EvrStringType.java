@@ -16,6 +16,26 @@ import org.joval.intf.scap.oval.IType;
  * @version %I% %G%
  */
 public class EvrStringType extends AbstractType {
+    public static void main(String[] argv) {
+	EvrStringType evr1 = new EvrStringType(argv[0]);
+	EvrStringType evr2 = new EvrStringType(argv[1]);
+	int result = evr1.compareTo(evr2);
+	switch(result) {
+	  case 1:
+	    System.out.println(evr1.getString() + " > " + evr2.getString());
+	    break;
+	  case 0:
+	    System.out.println(evr1.getString() + " = " + evr2.getString());
+	    break;
+	  case -1:
+	    System.out.println(evr1.getString() + " < " + evr2.getString());
+	    break;
+	  default:
+	    System.out.println("Unexpected result: " + result);
+	    break;
+	}
+    }
+
     private String data;
 
     public EvrStringType(String data) {
@@ -57,8 +77,8 @@ public class EvrStringType extends AbstractType {
 	    return 0;
 	}
 
-	byte[] b1 = data.getBytes();
-	byte[] b2 = other.data.getBytes();
+	byte[] b1 = data.getBytes(StringTools.ASCII);
+	byte[] b2 = other.data.getBytes(StringTools.ASCII);
 	int i1 = 0, i2 = 0;
 	boolean isNum = false;
 

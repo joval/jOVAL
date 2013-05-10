@@ -193,6 +193,10 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 	return SysinfoFactory.createSystemInfo(session);
     }
 
+    public Object getService(String name) {
+	throw new UnsupportedOperationException("getService");
+    }
+
     // Implement IProvider
 
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException {

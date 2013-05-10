@@ -6,7 +6,8 @@ TOP=../..
 include $(TOP)/common.mk
 
 API=$(JSAF_CORE_LIB)$(CLN)$(SCAP_LIB)
-CLASSPATH="$(CLASSLIB)$(CLN)$(LIBS)$(CLN)$(SRC)$(CLN)$(API)"
+CLASSPATH="$(CLASSLIB)$(CLN)$(LIBS)$(CLN)$(API)$(CLN)$(SRC)"
+RUNTIMECP="$(CLASSLIB)$(CLN)$(LIBS)$(CLN)$(API)$(CLN)$(JOVAL_CORE_LIB)"
 
 include classes.mk
 
@@ -43,3 +44,6 @@ $(BUILD)/%.class: $(SRC)/%.java
 
 $(BUILD)/%/:
 	mkdir -p $(subst PKG,,$@)
+
+test:
+	$(JRE) -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.scap.oval.types.EvrStringType 32:9.8.2-0.17.rc1.el6.3 32:9.8.2-0.17.rc1.el6_4.4
