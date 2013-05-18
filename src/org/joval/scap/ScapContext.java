@@ -381,6 +381,7 @@ public abstract class ScapContext implements IScapContext {
      */
     private ProfileType resolve(ProfileType base) {
 	ProfileType profile = XCCDF.createProfileType();
+	profile.getTitle().addAll(base.getTitle());
 
 	//
 	// Inheritance
