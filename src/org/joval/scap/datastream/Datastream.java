@@ -70,6 +70,7 @@ public class Datastream implements IDatastream, ILoggable {
     private Dictionary dictionary;
     private Map<String, Object> hrefMap;
     private Map<String, Component> components;
+    private Map<String, IBenchmark> benchmarks;
     private Map<String, ExtendedComponent> extendedComponents;
 
     /**
@@ -83,8 +84,12 @@ public class Datastream implements IDatastream, ILoggable {
 	// Index all the components available in the Datastream collection
 	//
 	components = new HashMap<String, Component>();
+	benchmarks = new HashMap<String, IBenchmark>();
 	for (Component component : dsc.getComponent()) {
 	    components.put(component.getId(), component);
+	    if (component.isSetBenchmark()) {
+		benchmarks.put(component.getBenchmark().getBenchmarkId(), new Benchmark(component.getBenchmark()));
+	    }
 	}
 	extendedComponents = new HashMap<String, ExtendedComponent>();
 	for (ExtendedComponent component : dsc.getExtendedComponent()) {
@@ -146,75 +151,36 @@ public class Datastream implements IDatastream, ILoggable {
     }
 
     /**
-     * Return a collection of Benchmark component IDs, for the given stream ID.
+     * Return a collection of Benchmark IDs, for the given stream ID.
      */
     public Collection<String> getBenchmarkIds() {
-	Collection<String> benchmarkIds = new ArrayList<String>();
-	for (ComponentRef ref : stream.getChecklists().getComponentRef()) {
-	    String href = ref.getHref();
-	    if (href.startsWith("#")) {
-		href = href.substring(1);
-	    }
-	    benchmarkIds.add(href);
-	}
-	return benchmarkIds; 
+	return benchmarks.keySet();
     }
 
-    public IBenchmark getBenchmark(String benchmarkId) throws NoSuchElementException, XccdfException {
-	Component comp = getComponent(benchmarkId);
-	if (comp.isSetBenchmark()) {
-	    return new Benchmark(comp);
+    public IBenchmark getBenchmark(String benchmarkId) throws NoSuchElementException {
+	if (benchmarks.containsKey(benchmarkId)) {
+	    return benchmarks.get(benchmarkId);
+	} else {
+	    throw new NoSuchElementException(benchmarkId);
 	}
-	throw new NoSuchElementException(benchmarkId);
     }
 
     public Collection<String> getProfileIds(String benchmarkId) throws NoSuchElementException {
-	Component comp = getComponent(benchmarkId);
-	if (comp.isSetBenchmark()) {
-	    Collection<String> result = new ArrayList<String>();
-	    for (ProfileType profile : comp.getBenchmark().getProfile()) {
-		result.add(profile.getProfileId());
-	    }
-	    return result;
+	Collection<String> result = new ArrayList<String>();
+	for (ProfileType profile : getBenchmark(benchmarkId).getBenchmark().getProfile()) {
+	    result.add(profile.getProfileId());
 	}
-	throw new NoSuchElementException(benchmarkId);
+	return result;
     }
 
     public IScapContext getContext(ITailoring tailoring, String profileId) throws NoSuchElementException, ScapException {
-	String benchmarkId = tailoring.getBenchmarkId();
-	if (components.containsKey(benchmarkId)) {
-	    Component comp = components.get(benchmarkId);
-	    if (comp.isSetBenchmark()) {
-		return new Context(new Benchmark(comp), tailoring.getProfile(profileId));
-	    } else {
-		throw new ScapException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, benchmarkId, "XCCDF"));
-	    }
-	} else {
-	    throw new NoSuchElementException(benchmarkId);
-	}
+	IBenchmark benchmark = getBenchmark(tailoring.getBenchmarkId());
+	return new Context(benchmark, benchmark.getProfile(profileId));
     }
 
     public IScapContext getContext(String benchmarkId, String profileId) throws NoSuchElementException, ScapException {
-	if (components.containsKey(benchmarkId)) {
-	    Component comp = components.get(benchmarkId);
-	    if (comp.isSetBenchmark()) {
-		BenchmarkType bt = comp.getBenchmark();
-		if (profileId == null) {
-		    return new Context(new Benchmark(comp), null);
-		} else {
-		    for (ProfileType profile : bt.getProfile()) {
-			if (profile.getProfileId().equals(profileId)) {
-			    return new Context(new Benchmark(comp), profile);
-			}
-		    }
-		    throw new NoSuchElementException(profileId);
-		}
-	    } else {
-		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, benchmarkId, "XCCDF"));
-	    }
-	} else {
-	    throw new NoSuchElementException(benchmarkId);
-	}
+	IBenchmark benchmark = getBenchmark(benchmarkId);
+	return new Context(benchmark, benchmark.getProfile(profileId));
     }
 
     public IChecklist getOcil(String href) throws NoSuchElementException, OcilException {
@@ -296,20 +262,6 @@ public class Datastream implements IDatastream, ILoggable {
     }
 
     // Private
-
-    private Component getComponent(String componentId) throws NoSuchElementException {
-	if (components.containsKey(componentId)) {
-	    return components.get(componentId);
-	}
-	throw new NoSuchElementException(componentId);
-    }
-
-    private ExtendedComponent getExtendedComponent(String componentId) throws NoSuchElementException {
-	if (extendedComponents.containsKey(componentId)) {
-	    return extendedComponents.get(componentId);
-	}
-	throw new NoSuchElementException(componentId);
-    }
 
     /**
      * Add a catalog, which maps hrefs to component IDs.

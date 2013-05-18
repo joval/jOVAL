@@ -41,7 +41,6 @@ import scap.xccdf.ValueType;
 
 import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.cpe.IDictionary;
-import org.joval.intf.scap.datastream.IDatastream;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.intf.scap.xccdf.IBenchmark;
