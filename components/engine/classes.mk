@@ -20,7 +20,6 @@ CLASSES=\
 	org.joval.intf.scap.sce.IScriptResult			\
 	org.joval.intf.scap.xccdf.SystemEnumeration		\
 	org.joval.intf.scap.xccdf.IBenchmark			\
-	org.joval.intf.scap.xccdf.IBundle			\
 	org.joval.intf.scap.xccdf.IEngine			\
 	org.joval.intf.scap.xccdf.ITailoring			\
 	org.joval.intf.util.IObserver				\

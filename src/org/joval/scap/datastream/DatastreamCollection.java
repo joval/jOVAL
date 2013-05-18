@@ -110,7 +110,7 @@ public class DatastreamCollection implements IDatastreamCollection {
 	return getDSCollection();
     }
 
-    // Implement IDatastream
+    // Implement IDatastreamCollection
 
     public DataStreamCollection getDSCollection() {
 	return dsc;

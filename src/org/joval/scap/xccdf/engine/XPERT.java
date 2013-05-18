@@ -247,8 +247,8 @@ public class XPERT {
 	    exitCode = 1;
 	    try {
 		logger = LogFormatter.createDuplex(logFile, level);
-		IScapContext ctx = null;
-
+		IDatastream ds = null;
+		String sourceName = source.getName();
 		if (source.isFile() && source.getName().toLowerCase().endsWith(".xml")) {
 		    //
 		    // Process a datastream
@@ -276,7 +276,7 @@ public class XPERT {
 			logger.info(getMessage("message.stream.query", source.toString()));
 			for (String sId : dsc.getStreamIds()) {
 			    logger.info("Stream ID=\"" + sId + "\"");
-			    IDatastream ds = dsc.getDatastream(sId);
+			    ds = dsc.getDatastream(sId);
 			    for (String bId : ds.getBenchmarkIds()) {
 				logger.info("  Benchmark ID=\"" + bId + "\"");
 				for (String pId : ds.getProfileIds(bId)) {
@@ -296,83 +296,62 @@ public class XPERT {
 				throw new XPERTException(getMessage("error.stream"));
 			    }
 			}
-
-			//
-			// Determine the singleton Benchmark ID, if none was specified
-			//
-			IDatastream ds = null;
+			sourceName = new StringBuffer(sourceName).append(", stream ").append(streamId).toString();
 			try {
 			    ds = dsc.getDatastream(streamId);
 			} catch (NoSuchElementException e) {
 			    throw new XPERTException(getMessage("error.stream.id", streamId));
-			}
-			if (benchmarkId == null) {
-			    if (ds.getBenchmarkIds().size() == 1) {
-				benchmarkId = ds.getBenchmarkIds().iterator().next();
-				logger.info(getMessage("message.benchmark.autoselect", benchmarkId));
-			    } else {
-				throw new XPERTException(getMessage("error.benchmark.stream", streamId));
-			    }
-			}
-			ctx = ds.getContext(benchmarkId, profileId);
-			if (profileId == null && ctx.getSelectedRules().size() == 0) {
-			    Collection<String> profiles = ds.getProfileIds(benchmarkId);
-			    if (profiles.size() == 1) {
-				profileId = profiles.iterator().next();
-				ctx = ds.getContext(benchmarkId, profileId);
-				logger.info(getMessage("message.profile.autoselect", profileId));
-			    } else if (profiles.size() > 1) {
-			        StringBuffer sb = new StringBuffer();
-			        for (String id : profiles) {
-			            sb.append(LogFormatter.LF).append("  ").append(id);
-			        }
-				throw new XPERTException(getMessage("error.profile", sb.toString()));
-			    }
 			}
 		    }
 		} else if (source.isDirectory() || source.getName().toLowerCase().endsWith(".zip")) {
 		    //
 		    // Process a bundle
 		    //
-		    Bundle bundle = new Bundle(source);
+		    ds = new Bundle(source);
 		    if (query) {
 			logger.info(getMessage("message.bundle.query", source.toString()));
-			for (String bId : bundle.getBenchmarkIds()) {
+			for (String bId : ds.getBenchmarkIds()) {
 			    logger.info("  Benchmark ID=\"" + bId + "\"");
-			    for (String pId : bundle.getProfileIds(bId)) {
-			        logger.info("    Profile ID=\"" + pId + "\"");
-			    }
-			}
-		    } else {
-			if (benchmarkId == null) {
-			    if (bundle.getBenchmarkIds().size() == 1) {
-				benchmarkId = bundle.getBenchmarkIds().iterator().next();
-				logger.info(getMessage("message.benchmark.autoselect", benchmarkId));
-			    } else {
-				throw new XPERTException(getMessage("error.benchmark.bundle", source.toString()));
-			    }
-			}
-			ctx = bundle.getContext(benchmarkId, profileId);
-			if (profileId == null && ctx.getSelectedRules().size() == 0) {
-			    Collection<String> profiles = bundle.getProfileIds(benchmarkId);
-			    if (profiles.size() == 1) {
-				profileId = profiles.iterator().next();
-				ctx = bundle.getContext(benchmarkId, profileId);
-				logger.info("Selected profile " + profileId);
-			    } else if (profiles.size() > 1) {
-			        StringBuffer sb = new StringBuffer();
-			        for (String id : profiles) {
-			            sb.append(LogFormatter.LF).append("  ").append(id);
-			        }
-				throw new XPERTException(getMessage("error.profile", sb.toString()));
+			    for (String pId : ds.getProfileIds(bId)) {
+				logger.info("    Profile ID=\"" + pId + "\"");
 			    }
 			}
 		    }
 		} else {
 		    throw new XPERTException(getMessage("error.source", source.toString()));
 		}
-
 		if (!query) {
+		    if (benchmarkId == null) {
+			//
+			// Determine whether there's a singleton benchmark in the datastream
+			//
+			if (ds.getBenchmarkIds().size() == 1) {
+			    benchmarkId = ds.getBenchmarkIds().iterator().next();
+			    logger.info(getMessage("message.benchmark.autoselect", benchmarkId));
+			} else {
+			    throw new XPERTException(getMessage("error.benchmark", sourceName));
+			}
+		    }
+		    if (profileId == null) {
+			//
+			// Determine whether there's a singleton profile in the benchmark
+			//
+			Collection<String> profiles = ds.getProfileIds(benchmarkId);
+			if (profiles.size() == 1) {
+			    profileId = profiles.iterator().next();
+			    logger.info(getMessage("message.profile.autoselect", profileId));
+			} else if (profiles.size() > 1 && ds.getContext(benchmarkId, null).getSelectedRules().size() == 0) {
+			    //
+			    // If no rules are selected by default, then require that the user select a profile
+			    //
+			    StringBuffer sb = new StringBuffer();
+			    for (String id : profiles) {
+				sb.append(LogFormatter.LF).append("  ").append(id);
+			    }
+			    throw new XPERTException(getMessage("error.profile", sb.toString()));
+			}
+		    }
+		    IScapContext ctx = ds.getContext(benchmarkId, profileId);
 		    logger.info(getMessage("message.start", new Date()));
 		    try {
 			//

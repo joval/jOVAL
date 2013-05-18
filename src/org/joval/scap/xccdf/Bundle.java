@@ -28,7 +28,6 @@ import org.joval.intf.scap.datastream.IDatastream;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.intf.scap.sce.IScript;
-import org.joval.intf.scap.xccdf.IBundle;
 import org.joval.intf.scap.xccdf.IBenchmark;
 import org.joval.intf.scap.xccdf.ITailoring;
 import org.joval.scap.ScapContext;
@@ -48,7 +47,7 @@ import org.joval.scap.xccdf.XccdfException;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Bundle implements IBundle {
+public class Bundle implements IDatastream {
     private File base;
     private ZipFile zip;
     private Map<String, IBenchmark> benchmarks;
@@ -104,7 +103,7 @@ public class Bundle implements IBundle {
 	}
     }
 
-    // Implement IBundle
+    // Implement IDatastream
 
     public IDictionary getDictionary() {
 	return dictionary;

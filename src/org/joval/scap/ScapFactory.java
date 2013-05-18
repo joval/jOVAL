@@ -8,9 +8,9 @@ import java.io.IOException;
 import java.net.URL;
 
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.scap.datastream.IDatastream;
 import org.joval.intf.scap.datastream.IDatastreamCollection;
 import org.joval.intf.scap.ocil.IChecklist;
-import org.joval.intf.scap.xccdf.IBundle;
 import org.joval.intf.scap.xccdf.IEngine;
 import org.joval.intf.scap.xccdf.ITailoring;
 import org.joval.scap.ScapException;
@@ -48,9 +48,9 @@ public class ScapFactory {
     }
 
     /**
-     * Create an scap bundle from a directory or ZIP file.
+     * Create a datastream from an SCAP "bundle" of files (directory or ZIP file).
      */
-    public static IBundle createBundle(File f) throws ScapException {
+    public static IDatastream createBundle(File f) throws ScapException {
 	return new Bundle(f);
     }
 
