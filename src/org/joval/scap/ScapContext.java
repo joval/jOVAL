@@ -251,9 +251,9 @@ public abstract class ScapContext implements IScapContext {
 		}
 	    } else if (item instanceof RuleType) {
 		RuleType rule = resolve((RuleType)item);
-		if (!rule.getAbstract()) {
-		    rules.add(rule);
+		if (!rule.getAbstract() && !ruleMap.containsKey(rule.getId())) {
 		    ruleMap.put(rule.getId(), rule);
+		    rules.add(rule);
 		}
 	    }
 	}
@@ -261,11 +261,12 @@ public abstract class ScapContext implements IScapContext {
 
     /**
      * Recursively find all the selected items, using selections gathered from a Profile (or null for defaults).
+     * Items are returned in document order.
      */
-    private Collection<SelectableItemType> getSelected(List<SelectableItemType> items, Map<String, Boolean> selections,
+    private List<SelectableItemType> getSelected(List<SelectableItemType> items, Map<String, Boolean> selections,
 		Collection<String> parentPlatforms, Map<String, Collection<String>> platforms) {
 
-	Collection<SelectableItemType> results = new HashSet<SelectableItemType>();
+	List<SelectableItemType> results = new ArrayList<SelectableItemType>();
 	for (SelectableItemType item : items) {
 	    String id = null;
 	    if (item instanceof GroupType) {
