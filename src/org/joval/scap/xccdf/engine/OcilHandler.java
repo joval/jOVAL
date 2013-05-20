@@ -54,7 +54,7 @@ public class OcilHandler implements ISystem {
     public static boolean exportFiles(IScapContext ctx, Producer<IEngine.Message> producer) throws OcilException {
 	Collection<String> hrefs = new HashSet<String>();
 	Map<String, Variables> variables = new HashMap<String, Variables>();
-	for (RuleType rule : ctx.getSelectedRules().values()) {
+	for (RuleType rule : ctx.getSelectedRules()) {
 	    for (CheckType check : rule.getCheck()) {
 		if (check.getSystem().equals(NAMESPACE)) {
 		    if (check.isSetCheckContentRef()) {
@@ -288,7 +288,7 @@ public class OcilHandler implements ISystem {
      */
     private HashSet<String> getOcilHrefs() {
 	HashSet<String> hrefs = new HashSet<String>();
-	for (RuleType rule : ctx.getSelectedRules().values()) {
+	for (RuleType rule : ctx.getSelectedRules()) {
 	    for (CheckType check : rule.getCheck()) {
 		if (NAMESPACE.equals(check.getSystem())) {
 		    for (CheckContentRefType ref : check.getCheckContentRef()) {

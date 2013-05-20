@@ -4,6 +4,7 @@
 package org.joval.intf.scap;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -60,9 +61,16 @@ public interface IScapContext {
     Map<String, Collection<String>> getValues();
 
     /**
-     * Return a Map of all the fully-resolved rules selected by this Profile.
+     * Return a List of all the fully-resolved rules selected by this Profile, in document order.
      */
-    Map<String, RuleType> getSelectedRules();
+    List<RuleType> getSelectedRules();
+
+    /**
+     * Get a rule. The rule must be selected in order to be visible in a context.
+     *
+     * @throws NoSuchElementException if no selected rule has the specified ID.
+     */
+    RuleType getRule(String ruleId) throws NoSuchElementException;
 
     /**
      * Get an OCIL checklist document with the specified component href.

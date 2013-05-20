@@ -66,7 +66,8 @@ public abstract class ScapContext implements IScapContext {
     private IBenchmark benchmark;
     private IDictionary dictionary;
     private BenchmarkType bt;
-    private Map<String, RuleType> rules;
+    private Map<String, RuleType> ruleMap;
+    private List<RuleType> rules;
     private Map<String, LogicalTestType> platforms;
     private Map<String, Collection<String>> values = null;
 
@@ -92,7 +93,8 @@ public abstract class ScapContext implements IScapContext {
 	}
 
 	values = new HashMap<String, Collection<String>>();
-	rules = new HashMap<String, RuleType>();
+	ruleMap = new HashMap<String, RuleType>();
+	rules = new ArrayList<RuleType>();
 
 	//
 	// If a named profile is specified, then gather all the selections, values, refinements, etc. associated with it.
@@ -139,7 +141,7 @@ public abstract class ScapContext implements IScapContext {
 	//
 	// Tailor the selected rules according to profile refinements
 	//
-	for (RuleType rule : rules.values()) {
+	for (RuleType rule : rules) {
 	    if (rule.getPlatform().size() == 0 && platformDefaults.containsKey(rule.getId())) {
 		//
 		// Borrow platforms from the nearest platform-defining container
@@ -214,8 +216,16 @@ public abstract class ScapContext implements IScapContext {
 	return values;
     }
 
-    public Map<String, RuleType> getSelectedRules() {
+    public List<RuleType> getSelectedRules() {
 	return rules;
+    }
+
+    public RuleType getRule(String ruleId) throws NoSuchElementException {
+	if (ruleMap.containsKey(ruleId)) {
+	    return ruleMap.get(ruleId);
+	} else {
+	    throw new NoSuchElementException(ruleId);
+	}
     }
 
     // Private
@@ -242,7 +252,8 @@ public abstract class ScapContext implements IScapContext {
 	    } else if (item instanceof RuleType) {
 		RuleType rule = resolve((RuleType)item);
 		if (!rule.getAbstract()) {
-		    rules.put(rule.getId(), rule);
+		    rules.add(rule);
+		    ruleMap.put(rule.getId(), rule);
 		}
 	    }
 	}

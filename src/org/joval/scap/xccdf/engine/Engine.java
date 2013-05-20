@@ -269,7 +269,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	state = State.RUNNING;
 	boolean doDisconnect = false;
 	try {
-	    Collection<RuleType> rules = ctx.getSelectedRules().values();
+	    List<RuleType> rules = ctx.getSelectedRules();
 	    if (rules.size() == 0) {
 		logger.warn(JOVALMsg.WARNING_XCCDF_RULES);
 	    } else {
@@ -407,7 +407,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	// Add all the selected rules to the handlers
 	//
 	Collection<String> notApplicable = new HashSet<String>();
-	for (RuleType rule : ctx.getSelectedRules().values()) {
+	for (RuleType rule : ctx.getSelectedRules()) {
 	    if (rule.getRole() != RoleEnumType.UNCHECKED && !rule.getAbstract()) {
 		//
 		// Check that at least one platform applies to the rule
@@ -450,7 +450,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	//
 	// Integrate check results from the handlers
 	//
-	for (RuleType rule : ctx.getSelectedRules().values()) {
+	for (RuleType rule : ctx.getSelectedRules()) {
 	    if (notApplicable.contains(rule.getId())) {
 		RuleResultType rrt = Engine.FACTORY.createRuleResultType();
 		rrt.setIdref(rule.getId());
@@ -494,8 +494,8 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     /**
      * Evaluate the check(s) in the rule, and return the results.
      */
-    private Collection<RuleResultType> evaluate(RuleType rule, Map<String, ISystem> handlers) throws Exception {
-	Collection<RuleResultType> results = new ArrayList<RuleResultType>();
+    private List<RuleResultType> evaluate(RuleType rule, Map<String, ISystem> handlers) throws Exception {
+	List<RuleResultType> results = new ArrayList<RuleResultType>();
 	if (rule.isSetComplexCheck()) {
 	    ComplexCheckType check = rule.getComplexCheck();
 	    ComplexCheckType checkResult = FACTORY.createComplexCheckType();
@@ -874,7 +874,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     ScoreKeeper computeScore(HashMap<String, RuleResultType> results, BenchmarkType bt, ScoringModel model)
 		throws IllegalArgumentException {
 
-	Collection<SelectableItemType> items = bt.getGroupOrRule();
+	List<SelectableItemType> items = bt.getGroupOrRule();
 	switch(model) {
 	  case DEFAULT:
 	    return new DefaultScoreKeeper(new DefaultScoreKeeper(results), items);
@@ -947,7 +947,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		    count = 1;
 		    score = 100 * score / count;
 		}
-		weightedScore = ctx.getSelectedRules().get(rule.getId()).getWeight().intValue() * score;
+		weightedScore = ctx.getRule(rule.getId()).getWeight().intValue() * score;
 	    }
 	}
 
@@ -956,14 +956,14 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    weightedScore = group.getWeight().intValue() * score;
 	}
 
-	DefaultScoreKeeper(DefaultScoreKeeper parent, Collection<SelectableItemType> items) throws IllegalArgumentException {
+	DefaultScoreKeeper(DefaultScoreKeeper parent, List<SelectableItemType> items) throws IllegalArgumentException {
 	    super(parent.results);
 	    for (SelectableItemType item : items) {
 		DefaultScoreKeeper child = null;
 		if (item instanceof RuleType) {
 		    RuleType rule = (RuleType)item;
 		    child = new DefaultScoreKeeper(this, rule);
-		    item = ctx.getSelectedRules().get(rule.getId());
+		    item = ctx.getRule(rule.getId());
 		} else if (item instanceof GroupType) {
 		    child = new DefaultScoreKeeper(this, (GroupType)item);
 		} else {
@@ -1014,7 +1014,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		    break;
 		}
 		if (count != 0) {
-		    int weight = ctx.getSelectedRules().get(rule.getId()).getWeight().intValue();
+		    int weight = ctx.getRule(rule.getId()).getWeight().intValue();
 		    if (weighted) {
 			max_score += weight;
 			score = (weight * score / count);
@@ -1029,7 +1029,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    }
 	}
 
-	FlatScoreKeeper(FlatScoreKeeper parent, Collection<SelectableItemType> items) throws IllegalArgumentException {
+	FlatScoreKeeper(FlatScoreKeeper parent, List<SelectableItemType> items) throws IllegalArgumentException {
 	    this(parent.weighted, parent.results);
 	    for (SelectableItemType item : items) {
 		FlatScoreKeeper child = null;
@@ -1054,7 +1054,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    super(true, results);
 	}
 
-	AbsoluteScoreKeeper(AbsoluteScoreKeeper parent, Collection<SelectableItemType> items) throws IllegalArgumentException {
+	AbsoluteScoreKeeper(AbsoluteScoreKeeper parent, List<SelectableItemType> items) throws IllegalArgumentException {
 	    super(parent, items);
 	}
 
