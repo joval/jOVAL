@@ -38,6 +38,11 @@ public interface IResults extends ITransformable {
     Collection<DefinitionType> getDefinitionResults() throws OvalException;
 
     /**
+     * Get a definition given its ID.
+     */
+    DefinitionType getDefinition(String definitionId);
+
+    /**
      * Get the result of a specific definition, given its ID.
      */
     ResultEnumeration getDefinitionResult(String definitionId) throws NoSuchElementException;

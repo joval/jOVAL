@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import scap.oval.common.ClassEnumeration;
 import scap.oval.common.GeneratorType;
 import scap.oval.definitions.core.OvalDefinitions;
 import scap.oval.results.ResultEnumeration;
@@ -153,7 +154,10 @@ public class OvalHandler implements ISystem {
 		IResults ovalResult = engines.get(ref.getHref()).getEngine().getResults();
 		if (ref.isSetName()) {
 		    try {
-			data.add(convertResult(ovalResult.getDefinitionResult(ref.getName())));
+			String definitionId = ref.getName();
+			ClassEnumeration definitionClass = ovalResult.getDefinition(definitionId).getClazz();
+			ResultEnumeration definitionResult = ovalResult.getDefinitionResult(definitionId);
+			data.add(convertResult(definitionClass, definitionResult));
 		    } catch (NoSuchElementException e) {
 			data.add(ResultEnumType.UNKNOWN);
 		    }
@@ -161,7 +165,10 @@ public class OvalHandler implements ISystem {
 		    CheckResult cr = new CheckResult();
 		    for (DefinitionType def : ovalResult.getDefinitionResults()) {
 			data = new CheckData(check.getNegate());
-			data.add(convertResult(def.getResult()));
+			String definitionId = ref.getName();
+			ClassEnumeration definitionClass = ovalResult.getDefinition(definitionId).getClazz();
+			ResultEnumeration definitionResult = ovalResult.getDefinitionResult(definitionId);
+			data.add(convertResult(definitionClass, definitionResult));
 			InstanceResultType inst = Engine.FACTORY.createInstanceResultType();
 			inst.setValue(def.getDefinitionId());
 			cr.getResults().add(new CheckResult(data.getResult(CcOperatorEnumType.AND), check, inst));
@@ -169,7 +176,10 @@ public class OvalHandler implements ISystem {
 		    return cr;
 		} else {
 		    for (DefinitionType def : ovalResult.getDefinitionResults()) {
-			data.add(convertResult(def.getResult()));
+			String definitionId = ref.getName();
+			ClassEnumeration definitionClass = ovalResult.getDefinition(definitionId).getClazz();
+			ResultEnumeration definitionResult = ovalResult.getDefinitionResult(definitionId);
+			data.add(convertResult(definitionClass, definitionResult));
 		    }
 		}
 		return new CheckResult(data.getResult(CcOperatorEnumType.AND), check);
@@ -182,17 +192,40 @@ public class OvalHandler implements ISystem {
 
     /**
      * Map an OVAL result to an XCCDF result.
+     *
+     * @see the SCAP specification document, Section 4.5.2: Mapping OVAL Results to XCCDF Results
+     *
      */
-    private ResultEnumType convertResult(ResultEnumeration re) {
+    private ResultEnumType convertResult(ClassEnumeration ce, ResultEnumeration re) {
 	switch (re) {
 	  case ERROR:
 	    return ResultEnumType.ERROR;
     
 	  case FALSE:
-	    return ResultEnumType.FAIL;
-  
+	    switch(ce) {
+	      case VULNERABILITY:
+	      case PATCH:
+		return ResultEnumType.PASS;
+
+	      case COMPLIANCE:
+	      case INVENTORY:
+	      case MISCELLANEOUS:
+	      default:
+		return ResultEnumType.FAIL;
+	    }
+
 	  case TRUE:
-	    return ResultEnumType.PASS;
+	    switch(ce) {
+	      case VULNERABILITY:
+	      case PATCH:
+		return ResultEnumType.FAIL;
+
+	      case COMPLIANCE:
+	      case INVENTORY:
+	      case MISCELLANEOUS:
+	      default:
+		return ResultEnumType.PASS;
+	    }
  
 	  case NOT_APPLICABLE:
 	    return ResultEnumType.NOTAPPLICABLE;
