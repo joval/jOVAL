@@ -48,7 +48,6 @@ import scap.xccdf.BenchmarkType;
 import scap.xccdf.CcOperatorEnumType;
 import scap.xccdf.CheckContentRefType;
 import scap.xccdf.CheckType;
-import scap.xccdf.CheckExportType;
 import scap.xccdf.ComplexCheckType;
 import scap.xccdf.CPE2IdrefType;
 import scap.xccdf.GroupType;

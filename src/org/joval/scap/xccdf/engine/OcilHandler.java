@@ -264,6 +264,7 @@ public class OcilHandler implements ISystem {
 
     /**
      * Convert a String questionnaire result into a check result.
+     * @see NIST IR7692 Appendix B: Mapping OCIL Results to XCCDF Results
      */
     private ResultEnumType convertResult(String qr) {
 	if ("PASS".equals(qr)) {

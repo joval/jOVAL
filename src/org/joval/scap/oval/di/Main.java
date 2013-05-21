@@ -54,6 +54,7 @@ import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.LogFormatter;
 import org.joval.util.Version;
 import org.joval.xml.SchemaValidator;
 import org.joval.xml.schematron.ValidationException;
@@ -531,13 +532,13 @@ public class Main implements IObserver<IEngine.Message> {
 	    print("");
 	    print(getMessage("ERROR_OVAL"));
 	    print("");
-	    e.printStackTrace();
+	    print(LogFormatter.toString(e));
 	    return ERR;
 	} catch (Exception e) {
 	    print("");
 	    print("");
 	    print(getMessage("ERROR_FATAL"));
-	    e.printStackTrace();
+	    print(LogFormatter.toString(e));
 	    return ERR;
 	}
     }
