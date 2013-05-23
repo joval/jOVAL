@@ -962,7 +962,6 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		if (item instanceof RuleType) {
 		    RuleType rule = (RuleType)item;
 		    child = new DefaultScoreKeeper(this, rule);
-		    item = ctx.getRule(rule.getId());
 		} else if (item instanceof GroupType) {
 		    child = new DefaultScoreKeeper(this, (GroupType)item);
 		} else {
