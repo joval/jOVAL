@@ -165,7 +165,7 @@ public class OvalHandler implements ISystem {
 		    CheckResult cr = new CheckResult();
 		    for (DefinitionType def : ovalResult.getDefinitionResults()) {
 			data = new CheckData(check.getNegate());
-			String definitionId = ref.getName();
+			String definitionId = def.getDefinitionId();
 			ClassEnumeration definitionClass = ovalResult.getDefinition(definitionId).getClazz();
 			ResultEnumeration definitionResult = ovalResult.getDefinitionResult(definitionId);
 			data.add(convertResult(definitionClass, definitionResult));
