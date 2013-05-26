@@ -275,6 +275,11 @@ public class Main implements IObserver<IEngine.Message> {
 	    logger.log(Level.INFO, getMessage("MESSAGE_OBJECT_LOG", (String)arg).trim());
 	    break;
 
+	  case OBJECTS:
+	    printStatus(getMessage("MESSAGE_OBJECTS", ((String[])arg).length));
+	    logger.log(Level.INFO, getMessage("MESSAGE_OBJECT_LOG", (String)arg).trim());
+	    break;
+
 	  case OBJECT_PHASE_END:
 	    printStatus(getMessage("MESSAGE_OBJECTS_DONE"));
 	    clearStatus();

@@ -37,6 +37,12 @@ public interface IEngine extends Runnable {
 	OBJECT,
 
 	/**
+	 * Message indicating that the engine has started collecting items for a group of objects in batch.  The argument
+	 * is a String[] containing the object IDs being collected.
+	 */
+	OBJECTS,
+
+	/**
 	 * Message indicating that the engine has finished probing for object items.
 	 */
 	OBJECT_PHASE_END,

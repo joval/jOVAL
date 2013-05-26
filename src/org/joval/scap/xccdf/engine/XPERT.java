@@ -528,6 +528,12 @@ public class XPERT {
 		logger.info("Scanning " + (String)arg);
 		break;
 
+	      case OBJECTS:
+		for (String id : (String[])arg) {
+		    logger.info("Scanning " + id);
+		}
+		break;
+
 	      case OBJECT_PHASE_END:
 		logger.info("Scan complete");
 		break;

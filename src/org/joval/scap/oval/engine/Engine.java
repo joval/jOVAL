@@ -606,7 +606,7 @@ public class Engine implements IEngine, IProvider {
 		    }
 		}
 		if (queued) {
-		    logger.info(JOVALMsg.STATUS_OBJECT_QUEUE, id);
+		    logger.debug(JOVALMsg.STATUS_OBJECT_QUEUE, id);
 		    scanQueue.put(id, group);
 		} else {
 		    scanObject(rc);
@@ -641,7 +641,11 @@ public class Engine implements IEngine, IProvider {
 	    // Organize results by object ID
 	    //
 	    Map<String, Collection<IBatch.IResult>> results = new HashMap<String, Collection<IBatch.IResult>>();
-	    logger.info(JOVALMsg.STATUS_OBJECT_BATCH, scanQueue.size());
+	    logger.debug(JOVALMsg.STATUS_OBJECT_BATCH, scanQueue.size());
+	    ArrayList<String> ids = new ArrayList<String>();
+	    ids.addAll(scanQueue.keySet());
+	    producer.sendNotify(Message.OBJECTS, ids.toArray(new String[ids.size()]));
+
 	    for (IBatch.IResult result : ((IBatch)plugin.getOvalProvider()).exec()) {
 		String id = ((RequestContext)result.getContext()).getObject().getId();
 		if (!results.containsKey(id)) {
