@@ -52,6 +52,7 @@ import scap.xccdf.ValueType;
 import org.joval.intf.scap.xccdf.IBenchmark;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -86,9 +87,8 @@ public class Benchmark implements IBenchmark, ILoggable {
 
 	    String ns = doc.getDocumentElement().getAttribute("xmlns");
 	    if (LEGACY_NS.equals(ns)) {
-		Class<?> clazz = Class.forName("net.sf.saxon.TransformerFactoryImpl");
 		JOVALMsg.getLogger().info(JOVALMsg.STATUS_XCCDF_CONVERT);
-		TransformerFactory xf = (TransformerFactory)clazz.newInstance();
+		TransformerFactory xf = JOVALSystem.XSLVersion.V2.getFactory();
 		InputStream xsl = Benchmark.class.getResourceAsStream("xccdf_convert_1.1.4_to_1.2.xsl");
 		Transformer transformer = xf.newTransformer(new StreamSource(xsl));
 		DOMResult result = new DOMResult();
@@ -101,12 +101,6 @@ public class Benchmark implements IBenchmark, ILoggable {
 	    }
 	} catch (TransformerException e) {
 	    throw new XccdfException(e);
-	} catch (IllegalAccessException e) {
-	    throw new XccdfException(e);
-	} catch (InstantiationException e) {
-	    throw new XccdfException(e);
-	} catch (ClassNotFoundException e) {
-	    throw new XccdfException("Legacy XCCDF bundle support requires Saxon9HE in the CLASSPATH");
 	} catch (SAXException e) {
 	    throw new XccdfException(e);
 	} catch (IOException e) {

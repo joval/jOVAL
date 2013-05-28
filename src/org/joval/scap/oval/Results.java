@@ -64,6 +64,7 @@ import org.joval.intf.scap.oval.ISystemCharacteristics;
 import org.joval.intf.scap.oval.IResults;
 import org.joval.scap.oval.xml.OvalNamespacePrefixMapper;
 import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -207,7 +208,7 @@ public class Results implements IResults, ILoggable {
      */
     public void writeTransform(File transform, File output) {
 	try {
-	    TransformerFactory xf = TransformerFactory.newInstance();
+	    TransformerFactory xf = JOVALSystem.XSLVersion.V1.getFactory();
 	    Transformer transformer = xf.newTransformer(new StreamSource(new FileInputStream(transform)));
 	    transformer.transform(getSource(), new StreamResult(output));
 	} catch (JAXBException e) {

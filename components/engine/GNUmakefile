@@ -46,4 +46,5 @@ $(BUILD)/%/:
 	mkdir -p $(subst PKG,,$@)
 
 test:
-	$(JRE) -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.scap.oval.types.EvrStringType 32:9.8.2-0.17.rc1.el6.3 32:9.8.2-0.17.rc1.el6_4.4
+#	$(JRE) -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.scap.oval.types.EvrStringType 32:9.8.2-0.17.rc1.el6.3 32:9.8.2-0.17.rc1.el6_4.4
+	$(JRE) -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.xml.XPathTools gconf.xml /gconf/entry[@name=\'idle_delay\']/@value

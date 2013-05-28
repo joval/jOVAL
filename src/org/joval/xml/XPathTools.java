@@ -4,6 +4,8 @@
 package org.joval.xml;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.util.Collection;
@@ -31,6 +33,8 @@ import org.xml.sax.SAXException;
 
 import jsaf.util.StringTools;
 
+import org.joval.util.JOVALSystem;
+
 /**
  * Useful methods for XPath evaluation.
  *
@@ -46,6 +50,39 @@ public class XPathTools {
 					  XPathConstants.STRING,
 					  XPathConstants.NUMBER,
 					  XPathConstants.BOOLEAN};
+
+    /**
+     * Test method.
+     */
+    public static void main(String[] argv) {
+	File f = new File(argv[0]);
+	System.out.println("XML File: " + f.toString());
+	String expression = argv[1];
+	System.out.println("XPATH: " + expression);
+	InputStream in = null;
+	try {
+            XPathExpression expr = compile(expression);
+            in = new FileInputStream(f);
+            Document doc = parse(in);
+            List<String> values = typesafeEval(expr, doc);
+            if (values.size() == 0) {
+		System.out.println("No result");
+            } else {
+                for (String value : values) {
+		    System.out.println("Result: " + value);
+                }
+            }
+	} catch (Exception e) {
+	    e.printStackTrace();
+	} finally {
+	    if (in != null) {
+		try {
+		    in.close();
+		} catch (IOException e) {
+		}
+	    }
+	}
+    }
 
     private static DocumentBuilder builder;
     private static XPath xpath;
@@ -139,7 +176,7 @@ public class XPathTools {
 
     private static Transformer getTransformer() throws TransformerException {
 	if (transformer == null) {
-	    transformer = TransformerFactory.newInstance().newTransformer();
+	    transformer = JOVALSystem.XSLVersion.V1.getFactory().newTransformer();
 	    transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
 	}
 	return transformer;

@@ -126,7 +126,7 @@ public enum SchemaRegistry {
 		try {
 		    schemaProps.load(rsc);
 		} catch (IOException e) {
-		    JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), res);
+		    JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}

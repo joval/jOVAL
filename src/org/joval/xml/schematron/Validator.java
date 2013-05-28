@@ -22,6 +22,7 @@ import org.iso.svrl.SuccessfulReport;
 import org.iso.svrl.FailedAssert;
 
 import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -64,7 +65,7 @@ public class Validator {
      * Create a new Validator given the specified Schematron-derived XSLT template.
      */
     public Validator(File xsl) throws IOException, TransformerException {
-	transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(new FileInputStream(xsl)));
+	transformer = JOVALSystem.XSLVersion.V1.getFactory().newTransformer(new StreamSource(new FileInputStream(xsl)));
     }
 
     /**

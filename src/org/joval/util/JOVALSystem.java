@@ -12,6 +12,8 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Timer;
 import javax.xml.bind.JAXBElement;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.TransformerFactoryConfigurationError;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -66,6 +68,29 @@ public class JOVALSystem {
      */
     public static Timer getTimer() {
 	return timer;
+    }
+
+    /**
+     * Supported versions of XSL/XPATH.
+     */
+    public enum XSLVersion {
+	V1("com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl"),
+	V2("net.sf.saxon.TransformerFactoryImpl");
+
+	private TransformerFactory factory;
+	private String className;
+
+	private XSLVersion(String className) {
+	    this.className = className;
+	    factory = null;
+	}
+
+	public TransformerFactory getFactory() throws TransformerFactoryConfigurationError {
+	    if (factory == null) {
+		factory = TransformerFactory.newInstance(className, JOVALSystem.class.getClassLoader());
+	    }
+	    return factory;
+	}
     }
 
     /**

@@ -222,14 +222,26 @@ public class PartitionAdapter implements IAdapter {
 		throw new IllegalArgumentException(line);
 	    } else {
 		name = line.substring(0,ptr);
-		StringTokenizer tok = new StringTokenizer(line.substring(ptr+1));
-		while (tok.hasMoreTokens()) {
-		    String token = tok.nextToken();
-		    ptr = token.indexOf("=");
-		    String attr = token.substring(0,ptr).trim();
-		    String value = token.substring(ptr+1).trim();
-		    if (value.startsWith("\"") && value.endsWith("\"")) {
-			value = value.substring(1, value.length()-1);
+		String data = line.substring(ptr+1);
+		while ((ptr = data.indexOf("=")) != -1) {
+		    String attr = data.substring(0,ptr).trim();
+		    data = data.substring(ptr+1);
+		    String value = null;
+		    if (data.startsWith("\"")) {
+			data = data.substring(1);
+			ptr = data.indexOf("\"");
+			if (ptr == -1) {
+			    throw new IllegalArgumentException(line);
+			}
+			value = data.substring(0, ptr);
+			data = data.substring(ptr+1);
+		    } else {
+			ptr = data.indexOf(" ");
+			if (ptr == -1) {
+			    throw new IllegalArgumentException(line);
+			}
+			value = data.substring(0, ptr);
+			data = data.substring(ptr+1);
 		    }
 		    if ("LABEL".equalsIgnoreCase(attr)) {
 			label = value;
