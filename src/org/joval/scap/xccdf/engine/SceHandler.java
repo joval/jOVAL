@@ -24,8 +24,8 @@ import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.sce.IScript;
 import org.joval.intf.scap.sce.IScriptResult;
-import org.joval.intf.scap.xccdf.IEngine;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
+import org.joval.intf.scap.xccdf.IXccdfEngine;
 import org.joval.intf.xml.ITransformable;
 import org.joval.scap.sce.SceException;
 import org.joval.scap.xccdf.XccdfException;
@@ -42,14 +42,14 @@ public class SceHandler implements ISystem {
     public static final String NAMESPACE = SystemEnumeration.SCE.namespace();
 
     private IScapContext ctx;
-    private Producer<IEngine.Message> producer;
+    private Producer<IXccdfEngine.Message> producer;
     private Map<String, Wrapper> scripts;
     private Map<String, SceResultsType> results;
 
     /**
      * Create an OVAL handler utility for the given XCCDF and Profile.
      */
-    public SceHandler(IScapContext ctx, Producer<IEngine.Message> producer) {
+    public SceHandler(IScapContext ctx, Producer<IXccdfEngine.Message> producer) {
 	this.ctx = ctx;
 	this.producer = producer;
 	scripts = new HashMap<String, Wrapper>();
@@ -83,7 +83,7 @@ public class SceHandler implements ISystem {
 	ISession session = plugin.getSession();
 	for (Map.Entry<String, Wrapper> entry : scripts.entrySet()) {
 	    Wrapper wrapper = entry.getValue();
-	    producer.sendNotify(IEngine.Message.SCE_SCRIPT, entry.getKey());
+	    producer.sendNotify(IXccdfEngine.Message.SCE_SCRIPT, entry.getKey());
 	    IScriptResult result = wrapper.getScript().exec(wrapper.getExports(), session);
 	    reports.add(result);
 	    results.put(entry.getKey(), result.getResult());

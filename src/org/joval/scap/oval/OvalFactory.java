@@ -17,7 +17,7 @@ import scap.oval.common.GeneratorType;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.oval.IDefinitions;
-import org.joval.intf.scap.oval.IEngine;
+import org.joval.intf.scap.oval.IOvalEngine;
 import org.joval.intf.scap.oval.ISystemCharacteristics;
 import org.joval.intf.scap.oval.IVariables;
 import org.joval.scap.oval.engine.Engine;
@@ -73,7 +73,7 @@ public class OvalFactory {
 	return new SystemCharacteristics(f);
     }
 
-    public static IEngine createEngine(IEngine.Mode mode, IPlugin plugin) {
+    public static IOvalEngine createEngine(IOvalEngine.Mode mode, IPlugin plugin) {
 	return new OEMEngine(mode, plugin);
     }
 
@@ -81,7 +81,7 @@ public class OvalFactory {
 	GeneratorType generator = Factories.common.createGeneratorType();
 	generator.setProductName(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_PRODUCT));
 	generator.setProductVersion(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION));
-	generator.setSchemaVersion(IEngine.SCHEMA_VERSION.toString());
+	generator.setSchemaVersion(IOvalEngine.SCHEMA_VERSION.toString());
 	try {
 	    generator.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
 	} catch (DatatypeConfigurationException e) {
@@ -94,7 +94,7 @@ public class OvalFactory {
     // Private
 
     private static class OEMEngine extends Engine {
-	OEMEngine(IEngine.Mode mode, IPlugin plugin) {
+	OEMEngine(IOvalEngine.Mode mode, IPlugin plugin) {
 	    super(mode, plugin);
 	}
     }

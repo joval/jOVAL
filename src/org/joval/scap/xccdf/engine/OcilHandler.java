@@ -30,8 +30,8 @@ import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.ocil.IVariables;
-import org.joval.intf.scap.xccdf.IEngine;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
+import org.joval.intf.scap.xccdf.IXccdfEngine;
 import org.joval.intf.xml.ITransformable;
 import org.joval.scap.ocil.OcilException;
 import org.joval.scap.ocil.Variables;
@@ -51,7 +51,7 @@ public class OcilHandler implements ISystem {
     /**
      * Export relevant OCIL files to the specified directory. Returns false if there are no OCIL checks in the context.
      */
-    public static boolean exportFiles(IScapContext ctx, Producer<IEngine.Message> producer) throws OcilException {
+    public static boolean exportFiles(IScapContext ctx, Producer<IXccdfEngine.Message> producer) throws OcilException {
 	Collection<String> hrefs = new HashSet<String>();
 	Map<String, Variables> variables = new HashMap<String, Variables>();
 	for (RuleType rule : ctx.getSelectedRules()) {
@@ -93,7 +93,7 @@ public class OcilHandler implements ISystem {
 	    try {
 		IChecklist checklist = ctx.getOcil(href);
 		IVariables vars = variables.get(href);
-		producer.sendNotify(IEngine.Message.OCIL_MISSING, new Argument(href, checklist, vars));
+		producer.sendNotify(IXccdfEngine.Message.OCIL_MISSING, new Argument(href, checklist, vars));
 	    } catch (NoSuchElementException e) {
 		e.printStackTrace();
 	    } catch (OcilException e) {
@@ -234,7 +234,7 @@ public class OcilHandler implements ISystem {
 
     // Internal
 
-    static class Argument implements IEngine.OcilMessageArgument {
+    static class Argument implements IXccdfEngine.OcilMessageArgument {
 	private String href;
 	private IChecklist checklist;
 	private IVariables variables;
@@ -245,7 +245,7 @@ public class OcilHandler implements ISystem {
 	    this.variables = variables;
 	}
 
-	// Implement IEngine.OcilMessageArgument
+	// Implement IXccdfEngine.OcilMessageArgument
 
 	public String getHref() {
 	    return href;

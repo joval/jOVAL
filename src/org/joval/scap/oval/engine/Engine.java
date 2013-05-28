@@ -119,7 +119,7 @@ import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.oval.IBatch;
 import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.oval.IDefinitions;
-import org.joval.intf.scap.oval.IEngine;
+import org.joval.intf.scap.oval.IOvalEngine;
 import org.joval.intf.scap.oval.IProvider;
 import org.joval.intf.scap.oval.IResults;
 import org.joval.intf.scap.oval.ISystemCharacteristics;
@@ -156,7 +156,7 @@ import org.joval.util.Version;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Engine implements IEngine, IProvider {
+public class Engine implements IOvalEngine, IProvider {
     private enum State {
 	CONFIGURE,
 	RUNNING,
@@ -170,7 +170,7 @@ public class Engine implements IEngine, IProvider {
     private IPlugin plugin = null;
     private ISystemCharacteristics sc = null;
     private IDefinitionFilter filter = null;
-    private IEngine.Mode mode;
+    private IOvalEngine.Mode mode;
     private Map<String, ObjectGroup> scanQueue = null;
     private Exception error;
     private Results results;
@@ -182,7 +182,7 @@ public class Engine implements IEngine, IProvider {
     /**
      * Create an engine for evaluating OVAL definitions using a plugin.
      */
-    protected Engine(IEngine.Mode mode, IPlugin plugin) {
+    protected Engine(IOvalEngine.Mode mode, IPlugin plugin) {
 	if (plugin == null) {
 	    logger = JOVALMsg.getLogger();
 	} else {
@@ -233,7 +233,7 @@ public class Engine implements IEngine, IProvider {
 	}
     }
 
-    // Implement IEngine
+    // Implement IOvalEngine
 
     public void setDefinitions(IDefinitions definitions) throws IllegalThreadStateException {
 	switch(state) {

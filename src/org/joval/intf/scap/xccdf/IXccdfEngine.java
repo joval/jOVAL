@@ -22,7 +22,7 @@ import org.joval.util.Version;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IEngine extends Runnable {
+public interface IXccdfEngine extends Runnable {
     /**
      * The version of the SCAP schema supported by the engine.
      */
@@ -58,9 +58,9 @@ public interface IEngine extends Runnable {
 
 	/**
 	 * Message indicating that the engine has created an OVAL engine instance and is about to run it. The argument
-	 * is the OVAL IEngine instance.
+	 * is the OVAL IOvalEngine instance.
 	 *
-	 * @see org.joval.intf.scap.oval.IEngine
+	 * @see org.joval.intf.scap.oval.IOvalEngine
 	 */
 	OVAL_ENGINE,
 
@@ -120,8 +120,8 @@ public interface IEngine extends Runnable {
     void addChecklist(String href, IChecklist checklist) throws IllegalStateException;
 
     /**
-     * Get an IProducer associated with the IEngine.  This IProducer can be observed for MESSAGE_ notifications while the
-     * engine is running.
+     * Get an IProducer associated with the IXccdfEngine.  This IProducer can be observed for MESSAGE_ notifications while
+     * the engine is running.
      */
     IProducer<Message> getNotificationProducer();
 

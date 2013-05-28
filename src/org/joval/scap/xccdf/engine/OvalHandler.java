@@ -29,11 +29,11 @@ import scap.xccdf.ResultEnumType;
 import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.oval.IDefinitions;
-import org.joval.intf.scap.oval.IEngine;
+import org.joval.intf.scap.oval.IOvalEngine;
 import org.joval.intf.scap.oval.IResults;
 import org.joval.intf.scap.oval.IVariables;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
-import org.joval.intf.scap.xccdf.IEngine.Message;
+import org.joval.intf.scap.xccdf.IXccdfEngine;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.xml.ITransformable;
 import org.joval.scap.oval.OvalException;
@@ -52,9 +52,9 @@ public class OvalHandler implements ISystem {
 
     private Map<String, EngineData> engines;
     private IScapContext ctx;
-    private Producer<Message> producer;
+    private Producer<IXccdfEngine.Message> producer;
 
-    public OvalHandler(IScapContext ctx, Producer<Message> producer) {
+    public OvalHandler(IScapContext ctx, Producer<IXccdfEngine.Message> producer) {
 	this.ctx = ctx;
 	this.producer = producer;
 	engines = new HashMap<String, EngineData>();
@@ -125,8 +125,8 @@ public class OvalHandler implements ISystem {
 	    Map.Entry<String, EngineData> entry = iter.next();
 	    if (entry.getValue().createEngine(plugin)) {
 		plugin.getLogger().info("Created engine for href " + entry.getKey());
-		IEngine engine = entry.getValue().getEngine();
-		producer.sendNotify(Message.OVAL_ENGINE, engine);
+		IOvalEngine engine = entry.getValue().getEngine();
+		producer.sendNotify(IXccdfEngine.Message.OVAL_ENGINE, engine);
 		engine.run();
 		switch(engine.getResult()) {
 	  	  case OK:
@@ -243,7 +243,7 @@ public class OvalHandler implements ISystem {
 	private IDefinitions definitions;
 	private IDefinitionFilter filter;
 	private IVariables variables;
-	private IEngine engine;
+	private IOvalEngine engine;
 
 	EngineData(IDefinitions definitions) {
 	    this.definitions = definitions;
@@ -261,7 +261,7 @@ public class OvalHandler implements ISystem {
 
 	boolean createEngine(IPlugin plugin) {
 	    if (filter.size() > 0) {
-		engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, plugin);
+		engine = OvalFactory.createEngine(IOvalEngine.Mode.DIRECTED, plugin);
 		engine.setDefinitions(definitions);
 		engine.setExternalVariables(variables);
 		engine.setDefinitionFilter(filter);
@@ -271,7 +271,7 @@ public class OvalHandler implements ISystem {
 	    }
 	}
 
-	IEngine getEngine() {
+	IOvalEngine getEngine() {
 	    return engine;
 	}
     }

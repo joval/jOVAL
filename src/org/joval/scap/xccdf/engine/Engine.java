@@ -72,11 +72,12 @@ import org.joval.intf.scap.arf.IReport;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.oval.IDefinitions;
-import org.joval.intf.scap.oval.IEngine;
+import org.joval.intf.scap.oval.IOvalEngine;
 import org.joval.intf.scap.oval.IResults;
 import org.joval.intf.scap.oval.ISystemCharacteristics;
 import org.joval.intf.scap.xccdf.IBenchmark;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
+import org.joval.intf.scap.xccdf.IXccdfEngine;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
@@ -103,7 +104,7 @@ import org.joval.xml.DOMTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Engine implements org.joval.intf.scap.xccdf.IEngine {
+public class Engine implements IXccdfEngine {
     public static final ObjectFactory FACTORY = new ObjectFactory();
 
     private static final String PRODUCT_NAME;
@@ -150,7 +151,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	reset();
     }
 
-    // Implement org.joval.intf.scap.xccdf.IEngine
+    // Implement IXccdfEngine
 
     public void destroy() {
 	if (state == State.RUNNING) {
@@ -704,7 +705,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	//
 	Map<String, IResults> results = new HashMap<String, IResults>();
 	for (Map.Entry<String, IDefinitionFilter> entry : filters.entrySet()) {
-	    IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, plugin);
+	    IOvalEngine engine = OvalFactory.createEngine(IOvalEngine.Mode.DIRECTED, plugin);
 	    producer.sendNotify(Message.OVAL_ENGINE, engine);
 	    DefinitionMonitor monitor = new DefinitionMonitor();
 	    engine.getNotificationProducer().addObserver(monitor);
@@ -812,9 +813,9 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     }
 
     /**
-     * An IObserver for an OVAL IEngine, that tracks all the definitions that are evaluated.
+     * An IObserver for an IOvalEngine, that tracks all the definitions that are evaluated.
      */
-    class DefinitionMonitor implements IObserver<org.joval.intf.scap.oval.IEngine.Message> {
+    class DefinitionMonitor implements IObserver<IOvalEngine.Message> {
 	private HashSet<String> defs;
 
 	DefinitionMonitor() {
@@ -825,9 +826,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    return defs;
 	}
 
-	public void notify(IProducer<org.joval.intf.scap.oval.IEngine.Message> sender,
-			   org.joval.intf.scap.oval.IEngine.Message msg, Object arg) {
-
+	public void notify(IProducer<IOvalEngine.Message> sender, IOvalEngine.Message msg, Object arg) {
 	    switch(msg) {
 	      case DEFINITION:
 		defs.add((String)arg);

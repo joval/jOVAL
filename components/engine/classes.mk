@@ -10,7 +10,7 @@ CLASSES=\
 	org.joval.intf.scap.ocil.IVariables			\
 	org.joval.intf.scap.oval.IDefinitionFilter		\
 	org.joval.intf.scap.oval.IDefinitions			\
-	org.joval.intf.scap.oval.IEngine			\
+	org.joval.intf.scap.oval.IOvalEngine			\
 	org.joval.intf.scap.oval.IProvider			\
 	org.joval.intf.scap.oval.IResults			\
 	org.joval.intf.scap.oval.ISystemCharacteristics		\
@@ -20,7 +20,7 @@ CLASSES=\
 	org.joval.intf.scap.sce.IScriptResult			\
 	org.joval.intf.scap.xccdf.SystemEnumeration		\
 	org.joval.intf.scap.xccdf.IBenchmark			\
-	org.joval.intf.scap.xccdf.IEngine			\
+	org.joval.intf.scap.xccdf.IXccdfEngine			\
 	org.joval.intf.scap.xccdf.ITailoring			\
 	org.joval.intf.util.IObserver				\
 	org.joval.intf.util.IProducer				\

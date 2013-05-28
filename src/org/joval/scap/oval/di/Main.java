@@ -44,7 +44,7 @@ import scap.oval.results.DefinitionType;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.oval.IDefinitions;
-import org.joval.intf.scap.oval.IEngine;
+import org.joval.intf.scap.oval.IOvalEngine;
 import org.joval.intf.scap.oval.IResults;
 import org.joval.intf.scap.oval.ISystemCharacteristics;
 import org.joval.intf.scap.oval.IVariables;
@@ -67,7 +67,7 @@ import org.joval.xml.schematron.Validator;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Main implements IObserver<IEngine.Message> {
+public class Main implements IObserver<IOvalEngine.Message> {
     private static final String LF			= System.getProperty("line.separator");
     private static final String JAVA_VERSION		= System.getProperty("java.specification.version");
     private static final String MIN_JAVA_VERSION	= "1.5";
@@ -262,9 +262,9 @@ public class Main implements IObserver<IEngine.Message> {
 	print("");
     }
 
-    // Implement IObserver<IEngine.Message>
+    // Implement IObserver<IOvalEngine.Message>
 
-    public void notify(IProducer<IEngine.Message> source, IEngine.Message msg, Object arg) {
+    public void notify(IProducer<IOvalEngine.Message> source, IOvalEngine.Message msg, Object arg) {
 	switch(msg) {
 	  case OBJECT_PHASE_START:
 	    print(getMessage("MESSAGE_OBJECT_PHASE"));
@@ -379,7 +379,7 @@ public class Main implements IObserver<IEngine.Message> {
 	    print(getMessage("MESSAGE_SCHEMA_VERSION_CHECK"));
 	    Version schemaVersion = new Version(defs.getOvalDefinitions().getGenerator().getSchemaVersion());
 	    print(getMessage("MESSAGE_SCHEMA_VERSION", schemaVersion.toString()));
-	    if (IEngine.SCHEMA_VERSION.compareTo(schemaVersion) < 0) {
+	    if (IOvalEngine.SCHEMA_VERSION.compareTo(schemaVersion) < 0) {
 		print(getMessage("ERROR_SCHEMA_VERSION", schemaVersion.toString()));
 		return ERR;
 	    }
@@ -437,7 +437,7 @@ public class Main implements IObserver<IEngine.Message> {
 		filter = OvalFactory.createDefinitionFilter(state.definitionIDs);
 	    }
 
-	    IEngine engine = OvalFactory.createEngine(IEngine.Mode.EXHAUSTIVE, state.plugin);
+	    IOvalEngine engine = OvalFactory.createEngine(IOvalEngine.Mode.EXHAUSTIVE, state.plugin);
 	    engine.setDefinitions(defs);
 
 	    if (filter != null) {

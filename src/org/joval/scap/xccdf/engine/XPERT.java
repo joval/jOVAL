@@ -29,8 +29,9 @@ import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.arf.IReport;
 import org.joval.intf.scap.datastream.IDatastream;
 import org.joval.intf.scap.ocil.IChecklist;
+import org.joval.intf.scap.oval.IOvalEngine;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
-import org.joval.intf.scap.xccdf.IEngine.OcilMessageArgument;
+import org.joval.intf.scap.xccdf.IXccdfEngine;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.plugin.PluginFactory;
@@ -442,15 +443,14 @@ public class XPERT {
 	}
     }
 
-    static class XccdfObserver implements IObserver<org.joval.intf.scap.xccdf.IEngine.Message> {
+    static class XccdfObserver implements IObserver<IXccdfEngine.Message> {
 	File ocilDir;
 
 	XccdfObserver(File ocilDir) {
 	    this.ocilDir = ocilDir;
 	}
 
-	public void notify(IProducer<org.joval.intf.scap.xccdf.IEngine.Message> sender,
-			   org.joval.intf.scap.xccdf.IEngine.Message msg, Object arg) {
+	public void notify(IProducer<IXccdfEngine.Message> sender, IXccdfEngine.Message msg, Object arg) {
 	    switch(msg) {
 	      case PLATFORM_PHASE_START:
 		logger.info("Beginning platform applicability scan");
@@ -478,12 +478,12 @@ public class XPERT {
 
 	      case OVAL_ENGINE:
 		logger.info("Executing OVAL tests");
-		org.joval.intf.scap.oval.IEngine oe = (org.joval.intf.scap.oval.IEngine)arg;
+		IOvalEngine oe = (IOvalEngine)arg;
 		oe.getNotificationProducer().addObserver(new OvalObserver(oe.getNotificationProducer()));
 		break;
 
 	      case OCIL_MISSING:
-		OcilMessageArgument oma = (OcilMessageArgument)arg;
+		IXccdfEngine.OcilMessageArgument oma = (IXccdfEngine.OcilMessageArgument)arg;
 		String base = oma.getHref();
 		if (base.endsWith(".xml")) {
 		    base = base.substring(0, base.length() - 4);
@@ -510,15 +510,14 @@ public class XPERT {
 	}
     }
 
-    static class OvalObserver implements IObserver<org.joval.intf.scap.oval.IEngine.Message> {
-	private IProducer<org.joval.intf.scap.oval.IEngine.Message> producer;
+    static class OvalObserver implements IObserver<IOvalEngine.Message> {
+	private IProducer<IOvalEngine.Message> producer;
 
-	OvalObserver(IProducer<org.joval.intf.scap.oval.IEngine.Message> producer) {
+	OvalObserver(IProducer<IOvalEngine.Message> producer) {
 	    this.producer = producer;
 	}
 
-	public void notify(IProducer<org.joval.intf.scap.oval.IEngine.Message> sender,
-			   org.joval.intf.scap.oval.IEngine.Message msg, Object arg) {
+	public void notify(IProducer<IOvalEngine.Message> sender, IOvalEngine.Message msg, Object arg) {
 	    switch(msg) {
 	      case OBJECT_PHASE_START:
 		logger.info("Beginning scan");

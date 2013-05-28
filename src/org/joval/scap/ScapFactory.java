@@ -11,8 +11,8 @@ import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.datastream.IDatastream;
 import org.joval.intf.scap.datastream.IDatastreamCollection;
 import org.joval.intf.scap.ocil.IChecklist;
-import org.joval.intf.scap.xccdf.IEngine;
 import org.joval.intf.scap.xccdf.ITailoring;
+import org.joval.intf.scap.xccdf.IXccdfEngine;
 import org.joval.scap.ScapException;
 import org.joval.scap.datastream.DatastreamCollection;
 import org.joval.scap.ocil.Checklist;
@@ -71,7 +71,7 @@ public class ScapFactory {
     /**
      * Create an XCCDF processing engine.
      */
-    public static IEngine createEngine(IPlugin plugin) {
+    public static IXccdfEngine createEngine(IPlugin plugin) {
 	return new OEMEngine(plugin);
     }
 

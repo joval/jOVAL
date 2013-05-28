@@ -18,7 +18,7 @@ import org.joval.util.Version;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IEngine extends Runnable {
+public interface IOvalEngine extends Runnable {
     /**
      * The version of the OVAL schema supported by the engine.
      */
@@ -134,7 +134,7 @@ public interface IEngine extends Runnable {
     void setSystemCharacteristics(ISystemCharacteristics sc) throws IllegalThreadStateException, OvalException;
 
     /**
-     * Get an IProducer associated with the IEngine.  This IProducer can be observed for notifications while the
+     * Get an IProducer associated with the IOvalEngine.  This IProducer can be observed for notifications while the
      * engine is running.
      */
     IProducer<Message> getNotificationProducer();
