@@ -64,7 +64,7 @@ public class ScapFactory {
     /**
      * Create an OCIL checklist (which can also include the results) from a file.
      */
-    public static IChecklist createChecklsit(File f) throws OcilException {
+    public static IChecklist createChecklist(File f) throws OcilException {
 	return new Checklist(f);
     }
 
