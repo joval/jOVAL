@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
@@ -16,6 +17,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
@@ -36,8 +38,10 @@ import scap.arf.reporting.RelationshipsContainerType;
 import scap.arf.reporting.RelationshipType;
 import scap.oval.systemcharacteristics.core.InterfaceType;
 import scap.oval.systemcharacteristics.core.SystemInfoType;
+import scap.xccdf.TestResultType;
 
 import org.joval.intf.scap.arf.IReport;
+import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.xml.ITransformable;
 import org.joval.scap.oval.types.Ip4AddressType;
 import org.joval.scap.oval.types.Ip6AddressType;
@@ -69,6 +73,41 @@ public class Report implements IReport, ILoggable {
     }
 
     // Implement IReport
+
+    public Collection<String> getAssetIds() {
+	return assets.keySet();
+    }
+
+    public AssetType getAsset(String assetId) throws NoSuchElementException {
+	if (assets.containsKey(assetId)) {
+	    return assets.get(assetId);
+	} else {
+	    throw new NoSuchElementException(assetId);
+	}
+    }
+
+    public Collection<TestResultType> getTestResults(String assetId) throws NoSuchElementException {
+	ArrayList<TestResultType> results = new ArrayList<TestResultType>();
+	try {
+	    Unmarshaller unmarshaller = SchemaRegistry.XCCDF.getJAXBContext().createUnmarshaller();
+	    for (RelationshipType rel : arc.getRelationships().getRelationship()) {
+		if (rel.getType().equals(Factories.IS_ABOUT)) {
+		    for (String ref : rel.getRef()) {
+			if (assetId.equals(ref) && reports.containsKey(rel.getSubject())) {
+			    Element elt = reports.get(rel.getSubject());
+			    if ("TestResult".equals(elt.getLocalName()) &&
+				SystemEnumeration.XCCDF.namespace().equals(elt.getNamespaceURI())) {
+				results.add((TestResultType)(((JAXBElement)unmarshaller.unmarshal(elt)).getValue()));
+			    }
+			}
+		    }
+		}
+	    }
+	} catch (JAXBException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	return results;
+    }
 
     public AssetReportCollection getAssetReportCollection() {
 	return arc;

@@ -473,18 +473,19 @@ public class Engine implements IXccdfEngine {
 	for (RuleResultType rrt : testResult.getRuleResult()) {
 	    resultMap.put(rrt.getIdref(), rrt);
 	}
+	// Compute scores for all the supported models.
 	// Note - only selected rules will be in the resultMap at this point
 	BenchmarkType bt = ctx.getBenchmark().getBenchmark();
-	for (Model model : bt.getModel()) {
+	for (ScoringModel model : ScoringModel.values()) {
 	    try {
-		ScoreKeeper sk = computeScore(resultMap, bt, ScoringModel.fromModel(model));
+		ScoreKeeper sk = computeScore(resultMap, bt, model);
 		ScoreType scoreType = FACTORY.createScoreType();
-		scoreType.setSystem(model.getSystem());
+		scoreType.setSystem(model.uri());
 		String score = Float.toString(sk.getScore());
 		scoreType.setValue(new BigDecimal(score));
 		scoreType.setMaximum(new BigDecimal(Float.toString(sk.getMaxScore())));
 		testResult.getScore().add(scoreType);
-		logger.info(JOVALMsg.STATUS_XCCDF_SCORE, model.getSystem(), score);
+		logger.info(JOVALMsg.STATUS_XCCDF_SCORE, model.uri(), score);
 	    } catch (IllegalArgumentException e) {
 		logger.warn(JOVALMsg.ERROR_XCCDF_MODEL, e.getMessage());
 	    }
@@ -850,17 +851,8 @@ public class Engine implements IXccdfEngine {
 	    this.uri = uri;
 	}
 
-	static ScoringModel fromModel(Model model) throws IllegalArgumentException {
-	    return fromUri(model.getSystem());
-	}
-
-	static ScoringModel fromUri(String uri) throws IllegalArgumentException {
-	    for (ScoringModel model : values()) {
-		if (model.uri.equals(uri)) {
-		    return model;
-		}
-	    }
-	    throw new IllegalArgumentException(uri);
+	String uri() {
+	    return uri;
 	}
     }
 
@@ -1019,6 +1011,7 @@ public class Engine implements IXccdfEngine {
 			if (weight == 0) {
 			    score = 0;
 			} else {
+			    max_score += count;
 			    score = (score / count);
 			}
 		    }

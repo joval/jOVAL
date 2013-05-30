@@ -10,8 +10,10 @@ import java.util.HashMap;
 import java.util.NoSuchElementException;
 import org.w3c.dom.Element;
 
+import scap.ai.AssetType;
 import scap.arf.core.AssetReportCollection;
 import scap.oval.systemcharacteristics.core.SystemInfoType;
+import scap.xccdf.TestResultType;
 
 import org.joval.intf.xml.ITransformable;
 
@@ -22,6 +24,21 @@ import org.joval.intf.xml.ITransformable;
  * @version %I% %G%
  */
 public interface IReport extends ITransformable {
+    /**
+     * Get the asset IDs in the report.
+     */
+    Collection<String> getAssetIds();
+
+    /**
+     * Get a particular asset.
+     */
+    AssetType getAsset(String assetId) throws NoSuchElementException;
+
+    /**
+     * Get all the XCCDF results associated with the asset.
+     */
+    Collection<TestResultType> getTestResults(String assetId) throws NoSuchElementException;
+
     /**
      * Get the underlying JAXB type.
      */
