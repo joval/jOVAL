@@ -63,19 +63,6 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class SystemCharacteristics implements ISystemCharacteristics, ILoggable {
-    public static final Object parse(InputStream in) throws OvalException {
-	return parse(new StreamSource(in));
-    }
-
-    public static final Object parse(Source src) throws OvalException {
-	try {
-	    Unmarshaller unmarshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext().createUnmarshaller();
-	    return unmarshaller.unmarshal(src);
-	} catch (JAXBException e) {
-	    throw new OvalException(e);
-	}
-    }
-
     public static final OvalSystemCharacteristics getOvalSystemCharacteristics(File f) throws OvalException {
 	return getOvalSystemCharacteristics(new StreamSource(f));
     }
@@ -86,6 +73,19 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    return (OvalSystemCharacteristics)rootObj;
 	} else {
 	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_SC_BAD_SOURCE, src.getSystemId()));
+	}
+    }
+
+    private static final Object parse(InputStream in) throws OvalException {
+	return parse(new StreamSource(in));
+    }
+
+    private static final Object parse(Source src) throws OvalException {
+	try {
+	    Unmarshaller unmarshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext().createUnmarshaller();
+	    return unmarshaller.unmarshal(src);
+	} catch (JAXBException e) {
+	    throw new OvalException(e);
 	}
     }
 

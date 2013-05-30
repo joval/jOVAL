@@ -21,6 +21,9 @@ import javax.xml.bind.JAXBElement;
 import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
+import org.oasis.catalog.Catalog;
+import org.oasis.catalog.Uri;
+import org.openscap.sce.xccdf.ScriptDataType;
 import scap.datastream.Component;
 import scap.datastream.ComponentRef;
 import scap.datastream.ContentSourceType;
@@ -29,9 +32,6 @@ import scap.datastream.DataStreamCollection;
 import scap.datastream.ExtendedComponent;
 import scap.datastream.RefListType;
 import scap.datastream.UseCaseType;
-import org.oasis.catalog.Catalog;
-import org.oasis.catalog.Uri;
-import org.openscap.sce.xccdf.ScriptDataType;
 import scap.xccdf.BenchmarkType;
 import scap.xccdf.ProfileType;
 
@@ -88,7 +88,8 @@ public class Datastream implements IDatastream, ILoggable {
 	for (Component component : dsc.getComponent()) {
 	    components.put(component.getId(), component);
 	    if (component.isSetBenchmark()) {
-		benchmarks.put(component.getBenchmark().getBenchmarkId(), new Benchmark(component.getBenchmark()));
+		String benchmarkId = component.getBenchmark().getBenchmarkId();
+		benchmarks.put(benchmarkId, new Benchmark(component));
 	    }
 	}
 	extendedComponents = new HashMap<String, ExtendedComponent>();
@@ -174,7 +175,8 @@ public class Datastream implements IDatastream, ILoggable {
     }
 
     public IScapContext getContext(ITailoring tailoring, String profileId) throws NoSuchElementException, ScapException {
-	IBenchmark benchmark = getBenchmark(tailoring.getBenchmarkId());
+	String benchmarkId = tailoring.getBenchmarkId();
+	IBenchmark benchmark = getBenchmark(benchmarkId);
 	return new Context(benchmark, benchmark.getProfile(profileId));
     }
 

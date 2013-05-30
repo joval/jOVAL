@@ -145,8 +145,9 @@ public class Benchmark implements IBenchmark, ILoggable {
     /**
      * Create a benchmark document from the JAXB datatype.
      */
-    public Benchmark(BenchmarkType bt) throws XccdfException {
+    public Benchmark(String href, BenchmarkType bt) throws XccdfException {
 	this();
+	this.href = href;
 	setBenchmark(bt);
     }
 

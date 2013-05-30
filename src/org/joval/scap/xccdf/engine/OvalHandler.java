@@ -4,10 +4,7 @@
 package org.joval.scap.xccdf.engine;
 
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -51,12 +48,14 @@ public class OvalHandler implements ISystem {
     private static final String NAMESPACE = SystemEnumeration.OVAL.namespace();
 
     private Map<String, EngineData> engines;
+    private Map<String, IResults> results;
     private IScapContext ctx;
     private Producer<IXccdfEngine.Message> producer;
 
-    public OvalHandler(IScapContext ctx, Producer<IXccdfEngine.Message> producer) {
+    public OvalHandler(IScapContext ctx, Producer<IXccdfEngine.Message> producer, Map<String, IResults> results) {
 	this.ctx = ctx;
 	this.producer = producer;
+	this.results = results;
 	engines = new HashMap<String, EngineData>();
     }
 
@@ -76,67 +75,71 @@ public class OvalHandler implements ISystem {
 
 	for (CheckContentRefType ref : check.getCheckContentRef()) {
 	    String href = ref.getHref();
-	    EngineData ed = null;
-	    if (engines.containsKey(href)) {
-		ed = engines.get(href);
-	    } else {
-		try {
-		    ed = new EngineData(ctx.getOval(href));
-		    engines.put(href, ed);
-		} catch (NoSuchElementException e) {
-		    continue;
+	    if (!results.containsKey(href)) {
+		EngineData ed = null;
+		if (engines.containsKey(href)) {
+		    ed = engines.get(href);
+		} else {
+		    try {
+			ed = new EngineData(ctx.getOval(href));
+			engines.put(href, ed);
+		    } catch (NoSuchElementException e) {
+			continue;
+		    }
 		}
-	    }
 
-	    //
-	    // Add definition references to the filter
-	    //
-	    if (ref.isSetName()) {
-		ed.getFilter().addDefinition(ref.getName());
-	    } else {
 		//
-		// Add all the definitions
+		// Add definition references to the filter
 		//
-		IDefinitions definitions = ctx.getOval(href);
-		for (scap.oval.definitions.core.DefinitionType definition :
-		     definitions.getOvalDefinitions().getDefinitions().getDefinition()) {
-		    ed.getFilter().addDefinition(definition.getId());
+		if (ref.isSetName()) {
+		    ed.getFilter().addDefinition(ref.getName());
+		} else {
+		    //
+		    // Add all the definitions
+		    //
+		    IDefinitions definitions = ctx.getOval(href);
+		    for (scap.oval.definitions.core.DefinitionType definition :
+			 definitions.getOvalDefinitions().getDefinitions().getDefinition()) {
+			ed.getFilter().addDefinition(definition.getId());
+		    }
 		}
-	    }
 
-	    //
-	    // Add variable exports to the variables
-	    //
-	    for (CheckExportType export : check.getCheckExport()) {
-		String ovalVariableId = export.getExportName();
-		String valueId = export.getValueId();
-		for (String s : ctx.getValues().get(valueId)) {
-		    ed.getVariables().addValue(ovalVariableId, s);
+		//
+		// Add variable exports to the variables
+		//
+		for (CheckExportType export : check.getCheckExport()) {
+		    String ovalVariableId = export.getExportName();
+		    String valueId = export.getValueId();
+		    for (String s : ctx.getValues().get(valueId)) {
+			ed.getVariables().addValue(ovalVariableId, s);
+		    }
+		    ed.getVariables().setComment(ovalVariableId, valueId);
 		}
-		ed.getVariables().setComment(ovalVariableId, valueId);
 	    }
 	}
     }
 
-    public Collection<ITransformable> exec(IPlugin plugin) throws Exception {
-	Collection<ITransformable> reports = new ArrayList<ITransformable>();
+    public Map<String, ITransformable> exec(IPlugin plugin) throws Exception {
+	Map<String, ITransformable> reports = new HashMap<String, ITransformable>();
+	reports.putAll(results);
 	Iterator<Map.Entry<String, EngineData>> iter = engines.entrySet().iterator();
 	while(iter.hasNext()) {
 	    Map.Entry<String, EngineData> entry = iter.next();
+	    String href = entry.getKey();
 	    if (entry.getValue().createEngine(plugin)) {
-		plugin.getLogger().info("Created engine for href " + entry.getKey());
+		plugin.getLogger().info("Created engine for href " + href);
 		IOvalEngine engine = entry.getValue().getEngine();
 		producer.sendNotify(IXccdfEngine.Message.OVAL_ENGINE, engine);
 		engine.run();
 		switch(engine.getResult()) {
 	  	  case OK:
-		    reports.add(engine.getResults());
+		    reports.put(href, engine.getResults());
 		    break;
 	  	  case ERR:
 		    throw engine.getError();
 		}
 	    } else {
-		plugin.getLogger().info("No engine created for href " + entry.getKey());
+		plugin.getLogger().info("No engine created for href " + href);
 		iter.remove();
 	    }
 	}
@@ -149,9 +152,15 @@ public class OvalHandler implements ISystem {
 	}
 
 	for (CheckContentRefType ref : check.getCheckContentRef()) {
-	    if (engines.containsKey(ref.getHref())) {
+	    IResults ovalResult = null;
+	    String href = ref.getHref();
+	    if (results.containsKey(href)) {
+		ovalResult = results.get(href);
+	    } else if (engines.containsKey(href)) {
+		ovalResult = engines.get(href).getEngine().getResults();
+	    }
+	    if (ovalResult != null) {
 		CheckData data = new CheckData(check.getNegate());
-		IResults ovalResult = engines.get(ref.getHref()).getEngine().getResults();
 		if (ref.isSetName()) {
 		    try {
 			String definitionId = ref.getName();

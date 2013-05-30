@@ -35,9 +35,9 @@ interface ISystem {
     /**
      * Execute the added checks using the specified plugin.
      *
-     * @return an enumeration of reports
+     * @return reports, indexed by source document URI
      */
-    Collection<ITransformable> exec(IPlugin plugin) throws Exception;
+    Map<String, ITransformable> exec(IPlugin plugin) throws Exception;
 
     /**
      * Get the result for a rule.

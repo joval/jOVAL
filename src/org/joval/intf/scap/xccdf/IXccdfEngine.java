@@ -10,6 +10,8 @@ import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.arf.IReport;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.ocil.IVariables;
+import org.joval.intf.scap.oval.IResults;
+import org.joval.intf.scap.sce.IScriptResult;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.util.IProducer;
 import org.joval.scap.ScapException;
@@ -113,11 +115,30 @@ public interface IXccdfEngine extends Runnable {
     void setContext(IScapContext ctx) throws IllegalStateException, ScapException;
 
     /**
-     * Add an OCIL checklist (containing result information) to the engine as input.
+     * Assert the applicability of a platform to the engine. This will prevent auto-discovery of the referenced platform.
+     */
+    void assertPlatform(String idref, boolean applicable) throws IllegalStateException;
+
+    /**
+     * Add a pre-existing OCIL checklist (containing result information) to the engine as input.
      *
      * @throws IllegalStateException if the engine has already started.
      */
     void addChecklist(String href, IChecklist checklist) throws IllegalStateException;
+
+    /**
+     * Add a pre-existing OVAL result to the engine as input.
+     *
+     * @throws IllegalStateException if the engine has already started.
+     */
+    void addOvalResult(String href, IResults results) throws IllegalStateException;
+
+    /**
+     * Add a pre-existing SCE result to the engine as input.
+     *
+     * @throws IllegalStateException if the engine has already started.
+     */
+    void addScriptResult(String href, IScriptResult result) throws IllegalStateException;
 
     /**
      * Get an IProducer associated with the IXccdfEngine.  This IProducer can be observed for MESSAGE_ notifications while

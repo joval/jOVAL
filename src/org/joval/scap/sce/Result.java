@@ -3,8 +3,10 @@
 
 package org.joval.scap.sce;
 
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.transform.Source;
 
@@ -13,6 +15,7 @@ import org.openscap.sce.results.SceResultsType;
 import org.joval.intf.scap.sce.IScriptResult;
 import org.joval.intf.xml.ITransformable;
 import org.joval.scap.ScapException;
+import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -22,6 +25,30 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class Result implements IScriptResult {
+    /**
+     * Obtain an SceResultsType from a JAXBSource.
+     */
+    public static final SceResultsType getSceResults(Source src) throws SceException {
+	Object rootObj = parse(src);
+	if (rootObj instanceof JAXBElement) {
+	    rootObj = ((JAXBElement)rootObj).getValue();
+	}
+	if (rootObj instanceof SceResultsType) {
+	    return (SceResultsType)rootObj;
+	} else {
+	    throw new SceException(JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_RESULT_BAD_SOURCE, src.getSystemId()));
+	}
+    }
+
+    private static final Object parse(Source src) throws SceException {
+	try {
+	    Unmarshaller unmarshaller = SchemaRegistry.SCE.getJAXBContext().createUnmarshaller();
+	    return unmarshaller.unmarshal(src);
+	} catch (JAXBException e) {
+	    throw new SceException(e);
+	}
+    }
+
     private SceResultsType result;
 
     /**

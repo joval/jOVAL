@@ -31,4 +31,9 @@ public class Factories {
      * Facilitates access to the AI variables schema ObjectFactory.
      */
     public static scap.ai.ObjectFactory asset = new scap.ai.ObjectFactory();
+
+    /**
+     * Facilitates access to the OASIS catalog schema ObjectFactory.
+     */
+    public static org.oasis.catalog.ObjectFactory catalog = new org.oasis.catalog.ObjectFactory();
 }

@@ -4,7 +4,6 @@
 package org.joval.scap.xccdf.engine;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -106,7 +105,7 @@ public class OcilHandler implements ISystem {
     private IScapContext ctx;
     private XMLGregorianCalendar startTime;
     private Map<String, Map<String, String>> results;
-    private Collection<ITransformable> reports;
+    private Map<String, ITransformable> reports;
 
     /**
      * Create an OCIL handler utility for the given context and href-indexed Checklists (results).
@@ -114,7 +113,7 @@ public class OcilHandler implements ISystem {
     public OcilHandler(IScapContext ctx, Map<String, IChecklist> checklists) throws IllegalArgumentException {
 	this.ctx = ctx;
 	results = new HashMap<String, Map<String, String>>();
-	reports = new ArrayList<ITransformable>();
+	reports = new HashMap<String, ITransformable>();
 
 	if (checklists.size() == 1 && "".equals(checklists.keySet().iterator().next())) {
 	    //
@@ -124,14 +123,14 @@ public class OcilHandler implements ISystem {
 	    // For reporting purposes, however, it is only added once.
 	    //
 	    IChecklist checklist = checklists.values().iterator().next();
-	    reports.add(checklist);
+	    reports.put("", checklist);
 
 	    checklists = new HashMap<String, IChecklist>();
 	    for (String href : getOcilHrefs()) {
 		checklists.put(href, checklist);
 	    }
 	} else {
-	    reports.addAll(checklists.values());
+	    reports.putAll(checklists);
 	}
 
 	for (Map.Entry<String, IChecklist> entry : checklists.entrySet()) {
@@ -188,7 +187,7 @@ public class OcilHandler implements ISystem {
 	// No-op
     }
 
-    public Collection<ITransformable> exec(IPlugin plugin) {
+    public Map<String, ITransformable> exec(IPlugin plugin) {
 	return reports;
     }
 

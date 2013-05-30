@@ -60,7 +60,7 @@ public class Bundle implements IDatastream {
 	    for (File f : base.listFiles()) {
 		if (f.isFile() && f.getName().endsWith(".xml")) {
 		    if (f.getName().toLowerCase().indexOf("xccdf") != -1) {
-			IBenchmark benchmark = new Benchmark(Benchmark.getBenchmarkType(f));
+			IBenchmark benchmark = new Benchmark(f.getName(), Benchmark.getBenchmarkType(f));
 			benchmarks.put(benchmark.getId(), benchmark);
 		    } else if (f.getName().toLowerCase().indexOf("cpe-dictionary") != -1) {
 			dictionary = new Dictionary(Dictionary.getCpeList(f));
@@ -78,7 +78,7 @@ public class Bundle implements IDatastream {
 			try {
 			    if (entry.getName().toLowerCase().indexOf("xccdf") != -1) {
 				in = zip.getInputStream(entry);
-				IBenchmark benchmark = new Benchmark(Benchmark.getBenchmarkType(in));
+				IBenchmark benchmark = new Benchmark(entry.getName(), Benchmark.getBenchmarkType(in));
 				benchmarks.put(benchmark.getId(), benchmark);
 			    } else if (entry.getName().toLowerCase().indexOf("cpe-dictionary") != -1) {
 				in = zip.getInputStream(entry);

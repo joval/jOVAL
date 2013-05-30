@@ -3,7 +3,6 @@
 
 package org.joval.scap.xccdf.engine;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,14 +43,15 @@ public class SceHandler implements ISystem {
     private IScapContext ctx;
     private Producer<IXccdfEngine.Message> producer;
     private Map<String, Wrapper> scripts;
-    private Map<String, SceResultsType> results;
+    private Map<String, IScriptResult> results;
 
     /**
      * Create an OVAL handler utility for the given XCCDF and Profile.
      */
-    public SceHandler(IScapContext ctx, Producer<IXccdfEngine.Message> producer) {
+    public SceHandler(IScapContext ctx, Producer<IXccdfEngine.Message> producer, Map<String, IScriptResult> results) {
 	this.ctx = ctx;
 	this.producer = producer;
+	this.results = results;
 	scripts = new HashMap<String, Wrapper>();
     }
 
@@ -67,26 +67,28 @@ public class SceHandler implements ISystem {
 	}
 	for (CheckContentRefType ref : check.getCheckContentRef()) {
 	    if (ref.isSetHref()) {
-		String scriptId = ref.getHref();
-		Map<String, String> exports = new HashMap<String, String>();
-		for (CheckExportType export : check.getCheckExport()) {
-		    exports.put(export.getExportName(), getSingleValue(export.getValueId()));
+		String href = ref.getHref();
+		if (!results.containsKey(href)) {
+		    Map<String, String> exports = new HashMap<String, String>();
+		    for (CheckExportType export : check.getCheckExport()) {
+			exports.put(export.getExportName(), getSingleValue(export.getValueId()));
+		    }
+		    scripts.put(href, new Wrapper(href, exports));
 		}
-		scripts.put(scriptId, new Wrapper(scriptId, exports));
 	    }
 	}
     }
 
-    public Collection<ITransformable> exec(IPlugin plugin) throws Exception {
-	Collection<ITransformable> reports = new ArrayList<ITransformable>();
-	results = new HashMap<String, SceResultsType>();
+    public Map<String, ITransformable> exec(IPlugin plugin) throws Exception {
+	Map<String, ITransformable> reports = new HashMap<String, ITransformable>();
+	reports.putAll(results);
 	ISession session = plugin.getSession();
 	for (Map.Entry<String, Wrapper> entry : scripts.entrySet()) {
+	    String href = entry.getKey();
 	    Wrapper wrapper = entry.getValue();
-	    producer.sendNotify(IXccdfEngine.Message.SCE_SCRIPT, entry.getKey());
+	    producer.sendNotify(IXccdfEngine.Message.SCE_SCRIPT, href);
 	    IScriptResult result = wrapper.getScript().exec(wrapper.getExports(), session);
-	    reports.add(result);
-	    results.put(entry.getKey(), result.getResult());
+	    reports.put(href, result);
 	}
 	return reports;
     }
@@ -116,7 +118,7 @@ public class SceHandler implements ISystem {
 	if (check.isSetCheckContentRef()) {
 	    for (CheckContentRefType ref : check.getCheckContentRef()) {
 		if (results.containsKey(ref.getHref())) {
-		    SceResultsType srt = results.get(ref.getHref());
+		    SceResultsType srt = results.get(ref.getHref()).getResult();
 		    data.add(srt.getResult());
 		    checkResult.getCheckContentRef().add(ref);
 		    if (importStdout) {

@@ -13,8 +13,10 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Hashtable;
 import java.util.HashSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -77,8 +79,8 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class Results implements IResults, ILoggable {
-    private Hashtable<String, DefinitionType> definitionTable;
-    private Hashtable<String, TestType> testTable;
+    private Map<String, DefinitionType> definitionTable;
+    private Map<String, TestType> testTable;
     private IDefinitions definitions;
     private ISystemCharacteristics sc;
     private Directives directives;
@@ -99,14 +101,31 @@ public class Results implements IResults, ILoggable {
     }
 
     /**
+     * Create a Results from an unmarshalled document.
+     */
+    public Results(OvalResults results) throws OvalException {
+	definitions = new Definitions(results.getOvalDefinitions());
+	List<SystemType> systems = results.getResults().getSystem();
+	if (systems.size() == 1) {
+	    sc = new SystemCharacteristics(systems.get(0).getOvalSystemCharacteristics());
+	} else {
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESULTS_SC_COUNT, Integer.toString(systems.size())));
+	}
+	logger = JOVALMsg.getLogger();
+	definitionTable = new HashMap<String, DefinitionType>();
+	testTable = new HashMap<String, TestType>();
+	directives = new Directives();
+    }
+
+    /**
      * Create a Results based on the specified Definitions and SystemCharacteristics.
      */
     public Results(IDefinitions definitions, ISystemCharacteristics sc) {
 	this.definitions = definitions;
 	this.sc = sc;
 	logger = JOVALMsg.getLogger();
-	definitionTable = new Hashtable<String, DefinitionType>();
-	testTable = new Hashtable<String, TestType>();
+	definitionTable = new HashMap<String, DefinitionType>();
+	testTable = new HashMap<String, TestType>();
 	directives = new Directives();
     }
 
@@ -242,7 +261,7 @@ public class Results implements IResults, ILoggable {
 	//
 	// Add definitions (using the Directives-filtered method) and simultaneously track reportable tests.
 	//
-	Hashtable<String, TestType> reportableTests = new Hashtable<String, TestType>();
+	Map<String, TestType> reportableTests = new HashMap<String, TestType>();
 	DefinitionsType definitionsType = Factories.results.createDefinitionsType();
 	Collection<DefinitionType> defs = new ArrayList<DefinitionType>();
 	for (DefinitionType definition : definitionTable.values()) {

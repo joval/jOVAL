@@ -75,6 +75,7 @@ import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.intf.scap.oval.IOvalEngine;
 import org.joval.intf.scap.oval.IResults;
 import org.joval.intf.scap.oval.ISystemCharacteristics;
+import org.joval.intf.scap.sce.IScriptResult;
 import org.joval.intf.scap.xccdf.IBenchmark;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.scap.xccdf.IXccdfEngine;
@@ -131,10 +132,12 @@ public class Engine implements IXccdfEngine {
     private SystemInfoType sysinfo;
     private Collection<String> applicableCpes;
     private Map<String, IChecklist> checklists;
+    private Map<String, IResults> ovalResults;
+    private Map<String, IScriptResult> scriptResults;
     private Map<String, Boolean> platforms;
     private IReport report;
     private String requestId;
-    private List<ITransformable> subreports;
+    private Map<String, ITransformable> subreports;
     private Exception error;
     private State state = State.CONFIGURE;
     private boolean abort = false;
@@ -179,6 +182,21 @@ public class Engine implements IXccdfEngine {
 	}
     }
 
+    public void assertPlatform(String idref, boolean applicable) {
+	switch(state) {
+	  case RUNNING:
+	    throw new IllegalThreadStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
+
+	  case COMPLETE_OK:
+	  case COMPLETE_ERR:
+	    reset();
+	    // fall-thru
+	  default:
+	    platforms.put(idref, applicable ? Boolean.TRUE : Boolean.FALSE);
+	    break;
+	}
+    }
+
     public void addChecklist(String href, IChecklist checklist) throws IllegalStateException {
 	switch(state) {
 	  case RUNNING:
@@ -190,6 +208,36 @@ public class Engine implements IXccdfEngine {
 	    // fall-thru
 	  default:
 	    checklists.put(href, checklist);
+	    break;
+	}
+    }
+
+    public void addOvalResult(String href, IResults results) throws IllegalStateException {
+	switch(state) {
+	  case RUNNING:
+	    throw new IllegalThreadStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
+
+	  case COMPLETE_OK:
+	  case COMPLETE_ERR:
+	    reset();
+	    // fall-thru
+	  default:
+	    ovalResults.put(href, results);
+	    break;
+	}
+    }
+
+    public void addScriptResult(String href, IScriptResult result) throws IllegalStateException {
+	switch(state) {
+	  case RUNNING:
+	    throw new IllegalThreadStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
+
+	  case COMPLETE_OK:
+	  case COMPLETE_ERR:
+	    reset();
+	    // fall-thru
+	  default:
+	    scriptResults.put(href, result);
 	    break;
 	}
     }
@@ -218,17 +266,18 @@ public class Engine implements IXccdfEngine {
 	  case COMPLETE_OK:
 	    try {
 		String assetId = report.addAsset(sysinfo, applicableCpes);
-		for (ITransformable subreport : subreports) {
+		for (Map.Entry<String, ITransformable> entry : subreports.entrySet()) {
+		    ITransformable subreport = entry.getValue();
 		    String ns = DOMTools.getNamespace(subreport);
 		    if (SystemEnumeration.XCCDF.namespace().equals(ns)) {
 			//
 			// Always include the XCCDF report
 			//
-			report.addReport(requestId, assetId, DOMTools.toElement(subreport));
+			report.addReport(requestId, assetId, entry.getKey(), DOMTools.toElement(subreport));
 		    } else {
 			for (SystemEnumeration system : systems) {
 			    if (system == SystemEnumeration.ANY || system.namespace().equals(ns)) {
-				report.addReport(requestId, assetId, DOMTools.toElement(subreport));
+				report.addReport(requestId, assetId, entry.getKey(), DOMTools.toElement(subreport));
 				break;
 			    }
 			}
@@ -273,7 +322,12 @@ public class Engine implements IXccdfEngine {
 	    if (rules.size() == 0) {
 		logger.warn(JOVALMsg.WARNING_XCCDF_RULES);
 	    } else {
-		String profileId = ctx.getProfile() == null ? "[no profile selected]" : ctx.getProfile().getProfileId();
+		String profileId = null;
+		if (ctx.getProfile() == null) {
+		    profileId = JOVALMsg.getMessage(JOVALMsg.STATUS_XCCDF_NOPROFILE);
+		} else {
+		    profileId = ctx.getProfile().getProfileId();
+		}
 		logger.info(JOVALMsg.STATUS_XCCDF_RULES, rules.size(), profileId);
 		HashSet<String> selectedIds = new HashSet<String>();
 		for (RuleType rule : rules) {
@@ -358,7 +412,7 @@ public class Engine implements IXccdfEngine {
 			testResult.getRuleResult().add(rrt);
 		    }
 		}
-		subreports.add(new TestResult(testResult));
+		subreports.put(testResult.getBenchmark().getHref(), new TestResult(testResult));
 
 		//
 		// XPERT requires the result to be added to the benchmark to create the HTML transform
@@ -380,8 +434,11 @@ public class Engine implements IXccdfEngine {
 
     private void reset() {
 	checklists = new HashMap<String, IChecklist>();
+	ovalResults = new HashMap<String, IResults>();
+	scriptResults = new HashMap<String, IScriptResult>();
+	platforms = new HashMap<String, Boolean>();
 	report = new Report();
-	subreports = new ArrayList<ITransformable>();
+	subreports = new HashMap<String, ITransformable>();
 	state = State.CONFIGURE;
 	error = null;
     }
@@ -398,9 +455,9 @@ public class Engine implements IXccdfEngine {
 	    ocil.setStartTime(testResult);
 	    handlers.put(ocil.getNamespace(), ocil);
 	}
-	ISystem oval = new OvalHandler(ctx, producer);
+	ISystem oval = new OvalHandler(ctx, producer, ovalResults);
 	handlers.put(oval.getNamespace(), oval);
-	ISystem sce = new SceHandler(ctx, producer);
+	ISystem sce = new SceHandler(ctx, producer, scriptResults);
 	handlers.put(sce.getNamespace(), sce);
 
 	//
@@ -444,7 +501,7 @@ public class Engine implements IXccdfEngine {
 	    if (abort) {
 		throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
 	    }
-	    subreports.addAll(handler.exec(plugin));
+	    subreports.putAll(handler.exec(plugin));
 	}
 
 	//
@@ -581,16 +638,16 @@ public class Engine implements IXccdfEngine {
      */
     private ResultEnumType getRuleResult(RuleType rule, ResultEnumType result) {
 	RoleEnumType role = rule.getRole();
-        switch(role) {
-          case UNSCORED:
-            return ResultEnumType.INFORMATIONAL;
+	switch(role) {
+	  case UNSCORED:
+	    return ResultEnumType.INFORMATIONAL;
 
-          case FULL:
-            return result;
+	  case FULL:
+	    return result;
 
-          default:
-            throw new IllegalArgumentException(role.toString());
-        }
+	  default:
+	    throw new IllegalArgumentException(role.toString());
+	}
     }
 
     /**
@@ -686,17 +743,21 @@ public class Engine implements IXccdfEngine {
      */
     private void checkPlatforms(TestResultType testResult) throws Exception {
 	//
-	// Parcel up all the check definitions by href
+	// Parcel up all the check definitions for auto-discovery by href
 	//
 	Map<String, IDefinitionFilter> filters = new HashMap<String, IDefinitionFilter>();
 	for (Map.Entry<String, LogicalTestType> entry : ctx.getCpeTests().entrySet()) {
-	    producer.sendNotify(Message.PLATFORM_CPE, entry.getKey());
-	    for (CheckFactRefType cfrt : entry.getValue().getCheckFactRef()) {
-		if (SystemEnumeration.OVAL.namespace().equals(cfrt.getSystem())) {
-		    if (!filters.containsKey(cfrt.getHref())) {
-			filters.put(cfrt.getHref(), OvalFactory.createDefinitionFilter());
+	    if (platforms.containsKey(entry.getKey())) {
+		// Ignore asserted platforms
+	    } else {
+		producer.sendNotify(Message.PLATFORM_CPE, entry.getKey());
+		for (CheckFactRefType cfrt : entry.getValue().getCheckFactRef()) {
+		    if (SystemEnumeration.OVAL.namespace().equals(cfrt.getSystem())) {
+			if (!filters.containsKey(cfrt.getHref())) {
+			    filters.put(cfrt.getHref(), OvalFactory.createDefinitionFilter());
+			}
+			filters.get(cfrt.getHref()).addDefinition(cfrt.getIdRef());
 		    }
-		    filters.get(cfrt.getHref()).addDefinition(cfrt.getIdRef());
 		}
 	    }
 	}
@@ -717,8 +778,13 @@ public class Engine implements IXccdfEngine {
 		switch(engine.getResult()) {
 		  case OK:
 		    IResults ir = engine.getResults();
-		    subreports.add(ir);
 		    results.put(entry.getKey(), ir);
+		    //
+		    // NB: Platform checks can make use of OVAL documents are also be leveraged by regular checks.
+		    // In such cases, the platform OVAL subreport will be over-written by the OVAL results used
+		    // to perform the XCCDF checks.
+		    //
+		    subreports.put(entry.getKey(), ir);
 		    break;
 
 		  case ERR:
@@ -732,18 +798,25 @@ public class Engine implements IXccdfEngine {
 	}
 
 	//
-	// Run an OVAL engine for each href to solve the platform definitions
+	// Evaluate the platform definitions based on assertions, logical tests and discovered data.
 	//
-	platforms = new HashMap<String, Boolean>();
 	for (Map.Entry<String, LogicalTestType> entry : ctx.getCpeTests().entrySet()) {
-	    if (evaluate(entry.getValue(), results)) {
-		CPE2IdrefType cpeRef = FACTORY.createCPE2IdrefType();
-		cpeRef.setIdref(entry.getKey());
-		testResult.getPlatform().add(cpeRef);
-		logger.info(JOVALMsg.STATUS_CPE_TARGET, plugin.getSession().getHostname(), entry.getKey());
-		platforms.put(entry.getKey(), Boolean.TRUE);
+	    if (platforms.containsKey(entry.getKey())) {
+		if (platforms.get(entry.getKey()).booleanValue()) {
+		    CPE2IdrefType cpeRef = FACTORY.createCPE2IdrefType();
+		    cpeRef.setIdref(entry.getKey());
+		    testResult.getPlatform().add(cpeRef);
+		}
 	    } else {
-		platforms.put(entry.getKey(), Boolean.FALSE);
+		if (evaluate(entry.getValue(), results)) {
+		    CPE2IdrefType cpeRef = FACTORY.createCPE2IdrefType();
+		    cpeRef.setIdref(entry.getKey());
+		    testResult.getPlatform().add(cpeRef);
+		    logger.info(JOVALMsg.STATUS_CPE_TARGET, plugin.getSession().getHostname(), entry.getKey());
+		    platforms.put(entry.getKey(), Boolean.TRUE);
+		} else {
+		    platforms.put(entry.getKey(), Boolean.FALSE);
+		}
 	    }
 	}
     }

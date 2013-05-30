@@ -7,11 +7,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -21,11 +23,14 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
 import org.w3c.dom.Element;
 
 import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
+import org.oasis.catalog.Catalog;
+import org.oasis.catalog.Uri;
 import scap.ai.AssetType;
 import scap.ai.ComputingDeviceType;
 import scap.ai.Cpe;
@@ -34,6 +39,7 @@ import scap.ai.NetworkInterfaceType;
 import scap.arf.core.AssetReportCollection;
 import scap.arf.core.ReportRequestType;
 import scap.arf.core.ReportType;
+import scap.arf.core.AssetReportCollection.ExtendedInfos.ExtendedInfo;
 import scap.arf.reporting.RelationshipsContainerType;
 import scap.arf.reporting.RelationshipType;
 import scap.oval.systemcharacteristics.core.InterfaceType;
@@ -55,11 +61,50 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class Report implements IReport, ILoggable {
+    public static final AssetReportCollection getAssetReportCollection(File f) throws ArfException {
+	return getAssetReportCollection(new StreamSource(f));
+    }
+
+    public static final AssetReportCollection getAssetReportCollection(Source src) throws ArfException {
+	Object rootObj = parse(src);
+	if (rootObj instanceof AssetReportCollection) {
+	    return (AssetReportCollection)rootObj;
+	} else {
+	    throw new ArfException(JOVALMsg.getMessage(JOVALMsg.ERROR_ARF_BAD_SOURCE, src.getSystemId()));
+	}
+    }
+
+    private static final Object parse(InputStream in) throws ArfException {
+	return parse(new StreamSource(in));
+    }
+
+    private static final Object parse(Source src) throws ArfException {
+	try {
+	    Unmarshaller unmarshaller = SchemaRegistry.ARF.getJAXBContext().createUnmarshaller();
+	    return unmarshaller.unmarshal(src);
+	} catch (JAXBException e) {
+	    throw new ArfException(e);
+	}
+    }
+
+    private static final String CATALOG_ID = "urn:joval:reports:catalog";
+
     private LocLogger logger;
     private AssetReportCollection arc;
     private HashMap<String, Element> requests;
     private HashMap<String, AssetType> assets;
     private HashMap<String, Element> reports;
+
+    /**
+     * Create a report based on an existing AssetReportCollection.
+     */
+    public Report(AssetReportCollection arc) {
+	this.arc = arc;
+	requests = new HashMap<String, Element>();
+	assets = new HashMap<String, AssetType>();
+	reports = new HashMap<String, Element>();
+	logger = JOVALMsg.getLogger();
+    }
 
     /**
      * Create an empty report.
@@ -86,8 +131,8 @@ public class Report implements IReport, ILoggable {
 	}
     }
 
-    public Collection<TestResultType> getTestResults(String assetId) throws NoSuchElementException {
-	ArrayList<TestResultType> results = new ArrayList<TestResultType>();
+    public Map<String, TestResultType> getTestResults(String assetId) throws NoSuchElementException {
+	Map<String, TestResultType> results = new HashMap<String, TestResultType>();
 	try {
 	    Unmarshaller unmarshaller = SchemaRegistry.XCCDF.getJAXBContext().createUnmarshaller();
 	    for (RelationshipType rel : arc.getRelationships().getRelationship()) {
@@ -97,7 +142,8 @@ public class Report implements IReport, ILoggable {
 			    Element elt = reports.get(rel.getSubject());
 			    if ("TestResult".equals(elt.getLocalName()) &&
 				SystemEnumeration.XCCDF.namespace().equals(elt.getNamespaceURI())) {
-				results.add((TestResultType)(((JAXBElement)unmarshaller.unmarshal(elt)).getValue()));
+				TestResultType tr = (TestResultType)(((JAXBElement)unmarshaller.unmarshal(elt)).getValue());
+				results.put(tr.getBenchmark().getId(), tr);
 			    }
 			}
 		    }
@@ -107,6 +153,25 @@ public class Report implements IReport, ILoggable {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return results;
+    }
+
+    public Catalog getCatalog() throws ArfException, NoSuchElementException {
+	if (arc.isSetExtendedInfos()) {
+	    for (ExtendedInfo ext : arc.getExtendedInfos().getExtendedInfo()) {
+		if (CATALOG_ID.equals(ext.getId())) {
+		    Object obj = ext.getAny();
+		    if (obj instanceof JAXBElement) {
+			obj = ((JAXBElement)obj).getValue();
+		    }
+		    if (obj instanceof Catalog) {
+			return (Catalog)obj;
+		    } else {
+			throw new ArfException(JOVALMsg.getMessage(JOVALMsg.ERROR_ARF_CATALOG, obj.getClass().getName()));
+		    }
+		}
+	    }
+	}
+	throw new NoSuchElementException();
     }
 
     public AssetReportCollection getAssetReportCollection() {
@@ -202,7 +267,9 @@ public class Report implements IReport, ILoggable {
 	return assetId;
     }
 
-    public synchronized String addReport(String requestId, String assetId, Element report) throws NoSuchElementException {
+    public synchronized String addReport(String requestId, String assetId, String ref, Element report)
+		throws NoSuchElementException, ArfException {
+
 	if (!requests.containsKey(requestId)) {
 	    throw new NoSuchElementException(requestId);
 	}
@@ -212,10 +279,20 @@ public class Report implements IReport, ILoggable {
 
 	String reportId = new StringBuffer("report_").append(Integer.toString(reports.size())).toString();
 	reports.put(reportId, report);
-
+	if (ref != null && ref.length() > 0) {
+	    Uri uri = Factories.catalog.createUri();
+	    uri.setName(reportId);
+	    if (ref.startsWith("#")) {
+		uri.setUri(ref);
+	    } else {
+		uri.setUri(new StringBuffer("#").append(ref).toString());
+	    }
+	    getCreateCatalog().getPublicOrSystemOrUri().add(Factories.catalog.createUri(uri));
+	}
 	if (!arc.isSetRelationships()) {
 	    arc.setRelationships(Factories.reporting.createRelationshipsContainerTypeRelationships());
 	}
+
 	//
 	// Relate to the request
 	//
@@ -331,6 +408,25 @@ public class Report implements IReport, ILoggable {
 	    IpAddressType.IpV6 ip6subnet = Factories.asset.createIpAddressTypeIpV6();
 	    ip6subnet.setValue(addressType.getSubnetString());
 	    subnet.setIpV6(ip6subnet);
+	}
+    }
+
+    private Catalog getCreateCatalog() throws ArfException {
+	try {
+	    return getCatalog();
+	} catch (NoSuchElementException e) {
+	    //
+	    // Catalog was not found, so generate it
+	    //
+	    if (!arc.isSetExtendedInfos()) {
+		arc.setExtendedInfos(Factories.core.createAssetReportCollectionExtendedInfos());
+	    }
+	    ExtendedInfo info = Factories.core.createAssetReportCollectionExtendedInfosExtendedInfo();
+	    arc.getExtendedInfos().getExtendedInfo().add(info);
+	    Catalog catalog = Factories.catalog.createCatalog();
+	    info.setId(CATALOG_ID);
+	    info.setAny(Factories.catalog.createCatalog(catalog));
+	    return catalog;
 	}
     }
 }
