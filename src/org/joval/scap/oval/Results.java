@@ -113,7 +113,13 @@ public class Results implements IResults, ILoggable {
 	}
 	logger = JOVALMsg.getLogger();
 	definitionTable = new HashMap<String, DefinitionType>();
+	for (DefinitionType def : systems.get(0).getDefinitions().getDefinition()) {
+	    storeDefinitionResult(def);
+	}
 	testTable = new HashMap<String, TestType>();
+	for (TestType test : systems.get(0).getTests().getTest()) {
+	    storeTestResult(test);
+	}
 	directives = new Directives();
     }
 

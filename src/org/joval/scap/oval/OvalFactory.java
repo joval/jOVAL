@@ -13,11 +13,13 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.datatype.DatatypeConfigurationException;
 
 import scap.oval.common.GeneratorType;
+import scap.oval.results.OvalResults;
 
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.intf.scap.oval.IOvalEngine;
+import org.joval.intf.scap.oval.IResults;
 import org.joval.intf.scap.oval.ISystemCharacteristics;
 import org.joval.intf.scap.oval.IVariables;
 import org.joval.scap.oval.engine.Engine;
@@ -71,6 +73,20 @@ public class OvalFactory {
 
     public static ISystemCharacteristics createSystemCharacteristics(File f) throws OvalException {
 	return new SystemCharacteristics(f);
+    }
+
+    /**
+     * Create an IResults from a file.
+     */
+    public static IResults createResults(File f) throws OvalException {
+	return new Results(Results.getOvalResults(f));
+    }
+
+    /**
+     * Create an IResults from an existing data model OVAL result.
+     */
+    public static IResults createResults(OvalResults results) throws OvalException {
+	return new Results(results);
     }
 
     public static IOvalEngine createEngine(IOvalEngine.Mode mode, IPlugin plugin) {

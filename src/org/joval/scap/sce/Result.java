@@ -54,7 +54,7 @@ public class Result implements IScriptResult {
     /**
      * Create a new SCE script result object.
      */
-    Result(SceResultsType result) {
+    public Result(SceResultsType result) {
 	this.result = result;
     }
 
