@@ -37,9 +37,9 @@ public interface IReport extends ITransformable {
     AssetType getAsset(String assetId) throws NoSuchElementException;
 
     /**
-     * Get all the XCCDF results associated with the asset, indexed by benchmark ID.
+     * Get the XCCDF result associated with the specified asset, benchmark and profile.
      */
-    Map<String, TestResultType> getTestResults(String assetId) throws NoSuchElementException;
+    TestResultType getTestResult(String assetId, String benchmarkId, String profileId) throws NoSuchElementException;
 
     /**
      * Get a catalog mapping individual report IDs to the document HREFs from which the request documents originated.

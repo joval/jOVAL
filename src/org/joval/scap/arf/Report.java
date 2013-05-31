@@ -131,8 +131,7 @@ public class Report implements IReport, ILoggable {
 	}
     }
 
-    public Map<String, TestResultType> getTestResults(String assetId) throws NoSuchElementException {
-	Map<String, TestResultType> results = new HashMap<String, TestResultType>();
+    public TestResultType getTestResult(String assetId, String benchmarkId, String profileId) throws NoSuchElementException {
 	try {
 	    Unmarshaller unmarshaller = SchemaRegistry.XCCDF.getJAXBContext().createUnmarshaller();
 	    for (RelationshipType rel : arc.getRelationships().getRelationship()) {
@@ -143,7 +142,10 @@ public class Report implements IReport, ILoggable {
 			    if ("TestResult".equals(elt.getLocalName()) &&
 				SystemEnumeration.XCCDF.namespace().equals(elt.getNamespaceURI())) {
 				TestResultType tr = (TestResultType)(((JAXBElement)unmarshaller.unmarshal(elt)).getValue());
-				results.put(tr.getBenchmark().getId(), tr);
+				if (benchmarkId.equals(tr.getBenchmark().getId()) &&
+				    profileId.equals(tr.getProfile().getIdref())) {
+				    return tr;
+				}
 			    }
 			}
 		    }
@@ -152,7 +154,7 @@ public class Report implements IReport, ILoggable {
 	} catch (JAXBException e) {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
-	return results;
+	throw new NoSuchElementException(assetId + ":" + benchmarkId + ":" + profileId);
     }
 
     public Catalog getCatalog() throws ArfException, NoSuchElementException {
