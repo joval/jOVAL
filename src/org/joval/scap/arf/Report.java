@@ -101,8 +101,17 @@ public class Report implements IReport, ILoggable {
     public Report(AssetReportCollection arc) {
 	this.arc = arc;
 	requests = new HashMap<String, Element>();
+	for (ReportRequestType req : arc.getReportRequests().getReportRequest()) {
+	    requests.put(req.getId(), (Element)req.getContent().getAny());
+	}
 	assets = new HashMap<String, AssetType>();
+	for (AssetReportCollection.Assets.Asset asset : arc.getAssets().getAsset()) {
+	    assets.put(asset.getId(), asset.getAsset().getValue());
+	}
 	reports = new HashMap<String, Element>();
+	for (ReportType report : arc.getReports().getReport()) {
+	    reports.put(report.getId(), (Element)report.getContent().getAny());
+	}
 	logger = JOVALMsg.getLogger();
     }
 
