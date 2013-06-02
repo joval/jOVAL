@@ -122,7 +122,7 @@ public class Engine implements IXccdfEngine {
 			for (CheckContentRefType ref : check.getCheckContentRef()) {
 			    String href = ref.getHref();
 			    String questionnaireId = ref.getName();
-			    if (questionnaires.containsKey(href)) {
+			    if (!questionnaires.containsKey(href)) {
 				questionnaires.put(href, new HashSet<String>());
 			    }
 			    questionnaires.get(href).add(questionnaireId);
