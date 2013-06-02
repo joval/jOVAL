@@ -84,8 +84,24 @@ public interface IXccdfEngine extends Runnable {
      * Specification for the argument accompanying a MESSAGE_OCIL notification message.
      */
     interface OcilMessageArgument {
+	/**
+	 * Get the href pertaining to this argument.
+	 */
 	String getHref();
+
+	/**
+	 * Get the OCIL checklist corresponding to the href.
+	 */
 	IChecklist getChecklist();
+
+	/**
+	 * Get the IDs of the questionnaires in the checklist for which results are required.
+	 */
+	Collection<String> getQuestionnaireIds();
+
+	/**
+	 * Get the variable value exports for the checklist.
+	 */
 	IVariables getVariables();
     }
 

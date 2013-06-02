@@ -112,7 +112,7 @@ public class Engine implements IXccdfEngine {
     public static final ObjectFactory FACTORY = new ObjectFactory();
 
     public static Collection<OcilMessageArgument> getOcilExports(IScapContext ctx) throws OcilException {
-	Collection<String> hrefs = new HashSet<String>();
+	Map<String, Collection<String>> questionnaires = new HashMap<String, Collection<String>>();
 	Map<String, Variables> variables = new HashMap<String, Variables>();
 	for (RuleType rule : ctx.getSelectedRules()) {
 	    for (CheckType check : rule.getCheck()) {
@@ -120,12 +120,17 @@ public class Engine implements IXccdfEngine {
 		    if (check.isSetCheckContentRef()) {
 			Variables vars = null;
 			for (CheckContentRefType ref : check.getCheckContentRef()) {
-			    hrefs.add(ref.getHref());
-			    if (variables.containsKey(ref.getHref())) {
-				vars = variables.get(ref.getHref());
+			    String href = ref.getHref();
+			    String questionnaireId = ref.getName();
+			    if (questionnaires.containsKey(href)) {
+				questionnaires.put(href, new HashSet<String>());
+			    }
+			    questionnaires.get(href).add(questionnaireId);
+			    if (variables.containsKey(href)) {
+				vars = variables.get(href);
 			    } else {
 				vars = new Variables();
-				variables.put(ref.getHref(), vars);
+				variables.put(href, vars);
 			    }
 			    for (CheckExportType export : check.getCheckExport()) {
 				String ocilVariableId = export.getExportName();
@@ -146,11 +151,12 @@ public class Engine implements IXccdfEngine {
 	// Export variables and OCIL XML for each HREF in the context.
 	//
 	Collection<OcilMessageArgument> results = new ArrayList<OcilMessageArgument>();
-	for (String href : hrefs) {
+	for (Map.Entry<String, Collection<String>> entry : questionnaires.entrySet()) {
+	    String href = entry.getKey();
 	    try {
 		IChecklist checklist = ctx.getOcil(href);
 		IVariables vars = variables.get(href);
-		results.add(new Argument(href, checklist, vars));
+		results.add(new Argument(href, checklist, entry.getValue(), vars));
 	    } catch (NoSuchElementException e) {
 		throw new OcilException(e);
 	    }
@@ -946,11 +952,13 @@ public class Engine implements IXccdfEngine {
     static class Argument implements OcilMessageArgument {
 	private String href;
 	private IChecklist checklist;
+	private Collection<String> questionnaireIds;
 	private IVariables variables;
 
-	Argument(String href, IChecklist checklist, IVariables variables) {
+	Argument(String href, IChecklist checklist, Collection<String> questionnaireIds, IVariables variables) {
 	    this.href = href;
 	    this.checklist = checklist;
+	    this.questionnaireIds = questionnaireIds;
 	    this.variables = variables;
 	}
 
@@ -962,6 +970,10 @@ public class Engine implements IXccdfEngine {
 
 	public IChecklist getChecklist() {
 	    return checklist;
+	}
+
+	public Collection<String> getQuestionnaireIds() {
+	    return questionnaireIds;
 	}
 
 	public IVariables getVariables() {
