@@ -14,10 +14,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import scap.ocil.core.ExceptionalResultType;
 import scap.ocil.core.ResultsType;
 import scap.ocil.core.QuestionnaireResultType;
-import scap.ocil.variables.OcilVariables;
 import scap.xccdf.CcOperatorEnumType;
 import scap.xccdf.CheckContentRefType;
-import scap.xccdf.CheckExportType;
 import scap.xccdf.CheckImportType;
 import scap.xccdf.CheckType;
 import scap.xccdf.InstanceResultType;
@@ -28,12 +26,10 @@ import scap.xccdf.TestResultType;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.ocil.IChecklist;
-import org.joval.intf.scap.ocil.IVariables;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.scap.xccdf.IXccdfEngine;
 import org.joval.intf.xml.ITransformable;
 import org.joval.scap.ocil.OcilException;
-import org.joval.scap.ocil.Variables;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.Producer;
@@ -46,61 +42,6 @@ import org.joval.util.Producer;
  */
 public class OcilHandler implements ISystem {
     public static final String NAMESPACE = SystemEnumeration.OCIL.namespace();
-
-    /**
-     * Export relevant OCIL files to the specified directory. Returns false if there are no OCIL checks in the context.
-     */
-    public static boolean exportFiles(IScapContext ctx, Producer<IXccdfEngine.Message> producer) throws OcilException {
-	Collection<String> hrefs = new HashSet<String>();
-	Map<String, Variables> variables = new HashMap<String, Variables>();
-	for (RuleType rule : ctx.getSelectedRules()) {
-	    for (CheckType check : rule.getCheck()) {
-		if (check.getSystem().equals(NAMESPACE)) {
-		    if (check.isSetCheckContentRef()) {
-			Variables vars = null;
-			for (CheckContentRefType ref : check.getCheckContentRef()) {
-			    hrefs.add(ref.getHref());
-			    if (variables.containsKey(ref.getHref())) {
-				vars = variables.get(ref.getHref());
-			    } else {
-				vars = new Variables();
-				variables.put(ref.getHref(), vars);
-			    }
-			    for (CheckExportType export : check.getCheckExport()) {
-				String ocilVariableId = export.getExportName();
-				String valueId = export.getValueId();
-				for (String s : ctx.getValues().get(valueId)) {
-				    vars.addValue(ocilVariableId, s);
-				}
-				vars.setComment(ocilVariableId, valueId);
-			    }
-			}
-		    }
-		    break;
-		}
-	    }
-	}
-
-	if (hrefs.size() == 0) {
-	    return false;
-	}
-
-	//
-	// Export variables and OCIL XML for each HREF in the context.
-	//
-	for (String href : hrefs) {
-	    try {
-		IChecklist checklist = ctx.getOcil(href);
-		IVariables vars = variables.get(href);
-		producer.sendNotify(IXccdfEngine.Message.OCIL_MISSING, new Argument(href, checklist, vars));
-	    } catch (NoSuchElementException e) {
-		e.printStackTrace();
-	    } catch (OcilException e) {
-		e.printStackTrace();
-	    }
-	}
-	return true;
-    }
 
     private IScapContext ctx;
     private XMLGregorianCalendar startTime;
@@ -229,34 +170,6 @@ public class OcilHandler implements ISystem {
 	    }
 	}
 	return new CheckResult(ResultEnumType.NOTCHECKED, check);
-    }
-
-    // Internal
-
-    static class Argument implements IXccdfEngine.OcilMessageArgument {
-	private String href;
-	private IChecklist checklist;
-	private IVariables variables;
-
-	Argument(String href, IChecklist checklist, IVariables variables) {
-	    this.href = href;
-	    this.checklist = checklist;
-	    this.variables = variables;
-	}
-
-	// Implement IXccdfEngine.OcilMessageArgument
-
-	public String getHref() {
-	    return href;
-	}
-
-	public IChecklist getChecklist() {
-	    return checklist;
-	}
-
-	public IVariables getVariables() {
-	    return variables;
-	}
     }
 
     // Private

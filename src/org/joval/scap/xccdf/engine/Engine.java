@@ -47,6 +47,7 @@ import scap.oval.variables.VariableType;
 import scap.xccdf.BenchmarkType;
 import scap.xccdf.CcOperatorEnumType;
 import scap.xccdf.CheckContentRefType;
+import scap.xccdf.CheckExportType;
 import scap.xccdf.CheckType;
 import scap.xccdf.ComplexCheckType;
 import scap.xccdf.CPE2IdrefType;
@@ -70,6 +71,7 @@ import scap.xccdf.TestResultType;
 import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.arf.IReport;
 import org.joval.intf.scap.ocil.IChecklist;
+import org.joval.intf.scap.ocil.IVariables;
 import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.intf.scap.oval.IOvalEngine;
@@ -88,6 +90,7 @@ import org.joval.scap.arf.ArfException;
 import org.joval.scap.arf.Report;
 import org.joval.scap.cpe.CpeException;
 import org.joval.scap.ocil.OcilException;
+import org.joval.scap.ocil.Variables;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.oval.engine.OperatorData;
@@ -107,6 +110,53 @@ import org.joval.xml.DOMTools;
  */
 public class Engine implements IXccdfEngine {
     public static final ObjectFactory FACTORY = new ObjectFactory();
+
+    public static Collection<OcilMessageArgument> getOcilExports(IScapContext ctx) throws OcilException {
+	Collection<String> hrefs = new HashSet<String>();
+	Map<String, Variables> variables = new HashMap<String, Variables>();
+	for (RuleType rule : ctx.getSelectedRules()) {
+	    for (CheckType check : rule.getCheck()) {
+		if (check.getSystem().equals(OcilHandler.NAMESPACE)) {
+		    if (check.isSetCheckContentRef()) {
+			Variables vars = null;
+			for (CheckContentRefType ref : check.getCheckContentRef()) {
+			    hrefs.add(ref.getHref());
+			    if (variables.containsKey(ref.getHref())) {
+				vars = variables.get(ref.getHref());
+			    } else {
+				vars = new Variables();
+				variables.put(ref.getHref(), vars);
+			    }
+			    for (CheckExportType export : check.getCheckExport()) {
+				String ocilVariableId = export.getExportName();
+				String valueId = export.getValueId();
+				for (String s : ctx.getValues().get(valueId)) {
+				    vars.addValue(ocilVariableId, s);
+				}
+				vars.setComment(ocilVariableId, valueId);
+			    }
+			}
+		    }
+		    break;
+		}
+	    }
+	}
+
+	//
+	// Export variables and OCIL XML for each HREF in the context.
+	//
+	Collection<OcilMessageArgument> results = new ArrayList<OcilMessageArgument>();
+	for (String href : hrefs) {
+	    try {
+		IChecklist checklist = ctx.getOcil(href);
+		IVariables vars = variables.get(href);
+		results.add(new Argument(href, checklist, vars));
+	    } catch (NoSuchElementException e) {
+		throw new OcilException(e);
+	    }
+	}
+	return results;
+    }
 
     private static final String PRODUCT_NAME;
     private static DatatypeFactory datatypeFactory = null;
@@ -334,7 +384,11 @@ public class Engine implements IXccdfEngine {
 		    selectedIds.add(rule.getId());
 		}
 		if (checklists.size() == 0) {
-		    if (OcilHandler.exportFiles(ctx, producer)) {
+		    Collection<OcilMessageArgument> exports = getOcilExports(ctx);
+		    if (exports.size() > 0) {
+			for (OcilMessageArgument arg : exports) {
+			    producer.sendNotify(IXccdfEngine.Message.OCIL_MISSING, arg);
+			}
 			throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_OCIL_REQUIRED));
 		    }
 		}
@@ -884,6 +938,35 @@ public class Engine implements IXccdfEngine {
 	    tm = datatypeFactory.newXMLGregorianCalendar(new GregorianCalendar());
 	}
 	return tm;
+    }
+
+    /**
+     * Implementation of OcilMessageArgument.
+     */
+    static class Argument implements OcilMessageArgument {
+	private String href;
+	private IChecklist checklist;
+	private IVariables variables;
+
+	Argument(String href, IChecklist checklist, IVariables variables) {
+	    this.href = href;
+	    this.checklist = checklist;
+	    this.variables = variables;
+	}
+
+	// Implement IXccdfEngine.OcilMessageArgument
+
+	public String getHref() {
+	    return href;
+	}
+
+	public IChecklist getChecklist() {
+	    return checklist;
+	}
+
+	public IVariables getVariables() {
+	    return variables;
+	}
     }
 
     /**

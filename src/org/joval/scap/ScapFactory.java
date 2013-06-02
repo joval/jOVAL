@@ -6,10 +6,12 @@ package org.joval.scap;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collection;
 
 import org.openscap.sce.results.SceResultsType;
 
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.arf.IReport;
 import org.joval.intf.scap.datastream.IDatastream;
 import org.joval.intf.scap.datastream.IDatastreamCollection;
@@ -92,6 +94,13 @@ public class ScapFactory {
      */
     public static IReport createReport(File f) throws ArfException {
 	return new Report(Report.getAssetReportCollection(f));
+    }
+
+    /**
+     * Discover all the OCIL exports (hrefs, variables and checklists) for the given context.
+     */
+    public static Collection<IXccdfEngine.OcilMessageArgument> getOcilExports(IScapContext ctx) throws OcilException {
+	return Engine.getOcilExports(ctx);
     }
 
     /**
