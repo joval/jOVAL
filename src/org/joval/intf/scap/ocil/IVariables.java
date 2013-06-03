@@ -5,6 +5,7 @@ package org.joval.intf.scap.ocil;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.NoSuchElementException;
 
 import scap.ocil.core.VariableDataType;
@@ -34,4 +35,6 @@ public interface IVariables extends ITransformable {
     VariableType getVariable(String id) throws NoSuchElementException;
 
     void writeXML(File f) throws IOException;
+
+    void writeXML(OutputStream out) throws IOException;
 }

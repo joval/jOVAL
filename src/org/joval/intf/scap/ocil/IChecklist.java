@@ -5,6 +5,7 @@ package org.joval.intf.scap.ocil;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -155,4 +156,9 @@ public interface IChecklist extends ITransformable {
      * Serialize the checklist to a file.
      */
     void writeXML(File f) throws IOException;
+
+    /**
+     * Serialize the checklist to a stream.
+     */
+    void writeXML(OutputStream out) throws IOException;
 }

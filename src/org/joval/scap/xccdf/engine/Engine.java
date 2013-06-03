@@ -112,38 +112,15 @@ public class Engine implements IXccdfEngine {
     public static final ObjectFactory FACTORY = new ObjectFactory();
 
     public static Collection<OcilMessageArgument> getOcilExports(IScapContext ctx) throws OcilException {
-	Map<String, Collection<String>> questionnaires = new HashMap<String, Collection<String>>();
-	Map<String, Variables> variables = new HashMap<String, Variables>();
+	Map<String, Collection<String>> qMap = new HashMap<String, Collection<String>>();
+	Map<String, Variables> vMap = new HashMap<String, Variables>();
 	for (RuleType rule : ctx.getSelectedRules()) {
-	    for (CheckType check : rule.getCheck()) {
-		if (check.getSystem().equals(OcilHandler.NAMESPACE)) {
-		    if (check.isSetCheckContentRef()) {
-			Variables vars = null;
-			for (CheckContentRefType ref : check.getCheckContentRef()) {
-			    String href = ref.getHref();
-			    String questionnaireId = ref.getName();
-			    if (!questionnaires.containsKey(href)) {
-				questionnaires.put(href, new HashSet<String>());
-			    }
-			    questionnaires.get(href).add(questionnaireId);
-			    if (variables.containsKey(href)) {
-				vars = variables.get(href);
-			    } else {
-				vars = new Variables();
-				variables.put(href, vars);
-			    }
-			    for (CheckExportType export : check.getCheckExport()) {
-				String ocilVariableId = export.getExportName();
-				String valueId = export.getValueId();
-				for (String s : ctx.getValues().get(valueId)) {
-				    vars.addValue(ocilVariableId, s);
-				}
-				vars.setComment(ocilVariableId, valueId);
-			    }
-			}
-		    }
-		    break;
+	    if (rule.isSetCheck()) {
+		for (CheckType check : rule.getCheck()) {
+		    addExports(check, ctx, qMap, vMap);
 		}
+	    } else if (rule.isSetComplexCheck()) {
+		addExports(rule.getComplexCheck(), ctx, qMap, vMap);
 	    }
 	}
 
@@ -151,17 +128,61 @@ public class Engine implements IXccdfEngine {
 	// Export variables and OCIL XML for each HREF in the context.
 	//
 	Collection<OcilMessageArgument> results = new ArrayList<OcilMessageArgument>();
-	for (Map.Entry<String, Collection<String>> entry : questionnaires.entrySet()) {
+	for (Map.Entry<String, Collection<String>> entry : qMap.entrySet()) {
 	    String href = entry.getKey();
 	    try {
 		IChecklist checklist = ctx.getOcil(href);
-		IVariables vars = variables.get(href);
+		IVariables vars = vMap.get(href);
 		results.add(new Argument(href, checklist, entry.getValue(), vars));
 	    } catch (NoSuchElementException e) {
 		throw new OcilException(e);
 	    }
 	}
 	return results;
+    }
+
+    private static void addExports(ComplexCheckType check, IScapContext ctx, Map<String, Collection<String>> qMap,
+		Map<String, Variables> vMap) throws OcilException {
+
+	for (Object obj : check.getCheckOrComplexCheck()) {
+	    if (obj instanceof CheckType) {
+		addExports((CheckType)obj, ctx, qMap, vMap);
+	    } else if (obj instanceof ComplexCheckType) {
+		addExports((ComplexCheckType)obj, ctx, qMap, vMap);
+	    }
+	}
+    }
+
+    private static void addExports(CheckType check, IScapContext ctx, Map<String, Collection<String>> qMap,
+		Map<String, Variables> vMap) throws OcilException {
+
+	if (check.getSystem().equals(OcilHandler.NAMESPACE)) {
+	    if (check.isSetCheckContentRef()) {
+		Variables vars = null;
+		for (CheckContentRefType ref : check.getCheckContentRef()) {
+		    String href = ref.getHref();
+		    String qId = ref.getName();
+		    if (!qMap.containsKey(href)) {
+			qMap.put(href, new HashSet<String>());
+		    }
+		    qMap.get(href).add(qId);
+		    if (vMap.containsKey(href)) {
+			vars = vMap.get(href);
+		    } else {
+			vars = new Variables();
+			vMap.put(href, vars);
+		    }
+		    for (CheckExportType export : check.getCheckExport()) {
+			String ocilVariableId = export.getExportName();
+			String valueId = export.getValueId();
+			for (String s : ctx.getValues().get(valueId)) {
+			    vars.addValue(ocilVariableId, s);
+			}
+			vars.setComment(ocilVariableId, valueId);
+		    }
+		}
+	    }
+	}
     }
 
     private static final String PRODUCT_NAME;

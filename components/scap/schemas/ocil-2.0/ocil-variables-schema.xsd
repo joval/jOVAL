@@ -31,7 +31,7 @@
    </xsd:element>
    <xsd:complexType name="VariablesType">
       <xsd:sequence>
-         <xsd:element name="variable" type="ocil-var:VariableType" minOccurs="1"
+         <xsd:element name="variable" type="ocil-var:VariableType" minOccurs="0"
                       maxOccurs="unbounded"/>
       </xsd:sequence>
    </xsd:complexType>

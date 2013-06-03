@@ -529,14 +529,8 @@ public class Checklist implements IChecklist {
     public void writeXML(File f) throws IOException {
 	OutputStream out = null;
 	try {
-	    Marshaller marshaller = SchemaRegistry.OCIL.getJAXBContext().createMarshaller();
-	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	    out = new FileOutputStream(f);
-	    marshaller.marshal(Factories.core.createOcil(getOCILType()), out);
-	} catch (JAXBException e) {
-	    throw new IOException(e);
-	} catch (FactoryConfigurationError e) {
-	    throw new IOException(e);
+	    writeXML(out);
 	} finally {
 	    if (out != null) {
 		try {
@@ -544,6 +538,18 @@ public class Checklist implements IChecklist {
 		} catch (IOException e) {
 		}
 	    }
+	}
+    }
+
+    public void writeXML(OutputStream out) throws IOException {
+	try {
+	    Marshaller marshaller = SchemaRegistry.OCIL.getJAXBContext().createMarshaller();
+	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+	    marshaller.marshal(Factories.core.createOcil(getOCILType()), out);
+	} catch (JAXBException e) {
+	    throw new IOException(e);
+	} catch (FactoryConfigurationError e) {
+	    throw new IOException(e);
 	}
     }
 
