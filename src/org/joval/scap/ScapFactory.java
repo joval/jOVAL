@@ -4,6 +4,7 @@
 package org.joval.scap;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
@@ -80,6 +81,13 @@ public class ScapFactory {
      */
     public static IChecklist createChecklist(File f) throws OcilException {
 	return new Checklist(f);
+    }
+
+    /**
+     * Create an OCIL checklist (which can also include the results) from a stream.
+     */
+    public static IChecklist createChecklist(InputStream in) throws OcilException {
+	return new Checklist(in);
     }
 
     /**
