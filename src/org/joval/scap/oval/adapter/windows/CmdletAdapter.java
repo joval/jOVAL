@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
 import javax.xml.bind.JAXBElement;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
 
 import jsaf.intf.system.ISession;
 import jsaf.intf.windows.powershell.IRunspace;
@@ -40,9 +42,9 @@ import scap.oval.systemcharacteristics.windows.EntityItemGUIDType;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;
-import org.joval.scap.oval.SystemCharacteristics;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
+import org.joval.xml.SchemaRegistry;
 
 /**
  * Retrieves windows:cmdlet_items.
@@ -188,7 +190,10 @@ public class CmdletAdapter implements IAdapter {
 		for (String line : data.split("\r\n")) {
 		    sb.append(line);
 		}
-		Object result = SystemCharacteristics.parse(new ByteArrayInputStream(sb.toString().getBytes()));
+
+		Unmarshaller unmarshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext().createUnmarshaller();
+		ByteArrayInputStream buff = new ByteArrayInputStream(sb.toString().getBytes(StringTools.UTF8));
+		Object result = unmarshaller.unmarshal(new StreamSource(buff));
 		if (result instanceof JAXBElement) {
 		    result = ((JAXBElement)result).getValue();
 		}
