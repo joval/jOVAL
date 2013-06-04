@@ -3,7 +3,7 @@
 
 package org.joval.intf.scap.xccdf;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.joval.intf.scap.IScapContext;
@@ -95,9 +95,10 @@ public interface IXccdfEngine extends Runnable {
 	IChecklist getChecklist();
 
 	/**
-	 * Get the IDs of the questionnaires in the checklist for which results are required.
+	 * Get the IDs of the questionnaires in the checklist for which results are required. Results are unique, but
+         * listed in the order in which they are first referenced by the XCCDF document.
 	 */
-	Collection<String> getQuestionnaireIds();
+	List<String> getQuestionnaireIds();
 
 	/**
 	 * Get the variable value exports for the checklist.

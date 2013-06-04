@@ -112,7 +112,7 @@ public class Engine implements IXccdfEngine {
     public static final ObjectFactory FACTORY = new ObjectFactory();
 
     public static Collection<OcilMessageArgument> getOcilExports(IScapContext ctx) throws OcilException {
-	Map<String, Collection<String>> qMap = new HashMap<String, Collection<String>>();
+	Map<String, List<String>> qMap = new HashMap<String, List<String>>();
 	Map<String, Variables> vMap = new HashMap<String, Variables>();
 	for (RuleType rule : ctx.getSelectedRules()) {
 	    if (rule.isSetCheck()) {
@@ -128,7 +128,7 @@ public class Engine implements IXccdfEngine {
 	// Export variables and OCIL XML for each HREF in the context.
 	//
 	Collection<OcilMessageArgument> results = new ArrayList<OcilMessageArgument>();
-	for (Map.Entry<String, Collection<String>> entry : qMap.entrySet()) {
+	for (Map.Entry<String, List<String>> entry : qMap.entrySet()) {
 	    String href = entry.getKey();
 	    try {
 		IChecklist checklist = ctx.getOcil(href);
@@ -141,7 +141,7 @@ public class Engine implements IXccdfEngine {
 	return results;
     }
 
-    private static void addExports(ComplexCheckType check, IScapContext ctx, Map<String, Collection<String>> qMap,
+    private static void addExports(ComplexCheckType check, IScapContext ctx, Map<String, List<String>> qMap,
 		Map<String, Variables> vMap) throws OcilException {
 
 	for (Object obj : check.getCheckOrComplexCheck()) {
@@ -153,7 +153,7 @@ public class Engine implements IXccdfEngine {
 	}
     }
 
-    private static void addExports(CheckType check, IScapContext ctx, Map<String, Collection<String>> qMap,
+    private static void addExports(CheckType check, IScapContext ctx, Map<String, List<String>> qMap,
 		Map<String, Variables> vMap) throws OcilException {
 
 	if (check.getSystem().equals(OcilHandler.NAMESPACE)) {
@@ -162,10 +162,16 @@ public class Engine implements IXccdfEngine {
 		for (CheckContentRefType ref : check.getCheckContentRef()) {
 		    String href = ref.getHref();
 		    String qId = ref.getName();
-		    if (!qMap.containsKey(href)) {
-			qMap.put(href, new HashSet<String>());
+		    List<String> qIds = null;
+		    if (qMap.containsKey(href)) {
+			qIds = qMap.get(href);
+		    } else {
+			qIds = new ArrayList<String>();
+			qMap.put(href, qIds);
 		    }
-		    qMap.get(href).add(qId);
+		    if (qIds.contains(qId)) {
+			qIds.add(qId);
+		    }
 		    if (vMap.containsKey(href)) {
 			vars = vMap.get(href);
 		    } else {
@@ -973,10 +979,10 @@ public class Engine implements IXccdfEngine {
     static class Argument implements OcilMessageArgument {
 	private String href;
 	private IChecklist checklist;
-	private Collection<String> questionnaireIds;
+	private List<String> questionnaireIds;
 	private IVariables variables;
 
-	Argument(String href, IChecklist checklist, Collection<String> questionnaireIds, IVariables variables) {
+	Argument(String href, IChecklist checklist, List<String> questionnaireIds, IVariables variables) {
 	    this.href = href;
 	    this.checklist = checklist;
 	    this.questionnaireIds = questionnaireIds;
@@ -993,7 +999,7 @@ public class Engine implements IXccdfEngine {
 	    return checklist;
 	}
 
-	public Collection<String> getQuestionnaireIds() {
+	public List<String> getQuestionnaireIds() {
 	    return questionnaireIds;
 	}
 
