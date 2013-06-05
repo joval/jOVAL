@@ -5,10 +5,10 @@ TOP=..
 
 include $(TOP)/common.mk
 
-all: _engine _plugin _schematron _xpert
+all: _engine _plugin _schematron
 	@$(MAKE) --keep-going --directory=jovaldi dist
 
-full: _engine _plugin _schematron _xpert
+full: _engine _plugin _schematron
 	@$(MAKE) --keep-going --directory=jovaldi dist-all
 
 
@@ -16,13 +16,11 @@ full: _engine _plugin _schematron _xpert
 rebuild:
 	@$(MAKE) --keep-going --directory=engine all
 	@$(MAKE) --keep-going --directory=plugin all
-	@$(MAKE) --keep-going --directory=xpert all
 	@$(MAKE) --keep-going --directory=jovaldi dist
 
 # Target to delete everything but the data models
 logic-clean:
 	@$(MAKE) --keep-going --directory=plugin clean
-	@$(MAKE) --keep-going --directory=xpert clean
 	@$(MAKE) --keep-going --directory=jovaldi clean
 	@$(MAKE) --keep-going --directory=engine clean
 
@@ -48,6 +46,3 @@ _scap:
 
 _schematron:
 	@$(MAKE) --keep-going --directory=schematron all
-
-_xpert: _scap
-	@$(MAKE) --keep-going --directory=xpert all
