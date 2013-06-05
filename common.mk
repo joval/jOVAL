@@ -91,7 +91,5 @@ JOVAL_CORE_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(JOVAL
 PLUGIN_LOCAL=$(COMPONENTS)/plugin
 PLUGIN_LOCAL_LIB=$(PLUGIN_LOCAL)/jOVAL-Plugin.jar
 PLUGIN_LOCAL_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(PLUGIN_LOCAL)/$(LIBDIR)/*)))
-XPERT=$(COMPONENTS)/xpert
-XPERT_LIB=$(XPERT)/XPERT.jar
 SCE=$(COMPONENTS)/sce
 SCE_LIB=$(SCE)/sce-schema-$(SCE_VERSION).jar

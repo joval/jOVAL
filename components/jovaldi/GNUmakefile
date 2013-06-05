@@ -52,6 +52,7 @@ $(DIST)/32: all $(DIST)/32/jre
 	sed 's/\[VERSION\]/$(JOVAL_VERSION)/g' $(RSRC)/docs/Readme.txt > $(DIST)/32/Readme.txt
 	cp -R $(RSRC)/lib $(DIST)/32
 	cp -R $(RSRC)/licenses $(DIST)/32
+	cp -R $(RSRC)/security $(DIST)/32
 	cp -R $(RSRC)/xml $(DIST)/32
 	cp -R $(SCAP)/schemas/oval-$(OVAL_VERSION)/*.xsd $(DIST)/32/xml
 	cp -R $(SCAP)/schemas/xml/xmldsig-core-schema.xsd $(DIST)/32/xml
@@ -61,12 +62,7 @@ $(DIST)/32: all $(DIST)/32/jre
 	cp $(SVRL) $(DIST)/32/lib
 	cp $(JOVAL_CORE_LIB) $(DIST)/32/lib
 	cp $(JOVAL_CORE)/$(LIBDIR)/*.jar $(DIST)/32/lib
-	cp $(XPERT)/$(LIBDIR)/*.jar $(DIST)/32/lib
-	cp $(XPERT_LIB) $(DIST)/32/lib
-	cp -R $(XPERT)/$(RSRC)/licenses/* $(DIST)/32/licenses
 	cp $(JSAF_CORE_LIB) $(DIST)/32/lib
-	mkdir -p $(DIST)/32/security
-	cp $(XPERT)/$(RSRC)/security/cacerts.jks $(DIST)/32/security
 	rm -rf $(DIST)/32/plugin/default
 	mkdir -p $(DIST)/32/plugin/default/lib
 	cp -R $(JSAF_PROVIDER)/$(LIBDIR)/* $(DIST)/32/plugin/default/lib
@@ -85,6 +81,7 @@ $(DIST)/64: all $(DIST)/64/jre
 	sed 's/\[VERSION\]/$(JOVAL_VERSION)/g' $(RSRC)/docs/Readme.txt > $(DIST)/64/Readme.txt
 	cp -R $(RSRC)/lib $(DIST)/64
 	cp -R $(RSRC)/licenses $(DIST)/64
+	cp -R $(RSRC)/security $(DIST)/64
 	cp -R $(RSRC)/xml $(DIST)/64
 	cp -R $(SCAP)/schemas/oval-$(OVAL_VERSION)/*.xsd $(DIST)/64/xml
 	cp -R $(SCAP)/schemas/xml/xmldsig-core-schema.xsd $(DIST)/64/xml
@@ -94,12 +91,7 @@ $(DIST)/64: all $(DIST)/64/jre
 	cp $(SVRL) $(DIST)/64/lib
 	cp $(JOVAL_CORE_LIB) $(DIST)/64/lib
 	cp $(JOVAL_CORE)/$(LIBDIR)/*.jar $(DIST)/64/lib
-	cp $(XPERT)/$(LIBDIR)/*.jar $(DIST)/64/lib
-	cp $(XPERT_LIB) $(DIST)/64/lib
-	cp -R $(XPERT)/$(RSRC)/licenses/* $(DIST)/64/licenses
 	cp $(JSAF_CORE_LIB) $(DIST)/64/lib
-	mkdir -p $(DIST)/64/security
-	cp $(XPERT)/$(RSRC)/security/cacerts.jks $(DIST)/64/security
 	rm -rf $(DIST)/64/plugin/default
 	mkdir -p $(DIST)/64/plugin/default/lib
 	cp -R $(JSAF_PROVIDER)/$(LIBDIR)/* $(DIST)/64/plugin/default/lib

@@ -12,7 +12,6 @@ components/schematron/*.xsl
 components/schematron/schema/docs/
 components/schematron/schema/svrl.jar
 components/plugin/jOVAL-Plugin.jar
-components/xpert/XPERT.jar
 test/test.ini
 test/logs/
 test/reports/
