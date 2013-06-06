@@ -8,6 +8,7 @@ SCHEMAS=\
 	cpe-2.3/cpe-naming_2.3.xsd	\
 	ds-1.2/scap-source-data-stream_1.2.xsd	\
 	dublin/simpledc20021212.xsd	\
+	joval/diagnostic-schema-1.0.xsd	\
 	oasis/catalog-1.1.xsd	\
 	oasis/xAL.xsd	\
 	oasis/xNL.xsd	\

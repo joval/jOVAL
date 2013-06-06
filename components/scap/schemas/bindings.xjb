@@ -588,4 +588,14 @@
         <jxb:property name="metabase_id" />
     </jxb:bindings>
   </jxb:bindings>
+
+  <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+  <!-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>                jOVAL Bindings                 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< -->
+  <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+
+  <jxb:bindings schemaLocation="joval/diagnostic-schema-1.0.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="org.joval.scap.diagnostics"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
 </jxb:bindings>

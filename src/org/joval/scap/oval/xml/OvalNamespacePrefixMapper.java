@@ -60,6 +60,7 @@ public class OvalNamespacePrefixMapper extends NamespacePrefixMapper {
 
     // Overrides
 
+    @Override
     public String getPreferredPrefix(String namespaceUri, String suggestion, boolean requirePrefix) {
 	return namespaces.get(namespaceUri);
     }

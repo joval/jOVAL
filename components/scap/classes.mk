@@ -1,4 +1,7 @@
 CLASSES=\
+	org.joval.scap.diagnostics.ObjectFactory	\
+	org.joval.scap.diagnostics.package-info	\
+	org.joval.scap.diagnostics.RuleResultDiagnostics	\
 	org.oasis.address.AddressDetails	\
 	org.oasis.address.AddressLine	\
 	org.oasis.address.AddressLinesType	\
