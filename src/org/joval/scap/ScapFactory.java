@@ -10,6 +10,7 @@ import java.net.URL;
 import java.util.Collection;
 
 import org.openscap.sce.results.SceResultsType;
+import scap.ocil.core.OCILType;
 
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.IScapContext;
@@ -88,6 +89,13 @@ public class ScapFactory {
      */
     public static IChecklist createChecklist(InputStream in) throws OcilException {
 	return new Checklist(in);
+    }
+
+    /**
+     * Create an OCIL checklist (which can also include the results) from a stream.
+     */
+    public static IChecklist createChecklist(OCILType ocil) throws OcilException {
+	return new Checklist(ocil);
     }
 
     /**

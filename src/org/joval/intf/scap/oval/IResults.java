@@ -48,6 +48,11 @@ public interface IResults extends ITransformable {
     ResultEnumeration getDefinitionResult(String definitionId) throws NoSuchElementException;
 
     /**
+     * Get the IDefinitions used to construct the result.
+     */
+    IDefinitions getDefinitions();
+
+    /**
      * Get the ISystemCharacteristics used to construct the result.
      */
     ISystemCharacteristics getSystemCharacteristics();

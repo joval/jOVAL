@@ -89,7 +89,12 @@ public enum SchemaRegistry {
     /**
      * Property indicating the package names for classes in the SVRL (Schematron Validation Report Language) schema.
      */
-    SVRL("svrl.packages");
+    SVRL("svrl.packages"),
+
+    /**
+     * Property indicating the package names for classes in the jOVAL diagnostic schema.
+     */
+    DIAGNOSTIC("diagnostic.packages");
 
     /**
      * Obtain the JAXBContext for the schema.
@@ -112,7 +117,7 @@ public enum SchemaRegistry {
 
     private static final String[] RESOURCES = {	"arf.properties", "ds.properties", "oval.properties",
 						"cpe.properties", "xccdf.properties", "ocil.properties",
-						"sce.properties", "svrl.properties" };
+						"sce.properties", "svrl.properties", "diagnostic.properties" };
 
     private static Properties schemaProps;
     static {
