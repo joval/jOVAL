@@ -138,10 +138,6 @@ public class Results implements IResults, ILoggable {
 	testTable.put(test.getTestId(), test);
     }
 
-    public TestType getTest(String testId) {
-	return testTable.get(testId);
-    }
-
     public ResultEnumeration getTestResult(String testId) {
 	TestType testType = testTable.get(testId);
 	if (testType == null) {
@@ -198,6 +194,10 @@ public class Results implements IResults, ILoggable {
 
     public DefinitionType getDefinition(String definitionId) {
 	return definitionTable.get(definitionId);
+    }
+
+    public TestType getTest(String id) {
+	return testTable.get(id);
     }
 
     /**

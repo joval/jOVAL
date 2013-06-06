@@ -6,6 +6,7 @@ package org.joval.intf.scap.oval;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import javax.xml.bind.JAXBElement;
 
 import scap.oval.definitions.core.DefinitionType;
 import scap.oval.definitions.core.ObjectType;
@@ -34,21 +35,21 @@ public interface IDefinitions extends ITransformable {
      *
      * @throws NoSuchElementException if no state with the given ID is found
      */
-    StateType getState(String id) throws NoSuchElementException;
+    JAXBElement<? extends StateType> getState(String id) throws NoSuchElementException;
 
     /**
      * Retrieve the OVAL test with the specified ID.
      *
      * @throws NoSuchElementException if no test with the given ID is found
      */
-    TestType getTest(String id) throws NoSuchElementException;
+    JAXBElement<? extends TestType> getTest(String id) throws NoSuchElementException;
 
     /**
      * Retrieve the Object with the specified ID.
      *
      * @throws NoSuchElementException if no object with the given ID is found
      */
-    ObjectType getObject(String id) throws NoSuchElementException;
+    JAXBElement<? extends ObjectType> getObject(String id) throws NoSuchElementException;
 
     /**
      * Retrieve the OVAL object with the specified ID, corresponding to the specified type.

@@ -11,6 +11,7 @@ import scap.oval.systemcharacteristics.core.SystemInfoType;
 import scap.oval.results.DefinitionType;
 import scap.oval.results.OvalResults;
 import scap.oval.results.ResultEnumeration;
+import scap.oval.results.TestType;
 
 import org.joval.intf.xml.ITransformable;
 import org.joval.scap.oval.OvalException;
@@ -41,6 +42,11 @@ public interface IResults extends ITransformable {
      * Get a definition given its ID.
      */
     DefinitionType getDefinition(String definitionId);
+
+    /**
+     * Get a test given its ID.
+     */
+    TestType getTest(String id);
 
     /**
      * Get the result of a specific definition, given its ID.

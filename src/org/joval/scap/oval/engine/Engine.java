@@ -436,13 +436,13 @@ public class Engine implements IOvalEngine, IProvider {
 		//
 		producer.sendNotify(Message.OBJECT_PHASE_START, null);
 		for (String id : variableObjectIds) {
-		    scanObject(new RequestContext(definitions.getObject(id)));
+		    scanObject(new RequestContext(definitions.getObject(id).getValue()));
 		}
 		HashSet<ObjectType> deferred = new HashSet<ObjectType>();
 		for (String id : allowedObjectIds) {
-		    ObjectType obj = definitions.getObject(id);
+		    ObjectType obj = definitions.getObject(id).getValue();
 		    if (getObjectSet(obj) == null) {
-			queueObject(new RequestContext(definitions.getObject(id)));
+			queueObject(new RequestContext(definitions.getObject(id).getValue()));
 		    } else {
 			deferred.add(obj);
 		    }
@@ -513,7 +513,11 @@ public class Engine implements IOvalEngine, IProvider {
 	ObjectType obj = rc.getObject();
 	String objectId = obj.getId();
 	if (sc.containsObject(objectId)) {
-	    return sc.getItemsByObjectId(objectId);
+	    ArrayList<ItemType> result = new ArrayList<ItemType>();
+	    for (JAXBElement<? extends ItemType> elt : sc.getItemsByObjectId(objectId)) {
+		result.add(elt.getValue());
+	    }
+	    return result;
 	}
 	logger.debug(JOVALMsg.STATUS_OBJECT, objectId);
 	producer.sendNotify(Message.OBJECT, objectId);
@@ -1525,7 +1529,7 @@ public class Engine implements IOvalEngine, IProvider {
 	    return filtered;
 	}
 	for (Filter filter : filters) {
-	    StateType state = definitions.getState(filter.getValue());
+	    StateType state = definitions.getState(filter.getValue()).getValue();
 	    Iterator<ItemType> iter = filtered.iterator();
 	    while (iter.hasNext()) {
 		ItemType item = iter.next();
@@ -1572,11 +1576,13 @@ public class Engine implements IOvalEngine, IProvider {
 	    }
 	} else {
 	    for (String objectId : s.getObjectReference()) {
-		Collection<ItemType> items = null;
+		Collection<ItemType> items = new ArrayList<ItemType>();
 		try {
-		    items = sc.getItemsByObjectId(objectId);
+		    for (JAXBElement<? extends ItemType> elt : sc.getItemsByObjectId(objectId)) {
+			items.add(elt.getValue());
+		    }
 		} catch (NoSuchElementException e) {
-		    rc.pushObject(definitions.getObject(objectId));
+		    rc.pushObject(definitions.getObject(objectId).getValue());
 		    items = scanObject(rc);
 		    rc.popObject();
 		}
@@ -1748,7 +1754,7 @@ public class Engine implements IOvalEngine, IProvider {
 	String testId = criterionDefinition.getTestRef();
 	TestType testResult = results.getTest(testId);
 	if (testResult == null) {
-	    scap.oval.definitions.core.TestType testDefinition = definitions.getTest(testId);
+	    scap.oval.definitions.core.TestType testDefinition = definitions.getTest(testId).getValue();
 	    testResult = Factories.results.createTestType();
 	    testResult.setTestId(testDefinition.getId());
 	    testResult.setCheck(testDefinition.getCheck());
@@ -1787,14 +1793,14 @@ public class Engine implements IOvalEngine, IProvider {
     private void evaluateTest(TestType testResult) throws NoSuchElementException, OvalException {
 	String testId = testResult.getTestId();
 	logger.debug(JOVALMsg.STATUS_TEST, testId);
-	scap.oval.definitions.core.TestType testDefinition = definitions.getTest(testId);
+	scap.oval.definitions.core.TestType testDefinition = definitions.getTest(testId).getValue();
 	String objectId = getObjectRef(testDefinition);
 	List<String> stateIds = getStateRef(testDefinition);
 
 	//
 	// Create all the structures we'll need to store information about the evaluation of the test.
 	//
-	RequestContext rc = new RequestContext(definitions.getObject(objectId));
+	RequestContext rc = new RequestContext(definitions.getObject(objectId).getValue());
 	ExistenceData existence = new ExistenceData();
 	CheckData check = new CheckData();
 	switch(sc.getObjectFlag(objectId)) {
@@ -1811,7 +1817,8 @@ public class Engine implements IOvalEngine, IProvider {
 	  // default value of DOES_NOT_EXIST (which is, of course, exactly what we want to happen).
 	  //
 	  case COMPLETE:
-	    for (ItemType item : sc.getItemsByObjectId(objectId)) {
+	    for (JAXBElement<? extends ItemType> elt : sc.getItemsByObjectId(objectId)) {
+		ItemType item = elt.getValue();
 		existence.addStatus(item.getStatus());
 
 		TestedItemType testedItem = Factories.results.createTestedItemType();
@@ -1826,7 +1833,7 @@ public class Engine implements IOvalEngine, IProvider {
 		    if (stateIds.size() > 0) {
 			OperatorData result = new OperatorData(false);
 			for (String stateId : stateIds) {
-			    StateType state = definitions.getState(stateId);
+			    StateType state = definitions.getState(stateId).getValue();
 			    try {
 				result.addResult(compare(state, item, rc));
 			    } catch (TestException e) {
@@ -2508,17 +2515,19 @@ public class Engine implements IOvalEngine, IProvider {
 	} else if (object instanceof ObjectComponentType) {
 	    ObjectComponentType oc = (ObjectComponentType)object;
 	    String objectId = oc.getObjectRef();
-	    Collection<ItemType> items = null;
+	    Collection<ItemType> items = new ArrayList<ItemType>();
 	    try {
 		//
 		// First, we scan the SystemCharacteristics for items related to the object.
 		//
-		items = sc.getItemsByObjectId(objectId);
+		for (JAXBElement<? extends ItemType> elt : sc.getItemsByObjectId(objectId)) {
+		    items.add(elt.getValue());
+		}
 	    } catch (NoSuchElementException e) {
 		//
 		// If the object has not yet been scanned, then it must be retrieved live from the adapter
 		//
-		rc.pushObject(definitions.getObject(objectId));
+		rc.pushObject(definitions.getObject(objectId).getValue());
 		items = scanObject(rc);
 		rc.popObject();
 	    }
@@ -2904,18 +2913,18 @@ public class Engine implements IOvalEngine, IProvider {
 	    } else if (obj instanceof ExtendDefinitionType) {
 		return getObjectReferences(definitions.getDefinition(((ExtendDefinitionType)obj).getDefinitionRef()));
 	    } else if (obj instanceof CriterionType) {
-		return getObjectReferences(definitions.getTest(((CriterionType)obj).getTestRef()));
+		return getObjectReferences(definitions.getTest(((CriterionType)obj).getTestRef()).getValue());
 	    } else if (obj instanceof scap.oval.definitions.core.TestType) {
 		ObjectRefType oRef = (ObjectRefType)safeInvokeMethod(obj, "getObject");
 		if (oRef != null) {
-		    results.addAll(getObjectReferences(definitions.getObject(oRef.getObjectRef())));
+		    results.addAll(getObjectReferences(definitions.getObject(oRef.getObjectRef()).getValue()));
 		}
 		Object oRefs = safeInvokeMethod(obj, "getState");
 		@SuppressWarnings("unchecked")
 		List<StateRefType> sRefs = (List<StateRefType>)oRefs;
 		if (sRefs != null) {
 		    for (StateRefType sRef : sRefs) {
-			results.addAll(getObjectReferences(definitions.getState(sRef.getStateRef())));
+			results.addAll(getObjectReferences(definitions.getState(sRef.getStateRef()).getValue()));
 		    }
 		}
 	    } else if (obj instanceof ObjectType) {
@@ -2952,7 +2961,7 @@ public class Engine implements IOvalEngine, IProvider {
 		Set set = (Set)obj;
 		if (set.isSetObjectReference()) {
 		    for (String id : set.getObjectReference()) {
-			results.addAll(getObjectReferences(definitions.getObject(id)));
+			results.addAll(getObjectReferences(definitions.getObject(id).getValue()));
 		    }
 		    results.addAll(getObjectReferences(set.getFilter()));
 		} else {
@@ -2973,7 +2982,7 @@ public class Engine implements IOvalEngine, IProvider {
 		    results.addAll(getObjectReferences(elt));
 		}
 	    } else if (obj instanceof ObjectComponentType) {
-		return getObjectReferences(definitions.getObject(((ObjectComponentType)obj).getObjectRef()));
+		return getObjectReferences(definitions.getObject(((ObjectComponentType)obj).getObjectRef()).getValue());
 	    } else if (obj instanceof VariableComponentType) {
 		VariableType var = definitions.getVariable(((VariableComponentType)obj).getVarRef());
 		if (var instanceof LocalVariable) {

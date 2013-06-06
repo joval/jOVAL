@@ -93,7 +93,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     private GeneratorType generator;
     private SystemInfoType systemInfo;
     private Map<String, ObjectData> objectTable;
-    private Map<BigInteger, ItemType> itemTable;
+    private Map<BigInteger, JAXBElement<? extends ItemType>> itemTable;
     private Map<String, Collection<VariableValueType>> variableTable;
     private Map<String, Collection<BigInteger>> objectItemTable;
     private Map<String, Collection<String>> objectVariableTable;
@@ -106,7 +106,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
      */
     SystemCharacteristics() {
 	objectTable = new HashMap<String, ObjectData>();
-	itemTable = new HashMap<BigInteger, ItemType>();
+	itemTable = new HashMap<BigInteger, JAXBElement<? extends ItemType>>();
 	itemChecksums = new HashMap<String, Collection<BigInteger>>();
 	variableTable = new HashMap<String, Collection<VariableValueType>>();
 	objectItemTable = new HashMap<String, Collection<BigInteger>>();
@@ -147,7 +147,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	systemInfo = osc.getSystemInfo();
 
 	for (JAXBElement<? extends ItemType> item : osc.getSystemData().getItem()) {
-	    itemTable.put(item.getValue().getId(), item.getValue());
+	    itemTable.put(item.getValue().getId(), item);
 	    itemCounter++;
 	}
 
@@ -209,28 +209,30 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 
 	CollectedObjectsType objects = Factories.sc.core.createCollectedObjectsType();
 	for (String objectId : objectTable.keySet()) {
-	    objects.getObject().add(makeObject(objectId));
+	    objects.getObject().add(getObject(objectId));
 	}
 	sc.setCollectedObjects(objects);
 
 	SystemDataType items = Factories.sc.core.createSystemDataType();
 	for (BigInteger itemId : itemTable.keySet()) {
-	    items.getItem().add(wrapItem(itemTable.get(itemId)));
+	    items.getItem().add(itemTable.get(itemId));
 	}
 	sc.setSystemData(items);
 
 	return sc;
     }
 
-    public synchronized BigInteger storeItem(ItemType item) throws OvalException {
+    public synchronized BigInteger storeItem(ItemType it) throws OvalException {
+	JAXBElement<? extends ItemType> item = wrapItem(it);
 	BigInteger itemId = null;
-	if (item.isSetId()) {
-	    // The item has been stored previously someplace else, so store a copy of it.
-	    Object obj = parse(new ByteArrayInputStream(toCanonicalBytes(item)));
-	    if (obj instanceof JAXBElement) {
-		obj = ((JAXBElement)obj).getValue();
-	    }
-	    item = (ItemType)obj;
+	if (item.getValue().isSetId()) {
+	    //
+	    // The item has been stored previously someplace else, so store a copy of it here.
+	    //
+	    @SuppressWarnings("unchecked")
+	    JAXBElement<? extends ItemType> clone =
+		(JAXBElement<? extends ItemType>)parse(new ByteArrayInputStream(toCanonicalBytes(item)));
+	    item = clone;
 	}
 	byte[] data = toCanonicalBytes(item);
 	Adler32 adler = new Adler32();
@@ -258,7 +260,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 		}
 		if (match) {
 		    itemId = id;
-		    item.setId(itemId);
+		    item.getValue().setId(itemId);
 		    break;
 		}
 	    }
@@ -267,13 +269,13 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    //
 	    if (!match) {
 		itemId = new BigInteger(Integer.toString(itemCounter++));
-		item.setId(itemId);
+		item.getValue().setId(itemId);
 		itemTable.put(itemId, item);
 		itemChecksums.get(cs).add(itemId);
 	    }
 	} else {
 	    itemId = new BigInteger(Integer.toString(itemCounter++));
-	    item.setId(itemId);
+	    item.getValue().setId(itemId);
 	    itemTable.put(itemId, item);
 	    Collection<BigInteger> set = new HashSet<BigInteger>();
 	    set.add(itemId);
@@ -320,6 +322,35 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	}
     }
 
+    public ObjectType getObject(String id) throws NoSuchElementException {
+	ObjectData data = objectTable.get(id);
+	if (data == null) {
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
+	}
+	ObjectType obj = Factories.sc.core.createObjectType();
+	obj.setId(data.id);
+	obj.setFlag(data.flag);
+	if (data.comment != null) {
+	    obj.setComment(data.comment);
+	}
+	if (data.version != null) {
+	    obj.setVersion(data.version);
+	}
+	for (MessageType message : data.messages) {
+	    obj.getMessage().add(message);
+	}
+	for (JAXBElement<? extends ItemType> item : getItemsByObjectId(id)) {
+	    ReferenceType ref = Factories.sc.core.createReferenceType();
+	    ref.setItemRef(item.getValue().getId());
+	    obj.getReference().add(ref);
+	}
+	for (VariableValueType variable : getVariablesByObjectId(id)) {
+	    obj.getVariableValue().add(variable);
+	}
+	return obj;
+
+    }
+
     public void relateItem(String objectId, BigInteger itemId) throws NoSuchElementException {
 	if (!objectTable.containsKey(objectId)) {
 	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, objectId));
@@ -361,21 +392,21 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	return objectTable.get(id).flag;
     }
 
-    public Collection<ItemType> getItemsByObjectId(String id) throws NoSuchElementException {
-	if (!objectTable.containsKey(id)) {
-	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
-	}
-	Collection <ItemType>items = new ArrayList<ItemType>();
-	if (objectItemTable.containsKey(id)) {
-	    for (BigInteger itemId : objectItemTable.get(id)) {
-		if (itemTable.containsKey(itemId)) {
-		    items.add(itemTable.get(itemId));
-		} else {
-		    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_ITEM, itemId));
+    public Collection<JAXBElement<? extends ItemType>> getItemsByObjectId(String id) throws NoSuchElementException {
+	if (objectTable.containsKey(id)) {
+	    Collection <JAXBElement <? extends ItemType>>items = new ArrayList<JAXBElement<? extends ItemType>>();
+	    if (objectItemTable.containsKey(id)) {
+		for (BigInteger itemId : objectItemTable.get(id)) {
+		    if (itemTable.containsKey(itemId)) {
+			items.add(itemTable.get(itemId));
+		    } else {
+			throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_ITEM, itemId));
+		    }
 		}
 	    }
+	    return items;
 	}
-	return items;
+	throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
     }
 
     public Collection<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException {
@@ -422,49 +453,20 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 
     // Private
 
-    private ObjectType makeObject(String id) throws NoSuchElementException {
-	ObjectData data = objectTable.get(id);
-	if (data == null) {
-	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
-	}
-	ObjectType obj = Factories.sc.core.createObjectType();
-	obj.setId(data.id);
-	obj.setFlag(data.flag);
-	if (data.comment != null) {
-	    obj.setComment(data.comment);
-	}
-	if (data.version != null) {
-	    obj.setVersion(data.version);
-	}
-	for (MessageType message : data.messages) {
-	    obj.getMessage().add(message);
-	}
-	for (ItemType item : getItemsByObjectId(id)) {
-	    ReferenceType ref = Factories.sc.core.createReferenceType();
-	    ref.setItemRef(item.getId());
-	    obj.getReference().add(ref);
-	}
-	for (VariableValueType variable : getVariablesByObjectId(id)) {
-	    obj.getVariableValue().add(variable);
-	}
-	return obj;
-    }
-
     /**
      * Canonicalize the item by stripping out its ID (if any) marshalling it to XML, and returning the bytes.
      */
-    private byte[] toCanonicalBytes(ItemType item) throws OvalException {
+    private byte[] toCanonicalBytes(JAXBElement<? extends ItemType> item) throws OvalException {
 	ByteArrayOutputStream out = new ByteArrayOutputStream();
 	synchronized(item) {
-	    BigInteger itemId = item.getId();
-	    item.setId(null);
-	    JAXBElement elt = wrapItem(item);
+	    BigInteger itemId = item.getValue().getId();
+	    item.getValue().setId(null);
 	    try {
-		marshaller.marshal(elt, out);
+		marshaller.marshal(item, out);
 	    } catch (JAXBException e) {
 		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } finally {
-		item.setId(itemId);
+		item.getValue().setId(itemId);
 	    }
 	}
 	return out.toByteArray();

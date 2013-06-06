@@ -7,6 +7,7 @@ import java.io.File;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.NoSuchElementException;
+import javax.xml.bind.JAXBElement;
 
 import scap.oval.common.MessageType;
 import scap.oval.systemcharacteristics.core.FlagEnumeration;
@@ -53,6 +54,11 @@ public interface ISystemCharacteristics extends ITransformable {
     void setObject(String objectId, String comment, BigInteger version, FlagEnumeration flag, MessageType message);
 
     /**
+     * Get a collected object record given its ID.
+     */
+    ObjectType getObject(String objectId) throws NoSuchElementException;
+
+    /**
      * Fetch an existing ObjectType or create a new ObjectType and store it in the objectTable, and create a relation between
      * the ObjectType and ItemType (if such a relation does not already exist).
      */
@@ -72,7 +78,10 @@ public interface ISystemCharacteristics extends ITransformable {
 
     Collection<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException;
 
-    Collection<ItemType> getItemsByObjectId(String id) throws NoSuchElementException;
+    /**
+     * Get all the items associated with the specified object.
+     */
+    Collection<JAXBElement<? extends ItemType>> getItemsByObjectId(String id) throws NoSuchElementException;
 
     /**
      * Serialize the OVAL system characteristics to the specified file.

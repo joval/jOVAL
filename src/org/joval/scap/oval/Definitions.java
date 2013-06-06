@@ -7,10 +7,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -71,11 +73,11 @@ public class Definitions implements IDefinitions, ILoggable {
 
     private OvalDefinitions defs;
     private LocLogger logger;
-    private Hashtable<String, DefinitionType> definitions;
-    private Hashtable<String, TestType> tests;
-    private Hashtable<String, StateType> states;
-    private Hashtable<String, VariableType> variables;
-    private Hashtable<String, ObjectType> objects;
+    private Map<String, DefinitionType> definitions;
+    private Map<String, JAXBElement<? extends TestType>> tests;
+    private Map<String, JAXBElement<? extends StateType>> states;
+    private Map<String, VariableType> variables;
+    private Map<String, JAXBElement<? extends ObjectType>> objects;
 
     /**
      * Load OVAL definitions from a File.
@@ -92,23 +94,21 @@ public class Definitions implements IDefinitions, ILoggable {
 	this.defs = defs;
 	this.logger = JOVALMsg.getLogger();
 
-	objects = new Hashtable <String, ObjectType>();
+	objects = new HashMap<String, JAXBElement<? extends ObjectType>>();
 	if (defs.getObjects() != null) {
 	    for (JAXBElement<? extends ObjectType> jot : defs.getObjects().getObject()) {
-		ObjectType ot = jot.getValue();
-		objects.put(ot.getId(), ot);
+		objects.put(jot.getValue().getId(), jot);
 	    }
 	}
 
-	tests = new Hashtable <String, TestType>();
+	tests = new HashMap<String, JAXBElement<? extends TestType>>();
 	if (defs.isSetTests() && defs.getTests().isSetTest()) {
 	    for (JAXBElement<? extends TestType> jtt : defs.getTests().getTest()) {
-		TestType tt = jtt.getValue();
-		tests.put(tt.getId(), tt);
+		tests.put(jtt.getValue().getId(), jtt);
 	    }
 	}
 
-	variables = new Hashtable <String, VariableType>();
+	variables = new HashMap<String, VariableType>();
 	if (defs.getVariables() != null) {
 	    for (JAXBElement<? extends VariableType> jvt : defs.getVariables().getVariable()) {
 		VariableType vt = jvt.getValue();
@@ -116,15 +116,14 @@ public class Definitions implements IDefinitions, ILoggable {
 	    }
 	}
 
-	states = new Hashtable <String, StateType>();
+	states = new HashMap<String, JAXBElement<? extends StateType>>();
 	if (defs.getStates() != null) {
 	    for (JAXBElement<? extends StateType> jst : defs.getStates().getState()) {
-		StateType st = jst.getValue();
-		states.put(st.getId(), st);
+		states.put(jst.getValue().getId(), jst);
 	    }
 	}
 
-	definitions = new Hashtable <String, DefinitionType>();
+	definitions = new HashMap<String, DefinitionType>();
 	if (defs.isSetDefinitions() && defs.getDefinitions().isSetDefinition()) {
 	    for (DefinitionType dt : defs.getDefinitions().getDefinition()) {
 		definitions.put(dt.getId(), dt);
@@ -163,64 +162,63 @@ public class Definitions implements IDefinitions, ILoggable {
     }
 
     public <T extends ObjectType> T getObject(String id, Class<T> type) throws NoSuchElementException {
-	ObjectType object = objects.get(id);
-	if (object == null) {
-	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_DEFINITION, id));
-	} else if (type.isInstance(object)) {
-	    return type.cast(object);
-	} else {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_INSTANCE, type.getName(), object.getClass().getName());
-	    throw new NoSuchElementException(msg);
+	if (objects.containsKey(id)) {
+	    ObjectType object = objects.get(id).getValue();
+	    if (type.isInstance(object)) {
+		return type.cast(object);
+	    } else {
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_INSTANCE, type.getName(), object.getClass().getName());
+		throw new NoSuchElementException(msg);
+	    }
 	}
+	throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_DEFINITION, id));
     }
 
     public Collection<ObjectType> getObjects() {
-	return objects.values();
+	ArrayList<ObjectType> result = new ArrayList<ObjectType>();
+	for (JAXBElement<? extends ObjectType> elt : objects.values()) {
+	    result.add(elt.getValue());
+	}
+	return result;
     }
 
     public Collection<VariableType> getVariables() {
 	return variables.values();
     }
 
-    public StateType getState(String id) throws NoSuchElementException {
-	StateType state = states.get(id);
-	if (state == null) {
-	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_STATE, id));
+    public JAXBElement<? extends StateType> getState(String id) throws NoSuchElementException {
+	if (states.containsKey(id)) {
+	    return states.get(id);
 	}
-	return state;
+	throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_STATE, id));
     }
 
-    public TestType getTest(String id) throws NoSuchElementException {
-	TestType test = tests.get(id);
-	if (test == null) {
-	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_TEST, id));
+    public JAXBElement<? extends TestType> getTest(String id) throws NoSuchElementException {
+	if (tests.containsKey(id)) {
+	    return tests.get(id);
 	}
-	return test;
+	throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_TEST, id));
     }
 
-    public ObjectType getObject(String id) throws NoSuchElementException {
-	ObjectType object = objects.get(id);
-	if (object == null) {
-	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
+    public JAXBElement<? extends ObjectType> getObject(String id) throws NoSuchElementException {
+	if (objects.containsKey(id)) {
+	    return objects.get(id);
 	}
-	return object;
+	throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
     }
 
     public VariableType getVariable(String id) throws NoSuchElementException {
-	VariableType variable = variables.get(id);
-	if (variable == null) {
-	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_VARIABLE, id));
-	} else {
-	    return variable;
+	if (variables.containsKey(id)) {
+	    return variables.get(id);
 	}
+	throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_VARIABLE, id));
     }
 
     public DefinitionType getDefinition(String id) throws NoSuchElementException {
-	DefinitionType definition = definitions.get(id);
-	if (definition == null) {
-	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_DEFINITION, id));
+	if (definitions.containsKey(id)) {
+	    return definitions.get(id);
 	}
-	return definition;
+	throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_DEFINITION, id));
     }
 
     /**
