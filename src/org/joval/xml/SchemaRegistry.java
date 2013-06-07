@@ -62,7 +62,7 @@ public enum SchemaRegistry {
     XCCDF("xccdf.packages"),
 
     /**
-     * Property indicating the package names for classes in the CPE (Common Platform Enumeration) schema.
+     * Property indicating the package names for classes in the OCIL (Open Checklist Interactive Language) schema.
      */
     OCIL("ocil.packages"),
 

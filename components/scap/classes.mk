@@ -1,4 +1,13 @@
 CLASSES=\
+	org.gocil.diagnostics.ActionSequenceType	\
+	org.gocil.diagnostics.ActionsType	\
+	org.gocil.diagnostics.ActionType	\
+	org.gocil.diagnostics.ObjectFactory	\
+	org.gocil.diagnostics.OcilResultDiagnostics	\
+	org.gocil.diagnostics.package-info	\
+	org.gocil.diagnostics.QuestionnaireRef	\
+	org.gocil.diagnostics.QuestionnaireType	\
+	org.gocil.diagnostics.QuestionRef	\
 	org.joval.scap.diagnostics.ObjectFactory	\
 	org.joval.scap.diagnostics.package-info	\
 	org.joval.scap.diagnostics.RuleResultDiagnostics	\

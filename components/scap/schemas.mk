@@ -13,6 +13,7 @@ SCHEMAS=\
 	oasis/xAL.xsd	\
 	oasis/xNL.xsd	\
 	ocil-2.0/ocil-2.0.xsd	\
+	ocil-2.0/ocil-diagnostic-schema.xsd	\
 	ocil-2.0/ocil-variables-schema.xsd	\
 	oval-5.10.1/aix-definitions-schema.xsd	\
 	oval-5.10.1/aix-system-characteristics-schema.xsd	\

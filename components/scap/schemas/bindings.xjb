@@ -590,12 +590,17 @@
   </jxb:bindings>
 
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
-  <!-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>                jOVAL Bindings                 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< -->
+  <!-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>          Diagnostic Schema Bindings           <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< -->
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
 
   <jxb:bindings schemaLocation="joval/diagnostic-schema-1.0.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="org.joval.scap.diagnostics"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="ocil-2.0/ocil-diagnostic-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="org.gocil.diagnostics"/>
     </jxb:schemaBindings>
   </jxb:bindings>
 </jxb:bindings>
