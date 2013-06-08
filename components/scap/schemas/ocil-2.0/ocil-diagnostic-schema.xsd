@@ -38,10 +38,11 @@
         <xsd:sequence>
             <xsd:element ref="ocil-diag:action" minOccurs="1" maxOccurs="unbounded"/>
         </xsd:sequence>
+        <xsd:attribute name="result" type="ocil:ResultType" use="required"/>
     </xsd:complexType>
    <xsd:element name="action" type="ocil-diag:ActionType" abstract="true"/>
-    <xsd:complexType name="ActionType" abstract="true"/>
-    <xsd:element name="question_ref">
+    <xsd:complexType name="ActionType"/>
+    <xsd:element name="question_ref" substitutionGroup="ocil-diag:action">
         <xsd:complexType>
             <xsd:complexContent>
                 <xsd:extension base="ocil-diag:ActionType">
@@ -54,7 +55,7 @@
             </xsd:complexContent>
         </xsd:complexType>
     </xsd:element>
-    <xsd:element name="questionnaire_ref">
+    <xsd:element name="questionnaire_ref" substitutionGroup="ocil-diag:action">
         <xsd:complexType>
             <xsd:complexContent>
                 <xsd:extension base="ocil-diag:ActionType">

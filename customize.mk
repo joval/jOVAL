@@ -10,8 +10,7 @@
 #
 # JAVA_HOME is where you've installed your JDK.
 #
-JAVA_HOME=$(TOP)/../../tools/jdk1.6.0_26
-#JAVA_HOME=$(TOP)/../../tools/jdk1.7.0_03
+JAVA_HOME=$(TOP)/../../tools/jdk1.7.0_21
 
 #
 # JSAF_HOME is the location of the jSAF FOSS git repository
@@ -29,5 +28,5 @@ JAXB_HOME=$(TOP)/../../tools/jaxb-ri-2.2.6
 # JRE[ARCH]_HOME is the install path for the JRE that will be bundled with the distribution of
 # architecture ARCH.
 #
-JRE32_HOME=$(TOP)/../../tools/jre170_03_x86
-JRE64_HOME=$(TOP)/../../tools/jre170_03_x64
+JRE32_HOME=$(TOP)/../../tools/jre170_21_x86
+JRE64_HOME=$(TOP)/../../tools/jdk1.7.0_21/jre
