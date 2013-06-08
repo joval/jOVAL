@@ -53,6 +53,7 @@
                   <xsd:element name="items" type="oval-sc:SystemDataType" minOccurs="1" maxOccurs="1"/>
                </xsd:sequence>
                <xsd:sequence>
+                  <xsd:element name="targets" type="ocil:TargetsType" minOccurs="1" maxOccurs="1"/>
                   <xsd:element ref="ocil-diag:ocil_result_diagnostics" minOccurs="1" maxOccurs="1"/>
                </xsd:sequence>
                <xsd:sequence>
