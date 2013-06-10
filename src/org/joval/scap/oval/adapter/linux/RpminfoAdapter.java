@@ -72,9 +72,7 @@ public class RpminfoAdapter implements IAdapter {
 	switch(rObj.getName().getOperation()) {
 	  case EQUALS:
 	    try {
-		items.add(getItem(SafeCLI.checkArgument((String)rObj.getName().getValue(), session)));
-	    } catch (NoSuchElementException e) {
-		// the package is not installed; don't add to the item list
+		items.addAll(getItems(SafeCLI.checkArgument((String)rObj.getName().getValue(), session)));
 	    } catch (Exception e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -163,25 +161,38 @@ public class RpminfoAdapter implements IAdapter {
     }
 
     /**
-     * Get an RpminfoItem for a single package.
+     * Get RpminfoItems matching a single package name (potentially a "short name", which can lead to multiple results).
      */
-    private RpminfoItem getItem(String packageName) throws Exception {
+    private Collection<RpminfoItem> getItems(String packageName) throws Exception {
+	Collection<RpminfoItem> result = new ArrayList<RpminfoItem>();
 	if (packageMap.containsKey(packageName)) {
-	    return packageMap.get(packageName);
+	    //
+	    // Return a previously-found exact match
+	    //
+	    result.add(packageMap.get(packageName));
 	} else if (loaded) {
-	    throw new NoSuchElementException(packageName);
-	}
-
-	session.getLogger().trace(JOVALMsg.STATUS_RPMINFO_RPM, packageName);
-
-	StringBuffer command = new StringBuffer(getBaseCommand()).append(" '").append(packageName).append("'");
-	RpminfoItem item = nextRpmInfo(SafeCLI.multiLine(command.toString(), session, IUnixSession.Timeout.S).iterator());
-	if (item == null) {
-	    throw new NoSuchElementException(packageName);
+	    //
+	    // Look for "short name" matches
+	    //
+	    for (Map.Entry<String, RpminfoItem> entry : packageMap.entrySet()) {
+		if (entry.getKey().startsWith(packageName)) {
+		    result.add(entry.getValue());
+		}
+	    }
 	} else {
-	    packageMap.put(packageName, item);
-	    return item;
+	    //
+	    // Query the RPM database for the package name; cache and return the results
+	    //
+	    session.getLogger().trace(JOVALMsg.STATUS_RPMINFO_RPM, packageName);
+	    String command = new StringBuffer(getBaseCommand()).append(" '").append(packageName).append("'").toString();
+	    Iterator<String> data = SafeCLI.multiLine(command, session, IUnixSession.Timeout.S).iterator();
+	    RpminfoItem item = null;
+	    while ((item = nextRpmInfo(data)) != null) {
+		packageMap.put(packageName, item);
+		result.add(item);
+	    }
 	}
+	return result;
     }
 
     /**
