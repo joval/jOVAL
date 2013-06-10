@@ -175,7 +175,7 @@ public class RpminfoAdapter implements IAdapter {
 	    // Look for "short name" matches
 	    //
 	    for (Map.Entry<String, RpminfoItem> entry : packageMap.entrySet()) {
-		if (entry.getKey().startsWith(packageName)) {
+		if (entry.getKey().startsWith(packageName + "-")) {
 		    result.add(entry.getValue());
 		}
 	    }
