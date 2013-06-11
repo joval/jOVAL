@@ -5,10 +5,12 @@ package org.joval.scap.xccdf.engine;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.NoSuchElementException;
 
 import scap.xccdf.CheckType;
 import scap.xccdf.InstanceResultType;
+import scap.xccdf.MessageType;
 import scap.xccdf.ResultEnumType;
 
 /**
@@ -22,6 +24,7 @@ public class CheckResult implements ISystem.IResult {
     private ResultEnumType result;
     private CheckType check;
     private InstanceResultType inst;
+    private Collection<MessageType> messages;
     private Collection<ISystem.IResult> results;
 
     CheckResult(ResultEnumType result, CheckType check) {
@@ -40,10 +43,27 @@ public class CheckResult implements ISystem.IResult {
         results = new ArrayList<ISystem.IResult>();
     }
 
+    void addMessage(MessageType message) {
+	if (messages == null) {
+	    messages = new ArrayList<MessageType>();
+	}
+	messages.add(message);
+    }
+
     // Implement IResult
 
     public Type getType() {
         return type;
+    }
+
+    public Collection<MessageType> getMessages() {
+	if (messages == null) {
+	    @SuppressWarnings("unchecked")
+	    Collection<MessageType> empty = (Collection<MessageType>)Collections.EMPTY_LIST;
+	    return empty;
+	} else {
+	    return messages;
+	}
     }
 
     public ResultEnumType getResult() throws NoSuchElementException {

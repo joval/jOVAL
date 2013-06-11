@@ -11,10 +11,12 @@ import javax.xml.bind.util.JAXBSource;
 import javax.xml.transform.Source;
 
 import org.openscap.sce.results.SceResultsType;
+import scap.xccdf.ResultEnumType;
 
 import org.joval.intf.scap.sce.IScriptResult;
 import org.joval.intf.xml.ITransformable;
 import org.joval.scap.ScapException;
+import org.joval.scap.ScapFactory;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 
@@ -50,6 +52,7 @@ public class Result implements IScriptResult {
     }
 
     private SceResultsType result;
+    private Throwable error;
 
     /**
      * Create a new SCE script result object.
@@ -58,10 +61,28 @@ public class Result implements IScriptResult {
 	this.result = result;
     }
 
+    /**
+     * Create a new SCE script result object representing a failure to run the script.
+     */
+    public Result(String scriptPath, Throwable error) {
+	this.error = error;
+	result = ScapFactory.SCE_RESULTS.createSceResultsType();
+	result.setResult(ResultEnumType.ERROR);
+	result.setScriptPath(scriptPath);
+    }
+
     // Implement IScriptResult
 
     public SceResultsType getResult() {
 	return result;
+    }
+
+    public boolean hasError() {
+	return error != null;
+    }
+
+    public Throwable getError() {
+	return error;
     }
 
     // Implement ITransformable

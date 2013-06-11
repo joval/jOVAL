@@ -268,15 +268,19 @@ public abstract class ScapContext implements IScapContext {
 
 	List<SelectableItemType> results = new ArrayList<SelectableItemType>();
 	for (SelectableItemType item : items) {
+	    String cId = item.isSetClusterId() ? item.getClusterId() : null;
 	    String id = null;
 	    if (item instanceof GroupType) {
 		id = ((GroupType)item).getId();
 	    } else if (item instanceof RuleType) {
 		id = ((RuleType)item).getId();
 	    }
-	    if ((selections.containsKey(id) && selections.get(id).booleanValue()) ||
-		(!selections.containsKey(id) && item.getSelected())) {
 
+	    boolean selected =	(selections.containsKey(id) && selections.get(id).booleanValue()) ||
+				(!selections.containsKey(id) && item.getSelected()) ||
+				(cId != null && selections.containsKey(cId) && selections.get(cId).booleanValue());
+
+	    if (selected) {
 		results.add(item);
 		if (item.getPlatform().size() == 0) {
 		    platforms.put(id, parentPlatforms);

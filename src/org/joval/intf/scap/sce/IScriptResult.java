@@ -18,4 +18,14 @@ public interface IScriptResult extends ITransformable {
      * Get the result of the script execution.
      */
     SceResultsType getResult();
+
+    /**
+     * Returns true if there was an error preventing the script from running.
+     */
+    boolean hasError();
+
+    /**
+     * Returns the error that prevented the script from running, or null if there was none.
+     */
+    Throwable getError();
 }

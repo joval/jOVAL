@@ -9,10 +9,12 @@ import java.util.NoSuchElementException;
 
 import scap.xccdf.CheckType;
 import scap.xccdf.InstanceResultType;
+import scap.xccdf.MessageType;
 import scap.xccdf.ResultEnumType;
 
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.xml.ITransformable;
+import org.joval.scap.ScapException;
 
 /**
  * XCCDF helper interface, which describes a "handler" that encapsulates the knowledge required to implement checks for
@@ -37,14 +39,14 @@ interface ISystem {
      *
      * @return reports, indexed by source document URI
      */
-    Map<String, ITransformable> exec(IPlugin plugin) throws Exception;
+    Map<String, ITransformable> exec(IPlugin plugin);
 
     /**
      * Get the result for a rule.
      *
      * @param multi overrides CheckType.getMultiCheck().
      */
-    IResult getResult(CheckType check, boolean multi) throws Exception;
+    IResult getResult(CheckType check, boolean multi) throws ScapException, IllegalArgumentException;
 
     /**
      * Interface definition for getting check result information. Since a check can be a regular single check, or a
@@ -56,6 +58,8 @@ interface ISystem {
 	}
 
 	Type getType();
+
+	Collection<MessageType> getMessages();
 
 	/**
 	 * For Type.SINGLE.

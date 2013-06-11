@@ -9,9 +9,9 @@ import javax.xml.bind.util.JAXBSource;
 import javax.xml.transform.Source;
 
 import scap.xccdf.TestResultType;
-import scap.xccdf.ObjectFactory;
 
 import org.joval.intf.xml.ITransformable;
+import org.joval.scap.ScapFactory;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -22,11 +22,9 @@ import org.joval.xml.SchemaRegistry;
  */
 public class TestResult implements ITransformable {
     private TestResultType result;
-    private ObjectFactory factory;
 
     public TestResult(TestResultType result) throws XccdfException {
 	this.result = result;
-	factory = new ObjectFactory();
     }
 
     /**
@@ -43,7 +41,7 @@ public class TestResult implements ITransformable {
     }
 
     public Object getRootObject() {
-	return factory.createTestResult(result);
+	return ScapFactory.XCCDF.createTestResult(result);
     }
 
     public JAXBContext getJAXBContext() throws JAXBException {

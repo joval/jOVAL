@@ -41,6 +41,16 @@ import org.joval.scap.xccdf.engine.Engine;
  */
 public class ScapFactory {
     /**
+     * A JAXB object factory for XCCDF data model elements.
+     */
+    public static final scap.xccdf.ObjectFactory XCCDF = new scap.xccdf.ObjectFactory();
+
+    /**
+     * A JAXB object factory for SCE results data model elements.
+     */
+    public static final org.openscap.sce.results.ObjectFactory SCE_RESULTS = new org.openscap.sce.results.ObjectFactory();
+
+    /**
      * An empty checklist.
      */
     public static final IChecklist EMPTY_CHECKLIST = Checklist.EMPTY;

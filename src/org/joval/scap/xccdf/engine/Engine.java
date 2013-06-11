@@ -54,6 +54,7 @@ import scap.xccdf.CPE2IdrefType;
 import scap.xccdf.GroupType;
 import scap.xccdf.IdrefType;
 import scap.xccdf.IdentityType;
+import scap.xccdf.MessageType;
 import scap.xccdf.Model;
 import scap.xccdf.ObjectFactory;
 import scap.xccdf.OverrideableCPE2IdrefType;
@@ -86,6 +87,7 @@ import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.intf.xml.ITransformable;
 import org.joval.plugin.PluginConfigurationException;
+import org.joval.scap.ScapException;
 import org.joval.scap.arf.ArfException;
 import org.joval.scap.arf.Report;
 import org.joval.scap.cpe.CpeException;
@@ -402,37 +404,41 @@ public class Engine implements IXccdfEngine {
 	boolean doDisconnect = false;
 	try {
 	    List<RuleType> rules = ctx.getSelectedRules();
-	    if (rules.size() == 0) {
-		logger.warn(JOVALMsg.WARNING_XCCDF_RULES);
+	    String profileId = null;
+	    if (ctx.getProfile() == null) {
+		profileId = JOVALMsg.getMessage(JOVALMsg.STATUS_XCCDF_NOPROFILE);
 	    } else {
-		String profileId = null;
-		if (ctx.getProfile() == null) {
-		    profileId = JOVALMsg.getMessage(JOVALMsg.STATUS_XCCDF_NOPROFILE);
+		profileId = ctx.getProfile().getProfileId();
+	    }
+	    if (checklists.size() == 0) {
+		Collection<OcilMessageArgument> exports = getOcilExports(ctx);
+		if (exports.size() > 0) {
+		    for (OcilMessageArgument arg : exports) {
+			producer.sendNotify(IXccdfEngine.Message.OCIL_MISSING, arg);
+		    }
+		    throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_OCIL_REQUIRED));
+		}
+	    }
+
+	    // De-duplicate rule selections
+	    HashSet<String> selectedIds = new HashSet<String>();
+	    for (RuleType rule : rules) {
+		selectedIds.add(rule.getId());
+	    }
+
+	    if (!plugin.isConnected()) {
+		if (plugin.connect()) {
+		    doDisconnect = true;
 		} else {
-		    profileId = ctx.getProfile().getProfileId();
+		    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
 		}
-		logger.info(JOVALMsg.STATUS_XCCDF_RULES, rules.size(), profileId);
-		HashSet<String> selectedIds = new HashSet<String>();
-		for (RuleType rule : rules) {
-		    selectedIds.add(rule.getId());
-		}
-		if (checklists.size() == 0) {
-		    Collection<OcilMessageArgument> exports = getOcilExports(ctx);
-		    if (exports.size() > 0) {
-			for (OcilMessageArgument arg : exports) {
-			    producer.sendNotify(IXccdfEngine.Message.OCIL_MISSING, arg);
-			}
-			throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_OCIL_REQUIRED));
-		    }
-		}
-		if (!plugin.isConnected()) {
-		    if (plugin.connect()) {
-			doDisconnect = true;
-		    } else {
-			throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
-		    }
-		}
-		TestResultType testResult = initializeResult();
+	    }
+	    TestResultType testResult = initializeResult();
+	    if (selectedIds.size() == 0) {
+		logger.warn(JOVALMsg.WARNING_XCCDF_RULES);
+		testResult.setEndTime(getTimestamp());
+	    } else {
+		logger.info(JOVALMsg.STATUS_XCCDF_RULES, selectedIds.size(), profileId);
 
 		//
 		// Perform the profile's platform applicability tests, and if it's applicable, the selected checks
@@ -464,48 +470,49 @@ public class Engine implements IXccdfEngine {
 		    producer.sendNotify(Message.PLATFORM_PHASE_END, Boolean.FALSE);
 		    logger.info(JOVALMsg.WARNING_CPE_TARGET, plugin.getSession().getHostname());
 		}
-		if (doDisconnect) {
-		    plugin.disconnect();
-		    doDisconnect = false;
-		}
-
-		//
-		// Add results for all the rules to the XCCDF results, and add that to the ARF report
-		//
-		HashMap<String, RuleResultType> resultIndex = new HashMap<String, RuleResultType>();
-		for (RuleResultType rrt : testResult.getRuleResult()) {
-		    resultIndex.put(rrt.getIdref(), rrt);
-		}
-		for (RuleType rule : listAllRules()) {
-		    String ruleId = rule.getId();
-		    if (resultIndex.containsKey(ruleId)) {
-			logger.info(JOVALMsg.STATUS_XCCDF_RULE, ruleId, resultIndex.get(ruleId).getResult());
-		    } else {
-			//
-			// Add a result record for the unselected/unchecked rule
-			//
-			RuleResultType rrt = FACTORY.createRuleResultType();
-			rrt.setIdref(rule.getId());
-			if (selectedIds.contains(ruleId)) {
-			    rrt.setResult(getRuleResult(rule, ResultEnumType.NOTCHECKED));
-			} else {
-			    rrt.setResult(getRuleResult(rule, ResultEnumType.NOTSELECTED));
-			}
-			if (rule.isSetCheck()) {
-			    for (CheckType check : rule.getCheck()) {
-				rrt.getCheck().add(check);
-			    }
-			}
-			testResult.getRuleResult().add(rrt);
-		    }
-		}
-		subreports.put(testResult.getBenchmark().getHref(), new TestResult(testResult));
-
-		//
-		// XPERT requires the result to be added to the benchmark to create the HTML transform
-		//
-		ctx.getBenchmark().getBenchmark().getTestResult().add(testResult);
 	    }
+	    if (doDisconnect) {
+		plugin.disconnect();
+		doDisconnect = false;
+	    }
+
+	    //
+	    // Add results for all the rules to the XCCDF results, and add that to the ARF report
+	    //
+	    HashMap<String, RuleResultType> resultIndex = new HashMap<String, RuleResultType>();
+	    for (RuleResultType rrt : testResult.getRuleResult()) {
+		resultIndex.put(rrt.getIdref(), rrt);
+	    }
+	    for (RuleType rule : listAllRules()) {
+		String ruleId = rule.getId();
+		if (resultIndex.containsKey(ruleId)) {
+		    logger.info(JOVALMsg.STATUS_XCCDF_RULE, ruleId, resultIndex.get(ruleId).getResult());
+		} else {
+		    //
+		    // Add a result record for the unselected/unchecked rule
+		    //
+		    RuleResultType rrt = FACTORY.createRuleResultType();
+		    rrt.setIdref(rule.getId());
+		    if (selectedIds.contains(ruleId)) {
+			rrt.setResult(getRuleResult(rule, ResultEnumType.NOTCHECKED));
+		    } else {
+			rrt.setResult(getRuleResult(rule, ResultEnumType.NOTSELECTED));
+		    }
+		    if (rule.isSetCheck()) {
+			for (CheckType check : rule.getCheck()) {
+			    rrt.getCheck().add(check);
+			}
+		    }
+		    testResult.getRuleResult().add(rrt);
+		}
+	    }
+	    subreports.put(testResult.getBenchmark().getHref(), new TestResult(testResult));
+
+	    //
+	    // XPERT requires the result to be added to the benchmark to create the HTML transform
+	    //
+	    ctx.getBenchmark().getBenchmark().getTestResult().add(testResult);
+
 	    state = State.COMPLETE_OK;
 	} catch (Exception e) {
 	    state = State.COMPLETE_ERR;
@@ -639,7 +646,7 @@ public class Engine implements IXccdfEngine {
     /**
      * Evaluate the check(s) in the rule, and return the results.
      */
-    private List<RuleResultType> evaluate(RuleType rule, Map<String, ISystem> handlers) throws Exception {
+    private List<RuleResultType> evaluate(RuleType rule, Map<String, ISystem> handlers) throws ScapException {
 	List<RuleResultType> results = new ArrayList<RuleResultType>();
 	if (rule.isSetComplexCheck()) {
 	    ComplexCheckType check = rule.getComplexCheck();
@@ -665,6 +672,9 @@ public class Engine implements IXccdfEngine {
 			rrt.setWeight(rule.getWeight());
 			rrt.setRole(rule.getRole());
 			rrt.getCheck().add(result.getCheck());
+			for (MessageType message : result.getMessages()) {
+			    rrt.getMessage().add(message);
+			}
 			rrt.setResult(getRuleResult(rule, result.getResult()));
 			results.add(rrt);
 			break;
@@ -678,6 +688,9 @@ public class Engine implements IXccdfEngine {
 			    rrt.setRole(rule.getRole());
 			    rrt.getCheck().add(subresult.getCheck());
 			    rrt.getInstance().add(subresult.getInstance());
+			    for (MessageType message : subresult.getMessages()) {
+				rrt.getMessage().add(message);
+			    }
 			    rrt.setResult(getRuleResult(rule, subresult.getResult()));
 			    results.add(rrt);
 			}
@@ -695,7 +708,7 @@ public class Engine implements IXccdfEngine {
      * overall result.
      */
     private ResultEnumType evaluate(ComplexCheckType check, ComplexCheckType checkResult, Map<String, ISystem> handlers)
-		throws Exception {
+		throws ScapException {
 
 	CheckData data = new CheckData(check.getNegate());
 	for (Object obj : check.getCheckOrComplexCheck()) {

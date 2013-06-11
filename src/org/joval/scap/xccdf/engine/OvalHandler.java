@@ -20,7 +20,8 @@ import scap.xccdf.CheckContentRefType;
 import scap.xccdf.CheckType;
 import scap.xccdf.CheckExportType;
 import scap.xccdf.InstanceResultType;
-import scap.xccdf.ObjectFactory;
+import scap.xccdf.MsgSevEnumType;
+import scap.xccdf.MessageType;
 import scap.xccdf.ResultEnumType;
 
 import org.joval.intf.scap.IScapContext;
@@ -33,6 +34,7 @@ import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.scap.xccdf.IXccdfEngine;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.xml.ITransformable;
+import org.joval.scap.ScapFactory;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.xccdf.XccdfException;
@@ -119,7 +121,7 @@ public class OvalHandler implements ISystem {
 	}
     }
 
-    public Map<String, ITransformable> exec(IPlugin plugin) throws Exception {
+    public Map<String, ITransformable> exec(IPlugin plugin) {
 	Map<String, ITransformable> reports = new HashMap<String, ITransformable>();
 	reports.putAll(results);
 	Iterator<Map.Entry<String, EngineData>> iter = engines.entrySet().iterator();
@@ -135,8 +137,6 @@ public class OvalHandler implements ISystem {
 	  	  case OK:
 		    reports.put(href, engine.getResults());
 		    break;
-	  	  case ERR:
-		    throw engine.getError();
 		}
 	    } else {
 		plugin.getLogger().info("No engine created for href " + href);
@@ -146,7 +146,7 @@ public class OvalHandler implements ISystem {
 	return reports;
     }
 
-    public IResult getResult(CheckType check, boolean multi) throws Exception {
+    public IResult getResult(CheckType check, boolean multi) throws OvalException, IllegalArgumentException {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
@@ -157,7 +157,19 @@ public class OvalHandler implements ISystem {
 	    if (results.containsKey(href)) {
 		ovalResult = results.get(href);
 	    } else if (engines.containsKey(href)) {
-		ovalResult = engines.get(href).getEngine().getResults();
+		IOvalEngine engine = engines.get(href).getEngine();
+		switch(engine.getResult()) {
+		  case OK:
+		    ovalResult = engine.getResults();
+		    break;
+		  case ERR:
+		    MessageType message = ScapFactory.XCCDF.createMessageType();
+		    message.setSeverity(MsgSevEnumType.ERROR);
+		    message.setValue(engine.getError().getMessage());
+		    CheckResult cr = new CheckResult(ResultEnumType.ERROR, check);
+		    cr.addMessage(message);
+		    return cr;
+		}
 	    }
 	    if (ovalResult != null) {
 		CheckData data = new CheckData(check.getNegate());

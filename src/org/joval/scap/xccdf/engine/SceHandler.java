@@ -17,6 +17,8 @@ import scap.xccdf.CheckContentRefType;
 import scap.xccdf.CheckExportType;
 import scap.xccdf.CheckImportType;
 import scap.xccdf.CheckType;
+import scap.xccdf.MsgSevEnumType;
+import scap.xccdf.MessageType;
 import scap.xccdf.ResultEnumType;
 
 import org.joval.intf.plugin.IPlugin;
@@ -26,6 +28,8 @@ import org.joval.intf.scap.sce.IScriptResult;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.scap.xccdf.IXccdfEngine;
 import org.joval.intf.xml.ITransformable;
+import org.joval.scap.ScapFactory;
+import org.joval.scap.sce.Result;
 import org.joval.scap.sce.SceException;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.util.JOVALMsg;
@@ -79,7 +83,7 @@ public class SceHandler implements ISystem {
 	}
     }
 
-    public Map<String, ITransformable> exec(IPlugin plugin) throws Exception {
+    public Map<String, ITransformable> exec(IPlugin plugin) {
 	Map<String, ITransformable> reports = new HashMap<String, ITransformable>();
 	reports.putAll(results);
 	ISession session = plugin.getSession();
@@ -87,17 +91,22 @@ public class SceHandler implements ISystem {
 	    String href = entry.getKey();
 	    Wrapper wrapper = entry.getValue();
 	    producer.sendNotify(IXccdfEngine.Message.SCE_SCRIPT, href);
-	    IScriptResult result = wrapper.getScript().exec(wrapper.getExports(), session);
+	    IScriptResult result = null;
+	    try {
+		result = wrapper.getScript().exec(wrapper.getExports(), session);
+	    } catch (Exception e) {
+		result = new Result(href, e);
+	    }
+	    results.put(href, result);
 	    reports.put(href, result);
 	}
 	return reports;
     }
 
-    public IResult getResult(CheckType check, boolean multi) throws Exception {
+    public IResult getResult(CheckType check, boolean multi) throws IllegalArgumentException {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
-
 	boolean importStdout = false;
 	for (CheckImportType cit : check.getCheckImport()) {
 	    if ("stdout".equals(cit.getImportName())) {
@@ -105,8 +114,6 @@ public class SceHandler implements ISystem {
 		break;
 	    }
 	}
-
-	CheckData data = new CheckData(check.getNegate());
 	CheckType checkResult = Engine.FACTORY.createCheckType();
 	checkResult.setId(check.getId());
 	checkResult.setMultiCheck(false);
@@ -114,24 +121,32 @@ public class SceHandler implements ISystem {
 	checkResult.setSelector(check.getSelector());
 	checkResult.setSystem(NAMESPACE);
 	checkResult.getCheckExport().addAll(check.getCheckExport());
-
 	if (check.isSetCheckContentRef()) {
 	    for (CheckContentRefType ref : check.getCheckContentRef()) {
 		if (results.containsKey(ref.getHref())) {
-		    SceResultsType srt = results.get(ref.getHref()).getResult();
-		    data.add(srt.getResult());
 		    checkResult.getCheckContentRef().add(ref);
-		    if (importStdout) {
+		    IScriptResult sr = results.get(ref.getHref());
+		    SceResultsType srt = sr.getResult();
+		    if (importStdout && srt.isSetStdout()) {
 			CheckImportType cit = Engine.FACTORY.createCheckImportType();
 			cit.setImportName("stdout");
 			cit.getContent().add(srt.getStdout());
 			checkResult.getCheckImport().add(cit);
 		    }
-		    break;
+		    CheckData data = new CheckData(check.getNegate());
+		    data.add(srt.getResult());
+		    CheckResult cr = new CheckResult(data.getResult(CcOperatorEnumType.AND), checkResult);
+		    if (sr.hasError()) {
+			MessageType message = ScapFactory.XCCDF.createMessageType();
+			message.setSeverity(MsgSevEnumType.ERROR);
+			message.setValue(sr.getError().getMessage());
+			cr.addMessage(message);
+		    }
+		    return cr;
 		}
 	    }
 	}
-	return new CheckResult(data.getResult(CcOperatorEnumType.AND), checkResult);
+	return new CheckResult(ResultEnumType.NOTCHECKED, check);
     }
 
     // Private
