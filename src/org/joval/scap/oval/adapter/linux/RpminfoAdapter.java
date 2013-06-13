@@ -150,7 +150,7 @@ public class RpminfoAdapter implements IAdapter, IBatch {
 	    try {
 		if (!loaded) {
 		    //
-		    // Build a list of all the packages about which we'll need information.
+		    // Build a newline-delimited list of all the packages about which we'll need information.
 		    //
 		    initPackageList();
 		    StringBuffer sb = new StringBuffer();
@@ -180,6 +180,10 @@ public class RpminfoAdapter implements IAdapter, IBatch {
 			    sb.append(name);
 			}
 		    }
+
+		    //
+		    // Gather information about packages in a single pass, and it all to the package map.
+		    //
 		    if (sb.length() > 0) {
 			//
 			// Execute a single command to retrieve information about all the packges.
@@ -193,6 +197,10 @@ public class RpminfoAdapter implements IAdapter, IBatch {
 			}
 		    }
 		}
+
+		//
+		// Use the package map to create result for all the requests.
+		//
 		for (IRequest request : queue) {
 		    RpminfoObject rObj = (RpminfoObject)request.getObject();
 		    String name = (String)rObj.getName().getValue();
@@ -225,7 +233,8 @@ public class RpminfoAdapter implements IAdapter, IBatch {
     // Private
 
     /**
-     * Only batch up exact match requests.
+     * Only batch up exact match requests. Anything else will result in a full load, which obviates collection in
+     * the batch exec phase anyway.
      */
     private boolean batchable(IRequest request) {
 	RpminfoObject rObj = (RpminfoObject)request.getObject();
@@ -254,9 +263,8 @@ public class RpminfoAdapter implements IAdapter, IBatch {
 	if (packageList == null) {
 	    session.getLogger().info(JOVALMsg.STATUS_RPMINFO_LIST);
 	    packageList = new HashSet<String>();
-	    Iterator<String> iter = SafeCLI.manyLines("rpm -qa", null, session);
-	    while (iter.hasNext()) {
-		packageList.add(iter.next());
+	    for (String name : SafeCLI.multiLine("rpm -qa", session, IUnixSession.Timeout.M)) {
+		packageList.add(name);
 	    }
 	}
     }
