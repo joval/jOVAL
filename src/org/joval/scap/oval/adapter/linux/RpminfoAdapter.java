@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +22,10 @@ import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.common.OperationEnumeration;
 import scap.oval.common.SimpleDatatypeEnumeration;
 import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.linux.RpmInfoBehaviors;
 import scap.oval.definitions.linux.RpminfoObject;
 import scap.oval.systemcharacteristics.core.EntityItemStringType;
 import scap.oval.systemcharacteristics.core.FlagEnumeration;
@@ -32,8 +35,10 @@ import scap.oval.systemcharacteristics.core.EntityItemEVRStringType;
 import scap.oval.systemcharacteristics.linux.RpminfoItem;
 
 import org.joval.intf.plugin.IAdapter;
+import org.joval.intf.scap.oval.IBatch;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
+import org.joval.scap.oval.Batch;
 import org.joval.util.JOVALMsg;
 
 /**
@@ -42,9 +47,11 @@ import org.joval.util.JOVALMsg;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class RpminfoAdapter implements IAdapter {
+public class RpminfoAdapter implements IAdapter, IBatch {
     private IUnixSession session;
+    private Collection<String> packageList;
     private Map<String, RpminfoItem> packageMap;
+    private boolean loaded = false;
 
     // Implement IAdapter
 
@@ -121,7 +128,109 @@ public class RpminfoAdapter implements IAdapter {
 	return items;
     }
 
+    // Implement IBatch
+
+    private Collection<IRequest> queue;
+
+    public boolean queue(IRequest request) {
+	if (batchable(request)) {
+	    if (queue == null) {
+		queue = new ArrayList<IRequest>();
+	    }
+	    queue.add(request);
+	    return true;
+	} else {
+	    return false;
+	}
+    }
+
+    public Collection<IResult> exec() {
+	Collection<IResult> results = new ArrayList<IResult>();
+	if (queue != null) {
+	    try {
+		if (!loaded) {
+		    //
+		    // Build a list of all the packages about which we'll need information.
+		    //
+		    initPackageList();
+		    StringBuffer sb = new StringBuffer();
+		    for (IRequest request : queue) {
+			RpminfoObject rObj = (RpminfoObject)request.getObject();
+			String name = SafeCLI.checkArgument((String)rObj.getName().getValue(), session);
+			boolean check = false;
+			if (packageList.contains(name)) {
+			    check = true;
+			} else {
+			    //
+			    // Check for a "short name" match
+			    //
+			    for (String packageName : packageList) {
+				if (packageName.startsWith(name + "-")) {
+				    if (!packageMap.containsKey(packageName)) {
+					check = true;
+				    }
+				    break;
+				}
+			    }
+			}
+			if (check) {
+			    if (sb.length() > 0) {
+				sb.append("\\n");
+			    }
+			    sb.append(name);
+			}
+		    }
+		    if (sb.length() > 0) {
+			//
+			// Execute a single command to retrieve information about all the packges.
+			//
+			StringBuffer cmd = new StringBuffer("echo -e \"").append(sb.toString()).append("\"");
+			cmd.append(" | xargs -I{} rpm -ql ").append(getBaseCommand()).append(" '{}'");
+			RpminfoItem item = null;
+			Iterator<String> iter = SafeCLI.manyLines(cmd.toString(), null, session);
+			while ((item = nextRpmInfo(iter)) != null) {
+			    packageMap.put((String)item.getName().getValue(), item);
+			}
+		    }
+		}
+		for (IRequest request : queue) {
+		    RpminfoObject rObj = (RpminfoObject)request.getObject();
+		    String name = (String)rObj.getName().getValue();
+		    Collection<RpminfoItem> result = new ArrayList<RpminfoItem>();
+		    if (packageMap.containsKey(name)) {
+			result.add(packageMap.get(name));
+		    } else {
+			//
+			// Look for a "short name" match
+			//
+			for (Map.Entry<String, RpminfoItem> entry : packageMap.entrySet()) {
+			    if (entry.getKey().startsWith(name + "-")) {
+				result.add(entry.getValue());
+				break;
+			    }
+			}
+		    }
+		    results.add(new Batch.Result(result, request.getContext()));
+		}
+	    } catch (Exception e) {
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		for (IRequest request : queue) {
+		    results.add(new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), request.getContext()));
+		}
+	    }
+	}
+	return results;
+    }
+
     // Private
+
+    /**
+     * Only batch up exact match requests.
+     */
+    private boolean batchable(IRequest request) {
+	RpminfoObject rObj = (RpminfoObject)request.getObject();
+	return rObj.isSetName() && rObj.getName().getOperation() == OperationEnumeration.EQUALS;
+    }
 
     private String getBaseCommand() {
 	StringBuffer command = new StringBuffer("rpm -ql --qf '");
@@ -138,13 +247,29 @@ public class RpminfoAdapter implements IAdapter {
 	return command.append("'").toString();
     }
 
-    private boolean loaded = false;
+    /**
+     * Populate packageList if it's not already populated. Idempotent.
+     */
+    private void initPackageList() throws Exception {
+	if (packageList == null) {
+	    session.getLogger().info(JOVALMsg.STATUS_RPMINFO_LIST);
+	    packageList = new HashSet<String>();
+	    Iterator<String> iter = SafeCLI.manyLines("rpm -qa", null, session);
+	    while (iter.hasNext()) {
+		packageList.add(iter.next());
+	    }
+	}
+    }
+
+    /**
+     * Load comprehensive information about every package on the system. Also initializes packageList. Idempotent.
+     */
     private void loadFullPackageMap() {
 	if (loaded) {
 	    return;
 	}
 	try {
-	    session.getLogger().info(JOVALMsg.STATUS_RPMINFO_LIST);
+	    packageList = new HashSet<String>();
 	    packageMap = new HashMap<String, RpminfoItem>();
 	    StringBuffer cmd = new StringBuffer("rpm -qa | xargs -I{} ");
 	    cmd.append(getBaseCommand()).append(" '{}'");
@@ -152,7 +277,9 @@ public class RpminfoAdapter implements IAdapter {
 	    RpminfoItem item = null;
 	    Iterator<String> iter = SafeCLI.manyLines(cmd.toString(), null, session);
 	    while ((item = nextRpmInfo(iter)) != null) {
-		packageMap.put((String)item.getName().getValue(), item);
+		String packageName = (String)item.getName().getValue();
+		packageList.add(packageName);
+		packageMap.put(packageName, item);
 	    }
 	    loaded = true;
 	} catch (Exception e) {
@@ -172,11 +299,12 @@ public class RpminfoAdapter implements IAdapter {
 	    result.add(packageMap.get(packageName));
 	} else if (loaded) {
 	    //
-	    // Look for "short name" matches
+	    // Look for a "short name" match
 	    //
 	    for (Map.Entry<String, RpminfoItem> entry : packageMap.entrySet()) {
 		if (entry.getKey().startsWith(packageName + "-")) {
 		    result.add(entry.getValue());
+		    break;
 		}
 	    }
 	} else {
@@ -188,7 +316,7 @@ public class RpminfoAdapter implements IAdapter {
 	    Iterator<String> data = SafeCLI.multiLine(command, session, IUnixSession.Timeout.S).iterator();
 	    RpminfoItem item = null;
 	    while ((item = nextRpmInfo(data)) != null) {
-		packageMap.put(packageName, item);
+		packageMap.put((String)item.getName().getValue(), item);
 		result.add(item);
 	    }
 	}

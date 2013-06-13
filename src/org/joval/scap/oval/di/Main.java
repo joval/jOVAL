@@ -276,8 +276,11 @@ public class Main implements IObserver<IOvalEngine.Message> {
 	    break;
 
 	  case OBJECTS:
-	    printStatus(getMessage("MESSAGE_OBJECTS", ((String[])arg).length));
-	    logger.log(Level.INFO, getMessage("MESSAGE_OBJECT_LOG", (String)arg).trim());
+	    String[] args = (String[])arg;
+	    printStatus(getMessage("MESSAGE_OBJECTS", args.length));
+	    for (String s : args) {
+		logger.log(Level.INFO, getMessage("MESSAGE_OBJECT_LOG", s.trim()));
+	    }
 	    break;
 
 	  case OBJECT_PHASE_END:
