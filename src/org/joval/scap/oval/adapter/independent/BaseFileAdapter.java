@@ -207,11 +207,13 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		    } catch (CollectException e) {
 			results.add(new Batch.Result(e, rc));
 		    } catch (Exception e) {
+			session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			results.add(new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), rc));
 		    }
 		}
 	    }
 	} catch (IOException e) {
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    for (IRequest request : queue) {
 		IRequestContext rc = request.getContext();
 		results.add(new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), rc));

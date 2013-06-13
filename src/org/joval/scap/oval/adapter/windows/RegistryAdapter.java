@@ -186,11 +186,13 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 			} catch (CollectException e) {
 			    results.add(new Batch.Result(e, rc));
 			} catch (Exception e) {
+			    session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			    results.add(new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), rc));
 			}
 		    }
 		}
 	    } catch (Exception e) {
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		for (IRequest request : queue) {
 		    results.add(new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), request.getContext()));
 		}
