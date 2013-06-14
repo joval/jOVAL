@@ -75,8 +75,8 @@ public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
 	XmlfilecontentObject xObj = (XmlfilecontentObject)obj;
 	for (IFile f : files) {
 	    try {
-		if (f.exists() && f.isFile()) {
-		    XmlfilecontentItem item = (XmlfilecontentItem)getBaseItem(obj, f);
+		XmlfilecontentItem item = (XmlfilecontentItem)getBaseItem(obj, f);
+		if (item != null) {
 		    EntityItemStringType xpathType = Factories.sc.core.createEntityItemStringType();
 		    String expression = (String)xObj.getXpath().getValue();
 		    xpathType.setValue(expression);

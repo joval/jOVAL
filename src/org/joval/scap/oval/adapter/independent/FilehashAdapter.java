@@ -121,8 +121,11 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 			throw new IllegalArgumentException(type);
 		    }
 		}
-		items.add((FilehashItem)getBaseItem(obj, f));
-		checkedFiles.add(f);
+		FilehashItem item = (FilehashItem)getBaseItem(obj, f);
+		if (item != null) {
+		    items.add(item);
+		    checkedFiles.add(f);
+		}
 	    } catch (IllegalArgumentException e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);

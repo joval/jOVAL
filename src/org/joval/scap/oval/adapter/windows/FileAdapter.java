@@ -85,56 +85,51 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	Collection<FileItem> items = new ArrayList<FileItem>();
 	for (IFile f : files) {
 	    try {
-		FileItem baseItem = (FileItem)getBaseItem(obj, f);
-		FileItem item = Factories.sc.windows.createFileItem();
-		item.setStatus(StatusEnumeration.EXISTS);
-		item.setPath(baseItem.getPath());
-		item.setFilename(baseItem.getFilename());
-		item.setFilepath(baseItem.getFilepath());
-		item.setWindowsView(baseItem.getWindowsView());
+		FileItem item = (FileItem)getBaseItem(obj, f);
+		if (item != null) {
+		    EntityItemIntType aTimeType = Factories.sc.core.createEntityItemIntType();
+		    Date temp = f.getAccessTime();
+		    if (temp == null) {
+			aTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
+		    } else {
+			aTimeType.setValue(Timestamp.toWindowsTimestamp(temp.getTime()));
+			aTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    }
+		    item.setATime(aTimeType);
 
-		EntityItemIntType aTimeType = Factories.sc.core.createEntityItemIntType();
-		Date temp = f.getAccessTime();
-		if (temp == null) {
-		    aTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
-		} else {
-		    aTimeType.setValue(Timestamp.toWindowsTimestamp(temp.getTime()));
-		    aTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    EntityItemIntType cTimeType = Factories.sc.core.createEntityItemIntType();
+		    temp = f.getCreateTime();
+		    if (temp == null) {
+			cTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
+		    } else {
+			cTimeType.setValue(Timestamp.toWindowsTimestamp(temp.getTime()));
+			cTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    }
+		    item.setCTime(cTimeType);
+
+		    EntityItemIntType mTimeType = Factories.sc.core.createEntityItemIntType();
+		    temp = f.getLastModified();
+		    if (temp == null) {
+			mTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
+		    } else {
+			mTimeType.setValue(Timestamp.toWindowsTimestamp(temp.getTime()));
+			mTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    }
+		    item.setMTime(mTimeType);
+
+		    EntityItemIntType sizeType = Factories.sc.core.createEntityItemIntType();
+		    if (f.isFile()) {
+			sizeType.setValue(new Long(f.length()).toString());
+			sizeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    } else {
+			sizeType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		    }
+		    item.setSize(sizeType);
+
+		    addExtendedInfo(fObj, f.getExtended(), item);
+		    addHeaderInfo(fObj, f, item);
+		    items.add(item);
 		}
-		item.setATime(aTimeType);
-
-		EntityItemIntType cTimeType = Factories.sc.core.createEntityItemIntType();
-		temp = f.getCreateTime();
-		if (temp == null) {
-		    cTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
-		} else {
-		    cTimeType.setValue(Timestamp.toWindowsTimestamp(temp.getTime()));
-		    cTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		}
-		item.setCTime(cTimeType);
-
-		EntityItemIntType mTimeType = Factories.sc.core.createEntityItemIntType();
-		temp = f.getLastModified();
-		if (temp == null) {
-		    mTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
-		} else {
-		    mTimeType.setValue(Timestamp.toWindowsTimestamp(temp.getTime()));
-		    mTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		}
-		item.setMTime(mTimeType);
-
-		EntityItemIntType sizeType = Factories.sc.core.createEntityItemIntType();
-		if (f.isFile()) {
-		    sizeType.setValue(new Long(f.length()).toString());
-		    sizeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		} else {
-		    sizeType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		}
-		item.setSize(sizeType);
-
-		addExtendedInfo(fObj, f.getExtended(), item);
-		addHeaderInfo(fObj, f, item);
-		items.add(item);
 	    } catch (IOException e) {
 		session.getLogger().warn(Message.ERROR_IO, f.getPath(), e.getMessage());
 		MessageType msg = Factories.common.createMessageType();

@@ -76,74 +76,76 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 	for (IFile f : files) {
 	    try {
 		TextfilecontentItem baseItem = (TextfilecontentItem)getBaseItem(obj, f);
-		int flags = 0;
-		if (tfcObj.isSetBehaviors()) {
-		    if (tfcObj.getBehaviors().getMultiline()) {
-			flags |= Pattern.MULTILINE;
+		if (baseItem != null) {
+		    int flags = 0;
+		    if (tfcObj.isSetBehaviors()) {
+			if (tfcObj.getBehaviors().getMultiline()) {
+			    flags |= Pattern.MULTILINE;
+			}
+			if (tfcObj.getBehaviors().getIgnoreCase()) {
+			    flags |= Pattern.CASE_INSENSITIVE;
+			}
+			if (tfcObj.getBehaviors().getSingleline()) {
+			    flags |= Pattern.DOTALL;
+			}
+		    } else {
+			flags = Pattern.MULTILINE;
 		    }
-		    if (tfcObj.getBehaviors().getIgnoreCase()) {
-			flags |= Pattern.CASE_INSENSITIVE;
-		    }
-		    if (tfcObj.getBehaviors().getSingleline()) {
-			flags |= Pattern.DOTALL;
-		    }
-		} else {
-		    flags = Pattern.MULTILINE;
-		}
-		Pattern pattern = StringTools.pattern((String)tfcObj.getPattern().getValue(), flags);
-		String s = readASCIIString(f.getInputStream());
+		    Pattern pattern = StringTools.pattern((String)tfcObj.getPattern().getValue(), flags);
+		    String s = readASCIIString(f.getInputStream());
 
-		//
-		// Find all the matching items
-		//
-		Collection<TextfilecontentItem> allItems = new ArrayList<TextfilecontentItem>();
-		OperationEnumeration op = tfcObj.getPattern().getOperation();
-		switch(op) {
-		  case PATTERN_MATCH:
-		    allItems.addAll(getItems(pattern, baseItem, s));
-		    break;
-
-		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-		}
-
-		//
-		// Filter the matches by instance number
-		//
-		int instanceNum = Integer.parseInt((String)tfcObj.getInstance().getValue());
-		op = tfcObj.getInstance().getOperation();
-		for (TextfilecontentItem item : allItems) {
-		    int inum = Integer.parseInt((String)item.getInstance().getValue());
+		    //
+		    // Find all the matching items
+		    //
+		    Collection<TextfilecontentItem> allItems = new ArrayList<TextfilecontentItem>();
+		    OperationEnumeration op = tfcObj.getPattern().getOperation();
 		    switch(op) {
-		      case EQUALS:
-			if (inum == instanceNum) {
-			    items.add(item);
-			}
+		      case PATTERN_MATCH:
+			allItems.addAll(getItems(pattern, baseItem, s));
 			break;
-		      case LESS_THAN:
-			if (inum < instanceNum) {
-			    items.add(item);
-			}
-			break;
-		      case LESS_THAN_OR_EQUAL:
-			if (inum <= instanceNum) {
-			    items.add(item);
-			}
-			break;
-		      case GREATER_THAN:
-			if (inum > instanceNum) {
-			    items.add(item);
-			}
-			break;
-		      case GREATER_THAN_OR_EQUAL:
-			if (inum >= instanceNum) {
-			    items.add(item);
-			}
-			break;
+
 		      default:
 			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
 			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		    }
+
+		    //
+		    // Filter the matches by instance number
+		    //
+		    int instanceNum = Integer.parseInt((String)tfcObj.getInstance().getValue());
+		    op = tfcObj.getInstance().getOperation();
+		    for (TextfilecontentItem item : allItems) {
+			int inum = Integer.parseInt((String)item.getInstance().getValue());
+			switch(op) {
+			  case EQUALS:
+			    if (inum == instanceNum) {
+				items.add(item);
+			    }
+			    break;
+			  case LESS_THAN:
+			    if (inum < instanceNum) {
+				items.add(item);
+			    }
+			    break;
+			  case LESS_THAN_OR_EQUAL:
+			    if (inum <= instanceNum) {
+				items.add(item);
+			    }
+			    break;
+			  case GREATER_THAN:
+			    if (inum > instanceNum) {
+				items.add(item);
+			    }
+			    break;
+			  case GREATER_THAN_OR_EQUAL:
+			    if (inum >= instanceNum) {
+				items.add(item);
+			    }
+			    break;
+			  default:
+			    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+			    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+			}
 		    }
 		}
 	    } catch (PatternSyntaxException e) {

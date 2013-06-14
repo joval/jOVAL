@@ -186,25 +186,27 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 	    //
 	    for (IFile f : files) {
 		FileeffectiverightsItem baseItem = (FileeffectiverightsItem)getBaseItem(obj, f);
-		for (IPrincipal principal : principalMap.values()) {
-		    switch(principal.getType()) {
-		      case USER: {
-			StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType File -Name ");
-			cmd.append("\"").append(f.getPath()).append("\"");
-			cmd.append(" -SID ").append(principal.getSid());
-			int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
-			items.add(makeItem(baseItem, principal, mask));
-			break;
-		      }
-		      case GROUP:
-			for (IPrincipal p : directory.getAllPrincipals(principal, includeGroups, resolveGroups)) {
+		if (baseItem != null) {
+		    for (IPrincipal principal : principalMap.values()) {
+			switch(principal.getType()) {
+			  case GROUP:
+			    for (IPrincipal p : directory.getAllPrincipals(principal, includeGroups, resolveGroups)) {
+				StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType File -Name ");
+				cmd.append("\"").append(f.getPath()).append("\"");
+				cmd.append(" -SID ").append(principal.getSid());
+				int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
+				items.add(makeItem(baseItem, p, mask));
+			    }
+			    break;
+
+			  case USER:
 			    StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType File -Name ");
 			    cmd.append("\"").append(f.getPath()).append("\"");
 			    cmd.append(" -SID ").append(principal.getSid());
 			    int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
-			    items.add(makeItem(baseItem, p, mask));
+			    items.add(makeItem(baseItem, principal, mask));
+			    break;
 			}
-			break;
 		    }
 		}
 	    }

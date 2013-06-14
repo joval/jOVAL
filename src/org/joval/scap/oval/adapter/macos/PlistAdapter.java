@@ -253,18 +253,18 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 		} else {
 		    baseItem = createBaseItem(pObj, f.getPath());
 		}
-
-		if (XSITools.isNil(key)) {
-		    baseItem.setKey(Factories.sc.macos.createPlistItemKey(null));
-		} else {
-		    EntityItemStringType keyType = Factories.sc.core.createEntityItemStringType();
-		    keyType.setValue(key.getValue().getValue());
-		    keyType.setDatatype(key.getValue().getDatatype());
-		    baseItem.setKey(Factories.sc.macos.createPlistItemKey(keyType));
+		if (baseItem != null) {
+		    if (XSITools.isNil(key)) {
+			baseItem.setKey(Factories.sc.macos.createPlistItemKey(null));
+		    } else {
+			EntityItemStringType keyType = Factories.sc.core.createEntityItemStringType();
+			keyType.setValue(key.getValue().getValue());
+			keyType.setDatatype(key.getValue().getDatatype());
+			baseItem.setKey(Factories.sc.macos.createPlistItemKey(keyType));
+		    }
+		    in = f.getInputStream();
+		    items.addAll(getItems(getPlist510Object(obj), baseItem, PropertyListParser.parse(in)));
 		}
-
-		in = f.getInputStream();
-		items.addAll(getItems(getPlist510Object(obj), baseItem, PropertyListParser.parse(in)));
 	    } catch (CollectException e) {
 		throw e;
 	    } catch (IOException e) {

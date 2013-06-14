@@ -27,6 +27,7 @@ import jsaf.intf.system.ISession;
 import jsaf.intf.util.ISearchable;
 import jsaf.intf.util.ISearchable.ICondition;
 import jsaf.intf.unix.io.IUnixFilesystem;
+import jsaf.intf.unix.system.IUnixSession;
 import jsaf.intf.windows.io.IWindowsFilesystem;
 import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
@@ -117,27 +118,19 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
     public Collection<T> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	String id = obj.getId();
 
-	//
-	// Get the appropriate IFilesystem
-	//
 	ReflectedFileObject fObj = new ReflectedFileObject(obj);
 	ReflectedFileBehaviors behaviors = null;
 	if (fObj.isSetBehaviors()) {
 	    behaviors = fObj.getBehaviors();
 	}
 	IFilesystem fs = session.getFilesystem();
+	IWindowsSession.View view = getView(behaviors);
+
+	//
+	// On Windows, make sure we get the appropriate IFilesystem
+	//
 	if (session instanceof IWindowsSession) {
-	    IWindowsSession.View view = null;
 	    IWindowsSession ws = (IWindowsSession)session;
-	    if (behaviors == null) {
-		view = ws.getNativeView();
-	    } else {
-		if ("32_bit".equals(behaviors.getWindowsView())) {
-		    view = IWindowsSession.View._32BIT;
-		} else if ("64_bit".equals(behaviors.getWindowsView())) {
-	    	    view = IWindowsSession.View._64BIT;
-		}
-	    }
 	    if (ws.supports(view)) {
 		fs = ws.getFilesystem(view);
 	    } else {
@@ -151,7 +144,28 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		return empty;
 	    }
 	}
-	return getItems(obj, getFiles(fObj, behaviors, rc, fs), rc);
+	Collection<IFile> files = getFiles(fObj, behaviors, rc, fs);
+
+	//
+	// On Unix, take a pass at resolving all 1st-level link targets, as a speed optimization
+	//
+	if (session instanceof IUnixSession) {
+	    try {
+		ArrayList<String> links = new ArrayList<String>();
+		for (IFile f : files) {
+		    if (f.isLink()) {
+			links.add(f.getLinkPath());
+		    }
+		}
+		if (links.size() > 0) {
+		    fs.getFiles(links.toArray(new String[links.size()]));
+		}
+	    } catch (IOException e) {
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+	}
+
+	return getItems(obj, files, rc);
     }
 
     // Implement IBatch
@@ -189,7 +203,10 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 	    }
 	}
 
-	IWindowsSession.View view = ((IWindowsSession)session).getNativeView();
+	IWindowsSession.View view = null;
+	if (session instanceof IWindowsSession) {
+	    view = ((IWindowsSession)session).getNativeView();
+	}
 	Collection<IResult> results = new ArrayList<IResult>();
 	try {
 	    //
@@ -209,7 +226,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		    } catch (CollectException e) {
 			results.add(new Batch.Result(e, rc));
 		    } catch (Exception e) {
-			session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			results.add(new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), rc));
 		    }
 		}
@@ -277,43 +294,11 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 	}
     }
 
-    protected IWindowsSession.View getView(scap.oval.definitions.independent.FileBehaviors behaviors) {
-	if (session instanceof IWindowsSession) {
-	    if (behaviors != null && behaviors.isSetWindowsView()) {
-		String s = behaviors.getWindowsView();
-		if ("32_bit".equals(s)) {
-		    return IWindowsSession.View._32BIT;
-		} else if ("64_bit".equals(s)) {
-		    return IWindowsSession.View._64BIT;
-		}
-	    }
-	    return ((IWindowsSession)session).getNativeView();
-	} else {
-	    return null;
-	}
-    }
-
-    protected IWindowsSession.View getView(scap.oval.definitions.windows.FileBehaviors behaviors) {
-	if (session instanceof IWindowsSession) {
-	    if (behaviors != null && behaviors.isSetWindowsView()) {
-		String s = behaviors.getWindowsView();
-		if ("32_bit".equals(s)) {
-		    return IWindowsSession.View._32BIT;
-		} else if ("64_bit".equals(s)) {
-		    return IWindowsSession.View._64BIT;
-		}
-	    }
-	    return ((IWindowsSession)session).getNativeView();
-	} else {
-	    return null;
-	}
-    }
-
     /**
      * Return an ItemType of the appropriate sub-type, with the path, filepath and filename entities populated according
      * to the specified IFile.
      *
-     * @return null if there is no such file
+     * @return null if there is no such file or directory
      */
     protected ItemType getBaseItem(ObjectType obj, IFile f) throws IOException {
 	String id = obj.getId();
@@ -377,29 +362,73 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 	return null;
     }
 
+    protected IWindowsSession.View getView(scap.oval.definitions.independent.FileBehaviors behaviors) {
+	if (session instanceof IWindowsSession) {
+	    if (behaviors != null && behaviors.isSetWindowsView()) {
+		String s = behaviors.getWindowsView();
+		if ("32_bit".equals(s)) {
+		    return IWindowsSession.View._32BIT;
+		} else if ("64_bit".equals(s)) {
+		    return IWindowsSession.View._64BIT;
+		}
+	    }
+	    return ((IWindowsSession)session).getNativeView();
+	} else {
+	    return null;
+	}
+    }
+
+    protected IWindowsSession.View getView(scap.oval.definitions.windows.FileBehaviors behaviors) {
+	if (session instanceof IWindowsSession) {
+	    if (behaviors != null && behaviors.isSetWindowsView()) {
+		String s = behaviors.getWindowsView();
+		if ("32_bit".equals(s)) {
+		    return IWindowsSession.View._32BIT;
+		} else if ("64_bit".equals(s)) {
+		    return IWindowsSession.View._64BIT;
+		}
+	    }
+	    return ((IWindowsSession)session).getNativeView();
+	} else {
+	    return null;
+	}
+    }
+
     // Private
 
+    private IWindowsSession.View getView(ReflectedFileBehaviors behaviors) {
+	if (session instanceof IWindowsSession) {
+	    if (behaviors != null) {
+		String s = behaviors.getWindowsView();
+		if ("32_bit".equals(s)) {
+		    return IWindowsSession.View._32BIT;
+		} else if ("64_bit".equals(s)) {
+		    return IWindowsSession.View._64BIT;
+		}
+	    }
+	    return ((IWindowsSession)session).getNativeView();
+	} else {
+	    return null;
+	}
+    }
+
     /**
-     * Determine whether or not a request can be batched. Only requests about regular files on Windows are batchable.
+     * Determine whether or not a request can be batched. Only requests about individual regular files are batchable.
      */
     private boolean batchable(IRequest request) {
-	if (session instanceof IWindowsSession) {
-	    ReflectedFileObject fObj = new ReflectedFileObject(request.getObject());
-	    return  (
-			fObj.isSetFilepath() &&
-			fObj.getFilepath().getOperation() == OperationEnumeration.EQUALS
-		    )
-		    ||
-		    (
-			!fObj.isSetBehaviors() &&
-			fObj.isSetFilename() &&
-			!fObj.isFilenameNil() &&
-			fObj.getFilename().getOperation() == OperationEnumeration.EQUALS &&
-			fObj.getPath().getOperation() == OperationEnumeration.EQUALS
-		    );
-	} else {
-	    return false;
-	}
+	ReflectedFileObject fObj = new ReflectedFileObject(request.getObject());
+	return  (
+		    fObj.isSetFilepath() &&
+		    fObj.getFilepath().getOperation() == OperationEnumeration.EQUALS
+		)
+		||
+		(
+		    !fObj.isSetBehaviors() &&
+		    fObj.isSetFilename() &&
+		    !fObj.isFilenameNil() &&
+		    fObj.getFilename().getOperation() == OperationEnumeration.EQUALS &&
+		    fObj.getPath().getOperation() == OperationEnumeration.EQUALS
+		);
     }
 
     /**

@@ -93,11 +93,11 @@ class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecurityconte
 	Collection<SelinuxsecuritycontextItem> items = new ArrayList<SelinuxsecuritycontextItem>();
 	for (IFile f : files) {
 	    try {
-		SelinuxsecuritycontextItem baseItem = (SelinuxsecuritycontextItem)getBaseItem(obj, f);
-		if (f.getExtended() instanceof IUnixFileInfo) {
+		SelinuxsecuritycontextItem item = (SelinuxsecuritycontextItem)getBaseItem(obj, f);
+		if (item != null && f.getExtended() instanceof IUnixFileInfo) {
 	            IUnixFileInfo info = (IUnixFileInfo)f.getExtended();
-		    parseSecurityContextData(baseItem, info.getExtendedData(IUnixFileInfo.SELINUX_DATA));
-		    items.add(baseItem);
+		    parseSecurityContextData(item, info.getExtendedData(IUnixFileInfo.SELINUX_DATA));
+		    items.add(item);
 	        }
 	    } catch (IOException e) {
 		session.getLogger().warn(Message.ERROR_IO, f.getPath(), e.getMessage());

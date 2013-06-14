@@ -83,7 +83,11 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	Collection<FileItem> items = new ArrayList<FileItem>();
 	for (IFile f : files) {
 	    try {
-		items.add(setItem((FileItem)getBaseItem(obj, f), f));
+		FileItem item = (FileItem)getBaseItem(obj, f);
+		if (item != null) {
+		    setItem(item, f);
+		    items.add(item);
+		}
 	    } catch (IOException e) {
 		session.getLogger().warn(Message.ERROR_IO, f.getPath(), e.getMessage());
 		MessageType msg = Factories.common.createMessageType();
@@ -100,7 +104,7 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
     /**
      * Decorate the Item with information about the file.
      */
-    private FileItem setItem(FileItem item, IFile f) throws IOException, CollectException {
+    private void setItem(FileItem item, IFile f) throws IOException, CollectException {
 	IFileEx info = f.getExtended();
 	IUnixFileInfo ufi = null;
 	if (info instanceof IUnixFileInfo) {
@@ -228,7 +232,5 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	}
 	aclType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setHasExtendedAcl(aclType);
-
-	return item;
     }
 }

@@ -79,82 +79,83 @@ public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem>
 	for (IFile f : files) {
 	    try {
 		TextfilecontentItem baseItem = (TextfilecontentItem)getBaseItem(obj, f);
+		if (baseItem != null) {
+		    //
+		    // Retrieve matching lines
+		    //
+		    List<String> lines = new ArrayList<String>();
+		    switch(session.getType()) {
+		      //
+		      // Leverage grep on known flavors of Unix
+		      //
+		      case UNIX:
+			IUnixSession us = (IUnixSession)session;
+			StringBuffer sb = new StringBuffer("cat ").append(f.getPath().replace(" ", "\\ ")).append(" | ");
+			boolean handled = false;
+			switch(us.getFlavor()) {
+			  case SOLARIS:
+			    sb.append("/usr/xpg4/bin/grep -E ");
+			    handled = true;
+			    break;
 
-		//
-		// Retrieve matching lines
-		//
-		List<String> lines = new ArrayList<String>();
-		switch(session.getType()) {
-		  //
-		  // Leverage grep on known flavors of Unix
-		  //
-		  case UNIX:
-		    IUnixSession us = (IUnixSession)session;
-		    StringBuffer sb = new StringBuffer("cat ").append(f.getPath().replace(" ", "\\ ")).append(" | ");
-		    boolean handled = false;
-		    switch(us.getFlavor()) {
-		      case SOLARIS:
-			sb.append("/usr/xpg4/bin/grep -E ");
-			handled = true;
-			break;
-
-		      case AIX:
-		      case LINUX:
-		      case MACOSX:
-			sb.append("grep ");
-			handled = true;
-			break;
-		    }
-		    if (handled) {
-			Pattern p = StringTools.pattern((String)tfcObj.getLine().getValue());
-			sb.append("\"").append(p.pattern().replace("\"","\\\"")).append("\"");
-			try {
-			    lines = SafeCLI.multiLine(sb.toString(), session, IUnixSession.Timeout.M);
-			} catch (Exception e) {
-			    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-			    throw new CollectException(e.getMessage(), FlagEnumeration.ERROR);
+			  case AIX:
+			  case LINUX:
+			  case MACOSX:
+			    sb.append("grep ");
+			    handled = true;
+			    break;
 			}
-			break;
-		    }
-		    // else fall-thru
-
-		  //
-		  // Use the IFilesystem by default
-		  //
-		  default:
-		    BufferedReader reader = null;
-		    try {
-			reader = new BufferedReader(new InputStreamReader(f.getInputStream(), StringTools.ASCII));
-			String line = null;
-			Pattern p = StringTools.pattern((String)tfcObj.getLine().getValue());
-			while ((line = reader.readLine()) != null) {
-			    if (p.matcher(line).find()) {
-				lines.add(line);
-			    }
-			}
-		    } finally {
-			if (reader != null) {
+			if (handled) {
+			    Pattern p = StringTools.pattern((String)tfcObj.getLine().getValue());
+			    sb.append("\"").append(p.pattern().replace("\"","\\\"")).append("\"");
 			    try {
-				reader.close();
-			    } catch (IOException e) {
-				session.getLogger().warn(JOVALMsg.ERROR_FILE_STREAM_CLOSE, f.toString());
+				lines = SafeCLI.multiLine(sb.toString(), session, IUnixSession.Timeout.M);
+			    } catch (Exception e) {
+				session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+				throw new CollectException(e.getMessage(), FlagEnumeration.ERROR);
+			    }
+			    break;
+			}
+			// else fall-thru
+
+		      //
+		      // Use the IFilesystem by default
+		      //
+		      default:
+			BufferedReader reader = null;
+			try {
+			    reader = new BufferedReader(new InputStreamReader(f.getInputStream(), StringTools.ASCII));
+			    String line = null;
+			    Pattern p = StringTools.pattern((String)tfcObj.getLine().getValue());
+			    while ((line = reader.readLine()) != null) {
+				if (p.matcher(line).find()) {
+				    lines.add(line);
+				}
+			    }
+			} finally {
+			    if (reader != null) {
+				try {
+				    reader.close();
+				} catch (IOException e) {
+				    session.getLogger().warn(JOVALMsg.ERROR_FILE_STREAM_CLOSE, f.toString());
+				}
 			    }
 			}
+			break;
 		    }
-		    break;
-		}
 
-		OperationEnumeration op = tfcObj.getLine().getOperation();
-		switch (op) {
-		  case PATTERN_MATCH: {
-		    Pattern p = StringTools.pattern((String)tfcObj.getLine().getValue());
-		    items.addAll(getItems(p, baseItem, lines));
-		    break;
-		  }
+		    OperationEnumeration op = tfcObj.getLine().getOperation();
+		    switch (op) {
+		      case PATTERN_MATCH: {
+			Pattern p = StringTools.pattern((String)tfcObj.getLine().getValue());
+			items.addAll(getItems(p, baseItem, lines));
+			break;
+		      }
 
-		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		      default:
+			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		    }
 		}
 	    } catch (PatternSyntaxException e) {
 		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage());
