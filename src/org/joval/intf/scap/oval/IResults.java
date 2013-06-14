@@ -41,7 +41,7 @@ public interface IResults extends ITransformable {
     /**
      * Get a definition given its ID.
      */
-    DefinitionType getDefinition(String definitionId);
+    DefinitionType getDefinition(String definitionId) throws NoSuchElementException;
 
     /**
      * Get a test given its ID.

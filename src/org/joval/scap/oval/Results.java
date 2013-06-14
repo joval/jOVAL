@@ -192,8 +192,11 @@ public class Results implements IResults, ILoggable {
 	return getOvalResults().getResults().getSystem().get(0).getDefinitions().getDefinition();
     }
 
-    public DefinitionType getDefinition(String definitionId) {
-	return definitionTable.get(definitionId);
+    public DefinitionType getDefinition(String definitionId) throws NoSuchElementException {
+	if (definitionTable.containsKey(definitionId)) {
+	    return definitionTable.get(definitionId);
+	}
+	throw new NoSuchElementException(definitionId);
     }
 
     public TestType getTest(String id) {

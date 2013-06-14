@@ -137,6 +137,9 @@ public class OvalHandler implements ISystem {
 	  	  case OK:
 		    reports.put(href, engine.getResults());
 		    break;
+		  case ERR:
+		    engine.getError().printStackTrace();
+		    break;
 		}
 	    } else {
 		plugin.getLogger().info("No engine created for href " + href);

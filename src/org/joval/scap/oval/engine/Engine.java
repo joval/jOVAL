@@ -1665,27 +1665,28 @@ public class Engine implements IOvalEngine, IProvider {
      */
     private scap.oval.results.DefinitionType evaluateDefinition(DefinitionType definition) throws OvalException {
 	String id = definition.getId();
-	scap.oval.results.DefinitionType result = results.getDefinition(id);
-	if (result == null) {
-	    result = Factories.results.createDefinitionType();
-	    logger.debug(JOVALMsg.STATUS_DEFINITION, id);
-	    producer.sendNotify(Message.DEFINITION, id);
-	    result.setDefinitionId(id);
-	    result.setVersion(definition.getVersion());
-	    result.setClazz(definition.getClazz());
-	    try {
-		scap.oval.results.CriteriaType criteriaResult = evaluateCriteria(definition.getCriteria());
-		result.setResult(criteriaResult.getResult());
-		result.setCriteria(criteriaResult);
-	    } catch (NoSuchElementException e) {
-		result.setResult(ResultEnumeration.ERROR);
-		MessageType message = Factories.common.createMessageType();
-		message.setLevel(MessageLevelEnumeration.ERROR);
-		message.setValue(e.getMessage());
-		result.getMessage().add(message);
-	    }
-	    results.storeDefinitionResult(result);
+	try {
+	    return results.getDefinition(id);
+	} catch (NoSuchElementException e) {
 	}
+	scap.oval.results.DefinitionType result = Factories.results.createDefinitionType();
+	logger.debug(JOVALMsg.STATUS_DEFINITION, id);
+	producer.sendNotify(Message.DEFINITION, id);
+	result.setDefinitionId(id);
+	result.setVersion(definition.getVersion());
+	result.setClazz(definition.getClazz());
+	try {
+	    scap.oval.results.CriteriaType criteriaResult = evaluateCriteria(definition.getCriteria());
+	    result.setResult(criteriaResult.getResult());
+	    result.setCriteria(criteriaResult);
+	} catch (NoSuchElementException e) {
+	    result.setResult(ResultEnumeration.ERROR);
+	    MessageType message = Factories.common.createMessageType();
+	    message.setLevel(MessageLevelEnumeration.ERROR);
+	    message.setValue(e.getMessage());
+	    result.getMessage().add(message);
+	}
+	results.storeDefinitionResult(result);
 	return result;
     }
 
