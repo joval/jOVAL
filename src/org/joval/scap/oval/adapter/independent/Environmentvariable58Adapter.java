@@ -445,7 +445,7 @@ public class Environmentvariable58Adapter implements IAdapter {
     }
 
     class WindowsEnvironmentBuilder implements IEnvironmentBuilder {
-	private HashSet<Integer> process32, process64;
+	private HashSet<Integer> process32, process64, inaccessible;
 	private IRunspace rs, rs32;
 
 	WindowsEnvironmentBuilder(IWindowsSession session) throws Exception {
@@ -469,6 +469,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 
 	    process32 = new HashSet<Integer>();
 	    process64 = new HashSet<Integer>();
+	    inaccessible = new HashSet<Integer>();
 	    String data = new String(Base64.decode(rs.invoke("List-Processes | Transfer-Encode")), StringTools.UTF8);
 	    for (String line : data.split("\r\n")) {
 		int ptr = line.indexOf(":");
@@ -479,14 +480,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 		    } else if (line.endsWith("64")) {
 			process64.add(pid);
 		    } else {
-			switch(view) {
-			  case _32BIT:
-			    process32.add(pid);
-			    break;
-			  case _64BIT:
-			    process64.add(pid);
-			    break;
-			}
+			inaccessible.add(pid);
 		    }
 		}
 	    }
@@ -513,6 +507,8 @@ public class Environmentvariable58Adapter implements IAdapter {
 	    } else if (process64.contains(id)) {
 		byte[] buff = Base64.decode(rs.invoke("Get-ProcessEnvironment -ProcessId " + pid + " | Transfer-Encode"));
 		return toEnvironment(new String(buff, StringTools.UTF8));
+	    } else if (inaccessible.contains(id)) {
+		throw new AccessControlException(id.toString());
 	    } else {
 		throw new NoSuchElementException(id.toString());
 	    }
