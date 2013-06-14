@@ -222,7 +222,7 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	    }
 	}
 
-	StringBuffer cmd;
+	StringBuffer cmd = null;
 	List<String> checksums = new ArrayList<String>();
 	switch(session.getType()) {
 	  case UNIX:
@@ -230,7 +230,7 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	    switch(us.getFlavor()) {
 	      case LINUX:
 	      case MACOSX:
-		cmd = new StringBuffer("echo -e \"").append(sb.toString()).append("\"");
+		cmd = new StringBuffer("printf \"").append(sb.toString()).append("\\n\"");
 		cmd.append(" | xargs -I{} openssl dgst -hex");
 		switch(algorithm) {
 		  case MD5:
@@ -317,6 +317,7 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	}
 	if (checksums.size() != files.size()) {
 	    session.getLogger().warn(JOVALMsg.WARNING_FILEHASH_LINES, checksums.size(), files.size());
+System.out.println(combine(checksums));
 	    throw new MismatchException();
 	}
 	return checksums;
