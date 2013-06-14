@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -60,7 +61,7 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
-    private Map<String, String[]> checksumMap;
+    private int maxArgLength = -1;
 
     // Implement IAdapter
 
@@ -68,7 +69,6 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	Collection<Class> classes = new ArrayList<Class>();
 	try {
 	    baseInit(session);
-	    checksumMap = new HashMap<String, String[]>();
 	    classes.add(FilehashObject.class);
 	} catch (UnsupportedOperationException e) {
 	    // doesn't support ISession.getFilesystem()
@@ -139,13 +139,15 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 
 	try {
 	    IWindowsSession.View view = getView(fObj.getBehaviors());
-	    for (int startIndex=0; startIndex < checkedFiles.size(); startIndex+=10) {
-		List<IFile> subset = checkedFiles.subList(startIndex, Math.min(startIndex+10, checkedFiles.size()));
-		List<String> md5s = safeComputeChecksums(subset, view, MD5);
-		List<String> sha1s = safeComputeChecksums(subset, view, SHA1);
-		for (int i=0; i < subset.size(); i++) {
+	    int startIndex = 0;
+	    List<IFile> sublist;
+	    while((sublist = nextList(startIndex, checkedFiles)) != null) {
+		List<String> md5s = computeChecksums(sublist, view, MD5);
+		List<String> sha1s = computeChecksums(sublist, view, SHA1);
+		for (int i=0; i < sublist.size(); i++) {
 		    setItem(items.get(startIndex + i), md5s.get(i), sha1s.get(i));
 		}
+		startIndex += sublist.size();
 	    }
 	    return items;
 	} catch (Exception e) {
@@ -181,19 +183,6 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 
     private static final int MD5	= 0;
     private static final int SHA1	= 1;
-
-    private List<String> safeComputeChecksums(List<IFile> files, IWindowsSession.View view, int algorithm) throws Exception {
-	int attempts = 0;
-	String lastError = null;
-	while(attempts++ < 5) {
-	    try {
-		return computeChecksums(files, view, algorithm);
-	    } catch (MismatchException e) {
-		lastError = e.getMessage();
-	    }
-	}
-	throw new Exception(lastError);
-    }
 
     /**
      * Compute checksums for a list of files. All the files must exist, and they must all be regular files, or this
@@ -284,8 +273,9 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 		    break;
 		}
 		cmd.append(" '{}'");
-		List<String> lines = SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.M);
-		for (String line : lines) {
+		Iterator<String> iter = SafeCLI.manyLines(cmd.toString(), null, us);
+		while(iter.hasNext()) {
+		    String line = iter.next();
 		    StringTokenizer tok = new StringTokenizer(line);
 		    if (tok.countTokens() == 2) {
 			checksums.add(tok.nextToken());
@@ -319,7 +309,7 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	}
 	if (checksums.size() != files.size()) {
 	    session.getLogger().warn(JOVALMsg.WARNING_FILEHASH_LINES, checksums.size(), files.size());
-	    throw new MismatchException(combine(checksums));
+	    throw new Exception(combine(checksums));
 	}
 	return checksums;
     }
@@ -335,9 +325,48 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	return sb.toString();
     }
 
-    class MismatchException extends Exception {
-	MismatchException(String message) {
-	    super(message);
+    /**
+     * Determine the maximum size of a (Unix) command-line.
+     */
+    private int getMaxArgLength() throws Exception {
+	if (maxArgLength == -1 && session.getType() == ISession.Type.UNIX) {
+	    int envSize = Integer.parseInt(SafeCLI.exec("env | wc -c", session, IUnixSession.Timeout.S).trim());
+	    int maxSize = Integer.parseInt(SafeCLI.exec("getconf ARG_MAX", session, IUnixSession.Timeout.S).trim());
+	    maxArgLength = maxSize - envSize;
 	}
+	return maxArgLength;
+    }
+
+    /**
+     * Get the next sublist of files whose single-pass command will fit inside maxArgLength.
+     */
+    private List<IFile> nextList(int start, List<IFile> master) throws Exception {
+	if (start >= master.size()) {
+	    return null;
+	}
+
+	int maxBytes = getMaxArgLength() - 50; // leave 50 bytes for other command chars
+	if (maxBytes > 0) {
+	    int padding = 0;
+	    switch(session.getType()) {
+	      case UNIX:
+		padding = 2; // escape-n
+		break;
+	      case WINDOWS:
+		padding = 3; // quotes and comma
+		break;
+	    }
+	    int end = start;
+	    int len = 0;
+	    for (int i=start; i < master.size(); i++) {
+		int next = padding + master.get(i).getPath().getBytes(StringTools.UTF8).length;
+		if ((len + next) > maxBytes) {
+		    return master.subList(start, end);
+		}
+		len += next;
+		end++;
+	    }
+	}
+	return master.subList(start, master.size());
     }
 }
