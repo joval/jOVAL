@@ -184,13 +184,15 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 
     private List<String> safeComputeChecksums(List<IFile> files, IWindowsSession.View view, int algorithm) throws Exception {
 	int attempts = 0;
+	String lastError = null;
 	while(attempts++ < 5) {
 	    try {
 		return computeChecksums(files, view, algorithm);
 	    } catch (MismatchException e) {
+		lastError = e.getMessage();
 	    }
 	}
-	throw new Exception("Gave up after 5 attempts");
+	throw new Exception(lastError);
     }
 
     /**
@@ -317,8 +319,7 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	}
 	if (checksums.size() != files.size()) {
 	    session.getLogger().warn(JOVALMsg.WARNING_FILEHASH_LINES, checksums.size(), files.size());
-System.out.println(combine(checksums));
-	    throw new MismatchException();
+	    throw new MismatchException(combine(checksums));
 	}
 	return checksums;
     }
@@ -335,5 +336,8 @@ System.out.println(combine(checksums));
     }
 
     class MismatchException extends Exception {
+	MismatchException(String message) {
+	    super(message);
+	}
     }
 }
