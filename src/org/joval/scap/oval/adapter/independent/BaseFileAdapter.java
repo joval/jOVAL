@@ -147,7 +147,11 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 	Collection<IFile> files = getFiles(fObj, behaviors, rc, fs);
 
 	//
-	// On Unix, take a pass at resolving all 1st-level link targets, as a speed optimization
+	// Subclasses will be taking these files and calling getBaseItem to synthesize ItemType objects with
+	// them, and getItemType checks to see whether the file is a directory.  If the file is a link, this
+	// means there will be a stat call on the link target to determine what kind of file it is.  If there
+	// are a lot of links, then there will be a lot of these calls.  Hence, to improve performance (on
+	// Unix), we resolve all the 1st-level link targets in a single pass now.
 	//
 	if (session instanceof IUnixSession) {
 	    try {
@@ -157,14 +161,13 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 			links.add(f.getLinkPath());
 		    }
 		}
-		if (links.size() > 0) {
+		if (links.size() > 1) { // if == 1, just let the stat call happen later on
 		    fs.getFiles(links.toArray(new String[links.size()]));
 		}
 	    } catch (IOException e) {
 		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
-
 	return getItems(obj, files, rc);
     }
 
