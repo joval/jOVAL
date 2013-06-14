@@ -445,13 +445,12 @@ public class Environmentvariable58Adapter implements IAdapter {
     }
 
     class WindowsEnvironmentBuilder implements IEnvironmentBuilder {
-	private HashSet<Integer> processes;
-	private IRunspace rs;
+	private HashSet<Integer> process32, process64;
+	private IRunspace rs, rs32;
 
 	WindowsEnvironmentBuilder(IWindowsSession session) throws Exception {
 	    //
-	    // Get a runspace if there are any in the pool, or create a new one, and load the Get-Environmentvariable58
-	    // Powershell module code.
+	    // Get the default runspace and (if that's 64) a 32-bit runspace as well, and load the PSM as needed.
 	    //
 	    IWindowsSession.View view = session.getNativeView();
 	    for (IRunspace runspace : session.getRunspacePool().enumerate()) {
@@ -463,17 +462,40 @@ public class Environmentvariable58Adapter implements IAdapter {
 	    if (rs == null) {
 		rs = session.getRunspacePool().spawn(view);
 	    }
-	    if (rs != null) {
-		rs.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
+	    rs.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
+	    if (view == IWindowsSession.View._32BIT) {
+		rs32 = rs;
 	    }
-	    processes = new HashSet<Integer>();
-	    String data = new String(Base64.decode(rs.invoke("Get-Process | %{$_.Id} | Transfer-Encode")), StringTools.UTF8);
-	    for (String id : data.split("\r\n")) {
-		processes.add(new Integer(id.trim()));
+
+	    process32 = new HashSet<Integer>();
+	    process64 = new HashSet<Integer>();
+	    String data = new String(Base64.decode(rs.invoke("List-Processes | Transfer-Encode")), StringTools.UTF8);
+	    for (String line : data.split("\r\n")) {
+		int ptr = line.indexOf(":");
+		if (ptr > 0) {
+		    Integer pid = new Integer(line.substring(0,ptr));
+		    if (line.endsWith("32")) {
+			process32.add(pid);
+		    } else if (line.endsWith("64")) {
+			process64.add(pid);
+		    } else {
+			switch(view) {
+			  case _32BIT:
+			    process32.add(pid);
+			    break;
+			  case _64BIT:
+			    process64.add(pid);
+			    break;
+			}
+		    }
+		}
 	    }
 	}
 
 	public int[] listProcesses() throws Exception {
+	    List<Integer> processes = new ArrayList<Integer>();
+	    processes.addAll(process32);
+	    processes.addAll(process64);
 	    int[] result = new int[processes.size()];
 	    int i=0;
 	    for (Integer id : processes) {
@@ -484,7 +506,11 @@ public class Environmentvariable58Adapter implements IAdapter {
 
 	public IEnvironment getProcessEnvironment(int pid) throws Exception {
 	    Integer id = new Integer(pid);
-	    if (processes.contains(id)) {
+	    if (process32.contains(id)) {
+		init32();
+		byte[] buff = Base64.decode(rs32.invoke("Get-ProcessEnvironment -ProcessId " + pid + " | Transfer-Encode"));
+		return toEnvironment(new String(buff, StringTools.UTF8));
+	    } else if (process64.contains(id)) {
 		byte[] buff = Base64.decode(rs.invoke("Get-ProcessEnvironment -ProcessId " + pid + " | Transfer-Encode"));
 		return toEnvironment(new String(buff, StringTools.UTF8));
 	    } else {
@@ -513,6 +539,21 @@ public class Environmentvariable58Adapter implements IAdapter {
 		}
 	    }
 	    return new Environment(processEnv, true);
+	}
+
+	private void init32() throws Exception {
+	    if (rs32 == null) {
+		for (IRunspace runspace : ((IWindowsSession)session).getRunspacePool().enumerate()) {
+		    if (runspace.getView() == IWindowsSession.View._32BIT) {
+			rs32 = runspace;
+			break;
+		    }
+		}
+		if (rs32 == null) {
+		    rs32 = ((IWindowsSession)session).getRunspacePool().spawn(IWindowsSession.View._32BIT);
+		}
+		rs32.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
+	    }
 	}
     }
 }

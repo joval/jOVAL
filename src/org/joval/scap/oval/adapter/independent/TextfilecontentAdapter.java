@@ -119,7 +119,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem>
 			// else fall-thru
 
 		      //
-		      // Use the IFilesystem by default
+		      // If all else fails, use the IFilesystem
 		      //
 		      default:
 			BufferedReader reader = null;

@@ -1,6 +1,76 @@
 # Copyright (C) 2012 jOVAL.org.  All rights reserved.
 # This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 #
+function List-Processes {
+  $Source = @"
+using System;
+using System.Runtime.InteropServices;
+
+namespace jOVAL.Environment58 {
+  public class ProcessHelper {
+    [Flags]
+    public enum ProcessAccessFlags : uint {
+      All = 0x001F0FFF, Terminate = 0x00000001, CreateThread = 0x00000002, VMOperation = 0x00000008,
+      VMRead = 0x00000010, VMWrite = 0x00000020, DupHandle = 0x00000040, SetInformation = 0x00000200,
+      QueryInformation = 0x00000400, Synchronize = 0x00100000
+    }
+
+    [DllImport("kernel32.dll", SetLastError=true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool CloseHandle(IntPtr hObject);
+
+    [DllImport("kernel32.dll")]
+    public static extern int GetLastError();
+
+    [DllImport("kernel32.dll")]
+    public static extern IntPtr OpenProcess(ProcessAccessFlags dwDesiredAccess, bool bInheritHandle, int dwProcessId);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool IsWow64Process(IntPtr hProcess, out bool wow64Process);
+
+    public static int GetProcessArchitecture(UInt32 pid) {
+      IntPtr hProcess = IntPtr.Zero;
+      ProcessAccessFlags flags = ProcessAccessFlags.QueryInformation | ProcessAccessFlags.VMRead;
+      hProcess = OpenProcess(flags, false, (int)pid);
+      if (hProcess == IntPtr.Zero) {
+	throw new System.ComponentModel.Win32Exception(GetLastError());
+      }
+      try {
+        bool wow64;
+        if (!IsWow64Process(hProcess, out wow64)) {
+	  return 32; // call failed means 32-bit
+        }
+        if (wow64) {
+	  return 32;
+        } else {
+	  return 64;
+        }
+      } finally {
+	CloseHandle(hProcess);
+      }
+    }
+  }
+}
+"@
+
+  $ErrorActionPreference = "SilentlyContinue"
+  $Type = [jOVAL.Process.Probe]
+  $ErrorActionPreference = "Stop"
+  if($Type -eq $null){
+    New-Type -TypeDefinition $Source
+  }
+  $ErrorActionPreference = "Continue"
+
+  foreach ($Process in Get-Process) {
+    $Arch = $null
+    try {
+      $Arch = [jOVAL.Environment58.ProcessHelper]::GetProcessArchitecture($Process.Id)
+    } catch {
+    }
+    Write-Output "$($Process.Id): $($Arch)"
+  }
+}
+
 function Get-ProcessEnvironment {
   param(
     [int]$ProcessId=$(throw "Mandatory parameter -ProcessId missing.")
