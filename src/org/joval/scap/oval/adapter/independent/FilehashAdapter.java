@@ -19,6 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFileEx;
 import jsaf.intf.system.ISession;
@@ -31,6 +32,7 @@ import jsaf.io.StreamTool;
 import jsaf.util.Base64;
 import jsaf.util.Checksum;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageLevelEnumeration;
 import scap.oval.common.MessageType;
@@ -84,30 +86,72 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
     /**
      * Parse the file as specified by the Object, and decorate the Item.
      */
-    protected Collection<FilehashItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
-		throws IOException, CollectException {
+    protected Collection<FilehashItem> getItems(ObjectType obj, Collection<IFile> files, IRequestContext rc)
+		throws CollectException {
 
 	FilehashObject fObj = (FilehashObject)obj;
-	FilehashItem baseItem = (FilehashItem)base;
-	try {
-	    String[] checksums = getChecksums(f, getView(fObj.getBehaviors()));
-	    return Arrays.asList(getItem(baseItem, checksums[MD5], checksums[SHA1]));
-	} catch (IllegalArgumentException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.INFO);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_NOT_FILE, f.getPath(), e.getMessage())); 
-	    rc.addMessage(msg);
-	} catch (Exception e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(e.getMessage());
-	    rc.addMessage(msg);
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+
+	//
+	// Filter out any bad files
+	//
+	List<FilehashItem> items = new ArrayList<FilehashItem>();
+	List<IFile> checkedFiles = new ArrayList<IFile>();
+	for (IFile f : files) {
+	    try {
+		IFileEx ext = f.getExtended();
+		if (ext instanceof IWindowsFileInfo) {
+		    //
+		    // Only IWindiwsFileInfo.FILE_TYPE_DISK gets through
+		    //
+		    switch(((IWindowsFileInfo)ext).getWindowsFileType()) {
+		      case IWindowsFileInfo.FILE_TYPE_UNKNOWN:
+			throw new IllegalArgumentException("unknown");
+		      case IWindowsFileInfo.FILE_TYPE_CHAR:
+			throw new IllegalArgumentException("char");
+		      case IWindowsFileInfo.FILE_TYPE_PIPE:
+			throw new IllegalArgumentException("pipe");
+		      case IWindowsFileInfo.FILE_TYPE_REMOTE:
+			throw new IllegalArgumentException("remote");
+		      case IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY:
+			throw new IllegalArgumentException("directory");
+		    }
+		} else if (ext instanceof IUnixFileInfo) {
+		    String type = ((IUnixFileInfo)ext).getUnixFileType();
+		    if (!type.equals(IUnixFileInfo.FILE_TYPE_REGULAR)) {
+			throw new IllegalArgumentException(type);
+		    }
+		}
+		items.add((FilehashItem)getBaseItem(obj, f));
+		checkedFiles.add(f);
+	    } catch (IllegalArgumentException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.INFO);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_NOT_FILE, f.getPath(), e.getMessage())); 
+		rc.addMessage(msg);
+	    } catch (IOException e) {
+		session.getLogger().warn(Message.ERROR_IO, f.getPath(), e.getMessage());
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		rc.addMessage(msg);
+	    }
 	}
 
-	@SuppressWarnings("unchecked")
-	Collection<FilehashItem> empty = (Collection<FilehashItem>)Collections.EMPTY_LIST;
-	return empty;
+	try {
+	    IWindowsSession.View view = getView(fObj.getBehaviors());
+	    for (int startIndex=0; startIndex < checkedFiles.size(); startIndex+=10) {
+		List<IFile> subset = checkedFiles.subList(startIndex, Math.min(startIndex+10, checkedFiles.size()));
+		List<String> md5s = safeComputeChecksums(subset, view, MD5);
+		List<String> sha1s = safeComputeChecksums(subset, view, SHA1);
+		for (int i=0; i < subset.size(); i++) {
+		    setItem(items.get(startIndex + i), md5s.get(i), sha1s.get(i));
+		}
+	    }
+	    return items;
+	} catch (Exception e) {
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new CollectException(e.getMessage(), FlagEnumeration.ERROR);
+	}
     }
 
     @Override
@@ -117,15 +161,9 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 
     // Internal
 
-    protected FilehashItem getItem(FilehashItem baseItem, String md5, String sha1) {
-	FilehashItem item = Factories.sc.independent.createFilehashItem();
-	item.setPath(baseItem.getPath());
-	item.setFilename(baseItem.getFilename());
-	item.setFilepath(baseItem.getFilepath());
-	item.setWindowsView(baseItem.getWindowsView());
-
+    protected void setItem(FilehashItem item, String md5, String sha1) {
 	EntityItemStringType md5Type = Factories.sc.core.createEntityItemStringType();
-	if (md5 == null) {
+	if (md5.startsWith("BAD LINE:")) {
 	    md5Type.setStatus(StatusEnumeration.ERROR);
 	} else {
 	    md5Type.setValue(md5);
@@ -133,128 +171,168 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	item.setMd5(md5Type);
 
 	EntityItemStringType sha1Type = Factories.sc.core.createEntityItemStringType();
-	if (sha1 == null) {
+	if (sha1.startsWith("BAD LINE:")) {
 	    sha1Type.setStatus(StatusEnumeration.ERROR);
 	} else {
 	    sha1Type.setValue(sha1);
 	}
 	item.setSha1(sha1Type);
-
-	return item;
     }
 
     private static final int MD5	= 0;
     private static final int SHA1	= 1;
 
-    /**
-     * Compute file checksums or return from cache.
-     *
-     * @throws IllegalArgumentException if the file f is not a "regular" file; exception message is the file type.
-     */
-    private String[] getChecksums(IFile f, IWindowsSession.View view) throws Exception {
-	String key = null;
-	if (view == null) {
-	    key = f.getCanonicalPath();
-	} else {
-	    key = view.toString() + ":" + f.getCanonicalPath();
+    private List<String> safeComputeChecksums(List<IFile> files, IWindowsSession.View view, int algorithm) throws Exception {
+	int attempts = 0;
+	while(attempts++ < 5) {
+	    try {
+		return computeChecksums(files, view, algorithm);
+	    } catch (MismatchException e) {
+	    }
 	}
-	if (checksumMap.containsKey(key)) {
-	    return checksumMap.get(key);
-	} else {
-	    String[] cs = computeChecksums(f, view);
-	    checksumMap.put(key, cs);
-	    return cs;
-	}
+	throw new Exception("Gave up after 5 attempts");
     }
 
     /**
-     * Compute file checksums.
+     * Compute checksums for a list of files. All the files must exist, and they must all be regular files, or this
+     * routine will fail.
      *
      * @throws IllegalArgumentException if the file f is not a "regular" file; exception message is the file type.
      */
-    private String[] computeChecksums(IFile f, IWindowsSession.View view) throws Exception {
-	IFileEx ext = f.getExtended();
-	if (ext instanceof IWindowsFileInfo) {
-	    //
-	    // Only IWindiwsFileInfo.FILE_TYPE_DISK gets through
-	    //
-	    switch(((IWindowsFileInfo)ext).getWindowsFileType()) {
-	      case IWindowsFileInfo.FILE_TYPE_UNKNOWN:
-		throw new IllegalArgumentException("unknown");
-	      case IWindowsFileInfo.FILE_TYPE_CHAR:
-		throw new IllegalArgumentException("char");
-	      case IWindowsFileInfo.FILE_TYPE_PIPE:
-		throw new IllegalArgumentException("pipe");
-	      case IWindowsFileInfo.FILE_TYPE_REMOTE:
-		throw new IllegalArgumentException("remote");
-	      case IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY:
-		throw new IllegalArgumentException("directory");
+    private List<String> computeChecksums(List<IFile> files, IWindowsSession.View view, int algorithm) throws Exception {
+	//
+	// Build the input list
+	//
+	StringBuffer sb = new StringBuffer();
+	if (session instanceof IWindowsSession) {
+	    for (IFile f : files) {
+		session.getLogger().info(JOVALMsg.STATUS_FILEHASH, algorithm == MD5 ? "md5" : "sha1", f.getPath());
+		if (sb.length() > 0) {
+		    sb.append(",");
+		}
+		sb.append("'").append(f.getPath()).append("'");
 	    }
-	} else if (ext instanceof IUnixFileInfo) {
-	    String type = ((IUnixFileInfo)ext).getUnixFileType();
-	    if (!type.equals(IUnixFileInfo.FILE_TYPE_REGULAR)) {
-		throw new IllegalArgumentException(type);
+	} else {
+	    for (IFile f : files) {
+		session.getLogger().info(JOVALMsg.STATUS_FILEHASH, algorithm == MD5 ? "md5" : "sha1", f.getPath());
+		if (sb.length() > 0) {
+		    sb.append("\\n");
+		}
+		sb.append(f.getPath());
 	    }
 	}
-	String[] checksums = new String[2];
+
+	StringBuffer cmd;
+	List<String> checksums = new ArrayList<String>();
 	switch(session.getType()) {
-	  case UNIX: {
+	  case UNIX:
 	    IUnixSession us = (IUnixSession)session;
 	    switch(us.getFlavor()) {
 	      case LINUX:
-	      case MACOSX: {
-		session.getLogger().info(JOVALMsg.STATUS_FILEHASH, "md5", f.getPath());
-		String temp = SafeCLI.exec("openssl dgst -hex -md5 " + f.getPath(), session, IUnixSession.Timeout.M);
-		int ptr = temp.indexOf("= ");
-		if (ptr > 0) {
-		    checksums[MD5] = temp.substring(ptr+2).trim();
+	      case MACOSX:
+		cmd = new StringBuffer("echo -e \"").append(sb.toString()).append("\"");
+		cmd.append(" | xargs -I{} openssl dgst -hex");
+		switch(algorithm) {
+		  case MD5:
+		    cmd.append(" -md5");
+		    break;
+		  case SHA1:
+		    cmd.append(" -sha1");
+		    break;
 		}
-		session.getLogger().info(JOVALMsg.STATUS_FILEHASH, "sha1", f.getPath());
-		temp = SafeCLI.exec("openssl dgst -hex -sha1 " + f.getPath(), session, IUnixSession.Timeout.M);
-		ptr = temp.indexOf("= ");
-		if (ptr > 0) {
-		    checksums[SHA1] = temp.substring(ptr+2).trim();
+		cmd.append(" '{}'");
+		for (String line : SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.M)) {
+		    int ptr = line.indexOf("= ");
+		    if (ptr > 0) {
+			checksums.add(line.substring(ptr+2).trim());
+		    } else if (line.length() > 0) {
+			checksums.add("BAD LINE: " + line);
+		    }
 		}
 		break;
-	      }
 
-	      case SOLARIS: {
-		session.getLogger().info(JOVALMsg.STATUS_FILEHASH, "md5", f.getPath());
-		checksums[MD5] = SafeCLI.exec("digest -a md5 " + f.getPath(), session, IUnixSession.Timeout.M);
-		session.getLogger().info(JOVALMsg.STATUS_FILEHASH, "sha1", f.getPath());
-		checksums[SHA1] = SafeCLI.exec("digest -a sha1 " + f.getPath(), session, IUnixSession.Timeout.M);
+	      case SOLARIS:
+		cmd = new StringBuffer("/usr/bin/echo \"").append(sb.toString()).append("\"");
+		cmd.append(" | xargs -I{} digest -a");
+		switch(algorithm) {
+		  case MD5:
+		    cmd.append(" md5");
+		    break;
+		  case SHA1:
+		    cmd.append(" sha1");
+		    break;
+		}
+		cmd.append(" '{}'");
+		for (String line : SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.M)) {
+		    if (line.length() > 0) {
+			checksums.add(line);
+		    }
+		}
 		break;
-	      }
 
-	      case AIX: {
-		session.getLogger().info(JOVALMsg.STATUS_FILEHASH, "md5", f.getPath());
-		String temp = SafeCLI.exec("csum -h MD5 " + f.getPath(), session, IUnixSession.Timeout.M);
-		StringTokenizer tok = new StringTokenizer(temp);
-		if (tok.countTokens() == 2) {
-		    checksums[MD5] = tok.nextToken();
+	      case AIX:
+		cmd = new StringBuffer("/usr/bin/echo \"").append(sb.toString()).append("\"");
+		cmd.append(" | xargs -I{} csum -h");
+		switch(algorithm) {
+		  case MD5:
+		    cmd.append(" MD5");
+		    break;
+		  case SHA1:
+		    cmd.append(" SHA1");
+		    break;
 		}
-		session.getLogger().info(JOVALMsg.STATUS_FILEHASH, "sha1", f.getPath());
-		temp = SafeCLI.exec("csum -h SHA1 " + f.getPath(), session, IUnixSession.Timeout.M);
-		tok = new StringTokenizer(temp);
-		if (tok.countTokens() == 2) {
-		    checksums[SHA1] = tok.nextToken();
+		cmd.append(" '{}'");
+		List<String> lines = SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.M);
+		for (String line : lines) {
+		    StringTokenizer tok = new StringTokenizer(line);
+		    if (tok.countTokens() == 2) {
+			checksums.add(tok.nextToken());
+		    } else if (line.length() > 0) {
+			checksums.add("BAD LINE: " + line);
+		    }
 		}
 		break;
-	      }
 	    }
 	    break;
-	  }
 
-	  case WINDOWS: {
-	    session.getLogger().info(JOVALMsg.STATUS_FILEHASH, "md5", f.getPath());
-	    String encoded = getRunspace(view).invoke("Get-FileHash -Algorithm MD5 -Path \"" + f.getPath() + "\"");
-	    checksums[MD5] = LittleEndian.toHexString(Base64.decode(encoded));
-	    session.getLogger().info(JOVALMsg.STATUS_FILEHASH, "sha1", f.getPath());
-	    encoded = getRunspace(view).invoke("Get-FileHash -Algorithm SHA1 -Path \"" + f.getPath() + "\"");
-	    checksums[SHA1] = LittleEndian.toHexString(Base64.decode(encoded));
+	  case WINDOWS:
+	    cmd = new StringBuffer(sb.toString()).append(" | Get-FileHash -Algorithm");
+	    switch(algorithm) {
+	      case MD5:
+		cmd.append(" MD5");
+		break;
+	      case SHA1:
+		cmd.append(" SHA1");
+		break;
+	    }
+	    cmd.append(" | Transfer-Encode");
+	    byte[] buff = Base64.decode(getRunspace(view).invoke(cmd.toString()));
+	    String data = new String(buff, StringTools.UTF8);
+	    for (String line : data.split("\r\n")) {
+		if (line.length() > 0) {
+		    checksums.add(line);
+		}
+	    }
 	    break;
-	  }
+	}
+	if (checksums.size() != files.size()) {
+	    session.getLogger().warn(JOVALMsg.WARNING_FILEHASH_LINES, checksums.size(), files.size());
+	    throw new MismatchException();
 	}
 	return checksums;
+    }
+
+    private String combine(List<String> lines) {
+	StringBuffer sb = new StringBuffer();
+	for (String line : lines) {
+	    if (sb.length() > 0) {
+		sb.append("\n");
+	    }
+	    sb.append(line);
+	}
+	return sb.toString();
+    }
+
+    class MismatchException extends Exception {
     }
 }

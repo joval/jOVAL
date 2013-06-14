@@ -126,8 +126,8 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 	    behaviors = fObj.getBehaviors();
 	}
 	IFilesystem fs = session.getFilesystem();
-	IWindowsSession.View view = null;
 	if (session instanceof IWindowsSession) {
+	    IWindowsSession.View view = null;
 	    IWindowsSession ws = (IWindowsSession)session;
 	    if (behaviors == null) {
 		view = ws.getNativeView();
@@ -151,12 +151,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		return empty;
 	    }
 	}
-
-	Collection<T> items = new ArrayList<T>();
-	for (IFile f : getFiles(fObj, behaviors, rc, fs)) {
-	    items.addAll(processFile(obj, fObj, rc, f, view));
-	}
-	return items;
+	return getItems(obj, getFiles(fObj, behaviors, rc, fs), rc);
     }
 
     // Implement IBatch
@@ -176,6 +171,9 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
     }
 
     public Collection<IResult> exec() {
+	//
+	// Create a list of paths associated with each queued object.
+	//
 	ArrayList<String> paths = new ArrayList<String>(queue.size());
 	for (IRequest request : queue) {
 	    ReflectedFileObject fObj = new ReflectedFileObject(request.getObject());
@@ -190,9 +188,13 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		paths.add(sb.toString());
 	    }
 	}
+
 	IWindowsSession.View view = ((IWindowsSession)session).getNativeView();
 	Collection<IResult> results = new ArrayList<IResult>();
 	try {
+	    //
+	    // For each path (and therefore object), process the file and add the corresponding result.
+	    //
 	    IFile[] files = session.getFilesystem().getFiles(paths.toArray(new String[paths.size()]));
 	    for (int i=0; i < paths.size(); i++) {
 		IRequestContext rc = queue.get(i).getContext();
@@ -203,7 +205,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		    results.add(new Batch.Result(new ArrayList<T>(), rc));
 		} else {
 		    try {
-			results.add(new Batch.Result(processFile(obj, fObj, rc, f, view), rc));
+			results.add(new Batch.Result(getItems(obj, Arrays.asList(f), rc), rc));
 		    } catch (CollectException e) {
 			results.add(new Batch.Result(e, rc));
 		    } catch (Exception e) {
@@ -241,12 +243,10 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
     }
 
     /**
-     * Return a list of items to associate with the given ObjectType, based on information gathered from the IFile.
-     *
-     * @arg it the base ItemType containing filepath, path and filename information already populated
+     * Return a list of items to associate with the given ObjectType, based on information gathered from the given IFiles.
      */
-    protected abstract Collection<T> getItems(ObjectType obj, ItemType it, IFile f, IRequestContext rc)
-	throws IOException, CollectException;
+    protected abstract Collection<T> getItems(ObjectType obj, Collection<IFile> files, IRequestContext rc)
+	throws CollectException;
 
     /**
      * Windows-specific object type subclasses should override by supplying streams to any Powershell modules that must be
@@ -309,6 +309,74 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 	}
     }
 
+    /**
+     * Return an ItemType of the appropriate sub-type, with the path, filepath and filename entities populated according
+     * to the specified IFile.
+     *
+     * @return null if there is no such file
+     */
+    protected ItemType getBaseItem(ObjectType obj, IFile f) throws IOException {
+	String id = obj.getId();
+	String path = f.getPath();
+	try {
+	    ReflectedFileObject fObj = new ReflectedFileObject(obj);
+	    String dirPath = null;
+	    boolean isDirectory = f.isDirectory();
+	    if (isDirectory) {
+		dirPath = path;
+	    } else {
+		dirPath = f.getParent();
+	    }
+	    ReflectedFileItem fItem = new ReflectedFileItem();
+	    if (session instanceof IWindowsSession) {
+		ReflectedFileBehaviors behaviors = fObj.getBehaviors();
+		if (behaviors == null) {
+		    fItem.setWindowsView(((IWindowsSession)session).getNativeView());
+		} else {
+		    fItem.setWindowsView(behaviors.getWindowsView());
+		}
+	    }
+	    if (isDirectory) {
+		if (fObj.isFilenameNil()) {
+		    EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
+		    pathType.setValue(dirPath);
+		    fItem.setPath(pathType);
+		    return fItem.it;
+		}
+	    } else {
+		EntityItemStringType filepathType = Factories.sc.core.createEntityItemStringType();
+		filepathType.setValue(path);
+		fItem.setFilepath(filepathType);
+		EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
+		pathType.setValue(f.getParent());
+		fItem.setPath(pathType);
+		EntityItemStringType filenameType = Factories.sc.core.createEntityItemStringType();
+		filenameType.setValue(f.getName());
+		fItem.setFilename(filenameType);
+		return fItem.it;
+	    }
+	} catch (ClassNotFoundException e) {
+	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
+	} catch (InstantiationException e) {
+	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
+	} catch (NoSuchMethodException e) {
+	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
+	} catch (IllegalAccessException e) {
+	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
+	} catch (InvocationTargetException e) {
+	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
+	} catch (IllegalArgumentException e) {
+	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(Message.ERROR_IO, path, e.getMessage());
+	}
+	return null;
+    }
+
     // Private
 
     /**
@@ -332,79 +400,6 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 	} else {
 	    return false;
 	}
-    }
-
-    /**
-     * Process a single file.
-     */
-    private Collection<T> processFile(ObjectType obj, ReflectedFileObject fObj, IRequestContext rc, IFile f,
-				      IWindowsSession.View view) throws CollectException {
-
-	String id = obj.getId();
-	String path = f.getPath();
-	try {
-	    String dirPath = null;
-	    boolean isDirectory = f.isDirectory();
-	    if (isDirectory) {
-		dirPath = path;
-	    } else {
-		dirPath = f.getParent();
-	    }
-	    ReflectedFileItem fItem = new ReflectedFileItem();
-	    fItem.setWindowsView(view);
-	    if (isDirectory) {
-		if (fObj.isFilenameNil()) {
-		    EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
-		    pathType.setValue(dirPath);
-		    fItem.setPath(pathType);
-		    return getItems(obj, fItem.it, f, rc);
-		}
-	    } else {
-		EntityItemStringType filepathType = Factories.sc.core.createEntityItemStringType();
-		filepathType.setValue(path);
-		fItem.setFilepath(filepathType);
-		EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
-		pathType.setValue(f.getParent());
-		fItem.setPath(pathType);
-		EntityItemStringType filenameType = Factories.sc.core.createEntityItemStringType();
-		filenameType.setValue(f.getName());
-		fItem.setFilename(filenameType);
-		return getItems(obj, fItem.it, f, rc);
-	    }
-	} catch (FileNotFoundException e) {
-	    // skip it
-	} catch (ClassNotFoundException e) {
-	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
-	} catch (InstantiationException e) {
-	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
-	} catch (NoSuchMethodException e) {
-	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
-	} catch (IllegalAccessException e) {
-	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
-	} catch (InvocationTargetException e) {
-	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
-	} catch (IllegalArgumentException e) {
-	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    session.getLogger().warn(Message.ERROR_IO, path, e.getMessage());
-	} catch (IOException e) {
-	    session.getLogger().warn(Message.ERROR_IO, path, e.getMessage());
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    if (f == null) {
-		msg.setValue(e.getMessage());
-	    } else {
-		msg.setValue(JOVALMsg.getMessage(Message.ERROR_IO, path, e.getMessage()));
-	    }
-	    rc.addMessage(msg);
-	}
-	@SuppressWarnings("unchecked")
-	List<T> empty = (List<T>)Collections.EMPTY_LIST;
-	return empty;
     }
 
     /**
@@ -948,6 +943,12 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		    viewString = "64_bit";
 		    break;
 		}
+		setWindowsView(viewString);
+	    }
+	}
+
+	void setWindowsView(String viewString) {
+	    if (viewString != null) {
 		try {
 		    if (setWindowsView != null) {
 			Class[] types = setWindowsView.getParameterTypes();

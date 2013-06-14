@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
+import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
 import jsaf.intf.system.ISession;
@@ -104,7 +105,7 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 		switch(op) {
 		  case EQUALS: {
 		    IFile f = session.getFilesystem().getFile(prefs + appid + ".plist");
-		    items.addAll(getItems(obj, createBaseItem(appid, f.getPath()), f, rc));
+		    items.addAll(getItems(obj, Arrays.asList(f), rc));
 		    break;
 		  }
 
@@ -115,7 +116,7 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 			    String fname = dir.getName();
 			    String id = fname.substring(0, fname.length() - 6);
 			    if (!id.equals(appid)) {
-				items.addAll(getItems(obj, createBaseItem(appid, f.getPath()), f, rc));
+				items.addAll(getItems(obj, Arrays.asList(f), rc));
 			    }
 			}
 		    }
@@ -130,7 +131,7 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 			    String fname = dir.getName();
 			    String id = fname.substring(0, fname.length() - 6);
 			    if (p.matcher(id).find()) {
-				items.addAll(getItems(obj, createBaseItem(appid, f.getPath()), f, rc));
+				items.addAll(getItems(obj, Arrays.asList(f), rc));
 			    }
 			}
 		    }
@@ -188,9 +189,19 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
     }
 
     /**
+     * Create a PlistItem containing the filepath and/or object-derived appid.
+     */
+    protected PlistItem createBaseItem(Plist510Object pObj, String filepath) throws IllegalArgumentException {
+	if (!pObj.isSetAppId()) {
+	    throw new IllegalArgumentException(pObj.getId());
+	}
+	return createBaseItem((String)pObj.getAppId().getValue(), filepath);
+    }
+
+    /**
      * Create a PlistItem containing the filepath and/or appid.
      */
-    protected PlistItem createBaseItem(String appid, String filepath) {
+    protected PlistItem createBaseItem(String appid, String filepath) throws IllegalArgumentException {
 	PlistItem item = Factories.sc.macos.createPlistItem();
 	EntityItemStringType appIdType = Factories.sc.core.createEntityItemStringType();
 	if (appid == null) {
@@ -221,48 +232,64 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
     /**
      * Implementation of abstract method from BaseFileAdapter.
      */
-    protected Collection<PlistItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
-		throws IOException, CollectException {
+    protected Collection<PlistItem> getItems(ObjectType obj, Collection<IFile> files, IRequestContext rc)
+		throws CollectException {
 
 	Plist510Object pObj = getPlist510Object(obj);
-	PlistItem baseItem = (PlistItem)base;
-
-	if (pObj.getKey().getValue().getOperation() == OperationEnumeration.EQUALS) {
-	    JAXBElement<EntityObjectStringType> key = pObj.getKey();
-	    if (XSITools.isNil(key)) {
-		baseItem.setKey(Factories.sc.macos.createPlistItemKey(null));
-	    } else {
-		EntityItemStringType keyType = Factories.sc.core.createEntityItemStringType();
-		keyType.setValue(key.getValue().getValue());
-		keyType.setDatatype(key.getValue().getDatatype());
-		baseItem.setKey(Factories.sc.macos.createPlistItemKey(keyType));
-	    }
-	} else {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pObj.getKey().getValue().getOperation());
+	OperationEnumeration keyOp = pObj.getKey().getValue().getOperation();
+	if (keyOp != OperationEnumeration.EQUALS) {
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, keyOp);
 	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
+	JAXBElement<EntityObjectStringType> key = pObj.getKey();
 
-	InputStream in = null;
-	try {
-	    in = f.getInputStream();
-	    return getItems(getPlist510Object(obj), baseItem, PropertyListParser.parse(in));
-	} catch (CollectException e) {
-	    throw e;
-	} catch (IOException e) {
-	    throw e;
-	} catch (Exception e) {
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_PLIST_PARSE, f.getPath(), e.getMessage());
-	    throw new CollectException(msg, FlagEnumeration.ERROR);
-	} finally {
-	    if (in != null) {
-		try {
-		    in.close();
-		} catch (IOException e) {
-		    session.getLogger().warn(JOVALMsg.ERROR_FILE_STREAM_CLOSE, f.toString());
+	Collection<PlistItem> items = new ArrayList<PlistItem>();
+	for (IFile f : files) {
+	    InputStream in = null;
+	    try {
+		PlistItem baseItem = null;
+		if (pObj.isSetFilepath()) {
+		    baseItem = (PlistItem)getBaseItem(obj, f);
+		} else {
+		    baseItem = createBaseItem(pObj, f.getPath());
+		}
+
+		if (XSITools.isNil(key)) {
+		    baseItem.setKey(Factories.sc.macos.createPlistItemKey(null));
+		} else {
+		    EntityItemStringType keyType = Factories.sc.core.createEntityItemStringType();
+		    keyType.setValue(key.getValue().getValue());
+		    keyType.setDatatype(key.getValue().getDatatype());
+		    baseItem.setKey(Factories.sc.macos.createPlistItemKey(keyType));
+		}
+
+		in = f.getInputStream();
+		items.addAll(getItems(getPlist510Object(obj), baseItem, PropertyListParser.parse(in)));
+	    } catch (CollectException e) {
+		throw e;
+	    } catch (IOException e) {
+		session.getLogger().warn(Message.ERROR_IO, f.getPath(), e.getMessage());
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		rc.addMessage(msg);
+	    } catch (Exception e) {
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PLIST_PARSE, f.getPath(), e.getMessage()));
+		rc.addMessage(msg);
+	    } finally {
+		if (in != null) {
+		    try {
+			in.close();
+		    } catch (IOException e) {
+			session.getLogger().warn(JOVALMsg.ERROR_FILE_STREAM_CLOSE, f.toString());
+		    }
 		}
 	    }
 	}
+	return items;
     }
 
     /**

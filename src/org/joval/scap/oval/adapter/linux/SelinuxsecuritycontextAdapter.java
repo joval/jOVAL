@@ -16,6 +16,7 @@ import java.util.Stack;
 import java.util.StringTokenizer;
 import javax.xml.bind.JAXBElement;
 
+import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
 import jsaf.intf.system.ISession;
@@ -86,30 +87,27 @@ class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecurityconte
     /**
      * Entry point for the BaseFileAdapter super-class.
      */
-    protected Collection<SelinuxsecuritycontextItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
-		throws IOException, CollectException {
+    protected Collection<SelinuxsecuritycontextItem> getItems(ObjectType obj, Collection<IFile> files, IRequestContext rc)
+		throws CollectException {
 
-	SelinuxsecuritycontextItem baseItem = null;
-	if (base instanceof SelinuxsecuritycontextItem) {
-	    baseItem = (SelinuxsecuritycontextItem)base;
-	} else {
-	    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, base.getClass().getName());
-	    throw new CollectException(message, FlagEnumeration.ERROR);
-	}
-
-	if (f.getExtended() instanceof IUnixFileInfo) {
-	    IUnixFileInfo info = (IUnixFileInfo)f.getExtended();
+	Collection<SelinuxsecuritycontextItem> items = new ArrayList<SelinuxsecuritycontextItem>();
+	for (IFile f : files) {
 	    try {
-		parseSecurityContextData(baseItem, info.getExtendedData(IUnixFileInfo.SELINUX_DATA));
-		return Arrays.asList(baseItem);
-	    } catch (NoSuchElementException e) {
-		// this should never happen!
+		SelinuxsecuritycontextItem baseItem = (SelinuxsecuritycontextItem)getBaseItem(obj, f);
+		if (f.getExtended() instanceof IUnixFileInfo) {
+	            IUnixFileInfo info = (IUnixFileInfo)f.getExtended();
+		    parseSecurityContextData(baseItem, info.getExtendedData(IUnixFileInfo.SELINUX_DATA));
+		    items.add(baseItem);
+	        }
+	    } catch (IOException e) {
+		session.getLogger().warn(Message.ERROR_IO, f.getPath(), e.getMessage());
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		rc.addMessage(msg);
 	    }
 	}
-
-	@SuppressWarnings("unchecked")
-	Collection<SelinuxsecuritycontextItem> empty = (Collection<SelinuxsecuritycontextItem>)Collections.EMPTY_LIST;
-	return empty;
+	return items;
     }
 
     // Private

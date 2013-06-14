@@ -19,6 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFileEx;
 import jsaf.intf.system.ISession;
@@ -109,8 +110,8 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
     /**
      * Parse the file as specified by the Object, and decorate the Item.
      */
-    protected Collection<Filehash58Item> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
-		throws IOException, CollectException {
+    protected Collection<Filehash58Item> getItems(ObjectType obj, Collection<IFile> files, IRequestContext rc)
+		throws CollectException {
 
 	//
 	// First, determine the appropriate set of checksum algorithms to use
@@ -159,30 +160,38 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
 
-	Filehash58Item baseItem = (Filehash58Item)base;
 	Filehash58Object fObj = (Filehash58Object)obj;
-	IWindowsSession.View view = getView(fObj.getBehaviors());
 	Collection<Filehash58Item> items = new ArrayList<Filehash58Item>();
-	for (Algorithm alg : algorithms) {
+	for (IFile f : files) {
 	    try {
-		items.add(getItem(baseItem, alg, getChecksum(f, alg, view)));
+		Filehash58Item base = (Filehash58Item)getBaseItem(obj, f);
+		IWindowsSession.View view = getView(fObj.getBehaviors());
+		for (Algorithm alg : algorithms) {
+		    try {
+			items.add(getItem(base, alg, getChecksum(f, alg, view)));
+		    } catch (NoSuchAlgorithmException e) {
+			MessageType msg = Factories.common.createMessageType();
+			msg.setLevel(MessageLevelEnumeration.WARNING);
+			msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_CHECKSUM_ALGORITHM, e.getMessage()));
+			rc.addMessage(msg);
+		    } catch (Exception e) {
+			MessageType msg = Factories.common.createMessageType();
+			msg.setLevel(MessageLevelEnumeration.ERROR);
+			msg.setValue(e.getMessage());
+			rc.addMessage(msg);
+			session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    }
+		}
+	    } catch (IOException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.WARNING);
+		msg.setValue(JOVALMsg.getMessage(Message.ERROR_IO, f.getPath(), e.getMessage()));
+		rc.addMessage(msg);
 	    } catch (IllegalArgumentException e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
 		msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_NOT_FILE, f.getPath(), e.getMessage()));
 		rc.addMessage(msg);
-		break;
-	    } catch (NoSuchAlgorithmException e) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.WARNING);
-		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_CHECKSUM_ALGORITHM, e.getMessage()));
-		rc.addMessage(msg);
-	    } catch (Exception e) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(e.getMessage());
-		rc.addMessage(msg);
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return items;
@@ -195,12 +204,12 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 
     // Internal
 
-    protected Filehash58Item getItem(Filehash58Item baseItem, Algorithm alg, String checksum) {
+    protected Filehash58Item getItem(Filehash58Item base, Algorithm alg, String checksum) {
 	Filehash58Item item = Factories.sc.independent.createFilehash58Item();
-	item.setPath(baseItem.getPath());
-	item.setFilename(baseItem.getFilename());
-	item.setFilepath(baseItem.getFilepath());
-	item.setWindowsView(baseItem.getWindowsView());
+	item.setPath(base.getPath());
+	item.setFilename(base.getFilename());
+	item.setFilepath(base.getFilepath());
+	item.setWindowsView(base.getWindowsView());
 
 	EntityItemHashTypeType hashType = Factories.sc.independent.createEntityItemHashTypeType();
 	hashType.setValue(alg.ovalId);

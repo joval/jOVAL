@@ -8,12 +8,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
@@ -68,95 +68,100 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 	return TextfilecontentItem.class;
     }
 
-    protected Collection<TextfilecontentItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
-		throws IOException, CollectException {
+    protected Collection<TextfilecontentItem> getItems(ObjectType obj, Collection<IFile> files, IRequestContext rc)
+		throws CollectException {
 
-	Collection<TextfilecontentItem> items = new HashSet<TextfilecontentItem>();
-	TextfilecontentItem baseItem = (TextfilecontentItem)base;
 	Textfilecontent54Object tfcObj = (Textfilecontent54Object)obj;
-	try {
-	    int flags = 0;
-	    if (tfcObj.isSetBehaviors()) {
-		if (tfcObj.getBehaviors().getMultiline()) {
-		    flags |= Pattern.MULTILINE;
+	Collection<TextfilecontentItem> items = new ArrayList<TextfilecontentItem>();
+	for (IFile f : files) {
+	    try {
+		TextfilecontentItem baseItem = (TextfilecontentItem)getBaseItem(obj, f);
+		int flags = 0;
+		if (tfcObj.isSetBehaviors()) {
+		    if (tfcObj.getBehaviors().getMultiline()) {
+			flags |= Pattern.MULTILINE;
+		    }
+		    if (tfcObj.getBehaviors().getIgnoreCase()) {
+			flags |= Pattern.CASE_INSENSITIVE;
+		    }
+		    if (tfcObj.getBehaviors().getSingleline()) {
+			flags |= Pattern.DOTALL;
+		    }
+		} else {
+		    flags = Pattern.MULTILINE;
 		}
-		if (tfcObj.getBehaviors().getIgnoreCase()) {
-		    flags |= Pattern.CASE_INSENSITIVE;
-		}
-		if (tfcObj.getBehaviors().getSingleline()) {
-		    flags |= Pattern.DOTALL;
-		}
-	    } else {
-		flags = Pattern.MULTILINE;
-	    }
-	    Pattern pattern = StringTools.pattern((String)tfcObj.getPattern().getValue(), flags);
-	    String s = readASCIIString(f.getInputStream());
+		Pattern pattern = StringTools.pattern((String)tfcObj.getPattern().getValue(), flags);
+		String s = readASCIIString(f.getInputStream());
 
-	    //
-	    // Find all the matching items
-	    //
-	    Collection<TextfilecontentItem> allItems = new ArrayList<TextfilecontentItem>();
-	    OperationEnumeration op = tfcObj.getPattern().getOperation();
-	    switch(op) {
-	      case PATTERN_MATCH:
-		allItems.addAll(getItems(pattern, baseItem, s));
-		break;
-
-	      default:
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-	    }
-
-	    //
-	    // Filter the matches by instance number
-	    //
-	    int instanceNum = Integer.parseInt((String)tfcObj.getInstance().getValue());
-	    op = tfcObj.getInstance().getOperation();
-	    for (TextfilecontentItem item : allItems) {
-		int inum = Integer.parseInt((String)item.getInstance().getValue());
+		//
+		// Find all the matching items
+		//
+		Collection<TextfilecontentItem> allItems = new ArrayList<TextfilecontentItem>();
+		OperationEnumeration op = tfcObj.getPattern().getOperation();
 		switch(op) {
-		  case EQUALS:
-		    if (inum == instanceNum) {
-			items.add(item);
-		    }
+		  case PATTERN_MATCH:
+		    allItems.addAll(getItems(pattern, baseItem, s));
 		    break;
-		  case LESS_THAN:
-		    if (inum < instanceNum) {
-			items.add(item);
-		    }
-		    break;
-		  case LESS_THAN_OR_EQUAL:
-		    if (inum <= instanceNum) {
-			items.add(item);
-		    }
-		    break;
-		  case GREATER_THAN:
-		    if (inum > instanceNum) {
-			items.add(item);
-		    }
-		    break;
-		  case GREATER_THAN_OR_EQUAL:
-		    if (inum >= instanceNum) {
-			items.add(item);
-		    }
-		    break;
+
 		  default:
 		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
 		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
+
+		//
+		// Filter the matches by instance number
+		//
+		int instanceNum = Integer.parseInt((String)tfcObj.getInstance().getValue());
+		op = tfcObj.getInstance().getOperation();
+		for (TextfilecontentItem item : allItems) {
+		    int inum = Integer.parseInt((String)item.getInstance().getValue());
+		    switch(op) {
+		      case EQUALS:
+			if (inum == instanceNum) {
+			    items.add(item);
+			}
+			break;
+		      case LESS_THAN:
+			if (inum < instanceNum) {
+			    items.add(item);
+			}
+			break;
+		      case LESS_THAN_OR_EQUAL:
+			if (inum <= instanceNum) {
+			    items.add(item);
+			}
+			break;
+		      case GREATER_THAN:
+			if (inum > instanceNum) {
+			    items.add(item);
+			}
+			break;
+		      case GREATER_THAN_OR_EQUAL:
+			if (inum >= instanceNum) {
+			    items.add(item);
+			}
+			break;
+		      default:
+			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		    }
+		}
+	    } catch (PatternSyntaxException e) {
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage());
+		throw new CollectException(msg, FlagEnumeration.ERROR);
+	    } catch (IOException e) {
+		session.getLogger().warn(Message.ERROR_IO, f.getPath(), e.getMessage());
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		rc.addMessage(msg);
+	    } catch (Exception e) {
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		rc.addMessage(msg);
 	    }
-	} catch (PatternSyntaxException e) {
-	    session.getLogger().warn(JOVALMsg.ERROR_PATTERN, e.getMessage());
-	    throw new IOException(e);
-	} catch (IOException e) {
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw e;
-	} catch (Exception e) {
-e.printStackTrace();
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(e.getMessage());
-	    rc.addMessage(msg);
 	}
 	return items;
     }

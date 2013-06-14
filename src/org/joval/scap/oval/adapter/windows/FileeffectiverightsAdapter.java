@@ -78,14 +78,11 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 	return FileeffectiverightsItem.class;
     }
 
-    protected Collection<FileeffectiverightsItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
-		throws IOException, CollectException {
+    protected Collection<FileeffectiverightsItem> getItems(ObjectType obj, Collection<IFile> files, IRequestContext rc)
+		throws CollectException {
 
-	if (directory == null) {
-	    directory = ((IWindowsSession)session).getDirectory();
-	}
+	directory = ((IWindowsSession)session).getDirectory();
 	Collection<FileeffectiverightsItem> items = new ArrayList<FileeffectiverightsItem>();
-	FileeffectiverightsItem baseItem = (FileeffectiverightsItem)base;
 	try {
 	    List<IPrincipal> principals = new ArrayList<IPrincipal>();
 	    IWindowsSession.View view = null;
@@ -187,25 +184,28 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 	    //
 	    // Create items
 	    //
-	    for (IPrincipal principal : principalMap.values()) {
-		switch(principal.getType()) {
-		  case USER: {
-		    StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType File -Name ");
-		    cmd.append("\"").append(f.getPath()).append("\"");
-		    cmd.append(" -SID ").append(principal.getSid());
-		    int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
-		    items.add(makeItem(baseItem, principal, mask));
-		    break;
-		  }
-		  case GROUP:
-		    for (IPrincipal p : directory.getAllPrincipals(principal, includeGroups, resolveGroups)) {
+	    for (IFile f : files) {
+		FileeffectiverightsItem baseItem = (FileeffectiverightsItem)getBaseItem(obj, f);
+		for (IPrincipal principal : principalMap.values()) {
+		    switch(principal.getType()) {
+		      case USER: {
 			StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType File -Name ");
 			cmd.append("\"").append(f.getPath()).append("\"");
 			cmd.append(" -SID ").append(principal.getSid());
 			int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
-			items.add(makeItem(baseItem, p, mask));
+			items.add(makeItem(baseItem, principal, mask));
+			break;
+		      }
+		      case GROUP:
+			for (IPrincipal p : directory.getAllPrincipals(principal, includeGroups, resolveGroups)) {
+			    StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType File -Name ");
+			    cmd.append("\"").append(f.getPath()).append("\"");
+			    cmd.append(" -SID ").append(principal.getSid());
+			    int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
+			    items.add(makeItem(baseItem, p, mask));
+			}
+			break;
 		    }
-		    break;
 		}
 	    }
 	} catch (NoSuchElementException e) {
@@ -214,11 +214,8 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_NOPRINCIPAL, e.getMessage()));
 	    rc.addMessage(msg);
 	} catch (PatternSyntaxException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-	    rc.addMessage(msg);
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage());
+	    throw new CollectException(msg, FlagEnumeration.ERROR);
 	} catch (WmiException e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);

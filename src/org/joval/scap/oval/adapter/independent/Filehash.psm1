@@ -3,11 +3,13 @@
 #
 function Get-FileHash {
   param(
-    [String]$Path=$(throw "Mandatory parameter -Path missing."),
+    [Parameter(ValueFromPipeline=$true)][String]$Path=$null,
     [ValidateSet("MD5", "SHA1", "SHA256", "SHA384", "SHA512")]$Algorithm=$(throw "Mandatory parameter -Algorithm missing.")
   )
 
-  $hasher = [System.Security.Cryptography.HashAlgorithm]::Create($Algorithm)
-  $hash = $hasher.ComputeHash([System.IO.File]::OpenRead($Path))
-  Write-Output([System.Convert]::ToBase64String($hash))
+  PROCESS {
+    $hasher = [System.Security.Cryptography.HashAlgorithm]::Create($Algorithm)
+    $hash = $hasher.ComputeHash([System.IO.File]::OpenRead($Path))
+    Write-Output([System.Convert]::ToBase64String($hash))
+  }
 }

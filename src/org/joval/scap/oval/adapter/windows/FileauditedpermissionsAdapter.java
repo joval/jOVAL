@@ -17,6 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFileEx;
 import jsaf.intf.system.ISession;
@@ -91,29 +92,15 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 	return Arrays.asList(getClass().getResourceAsStream("Fileauditedpermissions.psm1"));
     }
 
-    protected Collection<FileauditedpermissionsItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
-		throws IOException, CollectException {
+    protected Collection<FileauditedpermissionsItem> getItems(ObjectType obj, Collection<IFile> files, IRequestContext rc)
+		throws CollectException {
 
 	initialize();
-
-	//
-	// Grab a fresh directory in case there's been a reconnect since initialization.
-	//
 	directory = ws.getDirectory();
 
-	Collection<FileauditedpermissionsItem> items = new ArrayList<FileauditedpermissionsItem>();
-
-	FileauditedpermissionsItem baseItem = null;
-	if (base instanceof FileauditedpermissionsItem) {
-	    baseItem = (FileauditedpermissionsItem)base;
-	} else {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, base.getClass().getName());
-	    throw new CollectException(msg, FlagEnumeration.ERROR);
-	}
-
 	String pSid = null, pName = null;
-	boolean includeGroups = true;
-	boolean resolveGroups = false;
+	boolean ig = true;  // INCLUDE GROUPS
+	boolean rg = false; // RESOLVE GROUPS
 	OperationEnumeration op = OperationEnumeration.EQUALS;
 	IWindowsSession.View view = ws.getNativeView();
 	if (obj instanceof Fileauditedpermissions53Object) {
@@ -122,8 +109,8 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 	    pSid = (String)fObj.getTrusteeSid().getValue();
 	    if (fObj.isSetBehaviors()) {
 		view = getView(fObj.getBehaviors());
-		includeGroups = fObj.getBehaviors().getIncludeGroup();
-		resolveGroups = fObj.getBehaviors().getResolveGroup();
+		ig = fObj.getBehaviors().getIncludeGroup();
+		rg = fObj.getBehaviors().getResolveGroup();
 	    }
 	} else if (obj instanceof FileauditedpermissionsObject) {
 	    FileauditedpermissionsObject fObj = (FileauditedpermissionsObject)obj;
@@ -131,110 +118,119 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 	    pName = (String)fObj.getTrusteeName().getValue();
 	    if (fObj.isSetBehaviors()) {
 		view = getView(fObj.getBehaviors());
-		includeGroups = fObj.getBehaviors().getIncludeGroup();
-		resolveGroups = fObj.getBehaviors().getResolveGroup();
+		ig = fObj.getBehaviors().getIncludeGroup();
+		rg = fObj.getBehaviors().getResolveGroup();
 	    }
 	} else {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OBJECT, obj.getClass().getName(), obj.getId());
 	    throw new CollectException(msg, FlagEnumeration.ERROR);
 	}
 
-	try {
-	    switch(op) {
-	      case PATTERN_MATCH:
-		Pattern p = null;
-		if (pSid == null) {
-		    p = Pattern.compile(pName);
-		} else {
-		    p = Pattern.compile(pSid);
-		}
-		//
-		// Note: per the specification, the scope is limited to the trustees referenced by the security
-		// descriptor, as opposed to the full scope of all known trustees.
-		//
-		for (Map.Entry<String, List<AuditRule>> entry : getAuditRules(f, view).entrySet()) {
-		    IPrincipal principal = null;
-		    try {
-			if (pSid == null) {
-			    IPrincipal temp = directory.queryPrincipalBySid(entry.getKey());
-			    if (temp.isBuiltin()) {
-				if (p.matcher(temp.getName()).find()) {
+	Collection<FileauditedpermissionsItem> items = new ArrayList<FileauditedpermissionsItem>();
+	for (IFile f : files) {
+	    try {
+		FileauditedpermissionsItem baseItem = (FileauditedpermissionsItem)getBaseItem(obj, f);
+		switch(op) {
+		  case PATTERN_MATCH:
+		    Pattern p = null;
+		    if (pSid == null) {
+			p = Pattern.compile(pName);
+		    } else {
+			p = Pattern.compile(pSid);
+		    }
+		    //
+		    // Note: per the specification, the scope is limited to the trustees referenced by the security
+		    // descriptor, as opposed to the full scope of all known trustees.
+		    //
+		    for (Map.Entry<String, List<AuditRule>> entry : getAuditRules(f, view).entrySet()) {
+			IPrincipal principal = null;
+			try {
+			    if (pSid == null) {
+				IPrincipal temp = directory.queryPrincipalBySid(entry.getKey());
+				if (temp.isBuiltin()) {
+				    if (p.matcher(temp.getName()).find()) {
+					principal = temp;
+				    }
+				} else if (p.matcher(temp.getNetbiosName()).find()) {
 				    principal = temp;
 				}
-			    } else if (p.matcher(temp.getNetbiosName()).find()) {
-				principal = temp;
+			    } else {
+				if (p.matcher(entry.getKey()).find()) {
+				    principal = directory.queryPrincipalBySid(entry.getKey());
+				}
 			    }
-			} else {
-			    if (p.matcher(entry.getKey()).find()) {
-				principal = directory.queryPrincipalBySid(entry.getKey());
+			    if (principal != null) {
+				items.add(makeItem(baseItem, principal, entry.getValue()));
 			    }
+			} catch (NoSuchElementException e) {
+			    MessageType msg = Factories.common.createMessageType();
+			    msg.setLevel(MessageLevelEnumeration.WARNING);
+			    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_NOPRINCIPAL, e.getMessage()));
+			    rc.addMessage(msg);
 			}
-			if (principal != null) {
-			    items.add(makeItem(baseItem, principal, entry.getValue()));
+		    }
+		    break;
+
+		  case CASE_INSENSITIVE_EQUALS:
+		  case EQUALS:
+		  case NOT_EQUAL:
+		    Collection<IPrincipal> principals = null;
+		    if (pSid == null) {
+			principals = directory.getAllPrincipals(directory.queryPrincipal(pName), ig, rg);
+		    } else {
+			principals = directory.getAllPrincipals(directory.queryPrincipalBySid(pSid), ig, rg);
+		    }
+		    Map<String, List<AuditRule>> auditRules = getAuditRules(f, view);
+		    for (IPrincipal principal : principals) {
+			switch(op) {
+			  case EQUALS:
+			  case CASE_INSENSITIVE_EQUALS:
+			    items.add(makeItem(baseItem, principal, auditRules.get(principal.getSid())));
+			    break;
+			  case NOT_EQUAL:
+			    items.add(makeItem(baseItem, principal, auditRules.get(principal.getSid())));
+			    break;
 			}
-		    } catch (NoSuchElementException e) {
-			MessageType msg = Factories.common.createMessageType();
-			msg.setLevel(MessageLevelEnumeration.WARNING);
-			msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_NOPRINCIPAL, e.getMessage()));
-			rc.addMessage(msg);
 		    }
-		}
-		break;
+		    break;
 
-	      case CASE_INSENSITIVE_EQUALS:
-	      case EQUALS:
-	      case NOT_EQUAL:
-		Collection<IPrincipal> principals = null;
-		if (pSid == null) {
-		    principals = directory.getAllPrincipals(directory.queryPrincipal(pName), includeGroups, resolveGroups);
-		} else {
-		    principals = directory.getAllPrincipals(directory.queryPrincipalBySid(pSid), includeGroups, resolveGroups);
+		  default:
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
-		Map<String, List<AuditRule>> auditRules = getAuditRules(f, view);
-		for (IPrincipal principal : principals) {
-		    switch(op) {
-		      case EQUALS:
-		      case CASE_INSENSITIVE_EQUALS:
-			items.add(makeItem(baseItem, principal, auditRules.get(principal.getSid())));
-			break;
-		      case NOT_EQUAL:
-			items.add(makeItem(baseItem, principal, auditRules.get(principal.getSid())));
-			break;
-		    }
-		}
-		break;
-
-	      default:
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	    } catch (PatternSyntaxException e) {
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage());
+		throw new CollectException(msg, FlagEnumeration.ERROR);
+	    } catch (NoSuchElementException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.INFO);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_NOPRINCIPAL, e.getMessage()));
+		rc.addMessage(msg);
+	    } catch (WmiException e) {
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, obj.getId(), e.getMessage()));
+		rc.addMessage(msg);
+	    } catch (PowershellException e) {
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_FILESACL, obj.getId(), e.getMessage()));
+		rc.addMessage(msg);
+	    } catch (IOException e) {
+		session.getLogger().warn(Message.ERROR_IO, f.getPath(), e.getMessage());
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		rc.addMessage(msg);
+	    } catch (Exception e) {
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		rc.addMessage(msg);
 	    }
-	} catch (PatternSyntaxException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-	    rc.addMessage(msg);
-	} catch (NoSuchElementException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.INFO);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_NOPRINCIPAL, e.getMessage()));
-	    rc.addMessage(msg);
-	} catch (WmiException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, obj.getId(), e.getMessage()));
-	    rc.addMessage(msg);
-	} catch (PowershellException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_FILESACL, obj.getId(), e.getMessage()));
-	    rc.addMessage(msg);
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (Exception e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(e.getMessage());
-	    rc.addMessage(msg);
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return items;
     }

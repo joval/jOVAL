@@ -20,6 +20,7 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.MatchResult;
 
+import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFileEx;
 import jsaf.intf.system.ISession;
@@ -28,6 +29,8 @@ import jsaf.intf.unix.io.IUnixFilesystem;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.io.StreamTool;
 
+import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.common.MessageType;
 import scap.oval.common.SimpleDatatypeEnumeration;
 import scap.oval.definitions.core.ObjectType;
 import scap.oval.definitions.unix.FileObject;
@@ -74,15 +77,22 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	return FileItem.class;
     }
 
-    protected Collection<FileItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
-		throws CollectException, IOException {
+    protected Collection<FileItem> getItems(ObjectType obj, Collection<IFile> files, IRequestContext rc)
+		throws CollectException {
 
-	if (base instanceof FileItem) {
-	    return Arrays.asList(setItem((FileItem)base, f));
-	} else {
-	    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, base.getClass().getName());
-	    throw new CollectException(message, FlagEnumeration.ERROR);
+	Collection<FileItem> items = new ArrayList<FileItem>();
+	for (IFile f : files) {
+	    try {
+		items.add(setItem((FileItem)getBaseItem(obj, f), f));
+	    } catch (IOException e) {
+		session.getLogger().warn(Message.ERROR_IO, f.getPath(), e.getMessage());
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALMsg.getMessage(Message.ERROR_IO, f.getPath(), e.getMessage()));
+		rc.addMessage(msg);
+	    }
 	}
+	return items;
     }
 
     // Private
