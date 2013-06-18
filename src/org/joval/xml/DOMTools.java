@@ -13,7 +13,6 @@ import org.w3c.dom.Element;
 
 import org.joval.intf.xml.ITransformable;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Utility for working with XML DOM.
@@ -26,7 +25,7 @@ public class DOMTools {
      * Transform a JAXB object into a W3C Node.
      */
     public static Element toElement(ITransformable source) throws Exception {
-	TransformerFactory xf = JOVALSystem.XSLVersion.V1.getFactory();
+	TransformerFactory xf = XSLTools.XSLVersion.V1.getFactory();
 	Transformer transformer = xf.newTransformer();
 	DOMResult result = new DOMResult();
 	transformer.transform(source.getSource(), result);

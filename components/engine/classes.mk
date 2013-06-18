@@ -101,4 +101,5 @@ CLASSES=\
 	org.joval.xml.SchemaValidator				\
 	org.joval.xml.SignatureValidator			\
 	org.joval.xml.XPathTools				\
-	org.joval.xml.XSITools
+	org.joval.xml.XSITools					\
+	org.joval.xml.XSLTools

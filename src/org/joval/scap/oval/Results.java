@@ -30,9 +30,8 @@ import javax.xml.transform.Source;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
+import org.xml.sax.SAXException;
 
 import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
@@ -65,8 +64,8 @@ import org.joval.intf.scap.oval.ISystemCharacteristics;
 import org.joval.intf.scap.oval.IResults;
 import org.joval.scap.oval.xml.OvalNamespacePrefixMapper;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.xml.SchemaRegistry;
+import org.joval.xml.XSLTools;
 
 /**
  * The purpose of this class is to mirror the apparent relational storage structure used by Ovaldi to generate the system-
@@ -78,13 +77,6 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class Results implements IResults, ILoggable {
-    private Map<String, DefinitionType> definitionTable;
-    private Map<String, TestType> testTable;
-    private IDefinitions definitions;
-    private ISystemCharacteristics sc;
-    private Directives directives;
-    private LocLogger logger;
-
     public static final OvalResults getOvalResults(File f) throws OvalException {
 	try {
 	    Unmarshaller unmarshaller = SchemaRegistry.OVAL_RESULTS.getJAXBContext().createUnmarshaller();
@@ -92,12 +84,19 @@ public class Results implements IResults, ILoggable {
 	    if (rootObj instanceof OvalResults) {
 		return (OvalResults)rootObj;
 	    } else {
-	        throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESULTS_BAD_SOURCE, f));
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESULTS_BAD_SOURCE, f));
 	    }
 	} catch (JAXBException e) {
 	    throw new OvalException(e);
 	}
     }
+
+    private Map<String, DefinitionType> definitionTable;
+    private Map<String, TestType> testTable;
+    private IDefinitions definitions;
+    private ISystemCharacteristics sc;
+    private Directives directives;
+    private LocLogger logger;
 
     /**
      * Create a Results from an unmarshalled document.
@@ -235,16 +234,21 @@ public class Results implements IResults, ILoggable {
      */
     public void writeTransform(File transform, File output) {
 	try {
-	    TransformerFactory xf = JOVALSystem.XSLVersion.V1.getFactory();
-	    Transformer transformer = xf.newTransformer(new StreamSource(new FileInputStream(transform)));
+	    Transformer transformer = XSLTools.getTransformer(new FileInputStream(transform));
 	    transformer.transform(getSource(), new StreamResult(output));
-	} catch (JAXBException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (OvalException e) {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (FileNotFoundException e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
+	} catch (IllegalArgumentException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (NoSuchElementException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (SAXException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (JAXBException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (TransformerConfigurationException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (IOException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	} catch (TransformerException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);

@@ -18,7 +18,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -32,8 +31,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import jsaf.util.StringTools;
-
-import org.joval.util.JOVALSystem;
 
 /**
  * Useful methods for XPath evaluation.
@@ -84,11 +81,12 @@ public class XPathTools {
 	}
     }
 
-    private static DocumentBuilder builder;
-    private static XPath xpath;
+    private static final DocumentBuilder builder;
+    private static final XPath xpath;
     static {
 	try {
 	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	    factory.setNamespaceAware(false);
 	    builder = factory.newDocumentBuilder();
 	    xpath = XPathFactory.newInstance().newXPath();
 	} catch (ParserConfigurationException e) {
@@ -97,7 +95,8 @@ public class XPathTools {
     }
 
     /**
-     * Convenience method, for parsing an InputStream into a DOM Document.
+     * Convenience method, for parsing an InputStream into a DOM Document. Note that the DocumentBuilder for this
+     * class is NOT namespace-aware, as XPATH expressions are generally not themselves namespace-aware.
      */
     public static synchronized Document parse(InputStream in) throws SAXException, IOException {
 	return builder.parse(in);
@@ -176,7 +175,7 @@ public class XPathTools {
 
     private static Transformer getTransformer() throws TransformerException {
 	if (transformer == null) {
-	    transformer = JOVALSystem.XSLVersion.V1.getFactory().newTransformer();
+	    transformer = XSLTools.XSLVersion.V1.getFactory().newTransformer();
 	    transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
 	}
 	return transformer;

@@ -52,8 +52,8 @@ import scap.xccdf.ValueType;
 import org.joval.intf.scap.xccdf.IBenchmark;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.xml.SchemaRegistry;
+import org.joval.xml.XSLTools;
 
 /**
  * A representation of an XCCDF 1.2 benchmark.
@@ -88,7 +88,7 @@ public class Benchmark implements IBenchmark, ILoggable {
 	    String ns = doc.getDocumentElement().getAttribute("xmlns");
 	    if (LEGACY_NS.equals(ns)) {
 		JOVALMsg.getLogger().info(JOVALMsg.STATUS_XCCDF_CONVERT);
-		TransformerFactory xf = JOVALSystem.XSLVersion.V2.getFactory();
+		TransformerFactory xf = XSLTools.XSLVersion.V2.getFactory();
 		InputStream xsl = Benchmark.class.getResourceAsStream("xccdf_convert_1.1.4_to_1.2.xsl");
 		Transformer transformer = xf.newTransformer(new StreamSource(xsl));
 		DOMResult result = new DOMResult();
@@ -217,14 +217,19 @@ public class Benchmark implements IBenchmark, ILoggable {
 
     public void writeTransform(File transform, File output) {
 	try {
-	    TransformerFactory xf = TransformerFactory.newInstance();
-	    Transformer transformer = xf.newTransformer(new StreamSource(new FileInputStream(transform)));
+	    Transformer transformer = XSLTools.getTransformer(new FileInputStream(transform));
 	    transformer.transform(getSource(), new StreamResult(output));
+	} catch (IllegalArgumentException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (NoSuchElementException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (JAXBException e) {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (FileNotFoundException e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
+	} catch (SAXException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (TransformerConfigurationException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (IOException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	} catch (TransformerException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);

@@ -5,6 +5,7 @@ package org.joval.scap.oval.adapter.windows;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
@@ -88,10 +89,9 @@ public class PasswordpolicyAdapter implements IAdapter {
 	      case 0: // success
 		IFile file = null;
 		try {
+		    PasswordpolicyItem item = Factories.sc.windows.createPasswordpolicyItem();
 		    file = session.getFilesystem().getFile(secpol, IFile.Flags.READWRITE);
 		    IniFile config = new IniFile(file.getInputStream(), StringTools.UTF16LE);
-		    items = new ArrayList<PasswordpolicyItem>();
-		    PasswordpolicyItem item = Factories.sc.windows.createPasswordpolicyItem();
 		    IProperty prop = config.getSection("System Access");
 		    for (String key : prop) {
 			if ("MaximumPasswordAge".equals(key)) {
@@ -130,7 +130,7 @@ public class PasswordpolicyAdapter implements IAdapter {
 			    item.setPasswordComplexity(type);
 			}
 		    }
-		    items.add(item);
+		    items = Arrays.asList(item);
 		} catch (NoSuchElementException e) {
 		    error = new CollectException(e.getMessage(), FlagEnumeration.NOT_APPLICABLE);
 		    throw error;
