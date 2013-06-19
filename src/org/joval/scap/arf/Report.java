@@ -14,6 +14,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -36,6 +37,7 @@ import org.gocil.diagnostics.ActionType;
 import org.gocil.diagnostics.OcilResultDiagnostics;
 import org.gocil.diagnostics.QuestionnaireType;
 import org.gocil.diagnostics.QuestionRef;
+import org.gocil.diagnostics.QuestionnaireRef;
 import org.oasis.catalog.Catalog;
 import org.oasis.catalog.Uri;
 import org.openscap.sce.results.SceResultsType;
@@ -545,7 +547,11 @@ public class Report implements IReport, ILoggable {
 		    if (SystemEnumeration.OCIL.namespace().equals(system)) {
 			Unmarshaller unmarshaller = SchemaRegistry.OCIL.getJAXBContext().createUnmarshaller();
 			OCILType ocil = (OCILType)((JAXBElement)unmarshaller.unmarshal(subreport)).getValue();
-			setDiagnosticInfo(cd, ScapFactory.createChecklist(ocil));
+			if (check.isSetMultiCheck() || name == null) {
+			    // multi-check support is TBD
+			} else {
+			    setDiagnosticInfo(cd, ScapFactory.createChecklist(ocil), name);
+			}
 		    } else if (SystemEnumeration.OVAL.namespace().equals(system)) {
 			cd.setDefinitions(org.joval.scap.oval.Factories.definitions.core.createDefinitionsType());
 			cd.setDefinitionResults(org.joval.scap.oval.Factories.results.createDefinitionsType());
@@ -565,7 +571,8 @@ public class Report implements IReport, ILoggable {
 			}
 		    } else if (SystemEnumeration.SCE.namespace().equals(system)) {
 			Unmarshaller unmarshaller = SchemaRegistry.SCE.getJAXBContext().createUnmarshaller();
-			cd.setSceResults((SceResultsType)unmarshaller.unmarshal(subreport));
+			JAXBElement elt = (JAXBElement)unmarshaller.unmarshal(subreport);
+			cd.setSceResults((SceResultsType)elt.getValue());
 		    }
 		} catch (JAXBException e) {
 		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -580,7 +587,7 @@ public class Report implements IReport, ILoggable {
     /**
      * Find diagnostic information for the specified questionnaire in the checklist.
      */
-    private void setDiagnosticInfo(CheckDiagnostics cd, IChecklist checklist) {
+    private void setDiagnosticInfo(CheckDiagnostics cd, IChecklist checklist, String questionnaireId) {
 	OCILType ocil = checklist.getOCILType();
 	cd.setTargets(ocil.getResults().getTargets());
 	OcilResultDiagnostics ord = null;
@@ -590,9 +597,11 @@ public class Report implements IReport, ILoggable {
 		break;
 	    }
 	}
+	if (ord == null) return;
 
 	//
-	// Map the questionnaire results and question answers from the results.
+	// Create maps of questionnaire results (indexed by questionnaire ID) and question answers (indexed by question ID)
+	// from the checklist results.
 	//
 	Map<String, String> questionnaireResults = new HashMap<String, String>();
 	for (QuestionnaireResultType qr :
@@ -621,10 +630,22 @@ public class Report implements IReport, ILoggable {
 	}
 
 	//
-	// Add extra information to the diagnostic object.
+	// Starting with the specified questionnaire ID, determine all the questionnaires required to determine
+	// its result.  This is the scope of our diagnostic information.
 	//
+	Map<String, QuestionnaireType> questionnaires = new HashMap<String, QuestionnaireType>();
 	for (QuestionnaireType questionnaire : ord.getQuestionnaire()) {
-	    String id = questionnaire.getId();
+	    questionnaires.put(questionnaire.getId(), questionnaire);
+	}
+	HashSet<String> scope = new HashSet<String>();
+	findDependencies(scope, questionnaireId, questionnaires);
+
+	//
+	// Create a diagnostic object, and add supplementary information
+	//
+	OcilResultDiagnostics diagnostics = new OcilResultDiagnostics();
+	for (String id : scope) {
+	    QuestionnaireType questionnaire = questionnaires.get(id);
 	    questionnaire.setResult(questionnaireResults.get(id));
 	    questionnaire.setTitle(checklist.getQuestionnaire(id).getTitle());
 	    for (ActionSequenceType sequence : questionnaire.getActions().getTestActionSequence()) {
@@ -639,9 +660,10 @@ public class Report implements IReport, ILoggable {
 		    }
 		}
 	    }
+	    diagnostics.getQuestionnaire().add(questionnaire);
 	}
 
-	cd.setOcilResultDiagnostics(ord);
+	cd.setOcilResultDiagnostics(diagnostics);
     }
 
     /**
@@ -684,6 +706,18 @@ public class Report implements IReport, ILoggable {
 	    }
 	    for (String stateId : getStateRef(tt)) {
 		cd.getStates().getState().add(definitions.getState(stateId));
+	    }
+	}
+    }
+
+    private void findDependencies(HashSet<String> scope, String id, Map<String, QuestionnaireType> questionnaires) {
+	scope.add(id);
+	for (ActionSequenceType seq : questionnaires.get(id).getActions().getTestActionSequence()) {
+	    for (JAXBElement<? extends ActionType> elt : seq.getAction()) {
+		ActionType action = elt.getValue();
+		if (action instanceof QuestionnaireRef) {
+		    findDependencies(scope, ((QuestionnaireRef)action).getId(), questionnaires);
+		}
 	    }
 	}
     }
