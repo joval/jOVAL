@@ -37,10 +37,19 @@
                schemaLocation="../xccdf-1.2/xccdf_1.2.xsd"/>
    <xsd:import namespace="http://www.w3.org/2000/09/xmldsig#"
                schemaLocation="../xml/xmldsig-core-schema.xsd"/>
-   <xsd:element name="rule_result_diagnostics">
-   <xsd:complexType>
-      <xsd:sequence>
-         <xsd:element name="rule_result" type="cdf:ruleResultType" minOccurs="1" maxOccurs="1"/>
+   <xsd:element name="rule_diagnostics">
+      <xsd:complexType>
+         <xsd:sequence>
+            <xsd:element name="rule_result" type="cdf:ruleResultType" minOccurs="0" maxOccurs="1"/>
+            <xsd:element ref="diag:check_diagnostics" minOccurs="0" maxOccurs="unbounded"/>
+         </xsd:sequence>
+         <xsd:attribute name="rule_id" type="xsd:NCName" use="required"/>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="check_diagnostics">
+      <xsd:complexType>
+         <xsd:sequence>
+            <xsd:element name="check" type="cdf:checkType" minOccurs="1" maxOccurs="1"/>
             <xsd:choice minOccurs="1" maxOccurs="1">
                <xsd:sequence>
                   <xsd:element name="definitions" type="oval-def:DefinitionsType" minOccurs="1" maxOccurs="1"/>

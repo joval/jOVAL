@@ -10,9 +10,11 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import javax.xml.bind.JAXBContext;
@@ -29,8 +31,14 @@ import org.w3c.dom.Element;
 import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
+import org.gocil.diagnostics.ActionSequenceType;
+import org.gocil.diagnostics.ActionType;
+import org.gocil.diagnostics.OcilResultDiagnostics;
+import org.gocil.diagnostics.QuestionnaireType;
+import org.gocil.diagnostics.QuestionRef;
 import org.oasis.catalog.Catalog;
 import org.oasis.catalog.Uri;
+import org.openscap.sce.results.SceResultsType;
 import scap.ai.AssetType;
 import scap.ai.ComputingDeviceType;
 import scap.ai.Cpe;
@@ -42,13 +50,44 @@ import scap.arf.core.ReportType;
 import scap.arf.core.AssetReportCollection.ExtendedInfos.ExtendedInfo;
 import scap.arf.reporting.RelationshipsContainerType;
 import scap.arf.reporting.RelationshipType;
+import scap.ocil.core.BooleanQuestionResultType;
+import scap.ocil.core.ChoiceQuestionResultType;
+import scap.ocil.core.ChoiceType;
+import scap.ocil.core.ExtensionContainerType;
+import scap.ocil.core.NumericQuestionResultType;
+import scap.ocil.core.OCILType;
+import scap.ocil.core.QuestionResultType;
+import scap.ocil.core.QuestionnaireResultType;
+import scap.ocil.core.QuestionTestActionType;
+import scap.ocil.core.StringQuestionResultType;
+import scap.oval.definitions.core.CriteriaType;
+import scap.oval.definitions.core.CriterionType;
+import scap.oval.definitions.core.DefinitionType;
+import scap.oval.definitions.core.ExtendDefinitionType;
+import scap.oval.definitions.core.ObjectRefType;
+import scap.oval.definitions.core.StateRefType;
+import scap.oval.definitions.core.TestType;
+import scap.oval.results.OvalResults;
 import scap.oval.systemcharacteristics.core.InterfaceType;
+import scap.oval.systemcharacteristics.core.ItemType;
 import scap.oval.systemcharacteristics.core.SystemInfoType;
+import scap.xccdf.CheckType;
+import scap.xccdf.ComplexCheckType;
+import scap.xccdf.RuleResultType;
 import scap.xccdf.TestResultType;
 
 import org.joval.intf.scap.arf.IReport;
+import org.joval.intf.scap.ocil.IChecklist;
+import org.joval.intf.scap.oval.IDefinitions;
+import org.joval.intf.scap.oval.IResults;
+import org.joval.intf.scap.oval.ISystemCharacteristics;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.xml.ITransformable;
+import org.joval.scap.ScapException;
+import org.joval.scap.ScapFactory;
+import org.joval.scap.diagnostics.CheckDiagnostics;
+import org.joval.scap.diagnostics.RuleDiagnostics;
+import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.oval.types.Ip4AddressType;
 import org.joval.scap.oval.types.Ip6AddressType;
 import org.joval.util.JOVALMsg;
@@ -164,6 +203,29 @@ public class Report implements IReport, ILoggable {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	throw new NoSuchElementException(assetId + ":" + benchmarkId + ":" + profileId);
+    }
+
+    public Collection<RuleDiagnostics> getDiagnostics(String assetId, String benchmarkId, String profileId)
+		throws NoSuchElementException, ScapException {
+
+	ArrayList<RuleDiagnostics> results = new ArrayList<RuleDiagnostics>();
+	Catalog catalog = getCatalog();
+	for (RuleResultType result : getTestResult(assetId, benchmarkId, profileId).getRuleResult()) {
+	    results.add(getDiagnostics(result, catalog));
+	}
+	return results;
+    }
+
+    public RuleDiagnostics getDiagnostics(String assetId, String benchmarkId, String profileId, String ruleId)
+		throws NoSuchElementException, ScapException {
+
+	RuleResultType rrt = null;
+	for (RuleResultType result : getTestResult(assetId, benchmarkId, profileId).getRuleResult()) {
+	    if (result.getIdref().equals(ruleId)) {
+		return getDiagnostics(result, getCatalog());
+	    }
+	}
+	throw new NoSuchElementException(ruleId);
     }
 
     public Catalog getCatalog() throws ArfException, NoSuchElementException {
@@ -439,5 +501,253 @@ public class Report implements IReport, ILoggable {
 	    info.setAny(Factories.catalog.createCatalog(catalog));
 	    return catalog;
 	}
+    }
+
+    private RuleDiagnostics getDiagnostics(RuleResultType rrt, Catalog catalog) throws ScapException {
+	RuleDiagnostics rd = new RuleDiagnostics();
+	rd.setRuleResult(rrt);
+	rd.setRuleId(rrt.getIdref());
+
+	//
+	// Create a collection of checks that apply to the selected rule
+	//
+	Collection<CheckType> checks = new ArrayList<CheckType>();
+	if (rrt.isSetCheck()) {
+	    checks.add(rrt.getCheck().get(0));
+	} else {
+	    checks.addAll(getChecks(rrt.getComplexCheck()));
+	}
+
+	Collection<RuleDiagnostics> results = new ArrayList<RuleDiagnostics>();
+	for (CheckType check : checks) {
+	    CheckDiagnostics cd = new CheckDiagnostics();
+	    cd.setCheck(check);
+
+	    String system = check.getSystem();
+	    String href = check.getCheckContentRef().get(0).getHref();
+	    String name = check.getCheckContentRef().get(0).getName();
+	    String report_id = null;
+	    for (Object obj : catalog.getPublicOrSystemOrUri()) {
+		if (obj instanceof JAXBElement) {
+		    obj = ((JAXBElement)obj).getValue();
+		}
+		if (obj instanceof Uri) {
+		    Uri uri = (Uri)obj;
+		    if (uri.getUri().substring(1).equals(href)) {
+			report_id = uri.getName();
+			break;
+		    }
+		}
+	    }
+	    if (report_id != null && reports.containsKey(report_id)) {
+		Element subreport = reports.get(report_id);
+		try {
+		    if (SystemEnumeration.OCIL.namespace().equals(system)) {
+			Unmarshaller unmarshaller = SchemaRegistry.OCIL.getJAXBContext().createUnmarshaller();
+			OCILType ocil = (OCILType)((JAXBElement)unmarshaller.unmarshal(subreport)).getValue();
+			setDiagnosticInfo(cd, ScapFactory.createChecklist(ocil));
+		    } else if (SystemEnumeration.OVAL.namespace().equals(system)) {
+			cd.setDefinitions(org.joval.scap.oval.Factories.definitions.core.createDefinitionsType());
+			cd.setDefinitionResults(org.joval.scap.oval.Factories.results.createDefinitionsType());
+			cd.setTests(org.joval.scap.oval.Factories.definitions.core.createTestsType());
+			cd.setTestResults(org.joval.scap.oval.Factories.results.createTestsType());
+			cd.setObjects(org.joval.scap.oval.Factories.definitions.core.createObjectsType());
+			cd.setCollectedObjects(org.joval.scap.oval.Factories.sc.core.createCollectedObjectsType());
+			cd.setStates(org.joval.scap.oval.Factories.definitions.core.createStatesType());
+			cd.setItems(org.joval.scap.oval.Factories.sc.core.createSystemDataType());
+
+			Unmarshaller unmarshaller = SchemaRegistry.OVAL_RESULTS.getJAXBContext().createUnmarshaller();
+			OvalResults oval = (OvalResults)unmarshaller.unmarshal(subreport);
+			setDiagnosticInfo(cd, OvalFactory.createResults(oval), name);
+		    } else if (SystemEnumeration.SCE.namespace().equals(system)) {
+			Unmarshaller unmarshaller = SchemaRegistry.SCE.getJAXBContext().createUnmarshaller();
+			cd.setSceResults((SceResultsType)unmarshaller.unmarshal(subreport));
+		    }
+		} catch (JAXBException e) {
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    throw new ArfException(e);
+		}
+		rd.getCheckDiagnostics().add(cd);
+	    }
+	}
+	return rd;
+    }
+
+    /**
+     * Find diagnostic information for the specified questionnaire in the checklist.
+     */
+    private void setDiagnosticInfo(CheckDiagnostics cd, IChecklist checklist) {
+	OCILType ocil = checklist.getOCILType();
+	cd.setTargets(ocil.getResults().getTargets());
+	OcilResultDiagnostics ord = null;
+	for (Object obj : ocil.getGenerator().getAdditionalData().getAny()) {
+	    if (obj instanceof OcilResultDiagnostics) {
+		ord = (OcilResultDiagnostics)obj;
+		break;
+	    }
+	}
+
+	//
+	// Map the questionnaire results and question answers from the results.
+	//
+	Map<String, String> questionnaireResults = new HashMap<String, String>();
+	for (QuestionnaireResultType qr :
+		checklist.getOCILType().getResults().getQuestionnaireResults().getQuestionnaireResult()) {
+
+	    questionnaireResults.put(qr.getQuestionnaireRef(), qr.getResult());
+	}
+	Map<String, String> questionResults = new HashMap<String, String>();
+	for (JAXBElement<? extends QuestionResultType> elt : ocil.getResults().getQuestionResults().getQuestionResult()) {
+	    QuestionResultType qrt = elt.getValue();
+	    String id = qrt.getQuestionRef();
+	    if (qrt instanceof BooleanQuestionResultType) {
+		questionResults.put(id, ((BooleanQuestionResultType)qrt).getAnswer().toString());
+	    } else if (qrt instanceof ChoiceQuestionResultType) {
+		ChoiceType choice = checklist.getChoice(((ChoiceQuestionResultType)qrt).getAnswer().getChoiceRef());
+		if (choice.isSetValue()) {
+		    questionResults.put(id, choice.getValue());
+		} else if (choice.isSetVarRef()) {
+		    questionResults.put(id, choice.getVarRef()); // TBD: get value from somewhere?
+		}
+	    } else if (qrt instanceof NumericQuestionResultType) {
+		questionResults.put(id, ((NumericQuestionResultType)qrt).getAnswer().toString());
+	    } else if (qrt instanceof StringQuestionResultType) {
+		questionResults.put(id, ((StringQuestionResultType)qrt).getAnswer());
+	    }
+	}
+
+	//
+	// Add extra information to the diagnostic object.
+	//
+	for (QuestionnaireType questionnaire : ord.getQuestionnaire()) {
+	    String id = questionnaire.getId();
+	    questionnaire.setResult(questionnaireResults.get(id));
+	    questionnaire.setTitle(checklist.getQuestionnaire(id).getTitle());
+	    for (ActionSequenceType sequence : questionnaire.getActions().getTestActionSequence()) {
+		for (JAXBElement<? extends ActionType> elt : sequence.getAction()) {
+		    ActionType action = elt.getValue();
+		    if (action instanceof QuestionRef) {
+			QuestionRef ref = (QuestionRef)action;
+			QuestionTestActionType qta = checklist.getQuestionTestAction(ref.getId());
+			String questionId = qta.getQuestionRef();
+			ref.setAnswer(questionResults.get(questionId));
+			ref.getQuestionText().addAll(checklist.getQuestion(questionId).getQuestionText());
+		    }
+		}
+	    }
+	}
+
+	cd.setOcilResultDiagnostics(ord);
+    }
+
+    /**
+     * Find diagnostic information for the specified questionnaire in the results.
+     */
+    private void setDiagnosticInfo(CheckDiagnostics cd, IResults results, String definitionId) {
+	IDefinitions definitions = results.getDefinitions();
+
+	//
+	// Recursively find all the definitions and tests from the OVAL IDefinitions.
+	//
+	Map<String, DefinitionType> defMap = new HashMap<String, DefinitionType>();
+	DefinitionType rootDefinition = definitions.getDefinition(definitionId);
+	defMap.put(definitionId, rootDefinition);
+	Map<String, JAXBElement<? extends TestType>> testMap = new HashMap<String, JAXBElement<? extends TestType>>();
+	collectDefinitionsAndTests(rootDefinition.getCriteria(), results.getDefinitions(), defMap, testMap);
+
+	//
+	// Add all the test, object, state and def definitions and results to the diagnostic XML.
+	//
+	for (DefinitionType definition : defMap.values()) {
+	    cd.getDefinitions().getDefinition().add(definition);
+	    cd.getDefinitionResults().getDefinition().add(results.getDefinition(definition.getId()));
+	}
+	for (JAXBElement<? extends TestType> test : testMap.values()) {
+	    TestType tt = test.getValue();
+	    cd.getTests().getTest().add(test);
+	    cd.getTestResults().getTest().add(results.getTest(tt.getId()));
+
+	    String objectId = getObjectRef(tt);
+	    if (objectId != null) {
+		cd.getObjects().getObject().add(definitions.getObject(objectId));
+		ISystemCharacteristics sc = results.getSystemCharacteristics();
+		if (sc.containsObject(objectId)) {
+		    cd.getCollectedObjects().getObject().add(sc.getObject(objectId));
+		    for (JAXBElement<? extends ItemType> item : sc.getItemsByObjectId(objectId)) {
+			cd.getItems().getItem().add(item);
+		    }
+		}
+	    }
+	    for (String stateId : getStateRef(tt)) {
+		cd.getStates().getState().add(definitions.getState(stateId));
+	    }
+	}
+    }
+
+    private void collectDefinitionsAndTests(CriteriaType criteria, IDefinitions definitions,
+		Map<String, DefinitionType> defMap, Map<String, JAXBElement<? extends TestType>> testMap) {
+
+	for (Object obj : criteria.getCriteriaOrCriterionOrExtendDefinition()) {
+	    if (obj instanceof CriterionType) {
+		CriterionType criterion = (CriterionType)obj;
+		String testId = criterion.getTestRef();
+		if (!testMap.containsKey(testId)) {
+		    testMap.put(testId, definitions.getTest(testId));
+		}
+	    } else if (obj instanceof CriteriaType) {
+		collectDefinitionsAndTests((CriteriaType)obj, definitions, defMap, testMap);
+	    } else if (obj instanceof ExtendDefinitionType) {
+		String definitionId = ((ExtendDefinitionType)obj).getDefinitionRef();
+		DefinitionType definition = definitions.getDefinition(definitionId);
+		if (!defMap.containsKey(definitionId)) {
+		    defMap.put(definitionId, definition);
+		    collectDefinitionsAndTests(definition.getCriteria(), definitions, defMap, testMap);
+		}
+	    }
+	}
+    }
+
+    private String getObjectRef(TestType test) {
+	String result = null;
+	try {
+	    Class<?> clazz = test.getClass();
+	    Method method = clazz.getMethod("getObject");
+	    Object obj = method.invoke(test);
+	    if (obj instanceof ObjectRefType) {
+		result = ((ObjectRefType)obj).getObjectRef();
+	    }
+	} catch (Exception e) {
+	}
+	return result;
+    }
+
+    private List<String> getStateRef(TestType test) {
+	List<String> result = new ArrayList<String>();
+	try {
+	    Class<?> clazz = test.getClass();
+	    Method method = clazz.getMethod("getState");
+	    Object obj = method.invoke(test);
+	    if (obj instanceof List) {
+		for (Object elt : (List)obj) {
+		    if (elt instanceof StateRefType) {
+			result.add(((StateRefType)elt).getStateRef());
+		    }
+		}
+	    }
+	} catch (Exception e) {
+	}
+	return result;
+    }
+
+    private Collection<CheckType> getChecks(ComplexCheckType complex) {
+	Collection<CheckType> checks = new ArrayList<CheckType>();
+	for (Object obj : complex.getCheckOrComplexCheck()) {
+	    if (obj instanceof CheckType) {
+		checks.add((CheckType)obj);
+	    } else if (obj instanceof ComplexCheckType) {
+		checks.addAll(getChecks((ComplexCheckType)obj));
+	    }
+	}
+	return checks;
     }
 }

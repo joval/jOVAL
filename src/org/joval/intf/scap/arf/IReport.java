@@ -16,8 +16,10 @@ import scap.arf.core.AssetReportCollection;
 import scap.oval.systemcharacteristics.core.SystemInfoType;
 import scap.xccdf.TestResultType;
 
+import org.joval.scap.ScapException;
 import org.joval.scap.arf.ArfException;
 import org.joval.intf.xml.ITransformable;
+import org.joval.scap.diagnostics.RuleDiagnostics;
 
 /**
  * A representation of an ARF report collection.
@@ -40,6 +42,19 @@ public interface IReport extends ITransformable {
      * Get the XCCDF result associated with the specified asset, benchmark and profile.
      */
     TestResultType getTestResult(String assetId, String benchmarkId, String profileId) throws NoSuchElementException;
+
+    /**
+     * Get diagnostic information for all the rules defined in the TestResultType corresponding to the specified asset,
+     * benchmark and profile.
+     */
+    Collection<RuleDiagnostics> getDiagnostics(String assetId, String benchmarkId, String profileId) throws ScapException;
+
+    /**
+     * Get diagnostic information for the specified rule, in the TestResultType corresponding to the specified asset,
+     * benchmark and profile.
+     */
+    RuleDiagnostics getDiagnostics(String assetId, String benchmarkId, String profileId, String ruleId)
+	throws NoSuchElementException, ScapException;
 
     /**
      * Get a catalog mapping individual report IDs to the document HREFs from which the request documents originated.

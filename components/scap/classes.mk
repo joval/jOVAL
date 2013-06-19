@@ -10,7 +10,8 @@ CLASSES=\
 	org.gocil.diagnostics.QuestionRef	\
 	org.joval.scap.diagnostics.ObjectFactory	\
 	org.joval.scap.diagnostics.package-info	\
-	org.joval.scap.diagnostics.RuleResultDiagnostics	\
+	org.joval.scap.diagnostics.CheckDiagnostics	\
+	org.joval.scap.diagnostics.RuleDiagnostics	\
 	org.oasis.address.AddressDetails	\
 	org.oasis.address.AddressLine	\
 	org.oasis.address.AddressLinesType	\
