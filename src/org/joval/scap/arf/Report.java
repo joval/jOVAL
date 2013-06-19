@@ -70,6 +70,7 @@ import scap.oval.definitions.core.ObjectRefType;
 import scap.oval.definitions.core.StateRefType;
 import scap.oval.definitions.core.TestType;
 import scap.oval.results.OvalResults;
+import scap.oval.results.SystemType;
 import scap.oval.systemcharacteristics.core.InterfaceType;
 import scap.oval.systemcharacteristics.core.ItemType;
 import scap.oval.systemcharacteristics.core.SystemInfoType;
@@ -547,26 +548,29 @@ public class Report implements IReport, ILoggable {
 		    if (SystemEnumeration.OCIL.namespace().equals(system)) {
 			Unmarshaller unmarshaller = SchemaRegistry.OCIL.getJAXBContext().createUnmarshaller();
 			OCILType ocil = (OCILType)((JAXBElement)unmarshaller.unmarshal(subreport)).getValue();
-			if (check.isSetMultiCheck() || name == null) {
-			    // multi-check support is TBD
-			} else {
-			    setDiagnosticInfo(cd, ScapFactory.createChecklist(ocil), name);
-			}
+			setDiagnosticInfo(cd, ScapFactory.createChecklist(ocil), name);
 		    } else if (SystemEnumeration.OVAL.namespace().equals(system)) {
-			cd.setDefinitions(org.joval.scap.oval.Factories.definitions.core.createDefinitionsType());
-			cd.setDefinitionResults(org.joval.scap.oval.Factories.results.createDefinitionsType());
-			cd.setTests(org.joval.scap.oval.Factories.definitions.core.createTestsType());
-			cd.setTestResults(org.joval.scap.oval.Factories.results.createTestsType());
-			cd.setObjects(org.joval.scap.oval.Factories.definitions.core.createObjectsType());
-			cd.setCollectedObjects(org.joval.scap.oval.Factories.sc.core.createCollectedObjectsType());
-			cd.setStates(org.joval.scap.oval.Factories.definitions.core.createStatesType());
-			cd.setItems(org.joval.scap.oval.Factories.sc.core.createSystemDataType());
-
 			Unmarshaller unmarshaller = SchemaRegistry.OVAL_RESULTS.getJAXBContext().createUnmarshaller();
 			OvalResults oval = (OvalResults)unmarshaller.unmarshal(subreport);
-			if (check.isSetMultiCheck() || name == null) {
-			    // multi-check support is TBD
+			if (name == null) {
+			    cd.setDefinitions(oval.getOvalDefinitions().getDefinitions());
+			    cd.setTests(oval.getOvalDefinitions().getTests());
+			    cd.setObjects(oval.getOvalDefinitions().getObjects());
+			    cd.setStates(oval.getOvalDefinitions().getStates());
+			    SystemType st = oval.getResults().getSystem().get(0);
+			    cd.setDefinitionResults(st.getDefinitions());
+			    cd.setTestResults(st.getTests());
+			    cd.setCollectedObjects(st.getOvalSystemCharacteristics().getCollectedObjects());
+			    cd.setItems(st.getOvalSystemCharacteristics().getSystemData());
 			} else {
+			    cd.setDefinitions(org.joval.scap.oval.Factories.definitions.core.createDefinitionsType());
+			    cd.setDefinitionResults(org.joval.scap.oval.Factories.results.createDefinitionsType());
+			    cd.setTests(org.joval.scap.oval.Factories.definitions.core.createTestsType());
+			    cd.setTestResults(org.joval.scap.oval.Factories.results.createTestsType());
+			    cd.setObjects(org.joval.scap.oval.Factories.definitions.core.createObjectsType());
+			    cd.setCollectedObjects(org.joval.scap.oval.Factories.sc.core.createCollectedObjectsType());
+			    cd.setStates(org.joval.scap.oval.Factories.definitions.core.createStatesType());
+			    cd.setItems(org.joval.scap.oval.Factories.sc.core.createSystemDataType());
 			    setDiagnosticInfo(cd, OvalFactory.createResults(oval), name);
 			}
 		    } else if (SystemEnumeration.SCE.namespace().equals(system)) {
@@ -638,7 +642,14 @@ public class Report implements IReport, ILoggable {
 	    questionnaires.put(questionnaire.getId(), questionnaire);
 	}
 	HashSet<String> scope = new HashSet<String>();
-	findDependencies(scope, questionnaireId, questionnaires);
+	if (questionnaireId == null) {
+	    //
+	    // If no questionnaire is specified, then the scope is all questionnaires in the document
+	    //
+	    scope.addAll(questionnaires.keySet());
+	} else {
+	    findDependencies(scope, questionnaireId, questionnaires);
+	}
 
 	//
 	// Create a diagnostic object, and add supplementary information

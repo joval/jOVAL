@@ -13,9 +13,11 @@ import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.security.KeyStore;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -24,9 +26,13 @@ import java.util.PropertyResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import scap.xccdf.CheckContentRefType;
+import scap.xccdf.CheckType;
+import scap.xccdf.ComplexCheckType;
 import scap.xccdf.MetadataType;
 import scap.xccdf.TestResultType;
 import scap.xccdf.RuleResultType;
+import scap.xccdf.RuleType;
 
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.IScapContext;
@@ -181,9 +187,15 @@ public class XPERT {
 			System.out.println(getMessage("warning.ocil.href", key));
 		    }
 		    try {
-			checklists.put(key, new Checklist(new File(val)));
+			File f = new File(val);
+			if (f.exists() && f.isFile()) {
+			    checklists.put(key, new Checklist(new File(val)));
+			} else {
+			    System.out.println(getMessage("warning.ocil.source", val));
+			}
 		    } catch (OcilException e) {
-			logger.severe(e.getMessage());
+			System.out.println(getMessage("error.ocil.source", val));
+			e.printStackTrace();
 			System.exit(1);
 		    }
 		} else if (argv[i].equals("-r")) {
@@ -376,8 +388,34 @@ public class XPERT {
 		    try {
 			Engine engine = new Engine(plugin);
 			engine.setContext(ctx);
-			for (Map.Entry<String, IChecklist> entry : checklists.entrySet()) {
-			    engine.addChecklist(entry.getKey(), entry.getValue());
+			if (checklists.size() == 1) {
+			    HashSet<String> ocilURIs = new HashSet<String>();
+			    for (RuleType rule : ctx.getSelectedRules()) {
+				Collection<CheckType> checks = null;
+				if (rule.isSetCheck()) {
+				    checks = rule.getCheck();
+				} else if (rule.isSetComplexCheck()) {
+				    checks = getChecks(rule.getComplexCheck());
+				}
+				if (checks != null) {
+				    for (CheckType check : checks) {
+					if (SystemEnumeration.OCIL.namespace().equals(check.getSystem())) {
+					    for (CheckContentRefType ref : check.getCheckContentRef()) {
+						ocilURIs.add(ref.getHref());
+					    }
+					}
+				    }
+				}
+			    }
+			    if (ocilURIs.size() == 1) {
+				engine.addChecklist(ocilURIs.iterator().next(), checklists.values().iterator().next());
+			    } else {
+				engine.addChecklist("", checklists.values().iterator().next());
+			    }
+			} else {
+			    for (Map.Entry<String, IChecklist> entry : checklists.entrySet()) {
+				engine.addChecklist(entry.getKey(), entry.getValue());
+			    }
 			}
 			XccdfObserver observer = new XccdfObserver(ocilDir);
 			engine.getNotificationProducer().addObserver(observer);
@@ -581,5 +619,19 @@ public class XPERT {
 		break;
 	    }
 	}
+    }
+
+    // Private
+
+    private static Collection<CheckType> getChecks(ComplexCheckType complex) {
+	Collection<CheckType> checks = new ArrayList<CheckType>();
+	for (Object obj : complex.getCheckOrComplexCheck()) {
+	    if (obj instanceof CheckType) {
+		checks.add((CheckType)obj);
+	    } else if (obj instanceof ComplexCheckType) {
+		checks.addAll(getChecks((ComplexCheckType)obj));
+	    }
+	}
+	return checks;
     }
 }
