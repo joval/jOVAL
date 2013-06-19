@@ -83,7 +83,6 @@ public class XSLTools {
 		Element elt = (Element)node;
 		if ("stylesheet".equals(elt.getLocalName()) && XSL_NS.equals(elt.getNamespaceURI())) {
 		    String version = elt.getAttribute("version");
-System.out.println("DAS detected XSL version: " + version);
 		    TransformerFactory xf = null;
 		    if (version.startsWith("1.")) {
 			xf = XSLVersion.V1.getFactory();

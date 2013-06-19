@@ -229,9 +229,9 @@ public class Benchmark implements IBenchmark, ILoggable {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (TransformerConfigurationException e) {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (IOException e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	} catch (TransformerException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (IOException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	}
     }

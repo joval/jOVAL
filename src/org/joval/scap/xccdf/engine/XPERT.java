@@ -24,6 +24,10 @@ import java.util.PropertyResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import scap.xccdf.MetadataType;
+import scap.xccdf.TestResultType;
+import scap.xccdf.RuleResultType;
+
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.arf.IReport;
@@ -37,7 +41,9 @@ import org.joval.intf.util.IProducer;
 import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
 import org.joval.scap.ScapException;
+import org.joval.scap.ScapFactory;
 import org.joval.scap.cpe.CpeException;
+import org.joval.scap.diagnostics.RuleDiagnostics;
 import org.joval.scap.datastream.DatastreamCollection;
 import org.joval.scap.ocil.Checklist;
 import org.joval.scap.ocil.OcilException;
@@ -380,7 +386,27 @@ public class XPERT {
 			engine.getNotificationProducer().removeObserver(observer);
 			switch(engine.getResult()) {
 			  case OK:
-			    IReport report = engine.getReport(verbose ? SystemEnumeration.ANY : SystemEnumeration.XCCDF);
+			    IReport report = null;
+			    if (verbose) {
+				report = engine.getReport(SystemEnumeration.ANY);
+				String assetId = report.getAssetIds().iterator().next();
+				Map<String, RuleDiagnostics> diagnostics = new HashMap<String, RuleDiagnostics>();
+				logger.info(getMessage("message.diagnostics.generate"));
+				for (RuleDiagnostics rd : report.getDiagnostics(assetId, benchmarkId, profileId)) {
+				    String ruleId = rd.getRuleId();
+				    logger.info(getMessage("message.diagnostics.rule", ruleId));
+				    rd.setRuleResult(null);
+				    diagnostics.put(ruleId, rd);
+				}
+				TestResultType trt = ctx.getBenchmark().getBenchmark().getTestResult().get(0);
+				for (RuleResultType rrt : trt.getRuleResult()) {
+				    MetadataType md = ScapFactory.XCCDF.createMetadataType();
+				    md.getAny().add(diagnostics.get(rrt.getIdref()));
+				    rrt.getMetadata().add(md);
+				}
+			    } else {
+				report = engine.getReport(SystemEnumeration.XCCDF);
+			    }
 			    if (report == null) {
 				logger.info(getMessage("message.report.none"));
 			    } else if (report.getAssetReportCollection().isSetReports()) {

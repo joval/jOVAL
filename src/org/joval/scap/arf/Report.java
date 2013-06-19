@@ -514,7 +514,7 @@ public class Report implements IReport, ILoggable {
 	Collection<CheckType> checks = new ArrayList<CheckType>();
 	if (rrt.isSetCheck()) {
 	    checks.add(rrt.getCheck().get(0));
-	} else {
+	} else if (rrt.isSetComplexCheck()) {
 	    checks.addAll(getChecks(rrt.getComplexCheck()));
 	}
 
@@ -558,7 +558,11 @@ public class Report implements IReport, ILoggable {
 
 			Unmarshaller unmarshaller = SchemaRegistry.OVAL_RESULTS.getJAXBContext().createUnmarshaller();
 			OvalResults oval = (OvalResults)unmarshaller.unmarshal(subreport);
-			setDiagnosticInfo(cd, OvalFactory.createResults(oval), name);
+			if (check.isSetMultiCheck() || name == null) {
+			    // multi-check support is TBD
+			} else {
+			    setDiagnosticInfo(cd, OvalFactory.createResults(oval), name);
+			}
 		    } else if (SystemEnumeration.SCE.namespace().equals(system)) {
 			Unmarshaller unmarshaller = SchemaRegistry.SCE.getJAXBContext().createUnmarshaller();
 			cd.setSceResults((SceResultsType)unmarshaller.unmarshal(subreport));
