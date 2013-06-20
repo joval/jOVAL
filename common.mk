@@ -29,7 +29,7 @@ ifeq (Windows, $(findstring Windows,$(OS)))
 else
   OS=$(shell uname)
   CLN=:
-  JAVACFLAGS=-Xlint:unchecked -XDignore.symbol.file=true -Xbootclasspath/p:$(JAXB_HOME)/lib/jaxb-api.jar:$(JAXB_HOME)/lib/jaxb-impl.jar
+  JAVACFLAGS=-Xlint:unchecked -XDignore.symbol.file=true
   ifeq (64, $(findstring 64,$(shell uname -p)))
     ARCH=64
   else
@@ -59,7 +59,7 @@ else
 endif
 JRE=$(JRE_HOME)/bin/java
 
-XJC=$(JAVA) -jar $(JAXB_HOME)/lib/jaxb-xjc.jar
+XJC=$(JAVA_HOME)/bin/xjc
 XJCFLAGS=-enableIntrospection
 JAVAC=$(JAVA_HOME)/bin/javac
 JAR=$(JAVA_HOME)/bin/jar

@@ -593,6 +593,10 @@ public class Report implements IReport, ILoggable {
      */
     private void setDiagnosticInfo(CheckDiagnostics cd, IChecklist checklist, String questionnaireId) {
 	OCILType ocil = checklist.getOCILType();
+	if (!ocil.isSetResults()) {
+	    return;
+	}
+
 	cd.setTargets(ocil.getResults().getTargets());
 	OcilResultDiagnostics ord = null;
 	for (Object obj : ocil.getGenerator().getAdditionalData().getAny()) {
