@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -67,7 +68,9 @@ import scap.oval.definitions.core.CriterionType;
 import scap.oval.definitions.core.DefinitionType;
 import scap.oval.definitions.core.ExtendDefinitionType;
 import scap.oval.definitions.core.ObjectRefType;
+import scap.oval.definitions.core.ObjectType;
 import scap.oval.definitions.core.StateRefType;
+import scap.oval.definitions.core.StateType;
 import scap.oval.definitions.core.TestType;
 import scap.oval.results.OvalResults;
 import scap.oval.results.SystemType;
@@ -589,7 +592,7 @@ public class Report implements IReport, ILoggable {
     }
 
     /**
-     * Find diagnostic information for the specified questionnaire in the checklist.
+     * Find diagnostic information for the specified OCIL questionnaire in the checklist.
      */
     private void setDiagnosticInfo(CheckDiagnostics cd, IChecklist checklist, String questionnaireId) {
 	OCILType ocil = checklist.getOCILType();
@@ -599,10 +602,12 @@ public class Report implements IReport, ILoggable {
 
 	cd.setTargets(ocil.getResults().getTargets());
 	OcilResultDiagnostics ord = null;
-	for (Object obj : ocil.getGenerator().getAdditionalData().getAny()) {
-	    if (obj instanceof OcilResultDiagnostics) {
-		ord = (OcilResultDiagnostics)obj;
-		break;
+	if (ocil.getGenerator().isSetAdditionalData()) {
+	    for (Object obj : ocil.getGenerator().getAdditionalData().getAny()) {
+		if (obj instanceof OcilResultDiagnostics) {
+		    ord = (OcilResultDiagnostics)obj;
+		    break;
+		}
 	    }
 	}
 	if (ord == null) return;
@@ -682,7 +687,7 @@ public class Report implements IReport, ILoggable {
     }
 
     /**
-     * Find diagnostic information for the specified questionnaire in the results.
+     * Find diagnostic information for the specified OVAL definition in the results.
      */
     private void setDiagnosticInfo(CheckDiagnostics cd, IResults results, String definitionId) {
 	IDefinitions definitions = results.getDefinitions();
@@ -694,7 +699,14 @@ public class Report implements IReport, ILoggable {
 	DefinitionType rootDefinition = definitions.getDefinition(definitionId);
 	defMap.put(definitionId, rootDefinition);
 	Map<String, JAXBElement<? extends TestType>> testMap = new HashMap<String, JAXBElement<? extends TestType>>();
-	collectDefinitionsAndTests(rootDefinition.getCriteria(), results.getDefinitions(), defMap, testMap);
+	collectDefinitionsAndTests(rootDefinition.getCriteria(), definitions, defMap, testMap);
+
+	//
+	// Collect all the objects and states that are referenced by the referenced tests
+	//
+	Map<String, JAXBElement<? extends ObjectType>> objectMap = new HashMap<String, JAXBElement<? extends ObjectType>>();
+	Map<String, JAXBElement<? extends StateType>> stateMap = new HashMap<String, JAXBElement<? extends StateType>>();
+	collectObjectsAndStates(testMap.keySet(), definitions, objectMap, stateMap);
 
 	//
 	// Add all the test, object, state and def definitions and results to the diagnostic XML.
@@ -707,21 +719,28 @@ public class Report implements IReport, ILoggable {
 	    TestType tt = test.getValue();
 	    cd.getTests().getTest().add(test);
 	    cd.getTestResults().getTest().add(results.getTest(tt.getId()));
-
-	    String objectId = getObjectRef(tt);
-	    if (objectId != null) {
-		cd.getObjects().getObject().add(definitions.getObject(objectId));
-		ISystemCharacteristics sc = results.getSystemCharacteristics();
-		if (sc.containsObject(objectId)) {
-		    cd.getCollectedObjects().getObject().add(sc.getObject(objectId));
-		    for (JAXBElement<? extends ItemType> item : sc.getItemsByObjectId(objectId)) {
-			cd.getItems().getItem().add(item);
-		    }
+	}
+	//
+	// Add objects while collecting items in a map
+	//
+	Map<BigInteger, JAXBElement<? extends ItemType>> itemMap = new HashMap<BigInteger, JAXBElement<? extends ItemType>>();
+	for (Map.Entry<String, JAXBElement<? extends ObjectType>> entry : objectMap.entrySet()) {
+	    String objectId = entry.getKey();
+	    JAXBElement<? extends ObjectType> object = entry.getValue();
+	    cd.getObjects().getObject().add(object);
+	    ISystemCharacteristics sc = results.getSystemCharacteristics();
+	    if (sc.containsObject(objectId)) {
+		cd.getCollectedObjects().getObject().add(sc.getObject(objectId));
+		for (JAXBElement<? extends ItemType> item : sc.getItemsByObjectId(objectId)) {
+		    itemMap.put(item.getValue().getId(), item);
 		}
 	    }
-	    for (String stateId : getStateRef(tt)) {
-		cd.getStates().getState().add(definitions.getState(stateId));
-	    }
+	}
+	for (JAXBElement<? extends StateType> state : stateMap.values()) {
+	    cd.getStates().getState().add(state);
+	}
+	for (JAXBElement<? extends ItemType> item : itemMap.values()) {
+	    cd.getItems().getItem().add(item);
 	}
     }
 
@@ -756,6 +775,21 @@ public class Report implements IReport, ILoggable {
 		    defMap.put(definitionId, definition);
 		    collectDefinitionsAndTests(definition.getCriteria(), definitions, defMap, testMap);
 		}
+	    }
+	}
+    }
+
+    private void collectObjectsAndStates(Collection<String> testIds, IDefinitions definitions,
+		Map<String, JAXBElement<? extends ObjectType>> objMap, Map<String, JAXBElement<? extends StateType>> stateMap) {
+
+	for (String testId : testIds) {
+	    TestType test = definitions.getTest(testId).getValue();
+	    String objectId = getObjectRef(test);
+	    if (objectId != null) {
+		objMap.put(objectId, definitions.getObject(objectId));
+	    }
+	    for (String stateId : getStateRef(test)) {
+		stateMap.put(stateId, definitions.getState(stateId));
 	    }
 	}
     }

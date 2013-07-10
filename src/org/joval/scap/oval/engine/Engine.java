@@ -131,7 +131,6 @@ import org.joval.scap.oval.Batch;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.DefinitionFilter;
 import org.joval.scap.oval.Definitions;
-import org.joval.scap.oval.Directives;
 import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.ItemSet;
 import org.joval.scap.oval.OvalException;
