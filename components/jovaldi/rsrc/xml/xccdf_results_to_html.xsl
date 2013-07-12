@@ -955,8 +955,8 @@
                         operation: (sOperation) ? sOperation : 'equals',
                         value: sValue
                       }
-                      arStates.push(oState);
                     });
+                    arStates.push(oState);
                   }
 
                 });
@@ -1115,7 +1115,6 @@
                 case 'xor': 
                   switch (jGroup.children().length) {
                     case 1: return (bNegate) ? 'None of' : 'All of';
-
                     case 2: return (bNegate) ? 'Both or Neither of' : 'One of';
                     case 3: return (bNegate) ? 'None or Two of' : 'One or All of';
                     default: return (bNegate) ? 'An Even Number of' : 'An Odd Number of';
