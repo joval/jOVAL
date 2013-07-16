@@ -2598,14 +2598,15 @@ public class Engine implements IOvalEngine, IProvider {
 	    Collection<IType> values = new ArrayList<IType>();
 	    for (IType value : resolveComponent(getComponent(regexCapture), rc)) {
 		Matcher m = p.matcher(value.getString());
-		if (m.groupCount() > 0) {
+		if (m.groupCount() == 1) {
 		    if (m.find()) {
 			values.add(TypeFactory.createType(IType.Type.STRING, m.group(1)));
 		    } else {
 			values.add(StringType.EMPTY);
 		    }
 		} else {
-		    values.add(StringType.EMPTY);
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_REGEX_GROUP, p.pattern(), m.groupCount());
+		    throw new ResolveException(msg);
 		}
 	    }
 	    return values;
