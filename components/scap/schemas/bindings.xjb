@@ -538,6 +538,13 @@
     <jxb:bindings node="xs:element[@name='accesstoken_state']//xs:element[@name='security_principle']">
         <jxb:property name="security_principal" />
     </jxb:bindings>
+    <!-- Compensate for misspellings in the PE header state -->
+    <jxb:bindings node="xs:element[@name='peheader_state']//xs:element[@name='image_file_bytes_reveresed_hi']">
+        <jxb:property name="image_file_bytes_reversed_hi" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:element[@name='peheader_state']//xs:element[@name='minor_susbsystem_version']">
+        <jxb:property name="minor_subsystem_version" />
+    </jxb:bindings>
     <!-- Compensate for confusion between setrustedcredmanaccessnameright and setrustedcredmanaccessnameprivilege -->
     <jxb:bindings node="xs:element[@name='accesstoken_state']//xs:element[@name='setrustedcredmanaccessnameright']">
         <jxb:property name="setrustedcredmanaccessnameprivilege" />
@@ -574,6 +581,13 @@
     <!-- Compensate for confusion between principle and principal -->
     <jxb:bindings node="xs:element[@name='accesstoken_item']//xs:element[@name='security_principle']">
         <jxb:property name="security_principal" />
+    </jxb:bindings>
+    <!-- Compensate for misspellings in the PE header item -->
+    <jxb:bindings node="xs:element[@name='peheader_item']//xs:element[@name='image_file_bytes_reveresed_hi']">
+        <jxb:property name="image_file_bytes_reversed_hi" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:element[@name='peheader_item']//xs:element[@name='minor_susbsystem_version']">
+        <jxb:property name="minor_subsystem_version" />
     </jxb:bindings>
     <!-- Compensate for confusion between setrustedcredmanaccessnameright and setrustedcredmanaccessnameprivilege -->
     <jxb:bindings node="xs:element[@name='accesstoken_item']//xs:element[@name='setrustedcredmanaccessnameright']">
