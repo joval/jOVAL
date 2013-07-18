@@ -356,7 +356,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, objectId));
 	}
 	if (!itemTable.containsKey(itemId)) {
-	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_ITEM, itemId.toString()));
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_ITEM, objectId, itemId.toString()));
 	}
 	Collection<BigInteger> items = objectItemTable.get(objectId);
 	if (items == null) {
