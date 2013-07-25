@@ -542,6 +542,7 @@ CLASSES=\
 	scap.oval.definitions.ios.VersionObject	\
 	scap.oval.definitions.ios.VersionState	\
 	scap.oval.definitions.ios.VersionTest	\
+	scap.oval.definitions.junos.EntityStateJunosReleaseTypeType	\
 	scap.oval.definitions.junos.GlobalObject	\
 	scap.oval.definitions.junos.GlobalState	\
 	scap.oval.definitions.junos.GlobalTest	\
@@ -1084,6 +1085,7 @@ CLASSES=\
 	scap.oval.systemcharacteristics.ios.SnmpItem	\
 	scap.oval.systemcharacteristics.ios.TclshItem	\
 	scap.oval.systemcharacteristics.ios.VersionItem	\
+	scap.oval.systemcharacteristics.junos.EntityItemJunosReleaseTypeType	\
 	scap.oval.systemcharacteristics.junos.GlobalItem	\
 	scap.oval.systemcharacteristics.junos.LineItem	\
 	scap.oval.systemcharacteristics.junos.ObjectFactory	\

@@ -124,20 +124,33 @@
          </xsd:complexContent>
       </xsd:complexType>
    </xsd:element>
-   <xsd:element name="version_state" substitutionGroup="oval-def:state">
-      <xsd:complexType>
-         <xsd:complexContent>
-            <xsd:extension base="oval-def:StateType">
-               <xsd:sequence>
-                  <xsd:element name="component" type="oval-def:EntityStateStringType" minOccurs="0"/>
-                  <xsd:element name="release" type="oval-def:EntityStateVersionType" minOccurs="0" maxOccurs="1"/>
-                  <xsd:element name="builder" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
-                  <xsd:element name="build_date" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1"/>
-               </xsd:sequence>
-            </xsd:extension>
-         </xsd:complexContent>
-      </xsd:complexType>
-   </xsd:element>
+    <xsd:element name="version_state" substitutionGroup="oval-def:state">
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="oval-def:StateType">
+                    <xsd:sequence>
+                        <xsd:element name="component" type="oval-def:EntityStateStringType" minOccurs="0"/>
+                        <xsd:element name="raw_release" type="oval-def:EntityStateStringType" minOccurs="1" maxOccurs="1"/>
+                        <xsd:element name="major_version" type="oval-def:EntityStateVersionType" minOccurs="1" maxOccurs="1"/>
+                        <xsd:element name="release_type" type="junos-def:EntityStateJunosReleaseTypeType" minOccurs="1" maxOccurs="1"/>
+                        <xsd:element name="revision" type="oval-def:EntityStateVersionType" minOccurs="0" maxOccurs="1"/>
+                        <xsd:element name="builder" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                        <xsd:element name="build_date" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1"/>
+                    </xsd:sequence>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:complexType name="EntityStateJunosReleaseTypeType">
+        <xsd:simpleContent>
+            <xsd:restriction base="oval-def:EntityStateStringType">
+                <xsd:enumeration value="R"/>
+                <xsd:enumeration value="S"/>
+                <xsd:enumeration value="B"/>
+                <xsd:enumeration value="X"/>
+            </xsd:restriction>
+        </xsd:simpleContent>
+    </xsd:complexType>
    <xsd:element name="xml_line_test" substitutionGroup="oval-def:test">
       <xsd:complexType>
          <xsd:complexContent>
