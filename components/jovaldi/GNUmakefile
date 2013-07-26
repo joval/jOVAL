@@ -54,8 +54,8 @@ $(DIST)/32: all $(DIST)/32/jre
 	cp -R $(RSRC)/licenses $(DIST)/32
 	cp -R $(RSRC)/security $(DIST)/32
 	cp -R $(RSRC)/xml $(DIST)/32
-	cp -R $(SCAP)/schemas/oval-$(OVAL_VERSION)/*.xsd $(DIST)/32/xml
-	cp -R $(SCAP)/schemas/xml/xmldsig-core-schema.xsd $(DIST)/32/xml
+	cp -R $(SCAP)/schemas/* $(DIST)/32/xml
+	rm $(DIST)/32/xml/bindings.xjb
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST)/32/xml
 	cp $(PRODUCTNAME).jar $(DIST)/32/lib
 	cp $(SCAP_LIB) $(DIST)/32/lib
@@ -83,8 +83,8 @@ $(DIST)/64: all $(DIST)/64/jre
 	cp -R $(RSRC)/licenses $(DIST)/64
 	cp -R $(RSRC)/security $(DIST)/64
 	cp -R $(RSRC)/xml $(DIST)/64
-	cp -R $(SCAP)/schemas/oval-$(OVAL_VERSION)/*.xsd $(DIST)/64/xml
-	cp -R $(SCAP)/schemas/xml/xmldsig-core-schema.xsd $(DIST)/64/xml
+	cp -R $(SCAP)/schemas/* $(DIST)/64/xml
+	rm $(DIST)/64/xml/bindings.xjb
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST)/64/xml
 	cp $(PRODUCTNAME).jar $(DIST)/64/lib
 	cp $(SCAP_LIB) $(DIST)/64/lib

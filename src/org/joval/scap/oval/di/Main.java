@@ -602,7 +602,8 @@ public class Main implements IObserver<IOvalEngine.Message> {
 
     private static class DefinitionsSchemaFilter implements FilenameFilter {
 	static File[] list() {
-	    return state.xmlDir.listFiles(new DefinitionsSchemaFilter());
+	    File ovalDir = new File(state.xmlDir, "oval-" + IOvalEngine.SCHEMA_VERSION.toString());
+	    return ovalDir.listFiles(new DefinitionsSchemaFilter());
 	}
 
 	DefinitionsSchemaFilter() {}
@@ -614,7 +615,8 @@ public class Main implements IObserver<IOvalEngine.Message> {
 
     private static class SystemCharacteristicsSchemaFilter implements FilenameFilter {
 	static File[] list() {
-	    return state.xmlDir.listFiles(new SystemCharacteristicsSchemaFilter());
+	    File ovalDir = new File(state.xmlDir, "oval-" + IOvalEngine.SCHEMA_VERSION.toString());
+	    return ovalDir.listFiles(new SystemCharacteristicsSchemaFilter());
 	}
 
 	SystemCharacteristicsSchemaFilter() {}
