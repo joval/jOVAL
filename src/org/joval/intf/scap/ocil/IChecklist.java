@@ -22,6 +22,7 @@ import scap.ocil.core.TestActionConditionType;
 import scap.ocil.core.VariableType;
 
 import org.joval.intf.xml.ITransformable;
+import org.joval.util.Version;
 
 /**
  * Representation of a OCIL checklist document.
@@ -30,6 +31,8 @@ import org.joval.intf.xml.ITransformable;
  * @version %I% %G%
  */
 public interface IChecklist extends ITransformable {
+    Version SCHEMA_VERSION = new Version("2.0");
+
     /**
      * Get the underlying JAXB data model checklist.
      */

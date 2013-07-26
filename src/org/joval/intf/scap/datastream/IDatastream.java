@@ -22,6 +22,7 @@ import org.joval.scap.ocil.OcilException;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.sce.SceException;
 import org.joval.scap.xccdf.XccdfException;
+import org.joval.util.Version;
 
 /**
  * Interface defining an SCAP datastream.
@@ -30,6 +31,8 @@ import org.joval.scap.xccdf.XccdfException;
  * @version %I% %G%
  */
 public interface IDatastream {
+    Version SCHEMA_VERSION = new Version("1.2");
+
     /**
      * Get the CPE dictionary for this stream.
      */
