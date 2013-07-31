@@ -1668,25 +1668,29 @@ public class Engine implements IOvalEngine, IProvider {
 	    return results.getDefinition(id);
 	} catch (NoSuchElementException e) {
 	}
-	scap.oval.results.DefinitionType result = Factories.results.createDefinitionType();
+	scap.oval.results.DefinitionType definitionResult = Factories.results.createDefinitionType();
 	logger.debug(JOVALMsg.STATUS_DEFINITION, id);
 	producer.sendNotify(Message.DEFINITION, id);
-	result.setDefinitionId(id);
-	result.setVersion(definition.getVersion());
-	result.setClazz(definition.getClazz());
+	definitionResult.setDefinitionId(id);
+	definitionResult.setVersion(definition.getVersion());
+	definitionResult.setClazz(definition.getClazz());
 	try {
-	    scap.oval.results.CriteriaType criteriaResult = evaluateCriteria(definition.getCriteria());
-	    result.setResult(criteriaResult.getResult());
-	    result.setCriteria(criteriaResult);
+	    ResultEnumeration criteriaResult = ResultEnumeration.NOT_EVALUATED;
+	    if (definition.isSetCriteria()) {
+		scap.oval.results.CriteriaType criteria = evaluateCriteria(definition.getCriteria());
+		definitionResult.setCriteria(criteria);
+		criteriaResult = criteria.getResult();
+	    }
+	    definitionResult.setResult(criteriaResult);
 	} catch (NoSuchElementException e) {
-	    result.setResult(ResultEnumeration.ERROR);
+	    definitionResult.setResult(ResultEnumeration.ERROR);
 	    MessageType message = Factories.common.createMessageType();
 	    message.setLevel(MessageLevelEnumeration.ERROR);
 	    message.setValue(e.getMessage());
-	    result.getMessage().add(message);
+	    definitionResult.getMessage().add(message);
 	}
-	results.storeDefinitionResult(result);
-	return result;
+	results.storeDefinitionResult(definitionResult);
+	return definitionResult;
     }
 
     private scap.oval.results.CriteriaType evaluateCriteria(CriteriaType criteriaDefinition)
@@ -2904,8 +2908,11 @@ public class Engine implements IOvalEngine, IProvider {
 	String reflectionId = null;
 	try {
 	    if (obj instanceof DefinitionType) {
-		for (Object sub : ((DefinitionType)obj).getCriteria().getCriteriaOrCriterionOrExtendDefinition()) {
-		    results.addAll(getObjectReferences(sub));
+		DefinitionType def = (DefinitionType)obj;
+		if (def.isSetCriteria()) {
+		    for (Object sub : def.getCriteria().getCriteriaOrCriterionOrExtendDefinition()) {
+			results.addAll(getObjectReferences(sub));
+		    }
 		}
 	    } else if (obj instanceof CriteriaType) {
 		for (Object sub : ((CriteriaType)obj).getCriteriaOrCriterionOrExtendDefinition()) {
