@@ -4,8 +4,8 @@
 function Get-RegKeyLastWriteTime {
   param (
     [Parameter(ValueFromPipeline=$true)]
-    [string]$Subkey = $null,
-    [string]$Hive = "HKEY_LOCAL_MACHINE"
+    [String]$Subkey = $null,
+    [String]$Hive = "HKEY_LOCAL_MACHINE"
   )
 
   BEGIN {
@@ -38,7 +38,7 @@ namespace jOVAL.Registry {
 	}
 
 	[DllImport("advapi32.dll", CharSet = CharSet.Auto)]
-	public static extern int RegOpenKeyEx(int hKey, string subKey, int ulOptions, int samDesired, ref UIntPtr hkResult);
+	public static extern int RegOpenKeyEx(int hKey, String subKey, int ulOptions, int samDesired, ref UIntPtr hkResult);
 
 	[DllImport("advapi32.dll", EntryPoint="RegQueryInfoKey", CallingConvention=CallingConvention.Winapi, SetLastError=true)]
 	public static extern int RegQueryInfoKey(UIntPtr hkey, out StringBuilder lpClass, ref IntPtr lpcbClass, IntPtr lpReserved, out uint lpcSubKeys, out uint lpcbMaxSubKeyLen, out uint lpcbMaxClassLen, out uint lpcValues, out uint lpcbMaxValueNameLen, out uint lpcbMaxValueLen, out uint lpcbSecurityDescriptor, ref FILETIME lastWriteTime);
@@ -46,7 +46,7 @@ namespace jOVAL.Registry {
 	[DllImport("advapi32.dll", SetLastError=true)]
 	public static extern int RegCloseKey(UIntPtr hKey);
 
-	public static DateTime GetLastWriteTime(int hive, string subkey) {
+	public static DateTime GetLastWriteTime(int hive, String subkey) {
 	    UIntPtr hKey = UIntPtr.Zero;
 	    int result = RegOpenKeyEx(hive, subkey, 0, KEYREAD, ref hKey);
 	    if (result != 0) {
@@ -98,8 +98,7 @@ namespace jOVAL.Registry {
       $Path = "$($Hive)\$($Subkey)"
     }
     if (Test-Path -LiteralPath "Registry::$($Path)") {
-      $LastWrite = [jOVAL.Registry.Probe]::GetLastWriteTime($hKey, $Subkey)
-      Write-Output "$($Path): $($LastWrite.ToFileTimeUtc())"
+      "{0}: {1:D}" -f $Path, [jOVAL.Registry.Probe]::GetLastWriteTime($hKey, $Subkey).ToFileTimeUtc()
     }
   }
 }

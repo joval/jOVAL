@@ -4,6 +4,7 @@
 package org.joval.scap.oval.adapter.windows;
 
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -99,22 +100,22 @@ public class LockoutpolicyAdapter implements IAdapter {
 		    if ("force_logoff".equals(key)) {
 			EntityItemIntType type = Factories.sc.core.createEntityItemIntType();
 			type.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			type.setValue(new Integer(val).toString());
+			type.setValue(new BigInteger(val, 16).toString());
 			item.setForceLogoff(type);
 		    } else if ("lockout_duration".equals(key)) {
 			EntityItemIntType type = Factories.sc.core.createEntityItemIntType();
 			type.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			type.setValue(new Integer(val).toString());
+			type.setValue(new BigInteger(val, 16).toString());
 			item.setLockoutDuration(type);
 		    } else if ("lockout_observation_window".equals(key)) {
 			EntityItemIntType type = Factories.sc.core.createEntityItemIntType();
 			type.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			type.setValue(new Integer(val).toString());
+			type.setValue(new BigInteger(val, 16).toString());
 			item.setLockoutObservationWindow(type);
 		    } else if ("lockout_threshold".equals(key)) {
 			EntityItemIntType type = Factories.sc.core.createEntityItemIntType();
 			type.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			type.setValue(new Integer(val).toString());
+			type.setValue(new BigInteger(val, 16).toString());
 			item.setLockoutThreshold(type);
 		    }
 		} catch (IllegalArgumentException e) {

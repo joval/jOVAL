@@ -3,7 +3,7 @@
 #
 function Get-ModuleInfo {
   param(
-    [string]$moduleName=$null
+    [String]$moduleName=$null
   )
 
   if ($moduleName -eq $null) {
@@ -16,14 +16,13 @@ function Get-ModuleInfo {
   foreach ($module in $available) {
     if ($module.Path.EndsWith(".psd1")) {
       $name = $module.Name
-      Write-Output "ModuleName=$name"
+      "ModuleName={0}" -f $name
       if ($loaded -contains $module) {
-          Write-Output "Status=loaded"
+          "Status=loaded"
       } else {
-        Write-Output "Status=not loaded"
+        "Status=not loaded"
       }
-      $content = Get-Content $module.Path
-      Write-Output $content
+      Write-Output(Get-Content $module.Path)
     }
   }
 }
@@ -50,19 +49,18 @@ function ConvertTo-OVAL {
           $object = $inputObject.$name
           $field = "<field name=`"" + $name.ToLower() + "`""
           if ($object -eq $null) {
-            $field += "/>"
+	    $field = "<field name=`"{0}`"/>" -f $name
           } else {
             if ($member.Definition.StartsWith("System.Int32 ")) {
-              $field += " datatype=`"integer`">" + $object + "</field>"
+              $datatype = "integer"
             } elseif ($member.Definition.StartsWith("System.Int64 ")) {
-              $field += " datatype=`"integer`">" + $object + "</field>"
+              $datatype = "integer"
             } elseif ($member.Definition.StartsWith("System.Boolean ")) {
-              $field += " datatype=`"boolean`">" + $object + "</field>"
-            } elseif ($member.Definition.startsWith("System.String ")) {
-              $field += " datatype=`"string`">" + $object + "</field>"
+              $datatype = "boolean"
             } else {
-              $field += " datatype=`"string`">" + $object.ToString() + "</field>"
+              $datatype = "string"
             }
+	    $field = "<field name=`"{0}`" datatype=`"{1}`">{2}</field>" -f $name.ToLower(), $datatype, $object.ToString()
           }
           $value += $field
         }

@@ -24,10 +24,10 @@ namespace jOVAL.AccessToken {
     public static extern UInt32 LsaNtStatusToWinError(UInt32 Status);
 
     [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true, PreserveSig = true)]
-    public static extern bool ConvertStringSidToSid(string StringSid, out IntPtr pSid);
+    public static extern bool ConvertStringSidToSid(String StringSid, out IntPtr pSid);
 
     [DllImport("advapi32.dll", CharSet = CharSet.Unicode, PreserveSig = true)]
-    public static extern UInt32 LsaOpenPolicy(string SystemName, ref LSA_OBJECT_ATTRIBUTES ObjectAttributes, Int32 DesiredAccess, out IntPtr PolicyHandle);
+    public static extern UInt32 LsaOpenPolicy(String SystemName, ref LSA_OBJECT_ATTRIBUTES ObjectAttributes, Int32 DesiredAccess, out IntPtr PolicyHandle);
 
     [DllImport("advapi32.dll", CharSet = CharSet.Unicode, PreserveSig = true)]
     public static extern UInt32 LsaClose(IntPtr PolicyHandle);
@@ -52,14 +52,14 @@ namespace jOVAL.AccessToken {
       public UInt32 Length;
     }
 
-    public static string LSAUS2string(LSA_UNICODE_STRING lsaus) {
+    public static String LSAUS2string(LSA_UNICODE_STRING lsaus) {
       char[] cvt = new char[lsaus.Length / UnicodeEncoding.CharSize];
       Marshal.Copy(lsaus.Buffer, cvt, 0, lsaus.Length / UnicodeEncoding.CharSize);
-      return new string(cvt);
+      return new String(cvt);
     }
 
-    public static List<string> getAccessTokens(string sidString) {
-      List<string> tokens = new List<string>();
+    public static List<String> getAccessTokens(String sidString) {
+      List<String> tokens = new List<String>();
       IntPtr sid = IntPtr.Zero;
       if (!ConvertStringSidToSid(sidString, out sid)) {
 	int errorCode = GetLastError();
@@ -90,7 +90,7 @@ namespace jOVAL.AccessToken {
 	  for (ulong i=0; i < rightsLen; i++) {
 	    IntPtr itemAddr = new IntPtr(rightsArray.ToInt64() + (long)(i * (ulong)Marshal.SizeOf(myLsaus)));
 	    myLsaus = (LSA_UNICODE_STRING)Marshal.PtrToStructure(itemAddr, myLsaus.GetType());
-	    string thisRight = LSAUS2string(myLsaus);
+	    String thisRight = LSAUS2string(myLsaus);
 	    tokens.Add(thisRight);
 	  }
 	  break;
@@ -118,9 +118,9 @@ namespace jOVAL.AccessToken {
   $ErrorActionPreference = "Continue" 
   foreach ($SID in $input) {
     $Result = [jOVAL.AccessToken.Probe]::getAccessTokens($SID)
-    Write-Output "[$($SID)]"
+    "[{0}]" -f $SID
     foreach ($Token in $Result) {
-      Write-Output "$($Token): true"
+      "{0}: true" -f $Token
     }
   }
 }

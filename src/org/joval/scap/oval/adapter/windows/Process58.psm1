@@ -83,7 +83,7 @@ namespace jOVAL.WindowsProcess {
 	    }
 	}
 
-	public static string GetWindowText(UInt32 pid) {
+	public static String GetWindowText(UInt32 pid) {
 	    Process p = Process.GetProcessById((int)pid);
 	    if (p != null) {
 		IntPtr hWnd = p.MainWindowHandle;
@@ -111,29 +111,29 @@ namespace jOVAL.WindowsProcess {
   $ErrorActionPreference = "Continue" 
   $Processes = Get-WmiObject -query "Select * from Win32_Process"
   foreach ($Process in $Processes) {
-    Write-Output "[$($Process.ProcessId)]"
-    Write-Output "PPID=$($Process.ParentProcessId)"
-    Write-Output "Priority=$($Process.Priority)"
-    Write-Output "CommandLine=$($Process.CommandLine)"
+    "[{0:D}]" -f $Process.ProcessId
+    "PPID={0:D}" -f $Process.ParentProcessId
+    "Priority={0:D}" -f $Process.Priority
+    "CommandLine={0}" -f $Process.CommandLine
 
     # path is the current_dir + image_path
     if ($Process.CommandLine -ne $null) {
-      Write-Output "Path=$($Process.Path)"
+      "Path={0}" -f $Process.Path
     }
     if ($Process.CreationDate -ne $null) {
-      Write-Output "CreationDate=$($Process.CreationDate)"
+      "CreationDate={0}" -f $Process.CreationDate
     }
     try {
       $dep = [jOVAL.WindowsProcess.Probe]::IsDepEnabled($Process.ProcessId);
       if ($dep -eq 0) {
-        Write-Output "DepEnabled=false"
+        "DepEnabled=false"
       } elseif ($dep -eq 1) {
-        Write-Output "DepEnabled=true"
+        "DepEnabled=true"
       }
     } catch {}
     $title = [jOVAL.WindowsProcess.Probe]::GetWindowText($Process.ProcessId);
     if ($title -ne $null) {
-      Write-Output "PrimaryWindowText=$($title)"
+      "PrimaryWindowText={0}" -f $title
     }
   }
 }

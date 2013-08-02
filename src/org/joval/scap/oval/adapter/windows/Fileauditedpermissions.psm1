@@ -16,6 +16,6 @@ function Get-FileAuditedPermissions {
   foreach($ace in $security.GetAuditRules($True, $False, [System.Security.Principal.SecurityIdentifier])) {
     $mask = [Convert]::ToInt32($ace.FileSystemRights)
     $flags = [Convert]::ToInt32($ace.AuditFlags)
-    Write-Output "$($ace.IdentityReference): $mask, $flags"
+    "{0}: {1}, {2}" -f $ace.IdentityReference, $mask, $flags
   }
 }

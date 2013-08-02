@@ -67,7 +67,7 @@ namespace jOVAL.Environment58 {
       $Arch = [jOVAL.Environment58.ProcessHelper]::GetProcessArchitecture($Process.Id)
     } catch {
     }
-    Write-Output "$($Process.Id): $($Arch)"
+    "{0:D}: {0:D}" -f $Process.Id, $Arch
   }
 }
 
@@ -357,7 +357,7 @@ namespace jOVAL.Environment58 {
   $Dictionary = [jOVAL.Environment58.Probe]::GetEnvironmentVariables($ProcessId)
   foreach ($Entry in $Dictionary) {
     if ($Entry -ne $null) {
-      Write-Output "$($Entry.Key)=$($Entry.Value)"
+      "{0}={1}" -f $Entry.Key, $Entry.Value
     }
   }
 }

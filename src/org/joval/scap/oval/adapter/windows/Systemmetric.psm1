@@ -36,11 +36,11 @@ function Get-SystemMetrics {
 	[DllImport("user32.dll")]
 	static extern int GetSystemMetrics(SystemMetric smIndex);
 
-	public static List<string> getMetrics() {
-	  List<string> retList = new List<string>();
+	public static List<String> getMetrics() {
+	  List<String> retList = new List<String>();
           SystemMetric[] metrics = (SystemMetric[])Enum.GetValues(typeof(SystemMetric));
           for (int i=0; i < metrics.Length; i++) {
-            retList.Add(metrics[i].ToString() + ": " + GetSystemMetrics(metrics[i]));
+            retList.Add(String.Format("{0}: {1:D}", metrics[i].ToString(), GetSystemMetrics(metrics[i])));
           }
 	  return retList;
 	}
@@ -59,6 +59,6 @@ function Get-SystemMetrics {
   $ErrorActionPreference = "Continue"
   $result = [jOVAL.SystemMetrics.Probe]::getMetrics()
   foreach($token in $result) {
-    Write-Output $token
+    "{0}" -f $token
   }
 }

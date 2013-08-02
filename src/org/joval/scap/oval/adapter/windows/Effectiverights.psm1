@@ -3,9 +3,9 @@
 #
 function Get-EffectiveRights {
   param(
-    [string]$ObjectType = $(throw "Mandatory parameter -ObjectType"),
-    [string]$Name = $(throw "Mandatory parameter -Name"),
-    [string]$SID = $(throw "Mandatory parameter -SID")
+    [String]$ObjectType = $(throw "Mandatory parameter -ObjectType"),
+    [String]$Name = $(throw "Mandatory parameter -Name"),
+    [String]$SID = $(throw "Mandatory parameter -SID")
   )
 
   $Source = @"
@@ -49,7 +49,7 @@ namespace jOVAL.Security {
 	}
 
 	[DllImport("advapi32.dll", CharSet=CharSet.Auto)]
-	static extern uint GetNamedSecurityInfo(string pObjectName, SE_OBJECT_TYPE ObjectType, SECURITY_INFORMATION SecurityInfo, out IntPtr pSidOwner, out IntPtr pSidGroup, out IntPtr pDacl, out IntPtr pSacl, out IntPtr pSecurityDescriptor);
+	static extern uint GetNamedSecurityInfo(String pObjectName, SE_OBJECT_TYPE ObjectType, SECURITY_INFORMATION SecurityInfo, out IntPtr pSidOwner, out IntPtr pSidGroup, out IntPtr pDacl, out IntPtr pSacl, out IntPtr pSecurityDescriptor);
 
 	[DllImport("advapi32.dll", SetLastError = true)]
 	public static extern void BuildTrusteeWithSid(ref TRUSTEE pTrustee, byte[] sid);
@@ -108,18 +108,9 @@ namespace jOVAL.Security {
 
   $ErrorActionPreference = "Continue"
 
-  if ($ObjectType -eq "File") {
-    $mask = [jOVAL.Security.EffectiveRights]::GetFileEffectiveRights($Name, $SID);
-    Write-Output $mask
-  } else {
-    if ($ObjectType -eq "RegKey") {
-      $mask = [jOVAL.Security.EffectiveRights]::GetRegKeyEffectiveRights($Name, $SID);
-      Write-Output $mask
-    } else {
-      if ($ObjectType -eq "Service") {
-        $mask = [jOVAL.Security.EffectiveRights]::GetServiceEffectiveRights($Name, $SID);
-        Write-Output $mask
-      }
-    }
+  switch($ObjectType) {
+    "File"    {"{0:D}" -f [jOVAL.Security.EffectiveRights]::GetFileEffectiveRights($Name, $SID)} 
+    "RegKey"  {"{0:D}" -f [jOVAL.Security.EffectiveRights]::GetRegKeyEffectiveRights($Name, $SID)}
+    "Service" {"{0:D}" -f [jOVAL.Security.EffectiveRights]::GetServiceEffectiveRights($Name, $SID)}
   }
 }
