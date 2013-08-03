@@ -255,6 +255,7 @@ public class Process58Adapter implements IAdapter {
 		runspace = session.getRunspacePool().spawn(view);
 	    }
 	    if (runspace != null) {
+		runspace.loadAssembly(getClass().getResourceAsStream("Process58.dll"));
 		runspace.loadModule(getClass().getResourceAsStream("Process58.psm1"));
 	    }
 	} catch (Exception e) {

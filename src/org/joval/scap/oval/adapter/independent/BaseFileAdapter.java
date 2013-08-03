@@ -269,6 +269,16 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 	throws CollectException;
 
     /**
+     * Windows-specific object type subclasses should override by supplying streams to any Powershell assemblies that must be
+     * loaded into requested runspaces (i.e., for modules) using the getRunspace convenience method, below.
+     */
+    protected List<InputStream> getPowershellAssemblies() {
+	@SuppressWarnings("unchecked")
+	List<InputStream> empty = (List<InputStream>)Collections.EMPTY_LIST;
+	return empty;
+    }
+
+    /**
      * Windows-specific object type subclasses should override by supplying streams to any Powershell modules that must be
      * loaded into requested runspaces using the getRunspace convenience method, below.
      */
@@ -450,6 +460,9 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 	    }
 	    if (result == null) {
 		result = ws.getRunspacePool().spawn(view);
+	    }
+	    for (InputStream in : getPowershellAssemblies()) {
+		result.loadAssembly(in);
 	    }
 	    for (InputStream in : getPowershellModules()) {
 		result.loadModule(in);

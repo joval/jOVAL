@@ -32,10 +32,19 @@ resources:
 	cp $(RSRC)/adapters.txt $(BUILD)
 	cp $(RSRC)/plugin.resources.properties $(BUILD)
 	echo version=$(JOVAL_VERSION) >> $(BUILD)/plugin.resources.properties
-	rm -f $(BUILD)/org/joval/scap/oval/adapter/windows/*.psm1
-	cp $(SRC)/org/joval/scap/oval/adapter/windows/*.psm1 $(BUILD)/org/joval/scap/oval/adapter/windows/
-	rm -f $(BUILD)/org/joval/scap/oval/adapter/independent/*.psm1
+	rm -f $(BUILD)/org/joval/scap/oval/adapter/independent/*.psm1 \
+	      $(BUILD)/org/joval/scap/oval/adapter/independent/*.dll \
+	      $(BUILD)/org/joval/scap/oval/adapter/windows/*.psm1 \
+	      $(BUILD)/org/joval/scap/oval/adapter/windows/*.dll
 	cp $(SRC)/org/joval/scap/oval/adapter/independent/*.psm1 $(BUILD)/org/joval/scap/oval/adapter/independent/
+	cp $(RSRC)/assembly/Environmentvariable58.dll $(BUILD)/org/joval/scap/oval/adapter/independent/
+	cp $(SRC)/org/joval/scap/oval/adapter/windows/*.psm1 $(BUILD)/org/joval/scap/oval/adapter/windows/
+	cp $(RSRC)/assembly/Accesstoken.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
+	cp $(RSRC)/assembly/Effectiverights.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
+	cp $(RSRC)/assembly/Lockoutpolicy.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
+	cp $(RSRC)/assembly/Process58.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
+	cp $(RSRC)/assembly/Registry.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
+	cp $(RSRC)/assembly/Systemmetric.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 
 classes: classdirs $(CLASS_FILES)
 

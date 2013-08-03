@@ -269,6 +269,11 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
     }
 
     @Override
+    protected List<InputStream> getPowershellAssemblies() {
+	return Arrays.asList(getClass().getResourceAsStream("Effectiverights.dll"));
+    }
+
+    @Override
     protected List<InputStream> getPowershellModules() {
 	return Arrays.asList(getClass().getResourceAsStream("Effectiverights.psm1"));
     }

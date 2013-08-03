@@ -394,6 +394,7 @@ public class AccesstokenAdapter implements IAdapter {
 		runspace = session.getRunspacePool().spawn(view);
 	    }
 	    if (runspace != null) {
+		runspace.loadAssembly(getClass().getResourceAsStream("Accesstoken.dll"));
 		runspace.loadModule(getClass().getResourceAsStream("Accesstoken.psm1"));
 	    }
 	} catch (Exception e) {

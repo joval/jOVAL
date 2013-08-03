@@ -287,6 +287,11 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
     }
 
     @Override
+    protected List<InputStream> getPowershellAssemblies() {
+	return Arrays.asList(getClass().getResourceAsStream("Registry.dll"));
+    }
+
+    @Override
     protected List<InputStream> getPowershellModules() {
 	return Arrays.asList(getClass().getResourceAsStream("Registry.psm1"));
     }

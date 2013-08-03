@@ -82,6 +82,7 @@ public class LockoutpolicyAdapter implements IAdapter {
 	    if (runspace == null) {
 		runspace = session.getRunspacePool().spawn(view);
 	    }
+	    runspace.loadAssembly(getClass().getResourceAsStream("Lockoutpolicy.dll"));
 	    runspace.loadModule(getClass().getResourceAsStream("Lockoutpolicy.psm1"));
 
 	    //

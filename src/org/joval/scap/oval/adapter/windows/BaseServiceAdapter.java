@@ -167,6 +167,16 @@ public abstract class BaseServiceAdapter<T extends ItemType> implements IAdapter
     protected abstract Collection<T> getItems(ObjectType obj, ItemType base, IRequestContext rc) throws Exception;
 
     /**
+     * Subclasses should override by supplying streams to any assemblies that must be loaded into requested runspaces using
+     * the getRunspace method (such as those required by modules), below.
+     */
+    protected List<InputStream> getPowershellAssemblies() {
+	@SuppressWarnings("unchecked")
+	List<InputStream> empty = (List<InputStream>)Collections.EMPTY_LIST;
+	return empty;
+    }
+
+    /**
      * Subclasses should override by supplying streams to any modules that must be loaded into requested runspaces using
      * the getRunspace method, below.
      */

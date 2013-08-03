@@ -116,6 +116,7 @@ public class SystemmetricAdapter implements IAdapter {
 	    if (runspace == null) {
 		runspace = session.getRunspacePool().spawn(view);
 	    }
+	    runspace.loadAssembly(getClass().getResourceAsStream("Systemmetric.dll"));
 	    runspace.loadModule(getClass().getResourceAsStream("Systemmetric.psm1"));
 
 	    //

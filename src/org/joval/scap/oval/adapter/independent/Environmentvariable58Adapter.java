@@ -463,6 +463,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 	    if (rs == null) {
 		rs = session.getRunspacePool().spawn(view);
 	    }
+	    rs.loadAssembly(getClass().getResourceAsStream("Environmentvariable58.dll"));
 	    rs.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
 	    if (view == IWindowsSession.View._32BIT) {
 		rs32 = rs;
@@ -549,6 +550,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 		if (rs32 == null) {
 		    rs32 = ((IWindowsSession)session).getRunspacePool().spawn(IWindowsSession.View._32BIT);
 		}
+		rs32.loadAssembly(getClass().getResourceAsStream("Environmentvariable58.dll"));
 		rs32.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
 	    }
 	}
