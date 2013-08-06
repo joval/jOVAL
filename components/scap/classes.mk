@@ -8,9 +8,9 @@ CLASSES=\
 	org.gocil.diagnostics.QuestionnaireRef	\
 	org.gocil.diagnostics.QuestionnaireType	\
 	org.gocil.diagnostics.QuestionRef	\
+	org.joval.scap.diagnostics.CheckDiagnostics	\
 	org.joval.scap.diagnostics.ObjectFactory	\
 	org.joval.scap.diagnostics.package-info	\
-	org.joval.scap.diagnostics.CheckDiagnostics	\
 	org.joval.scap.diagnostics.RuleDiagnostics	\
 	org.oasis.address.AddressDetails	\
 	org.oasis.address.AddressLine	\
@@ -322,6 +322,60 @@ CLASSES=\
 	scap.oval.definitions.aix.OslevelState	\
 	scap.oval.definitions.aix.OslevelTest	\
 	scap.oval.definitions.aix.package-info	\
+	scap.oval.definitions.android.AppManagerObject	\
+	scap.oval.definitions.android.AppManagerState	\
+	scap.oval.definitions.android.AppManagerTest	\
+	scap.oval.definitions.android.BluetoothObject	\
+	scap.oval.definitions.android.BluetoothState	\
+	scap.oval.definitions.android.BluetoothTest	\
+	scap.oval.definitions.android.CameraObject	\
+	scap.oval.definitions.android.CameraState	\
+	scap.oval.definitions.android.CameraTest	\
+	scap.oval.definitions.android.CertificateObject	\
+	scap.oval.definitions.android.CertificateState	\
+	scap.oval.definitions.android.CertificateTest	\
+	scap.oval.definitions.android.DeviceAccessObject	\
+	scap.oval.definitions.android.DeviceAccessState	\
+	scap.oval.definitions.android.DeviceAccessTest	\
+	scap.oval.definitions.android.DeviceSettingsObject	\
+	scap.oval.definitions.android.DeviceSettingsState	\
+	scap.oval.definitions.android.DeviceSettingsTest	\
+	scap.oval.definitions.android.EncryptionObject	\
+	scap.oval.definitions.android.EncryptionState	\
+	scap.oval.definitions.android.EncryptionTest	\
+	scap.oval.definitions.android.EntityStateEncryptionStatusType	\
+	scap.oval.definitions.android.EntityStateExternalStorageType	\
+	scap.oval.definitions.android.EntityStateKeyguardDisabledFeaturesType	\
+	scap.oval.definitions.android.EntityStatePasswordQualityType	\
+	scap.oval.definitions.android.EntityStateWifiAuthAlgorithmType	\
+	scap.oval.definitions.android.EntityStateWifiCurrentStatusType	\
+	scap.oval.definitions.android.EntityStateWifiGroupCipherType	\
+	scap.oval.definitions.android.EntityStateWifiKeyMgmtType	\
+	scap.oval.definitions.android.EntityStateWifiPairwiseCipherType	\
+	scap.oval.definitions.android.EntityStateWifiProtocolType	\
+	scap.oval.definitions.android.ExternalStorageObject	\
+	scap.oval.definitions.android.ExternalStorageState	\
+	scap.oval.definitions.android.ExternalStorageTest	\
+	scap.oval.definitions.android.LocationServiceObject	\
+	scap.oval.definitions.android.LocationServiceState	\
+	scap.oval.definitions.android.LocationServiceTest	\
+	scap.oval.definitions.android.NetworkObject	\
+	scap.oval.definitions.android.NetworkState	\
+	scap.oval.definitions.android.NetworkTest	\
+	scap.oval.definitions.android.ObjectFactory	\
+	scap.oval.definitions.android.package-info	\
+	scap.oval.definitions.android.PasswordObject	\
+	scap.oval.definitions.android.PasswordState	\
+	scap.oval.definitions.android.PasswordTest	\
+	scap.oval.definitions.android.SystemDetailsObject	\
+	scap.oval.definitions.android.SystemDetailsState	\
+	scap.oval.definitions.android.SystemDetailsTest	\
+	scap.oval.definitions.android.WifiObject	\
+	scap.oval.definitions.android.WifiSecurityObject	\
+	scap.oval.definitions.android.WifiSecurityState	\
+	scap.oval.definitions.android.WifiSecurityTest	\
+	scap.oval.definitions.android.WifiState	\
+	scap.oval.definitions.android.WifiTest	\
 	scap.oval.definitions.apache.HttpdObject	\
 	scap.oval.definitions.apache.HttpdState	\
 	scap.oval.definitions.apache.HttpdTest	\
@@ -1002,6 +1056,32 @@ CLASSES=\
 	scap.oval.systemcharacteristics.aix.ObjectFactory	\
 	scap.oval.systemcharacteristics.aix.OslevelItem	\
 	scap.oval.systemcharacteristics.aix.package-info	\
+	scap.oval.systemcharacteristics.android.AppManagerItem	\
+	scap.oval.systemcharacteristics.android.BluetoothItem	\
+	scap.oval.systemcharacteristics.android.CameraItem	\
+	scap.oval.systemcharacteristics.android.CertificateItem	\
+	scap.oval.systemcharacteristics.android.DeviceAccessItem	\
+	scap.oval.systemcharacteristics.android.DeviceSettingsItem	\
+	scap.oval.systemcharacteristics.android.EncryptionItem	\
+	scap.oval.systemcharacteristics.android.EntityItemEncryptionStatusType	\
+	scap.oval.systemcharacteristics.android.EntityItemExternalStorageType	\
+	scap.oval.systemcharacteristics.android.EntityItemKeyguardDisabledFeaturesType	\
+	scap.oval.systemcharacteristics.android.EntityItemPasswordQualityType	\
+	scap.oval.systemcharacteristics.android.EntityItemWifiAuthAlgorithmType	\
+	scap.oval.systemcharacteristics.android.EntityItemWifiCurrentStatusType	\
+	scap.oval.systemcharacteristics.android.EntityItemWifiGroupCipherType	\
+	scap.oval.systemcharacteristics.android.EntityItemWifiKeyMgmtType	\
+	scap.oval.systemcharacteristics.android.EntityItemWifiPairwiseCipherType	\
+	scap.oval.systemcharacteristics.android.EntityItemWifiProtocolType	\
+	scap.oval.systemcharacteristics.android.ExternalStorageItem	\
+	scap.oval.systemcharacteristics.android.LocationServiceItem	\
+	scap.oval.systemcharacteristics.android.NetworkItem	\
+	scap.oval.systemcharacteristics.android.ObjectFactory	\
+	scap.oval.systemcharacteristics.android.package-info	\
+	scap.oval.systemcharacteristics.android.PasswordItem	\
+	scap.oval.systemcharacteristics.android.SystemDetailsItem	\
+	scap.oval.systemcharacteristics.android.WifiItem	\
+	scap.oval.systemcharacteristics.android.WifiSecurityItem	\
 	scap.oval.systemcharacteristics.apache.HttpdItem	\
 	scap.oval.systemcharacteristics.apache.ObjectFactory	\
 	scap.oval.systemcharacteristics.apache.package-info	\

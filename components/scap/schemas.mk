@@ -32,14 +32,10 @@ SCHEMAS=\
 	oval-5.10.1/independent-system-characteristics-schema.xsd	\
 	oval-5.10.1/ios-definitions-schema.xsd	\
 	oval-5.10.1/ios-system-characteristics-schema.xsd	\
-	oval-5.10.1/junos-definitions-schema.xsd	\
-	oval-5.10.1/junos-system-characteristics-schema.xsd	\
 	oval-5.10.1/linux-definitions-schema.xsd	\
 	oval-5.10.1/linux-system-characteristics-schema.xsd	\
 	oval-5.10.1/macos-definitions-schema.xsd	\
 	oval-5.10.1/macos-system-characteristics-schema.xsd	\
-	oval-5.10.1/netconf-definitions-schema.xsd	\
-	oval-5.10.1/netconf-system-characteristics-schema.xsd	\
 	oval-5.10.1/oval-common-schema.xsd	\
 	oval-5.10.1/oval-definitions-schema.xsd	\
 	oval-5.10.1/oval-directives-schema.xsd	\
@@ -56,6 +52,12 @@ SCHEMAS=\
 	oval-5.10.1/unix-system-characteristics-schema.xsd	\
 	oval-5.10.1/windows-definitions-schema.xsd	\
 	oval-5.10.1/windows-system-characteristics-schema.xsd	\
+	oval-5.10.1/x-android-definitions-schema.xsd	\
+	oval-5.10.1/x-android-system-characteristics-schema.xsd	\
+	oval-5.10.1/x-junos-definitions-schema.xsd	\
+	oval-5.10.1/x-junos-system-characteristics-schema.xsd	\
+	oval-5.10.1/x-netconf-definitions-schema.xsd	\
+	oval-5.10.1/x-netconf-system-characteristics-schema.xsd	\
 	sce-1.0/sce-1.0-xccdf-extended-component.xsd	\
 	sce-1.0/sce-result-schema.xsd	\
 	xccdf-1.2/xccdf_1.2.xsd	\
