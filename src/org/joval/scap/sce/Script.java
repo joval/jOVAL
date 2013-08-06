@@ -239,7 +239,7 @@ public class Script implements IScript {
 	    return LangEnumeration.SHELL;
 	} else if ("tcl".equals(extension)) {
 	    return LangEnumeration.TCL;
-	} else if ("psm1".equals(extension)) {
+	} else if ("ps1".equals(extension)) {
 	    return LangEnumeration.POWERSHELL;
 	} else if ("vbs".equals(extension)) {
 	    return LangEnumeration.VISUAL_BASIC;
@@ -270,7 +270,7 @@ public class Script implements IScript {
 	  case TCL:
 	    return "tcl";
 	  case POWERSHELL:
-	    return "psm1";
+	    return "ps1";
 	  case VISUAL_BASIC:
 	    return "vbs";
 	  case WINDOWS_BATCH:
@@ -318,7 +318,7 @@ public class Script implements IScript {
 	      case PERL:
 		return "perl.exe ";
 	      case POWERSHELL:
-		return "powershell.exe ";
+		return "powershell.exe -File ";
 	      case PYTHON:
 		return "python.exe ";
 	      case VISUAL_BASIC:
