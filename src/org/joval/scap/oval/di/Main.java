@@ -57,6 +57,7 @@ import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
 import org.joval.util.Version;
 import org.joval.xml.SchemaValidator;
+import org.joval.xml.XSLTools;
 import org.joval.xml.schematron.ValidationException;
 import org.joval.xml.schematron.Validator;
 
@@ -516,7 +517,12 @@ public class Main implements IObserver<IOvalEngine.Message> {
 	    }
 	    if (state.applyTransform) {
 		print(getMessage("MESSAGE_RUNNING_TRANSFORM", state.getPath(state.getXMLTransform())));
-		results.writeTransform(state.getXMLTransform(), state.resultsHTML);
+		try {
+		    FileInputStream fin = new FileInputStream(state.getXMLTransform());
+		    results.writeTransform(XSLTools.getTransformer(fin), state.resultsHTML);
+		} catch (Exception e) {
+		    logger.log(Level.WARNING, e.getMessage(), e);
+		}
 	    } else {
 		print(getMessage("MESSAGE_SKIPPING_TRANSFORM"));
 	    }

@@ -6,6 +6,7 @@ package org.joval.intf.scap.xccdf;
 import java.io.File;
 import java.io.IOException;
 import java.util.NoSuchElementException;
+import javax.xml.transform.Transformer;
 
 import scap.xccdf.BenchmarkType;
 import scap.xccdf.ProfileType;
@@ -53,5 +54,5 @@ public interface IBenchmark extends ITransformable {
     /**
      * Transform using the specified template, and serialize to the specified file.
      */
-    void writeTransform(File transform, File output);
+    void writeTransform(Transformer transform, File output);
 }

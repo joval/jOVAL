@@ -14,6 +14,7 @@ import org.oasis.catalog.Catalog;
 import scap.ai.AssetType;
 import scap.arf.core.AssetReportCollection;
 import scap.oval.systemcharacteristics.core.SystemInfoType;
+import scap.xccdf.BenchmarkType;
 import scap.xccdf.TestResultType;
 
 import org.joval.scap.ScapException;
@@ -37,6 +38,16 @@ public interface IReport extends ITransformable {
      * Get a particular asset.
      */
     AssetType getAsset(String assetId) throws NoSuchElementException;
+
+    /**
+     * Get the benchmark IDs from the report requests in the report.
+     */
+    Collection<String> getBenchmarkIds();
+
+    /**
+     * Get a copy of a particular report request based on its benchmark ID.
+     */
+    BenchmarkType getBenchmark(String benchmarkId) throws ScapException;
 
     /**
      * Get the XCCDF result associated with the specified asset, benchmark and profile.

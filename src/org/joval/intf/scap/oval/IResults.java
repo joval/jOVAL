@@ -6,6 +6,7 @@ package org.joval.intf.scap.oval;
 import java.io.File;
 import java.util.Collection;
 import java.util.NoSuchElementException;
+import javax.xml.transform.Transformer;
 
 import scap.oval.systemcharacteristics.core.SystemInfoType;
 import scap.oval.results.DefinitionType;
@@ -71,5 +72,5 @@ public interface IResults extends ITransformable {
     /**
      * Serialize the contents of this IResults to the output file, after applying the given XSL transform.
      */
-    void writeTransform(File transform, File output);
+    void writeTransform(Transformer transform, File output);
 }

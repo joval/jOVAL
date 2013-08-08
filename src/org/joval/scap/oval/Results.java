@@ -232,26 +232,15 @@ public class Results implements IResults, ILoggable {
     /**
      * Transform using the specified template, and serialize to the specified file.
      */
-    public void writeTransform(File transform, File output) {
+    public void writeTransform(Transformer transform, File output) {
 	try {
-	    Transformer transformer = XSLTools.getTransformer(new FileInputStream(transform));
-	    transformer.transform(getSource(), new StreamResult(output));
+	    transform.transform(getSource(), new StreamResult(output));
 	} catch (OvalException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (IllegalArgumentException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (NoSuchElementException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (SAXException e) {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (JAXBException e) {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (TransformerConfigurationException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (IOException e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	} catch (TransformerException e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 

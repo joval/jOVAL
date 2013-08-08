@@ -62,6 +62,7 @@ import org.joval.scap.xccdf.Bundle;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
+import org.joval.xml.XSLTools;
 import org.joval.xml.SchemaValidator;
 import org.joval.xml.SignatureValidator;
 
@@ -457,7 +458,12 @@ public class XPERT {
 				logger.info(getMessage("message.report.save", reportFile));
 				report.writeXML(reportFile);
 				logger.info(getMessage("message.transform", reportHTML));
-				ctx.getBenchmark().writeTransform(transformFile, reportHTML);
+				try {
+				    FileInputStream fin = new FileInputStream(transformFile);
+				    ctx.getBenchmark().writeTransform(XSLTools.getTransformer(fin), reportHTML);
+				} catch (Exception e) {
+				    logger.severe(getMessage("error.transform", e.getMessage()));
+				}
 			    }
 			    logger.info(getMessage("message.benchmark.processed"));
 			    exitCode = 0;

@@ -116,6 +116,13 @@ public class ScapFactory {
     }
 
     /**
+     * Create an ARF report from a stream.
+     */
+    public static IReport createReport(InputStream in) throws ArfException {
+	return new Report(Report.getAssetReportCollection(in));
+    }
+
+    /**
      * Create an ARF report from a file.
      */
     public static IReport createReport(File f) throws ArfException {

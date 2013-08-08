@@ -121,13 +121,6 @@ public class Benchmark implements IBenchmark, ILoggable {
 	    Object rootObj = unmarshaller.unmarshal(source);
 	    if (rootObj instanceof BenchmarkType) {
 		return (BenchmarkType)rootObj;
-	    } else if (rootObj instanceof JAXBElement) {
-		JAXBElement root = (JAXBElement)rootObj;
-		if (root.getValue() instanceof BenchmarkType) {
-		    return (BenchmarkType)root.getValue();
-		} else {
-		    throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_BAD_SOURCE, source.getSystemId()));
-		}
 	    } else {
 		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_BAD_SOURCE, source.getSystemId()));
 	    }
@@ -215,24 +208,13 @@ public class Benchmark implements IBenchmark, ILoggable {
 	}
     }
 
-    public void writeTransform(File transform, File output) {
+    public void writeTransform(Transformer transform, File output) {
 	try {
-	    Transformer transformer = XSLTools.getTransformer(new FileInputStream(transform));
-	    transformer.transform(getSource(), new StreamResult(output));
-	} catch (IllegalArgumentException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (NoSuchElementException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    transform.transform(getSource(), new StreamResult(output));
 	} catch (JAXBException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (SAXException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (TransformerConfigurationException e) {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (TransformerException e) {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (IOException e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	}
     }
 

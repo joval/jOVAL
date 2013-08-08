@@ -77,6 +77,7 @@ import scap.oval.results.SystemType;
 import scap.oval.systemcharacteristics.core.InterfaceType;
 import scap.oval.systemcharacteristics.core.ItemType;
 import scap.oval.systemcharacteristics.core.SystemInfoType;
+import scap.xccdf.BenchmarkType;
 import scap.xccdf.CheckType;
 import scap.xccdf.ComplexCheckType;
 import scap.xccdf.RuleResultType;
@@ -110,6 +111,10 @@ public class Report implements IReport, ILoggable {
 	return getAssetReportCollection(new StreamSource(f));
     }
 
+    public static final AssetReportCollection getAssetReportCollection(InputStream in) throws ArfException {
+	return getAssetReportCollection(new StreamSource(in));
+    }
+
     public static final AssetReportCollection getAssetReportCollection(Source src) throws ArfException {
 	Object rootObj = parse(src);
 	if (rootObj instanceof AssetReportCollection) {
@@ -137,6 +142,7 @@ public class Report implements IReport, ILoggable {
     private LocLogger logger;
     private AssetReportCollection arc;
     private HashMap<String, Element> requests;
+    private HashMap<String, String> requestXrefs;
     private HashMap<String, AssetType> assets;
     private HashMap<String, Element> reports;
 
@@ -183,6 +189,30 @@ public class Report implements IReport, ILoggable {
 	} else {
 	    throw new NoSuchElementException(assetId);
 	}
+    }
+
+    public Collection<String> getBenchmarkIds() {
+	if (requestXrefs == null) {
+	    initRequestXrefs();
+	}
+	return requestXrefs.values();
+    }
+
+    public BenchmarkType getBenchmark(String benchmarkId) throws NoSuchElementException {
+	if (requestXrefs == null) {
+	    initRequestXrefs();
+	}
+	try {
+	    for (Map.Entry<String, String> entry : requestXrefs.entrySet()) {
+		if (benchmarkId.equals(entry.getValue())) {
+		    Unmarshaller unmarshaller = SchemaRegistry.XCCDF.getJAXBContext().createUnmarshaller();
+		    return (BenchmarkType)unmarshaller.unmarshal(requests.get(entry.getKey()));
+		}
+	    }
+	} catch (JAXBException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	throw new NoSuchElementException(benchmarkId);
     }
 
     public TestResultType getTestResult(String assetId, String benchmarkId, String profileId) throws NoSuchElementException {
@@ -454,6 +484,19 @@ public class Report implements IReport, ILoggable {
     }
 
     // Private
+
+    private void initRequestXrefs() {
+	requestXrefs = new HashMap<String, String>();
+	try {
+	    Unmarshaller unmarshaller = SchemaRegistry.XCCDF.getJAXBContext().createUnmarshaller();
+	    for (Map.Entry<String, Element> entry : requests.entrySet()) {
+		BenchmarkType bt = (BenchmarkType)unmarshaller.unmarshal(entry.getValue());
+		requestXrefs.put(entry.getKey(), bt.getBenchmarkId());
+	    }
+	} catch (Exception e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+    }
 
     private void setIpAddressInfo(NetworkInterfaceType nit, String ipAddressString) {
 	IpAddressType ip = null;
