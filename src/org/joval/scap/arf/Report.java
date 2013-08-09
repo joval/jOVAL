@@ -227,7 +227,7 @@ public class Report implements IReport, ILoggable {
 				SystemEnumeration.XCCDF.namespace().equals(elt.getNamespaceURI())) {
 				TestResultType tr = (TestResultType)(((JAXBElement)unmarshaller.unmarshal(elt)).getValue());
 				if (benchmarkId.equals(tr.getBenchmark().getId()) &&
-				    profileId.equals(tr.getProfile().getIdref())) {
+				    profileId == null ? !tr.isSetProfile() : profileId.equals(tr.getProfile().getIdref())) {
 				    return tr;
 				}
 			    }
@@ -624,6 +624,8 @@ public class Report implements IReport, ILoggable {
 			JAXBElement elt = (JAXBElement)unmarshaller.unmarshal(subreport);
 			cd.setSceResults((SceResultsType)elt.getValue());
 		    }
+		} catch (NoSuchElementException e) {
+		    logger.warn(e.getMessage());
 		} catch (JAXBException e) {
 		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    throw new ArfException(e);
