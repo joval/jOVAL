@@ -13,6 +13,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import jsaf.identity.IdentityException;
 import jsaf.intf.system.ISession;
 import jsaf.intf.windows.identity.IDirectory;
 import jsaf.intf.windows.identity.IUser;
@@ -23,7 +24,6 @@ import jsaf.intf.windows.wmi.ISWbemProperty;
 import jsaf.intf.windows.wmi.ISWbemPropertySet;
 import jsaf.intf.windows.wmi.IWmiProvider;
 import jsaf.provider.windows.Timestamp;
-import jsaf.provider.windows.wmi.WmiException;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -130,10 +130,10 @@ public class UserAdapter implements IAdapter {
 	    }
 	} catch (NoSuchElementException e) {
 	    // No match.
-	} catch (WmiException e) {
+	} catch (IdentityException e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, obj.getId(), e.getMessage()));
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_IDENTITY, obj.getId(), e.getMessage()));
 	    rc.addMessage(msg);
 	}
 	return items;
@@ -158,7 +158,7 @@ public class UserAdapter implements IAdapter {
 	}
     }
 
-    private UserItem makeItem(IUser user) throws WmiException {
+    private UserItem makeItem(IUser user) throws IdentityException {
 	UserItem item = Factories.sc.windows.createUserItem();
 	EntityItemStringType userType = Factories.sc.core.createEntityItemStringType();
 	if (user.isBuiltin()) {

@@ -31,6 +31,7 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import org.slf4j.cal10n.LocLogger;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
+import jsaf.intf.windows.identity.IGroup;
 import jsaf.intf.windows.system.IWindowsSession;
 
 import scap.cpe.dictionary.ListType;
@@ -769,7 +770,7 @@ public class Engine implements IXccdfEngine {
     /**
      * Create a Benchmark.TestResult node, initialized with information gathered from the context and plugin.
      */
-    private TestResultType initializeResult() throws OvalException {
+    private TestResultType initializeResult() throws Exception {
 	TestResultType testResult = FACTORY.createTestResultType();
 	String id = ctx.getBenchmark().getId();
 	String name = "unknown";
@@ -795,16 +796,30 @@ public class Engine implements IXccdfEngine {
 	    profileRef.setIdref(ctx.getProfile().getProfileId());
 	    testResult.setProfile(profileRef);
 	}
-	String user = plugin.getSession().getUsername();
-	if (user != null) {
-	    IdentityType identity = FACTORY.createIdentityType();
-	    identity.setValue(user);
-	    if (IUnixSession.ROOT.equals(user) || IWindowsSession.ADMINISTRATOR.equalsIgnoreCase(user)) {
+
+	ISession session = plugin.getSession();
+	IdentityType identity = FACTORY.createIdentityType();
+	identity.setValue(session.getUsername());
+	identity.setAuthenticated(true);
+	String user = session.getUsername();
+	switch(session.getType()) {
+	  case WINDOWS:
+	    IGroup admins = ((IWindowsSession)session).getDirectory().queryGroupBySid(IWindowsSession.ADMINISTRATORS_SID);
+	    for (String member : admins.getMemberUserNetbiosNames()) {
+		if (user.equalsIgnoreCase(member)) {
+		    identity.setPrivileged(true);
+		    break;
+		}
+	    }
+	    break;
+	  case UNIX:
+	    if (IUnixSession.ROOT.equals(user)) {
 		identity.setPrivileged(true);
 	    }
-	    identity.setAuthenticated(true);
-	    testResult.setIdentity(identity);
+	    break;
 	}
+	testResult.setIdentity(identity);
+
 	sysinfo = plugin.getSystemInfo();
 	applicableCpes = new ArrayList<String>();
 	if (!testResult.getTarget().contains(sysinfo.getPrimaryHostName())) {
