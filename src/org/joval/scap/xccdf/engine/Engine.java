@@ -18,6 +18,7 @@ import java.util.GregorianCalendar;
 import java.util.Hashtable;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -32,6 +33,7 @@ import org.slf4j.cal10n.LocLogger;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.intf.windows.identity.IGroup;
+import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
 
 import scap.cpe.dictionary.ListType;
@@ -804,13 +806,15 @@ public class Engine implements IXccdfEngine {
 	String user = session.getUsername();
 	switch(session.getType()) {
 	  case WINDOWS:
-	    IGroup admins = ((IWindowsSession)session).getDirectory().queryGroupBySid(IWindowsSession.ADMINISTRATORS_SID);
-	    for (String member : admins.getMemberUserNetbiosNames()) {
-		if (user.equalsIgnoreCase(member)) {
-		    identity.setPrivileged(true);
-		    break;
-		}
+	    IWindowsSession ws = (IWindowsSession)session;
+	    IRunspace runspace = null;
+	    Iterator<IRunspace> iter = ws.getRunspacePool().enumerate().iterator();
+	    if (iter.hasNext()) {
+		runspace = iter.next();
+	    } else {
+		runspace = ws.getRunspacePool().spawn(ws.getNativeView());
 	    }
+	    identity.setPrivileged("true".equalsIgnoreCase(runspace.invoke("Check-Privileged")));
 	    break;
 	  case UNIX:
 	    if (IUnixSession.ROOT.equals(user)) {
