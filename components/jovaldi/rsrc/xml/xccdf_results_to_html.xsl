@@ -70,8 +70,8 @@
                 <small>
                   <xsl:if test="./@authenticated = 'true'"> authenticated, </xsl:if>
                   <xsl:if test="./@authenticated = 'false'"> not authenticated, </xsl:if>
-                  <xsl:if test="./@privileged = 'true'">priviledged</xsl:if>
-                  <xsl:if test="./@privileged = 'false'">not priviledged</xsl:if>
+                  <xsl:if test="./@privileged = 'true'">privileged</xsl:if>
+                  <xsl:if test="./@privileged = 'false'">not privileged</xsl:if>
                 </small><xsl:if test="position() != last()"><br /></xsl:if>
               </xsl:for-each>            
             </td>
