@@ -536,6 +536,7 @@
     <!-- avoid overloading the id property -->
     <jxb:bindings node="xs:element[@name='metabase_object']//xs:element[@name='id']">
         <jxb:property name="metabase_id" />
+        <jxb:factoryMethod name="MetabaseObjectMetabaseId" />
     </jxb:bindings>
     <!-- avoid overloading the id property -->
     <jxb:bindings node="xs:element[@name='metabase_state']//xs:element[@name='id']">
