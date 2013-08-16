@@ -276,6 +276,7 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	item.setLanguage(languageType);
 
 	EntityItemVersionType versionType = Factories.sc.core.createEntityItemVersionType();
+	versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 	if (peHeaders != null && peHeaders.containsKey(IWindowsFileInfo.PE_VERSION_MAJOR_PART)) {
 	    int major = Integer.parseInt(peHeaders.get(IWindowsFileInfo.PE_VERSION_MAJOR_PART));
 	    int minor = 0, build = 0, priv = 0;
@@ -292,7 +293,6 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 		versionType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
 		versionType.setValue(new Version(major, minor, build, priv).toString());
-		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 	    }
 	} else {
 	    versionType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
@@ -332,9 +332,9 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	item.setOriginalFilename(originalFilenameType);
 
 	EntityItemVersionType productVersionType = Factories.sc.core.createEntityItemVersionType();
+	productVersionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 	if (peHeaders != null && peHeaders.containsKey(IWindowsFileInfo.PE_PRODUCT_VERSION)) {
 	    productVersionType.setValue(peHeaders.get(IWindowsFileInfo.PE_PRODUCT_VERSION));
-	    productVersionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 	} else {
 	    productVersionType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	}
