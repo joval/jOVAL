@@ -187,25 +187,34 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 	    for (IFile f : files) {
 		FileeffectiverightsItem baseItem = (FileeffectiverightsItem)getBaseItem(obj, f);
 		if (baseItem != null) {
+		    Map<String, IPrincipal> resolvedPrincipals = new HashMap<String, IPrincipal>();
 		    for (IPrincipal principal : principalMap.values()) {
 			switch(principal.getType()) {
 			  case GROUP:
 			    for (IPrincipal p : directory.getAllPrincipals(principal, includeGroups, resolveGroups)) {
-				StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType File -Name ");
-				cmd.append("\"").append(f.getPath()).append("\"");
-				cmd.append(" -SID ").append(principal.getSid());
-				int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
-				items.add(makeItem(baseItem, p, mask));
+				resolvedPrincipals.put(p.getSid(), p);
 			    }
 			    break;
-
 			  case USER:
-			    StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType File -Name ");
-			    cmd.append("\"").append(f.getPath()).append("\"");
-			    cmd.append(" -SID ").append(principal.getSid());
-			    int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
-			    items.add(makeItem(baseItem, principal, mask));
+			    resolvedPrincipals.put(principal.getSid(), principal);
 			    break;
+			}
+		    }
+		    StringBuffer cmd = new StringBuffer();
+		    for (String sid : resolvedPrincipals.keySet()) {
+			if (cmd.length() > 0) {
+			    cmd.append(",");
+			}
+			cmd.append("\"").append(sid).append("\"");
+		    }
+		    cmd.append(" | Get-EffectiveRights -ObjectType File ");
+		    cmd.append(" -Name \"").append(f.getPath()).append("\"");
+		    for (String line : getRunspace(view).invoke(cmd.toString()).split("\r\n")) {
+			int ptr = line.indexOf(":");
+			if (ptr != -1) {
+			    String sid = line.substring(0,ptr);
+			    int mask = Integer.parseInt(line.substring(ptr+1).trim());
+			    items.add(makeItem(baseItem, resolvedPrincipals.get(sid), mask));
 			}
 		    }
 		}

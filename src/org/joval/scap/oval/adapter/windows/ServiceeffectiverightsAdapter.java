@@ -119,12 +119,25 @@ public class ServiceeffectiverightsAdapter extends BaseServiceAdapter<Serviceeff
 	    // Create items
 	    //
 	    String serviceName = (String)baseItem.getServiceName().getValue();
+	    Map<String, IPrincipal> principalMap = new HashMap<String, IPrincipal>();
+	    StringBuffer cmd = new StringBuffer();
 	    for (IPrincipal principal : principals) {
-		StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType Service -Name ");
-		cmd.append("\"").append(serviceName).append("\"");
-		cmd.append(" -SID ").append(principal.getSid());
-		int mask = Integer.parseInt(getRunspace().invoke(cmd.toString()));
-		items.add(makeItem(baseItem, principal, mask));
+		if (cmd.length() > 0) {
+		    cmd.append(",");
+		}
+		sid = principal.getSid();
+		cmd.append("\"").append(sid).append("\"");
+		principalMap.put(sid, principal);
+	    }
+	    cmd.append(" | Get-EffectiveRights -ObjectType Service ");
+	    cmd.append(" -Name \"").append(serviceName).append("\"");
+	    for (String line : getRunspace().invoke(cmd.toString()).split("\r\n")) {
+		int ptr = line.indexOf(":");
+		if (ptr != -1) {
+		    sid = line.substring(0,ptr);
+		    int mask = Integer.parseInt(line.substring(ptr+1).trim());
+		    items.add(makeItem(baseItem, principalMap.get(sid), mask));
+		}
 	    }
 	} catch (NoSuchElementException e) {
 	    MessageType msg = Factories.common.createMessageType();

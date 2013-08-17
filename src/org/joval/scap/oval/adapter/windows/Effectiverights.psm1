@@ -3,15 +3,23 @@
 #
 function Get-EffectiveRights {
   param(
+    [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true)][String]$SID,
     [String]$ObjectType = $(throw "Mandatory parameter -ObjectType"),
-    [String]$Name = $(throw "Mandatory parameter -Name"),
-    [String]$SID = $(throw "Mandatory parameter -SID")
+    [String]$Name = $(throw "Mandatory parameter -Name")
   )
 
-  $ErrorActionPreference = "Continue"
-  switch($ObjectType) {
-    "File"    {"{0:D}" -f [jOVAL.EffectiveRights.Probe]::GetFileEffectiveRights($Name, $SID)} 
-    "RegKey"  {"{0:D}" -f [jOVAL.EffectiveRights.Probe]::GetRegKeyEffectiveRights($Name, $SID)}
-    "Service" {"{0:D}" -f [jOVAL.EffectiveRights.Probe]::GetServiceEffectiveRights($Name, $SID)}
+  PROCESS {
+    $ErrorActionPreference = "Continue"
+    switch($ObjectType) {
+      "File" {
+        "{0}: {1:D}" -f $SID, [jOVAL.EffectiveRights.Probe]::GetFileEffectiveRights($Name, $SID)
+      } 
+      "RegKey" {
+        "{0}: {1:D}" -f $SID, [jOVAL.EffectiveRights.Probe]::GetRegKeyEffectiveRights($Name, $SID)
+      }
+      "Service" {
+        "{0}: {1:D}" -f $SID, [jOVAL.EffectiveRights.Probe]::GetServiceEffectiveRights($Name, $SID)
+      }
+    }
   }
 }

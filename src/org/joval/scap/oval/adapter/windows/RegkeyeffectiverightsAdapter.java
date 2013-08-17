@@ -219,26 +219,33 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	    //
 	    // Create items
 	    //
+	    Map<String, IPrincipal> resolvedPrincipals = new HashMap<String, IPrincipal>();
 	    for (IPrincipal principal : principalMap.values()) {
 		switch(principal.getType()) {
-		  case USER: {
-		    StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType RegKey -Name ");
-		    cmd.append("\"").append(hive).append("\\").append(key.getPath()).append("\"");
-		    cmd.append(" -SID ").append(principal.getSid());
-		    int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
-		    items.add(makeItem(baseItem, principal, mask));
+		  case USER:
+		    resolvedPrincipals.put(principal.getSid(), principal);
 		    break;
-		  }
 		  case GROUP:
 		    for (IPrincipal p : directory.getAllPrincipals(principal, includeGroups, resolveGroups)) {
-			StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType RegKey -Name ");
-			cmd.append("\"").append(hive).append("\\").append(key.getPath()).append("\"");
-			cmd.append(" -SID ").append(principal.getSid());
-			int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
-			items.add(makeItem(baseItem, p, mask));
+			resolvedPrincipals.put(p.getSid(), p);
 		    }
 		    break;
 		}
+	    }
+	    StringBuffer cmd = new StringBuffer();
+	    for (Map.Entry<String, IPrincipal> entry : resolvedPrincipals.entrySet()) {
+		if (cmd.length() > 0) {
+		    cmd.append(",");
+		}
+		cmd.append("\"").append(entry.getKey()).append("\"");
+	    }
+	    cmd.append(" | Get-EffectiveRights -ObjectType RegKey ");
+	    cmd.append(" -Name \"").append(hive).append("\\").append(key.getPath()).append("\"");
+	    for (String line : getRunspace(view).invoke(cmd.toString()).split("\r\n")) {
+		int ptr = line.indexOf(":");
+		String sid = line.substring(0,ptr);
+		int mask = Integer.parseInt(line.substring(ptr+1).trim());
+		items.add(makeItem(baseItem, resolvedPrincipals.get(sid), mask));
 	    }
 	} catch (NoSuchElementException e) {
 	    MessageType msg = Factories.common.createMessageType();
