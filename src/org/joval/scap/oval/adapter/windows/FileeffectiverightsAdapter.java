@@ -5,6 +5,7 @@ package org.joval.scap.oval.adapter.windows;
 
 import java.io.InputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,6 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import jsaf.identity.IdentityException;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFileEx;
 import jsaf.intf.system.ISession;
@@ -25,7 +27,7 @@ import jsaf.intf.windows.identity.IDirectory;
 import jsaf.intf.windows.identity.IPrincipal;
 import jsaf.intf.windows.io.IWindowsFileInfo;
 import jsaf.intf.windows.system.IWindowsSession;
-import jsaf.provider.windows.wmi.WmiException;
+import jsaf.util.Base64;
 import jsaf.util.StringTools;
 
 import scap.oval.common.MessageLevelEnumeration;
@@ -33,6 +35,7 @@ import scap.oval.common.MessageType;
 import scap.oval.common.OperationEnumeration;
 import scap.oval.common.SimpleDatatypeEnumeration;
 import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.windows.FileBehaviors;
 import scap.oval.definitions.windows.Fileeffectiverights53Object;
 import scap.oval.definitions.windows.FileeffectiverightsObject;
 import scap.oval.systemcharacteristics.core.EntityItemBoolType;
@@ -43,6 +46,7 @@ import scap.oval.systemcharacteristics.core.StatusEnumeration;
 import scap.oval.systemcharacteristics.windows.FileeffectiverightsItem;
 
 import org.joval.intf.plugin.IAdapter;
+import org.joval.scap.oval.Batch;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.adapter.independent.BaseFileAdapter;
@@ -72,7 +76,121 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 	return classes;
     }
 
+    // Implement IBatch
+
+    @Override
+    public Collection<IResult> exec() {
+	Map<IRequest, IResult> resultMap = new HashMap<IRequest, IResult>();
+	Map<String, IRequest> requestMap = new HashMap<String, IRequest>();
+	Map<String, FileeffectiverightsItem> baseItems = new HashMap<String, FileeffectiverightsItem>();
+	try {
+	    //
+	    // Build a massive command...
+	    //
+	    StringBuffer cmd = new StringBuffer("%{");
+	    String[] paths = queuePaths();
+	    IFile[] files = session.getFilesystem().getFiles(paths);
+	    for (int i=0; i < files.length; i++) {
+		IRequest request = queue.get(i);
+		IRequestContext rc = request.getContext();
+		ObjectType obj = request.getObject();
+		ReflectedFileObject fObj = new ReflectedFileObject(obj);
+		IFile f = files[i];
+		if (f == null) {
+		    resultMap.put(request, new Batch.Result(new ArrayList<FileeffectiverightsItem>(), rc));
+		} else {
+		    try {
+			baseItems.put(obj.getId(), (FileeffectiverightsItem)getBaseItem(obj, f));
+			StringBuffer sb = new StringBuffer("\"{\";");
+			sb.append("\"Object: ").append(obj.getId()).append("\";");
+			int sidNum=0;
+			for (String sid : getObjectInfo(obj).principalMap.keySet()) {
+			    if (sidNum++ > 0) {
+				sb.append(",");
+			    }
+			    sb.append("\"").append(sid).append("\"");
+			}
+			sb.append(" | Get-EffectiveRights -ObjectType File ");
+			sb.append(" -Name \"").append(f.getPath()).append("\";");
+			sb.append("\"}\";");
+			cmd.append(sb);
+			requestMap.put(obj.getId(), request);
+		    } catch (CollectException e) {
+			resultMap.put(request, new Batch.Result(e, rc));
+		    } catch (Exception e) {
+			session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			resultMap.put(request, new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), rc));
+		    }
+		}
+	    }
+	    cmd.append("} | Transfer-Encode");
+	    try {
+		String data = getRunspace(((IWindowsSession)session).getNativeView()).invoke(cmd.toString());
+		data = new String(Base64.decode(data), StringTools.UTF8);
+		Iterator<String> iter = Arrays.asList(data.split("\r\n")).iterator();
+		ObjectItems items = null;
+		while ((items = nextItems(iter, requestMap, baseItems)) != null) {
+		    IRequest request = requestMap.get(items.objectId);
+		    resultMap.put(request, new Batch.Result(items.items, request.getContext()));
+		}
+	    } catch (Exception e) {
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		for (IRequest request : requestMap.values()) {
+		    IRequestContext rc = request.getContext();
+		    resultMap.put(request, new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), rc));
+		}
+	    }
+	} catch (IOException e) {
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    for (IRequest request : queue) {
+		IRequestContext rc = request.getContext();
+		resultMap.put(request, new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), rc));
+	    }
+	}
+	queue = null;
+	return resultMap.values();
+    }
+
     // Protected
+
+    /**
+     * Similar to super.batchable, except that behaviors are allowed provided they do not pertain to the file.
+     */
+    @Override
+    protected boolean batchable(IRequest request) {
+	ObjectType obj = request.getObject();
+	FileBehaviors behaviors = null;
+	if (obj instanceof Fileeffectiverights53Object) {
+	    Fileeffectiverights53Object fObj = (Fileeffectiverights53Object)obj;
+	    if (fObj.isSetBehaviors()) {
+		behaviors = fObj.getBehaviors();
+	    }
+	} else if (obj instanceof FileeffectiverightsObject) {
+	    FileeffectiverightsObject fObj = (FileeffectiverightsObject)obj;
+	    if (fObj.isSetBehaviors()) {
+		behaviors = fObj.getBehaviors();
+	    }
+	}
+	if (behaviors != null) {
+	    if (((IWindowsSession)session).getNativeView() != getView(behaviors) ||
+		(behaviors.isSetRecurseDirection() && !behaviors.getRecurseDirection().equals("none")) ||
+		(behaviors.isSetMaxDepth() && !BigInteger.ZERO.equals(behaviors.getMaxDepth()))) {
+		return false;
+	    }
+	}
+	ReflectedFileObject fObj = new ReflectedFileObject(obj);
+	return  (
+		    fObj.isSetFilepath() &&
+		    fObj.getFilepath().getOperation() == OperationEnumeration.EQUALS
+		)
+		||
+		(
+		    fObj.isSetFilename() &&
+		    !fObj.isFilenameNil() &&
+		    fObj.getFilename().getOperation() == OperationEnumeration.EQUALS &&
+		    fObj.getPath().getOperation() == OperationEnumeration.EQUALS
+		);
+    }
 
     protected Class getItemClass() {
 	return FileeffectiverightsItem.class;
@@ -81,127 +199,14 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
     protected Collection<FileeffectiverightsItem> getItems(ObjectType obj, Collection<IFile> files, IRequestContext rc)
 		throws CollectException {
 
-	directory = ((IWindowsSession)session).getDirectory();
 	Collection<FileeffectiverightsItem> items = new ArrayList<FileeffectiverightsItem>();
 	try {
-	    List<IPrincipal> principals = new ArrayList<IPrincipal>();
-	    IWindowsSession.View view = null;
-	    boolean includeGroups = true;
-	    boolean resolveGroups = false;
-	    if (obj instanceof Fileeffectiverights53Object) {
-		Fileeffectiverights53Object fObj = (Fileeffectiverights53Object)obj;
-		view = getView(fObj.getBehaviors());
-		if (fObj.isSetBehaviors()) {
-		    includeGroups = fObj.getBehaviors().getIncludeGroup();
-		    resolveGroups = fObj.getBehaviors().getResolveGroup();
-		}
-		String pSid = (String)fObj.getTrusteeSid().getValue();
-		OperationEnumeration op = fObj.getTrusteeSid().getOperation();
-		switch(op) {
-		  case PATTERN_MATCH: {
-		    Pattern p = Pattern.compile(pSid);
-		    for (IPrincipal principal : directory.queryAllPrincipals()) {
-			if (p.matcher(principal.getSid()).find()) {
-			    principals.add(principal);
-			}
-		    }
-		    break;
-		  }
-
-		  case NOT_EQUAL:
-		    for (IPrincipal principal : directory.queryAllPrincipals()) {
-			if (!pSid.equals(principal.getSid())) {
-			    principals.add(principal);
-			}
-		    }
-		    break;
-
-		  case CASE_INSENSITIVE_EQUALS:
-		  case EQUALS: {
-		    principals.add(directory.queryPrincipalBySid(pSid));
-		    break;
-		  }
-
-		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-		}
-	    } else if (obj instanceof FileeffectiverightsObject) {
-		FileeffectiverightsObject fObj = (FileeffectiverightsObject)obj;
-		view = getView(fObj.getBehaviors());
-		if (fObj.isSetBehaviors()) {
-		    includeGroups = fObj.getBehaviors().getIncludeGroup();
-		    resolveGroups = fObj.getBehaviors().getResolveGroup();
-		}
-		String pName = (String)fObj.getTrusteeName().getValue();
-		OperationEnumeration op = fObj.getTrusteeName().getOperation();
-		switch(op) {
-		  case PATTERN_MATCH: {
-		    Pattern p = Pattern.compile(pName);
-		    for (IPrincipal principal : directory.queryAllPrincipals()) {
-			if (principal.isBuiltin() && p.matcher(principal.getName()).find()) {
-			    principals.add(principal);
-			} else if (p.matcher(principal.getNetbiosName()).find()) {
-			    principals.add(principal);
-			}
-		    }
-		    break;
-		  }
-
-		  case NOT_EQUAL:
-		    for (IPrincipal principal : directory.queryAllPrincipals()) {
-			if (principal.isBuiltin() && !pName.equals(principal.getName())) {
-			    principals.add(principal);
-			} else if (!pName.equals(principal.getNetbiosName())) {
-			    principals.add(principal);
-			}
-		    }
-		    break;
-
-		  case CASE_INSENSITIVE_EQUALS:
-		  case EQUALS: {
-		    principals.add(directory.queryPrincipal(pName));
-		    break;
-		  }
-
-		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-		}
-	    } else {
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OBJECT, obj.getClass().getName(), obj.getId());
-		throw new CollectException(msg, FlagEnumeration.ERROR);
-	    }
-
-	    //
-	    // Filter out any duplicate IPrincipals
-	    //
-	    Map<String, IPrincipal> principalMap = new HashMap<String, IPrincipal>();
-	    for (IPrincipal principal : principals) {
-		principalMap.put(principal.getSid(), principal);
-	    }
-
-	    //
-	    // Create items
-	    //
+	    ObjectInfo info = getObjectInfo(obj);
 	    for (IFile f : files) {
 		FileeffectiverightsItem baseItem = (FileeffectiverightsItem)getBaseItem(obj, f);
 		if (baseItem != null) {
-		    Map<String, IPrincipal> resolvedPrincipals = new HashMap<String, IPrincipal>();
-		    for (IPrincipal principal : principalMap.values()) {
-			switch(principal.getType()) {
-			  case GROUP:
-			    for (IPrincipal p : directory.getAllPrincipals(principal, includeGroups, resolveGroups)) {
-				resolvedPrincipals.put(p.getSid(), p);
-			    }
-			    break;
-			  case USER:
-			    resolvedPrincipals.put(principal.getSid(), principal);
-			    break;
-			}
-		    }
 		    StringBuffer cmd = new StringBuffer();
-		    for (String sid : resolvedPrincipals.keySet()) {
+		    for (String sid : info.principalMap.keySet()) {
 			if (cmd.length() > 0) {
 			    cmd.append(",");
 			}
@@ -209,12 +214,12 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 		    }
 		    cmd.append(" | Get-EffectiveRights -ObjectType File ");
 		    cmd.append(" -Name \"").append(f.getPath()).append("\"");
-		    for (String line : getRunspace(view).invoke(cmd.toString()).split("\r\n")) {
+		    for (String line : getRunspace(info.view).invoke(cmd.toString()).split("\r\n")) {
 			int ptr = line.indexOf(":");
 			if (ptr != -1) {
 			    String sid = line.substring(0,ptr);
 			    int mask = Integer.parseInt(line.substring(ptr+1).trim());
-			    items.add(makeItem(baseItem, resolvedPrincipals.get(sid), mask));
+			    items.add(makeItem(baseItem, info.principalMap.get(sid), mask));
 			}
 		    }
 		}
@@ -227,10 +232,10 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 	} catch (PatternSyntaxException e) {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage());
 	    throw new CollectException(msg, FlagEnumeration.ERROR);
-	} catch (WmiException e) {
+	} catch (IdentityException e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, obj.getId(), e.getMessage()));
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_IDENTITY, obj.getId(), e.getMessage()));
 	    rc.addMessage(msg);
 	} catch (CollectException e) {
 	    throw e;
@@ -255,6 +260,189 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
     }
 
     // Private
+
+    /**
+     * Associates a file path (object) with the relevant items.
+     */
+    static class ObjectItems {
+	Collection<FileeffectiverightsItem> items;
+	String objectId;
+
+	ObjectItems() {
+	    items = new ArrayList<FileeffectiverightsItem>();
+	}
+    }
+
+    private ObjectItems nextItems(Iterator<String> input, Map<String, IRequest> requestMap,
+		Map<String, FileeffectiverightsItem> baseItems) {
+
+        boolean start = false;
+        while(input.hasNext()) {
+            String line = input.next();
+            if (line.trim().equals("{")) {
+                start = true;
+                break;
+            }
+        }
+        if (start) {
+	    while(input.hasNext()) {
+		String line = input.next().trim();
+		if (line.startsWith("Object:")) {
+		    ObjectItems items = new ObjectItems();
+		    items.objectId = line.substring(7).trim();
+		    FileeffectiverightsItem baseItem = baseItems.get(items.objectId);
+		    while(input.hasNext()) {
+			line = input.next().trim();
+			if (line.equals("}")) {
+			    break;
+			} else {
+			    int ptr = line.indexOf(":");
+			    if (ptr != -1) {
+				String sid = line.substring(0,ptr);
+				int mask = Integer.parseInt(line.substring(ptr+1).trim());
+				try {
+				    items.items.add(makeItem(baseItem, directory.queryPrincipalBySid(sid), mask));
+				} catch (Exception e) {
+				    IRequestContext rc = requestMap.get(items.objectId).getContext();
+				    MessageType msg = Factories.common.createMessageType();
+				    msg.setLevel(MessageLevelEnumeration.ERROR);
+				    msg.setValue(e.getMessage());
+				    rc.addMessage(msg);
+				    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+				}
+			    }
+			}
+		    }
+		    return items;
+		}
+	    }
+	}
+	return null;
+    }
+
+    /**
+     * Includes a map of all the IPrincipals (keyed by SID) that are relevant to the specified object, resolved according
+     * to the object's behaviors.
+     */
+    static class ObjectInfo {
+	Map<String, IPrincipal> principalMap;
+	IWindowsSession.View view = null;
+
+	ObjectInfo() {}
+    }
+
+    /**
+     * Find the ObjectInfo for the specified ObjectType.
+     */
+    private ObjectInfo getObjectInfo(ObjectType obj) throws IdentityException, CollectException {
+	directory = ((IWindowsSession)session).getDirectory();
+	ObjectInfo info = new ObjectInfo();
+	List<IPrincipal> principals = new ArrayList<IPrincipal>();
+	boolean includeGroups = true;
+	boolean resolveGroups = false;
+	if (obj instanceof Fileeffectiverights53Object) {
+	    Fileeffectiverights53Object fObj = (Fileeffectiverights53Object)obj;
+	    info.view = getView(fObj.getBehaviors());
+	    if (fObj.isSetBehaviors()) {
+		includeGroups = fObj.getBehaviors().getIncludeGroup();
+		resolveGroups = fObj.getBehaviors().getResolveGroup();
+	    }
+	    String pSid = (String)fObj.getTrusteeSid().getValue();
+	    OperationEnumeration op = fObj.getTrusteeSid().getOperation();
+	    switch(op) {
+	      case PATTERN_MATCH: {
+		Pattern p = Pattern.compile(pSid);
+		for (IPrincipal principal : directory.queryAllPrincipals()) {
+		    if (p.matcher(principal.getSid()).find()) {
+			principals.add(principal);
+		    }
+		}
+		break;
+	      }
+
+	      case NOT_EQUAL:
+		for (IPrincipal principal : directory.queryAllPrincipals()) {
+		    if (!pSid.equals(principal.getSid())) {
+			principals.add(principal);
+		    }
+		}
+		break;
+
+	      case CASE_INSENSITIVE_EQUALS:
+	      case EQUALS: {
+		principals.add(directory.queryPrincipalBySid(pSid));
+		break;
+	      }
+
+	      default:
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	    }
+	} else if (obj instanceof FileeffectiverightsObject) {
+	    FileeffectiverightsObject fObj = (FileeffectiverightsObject)obj;
+	    info.view = getView(fObj.getBehaviors());
+	    if (fObj.isSetBehaviors()) {
+		includeGroups = fObj.getBehaviors().getIncludeGroup();
+		resolveGroups = fObj.getBehaviors().getResolveGroup();
+	    }
+	    String pName = (String)fObj.getTrusteeName().getValue();
+	    OperationEnumeration op = fObj.getTrusteeName().getOperation();
+	    switch(op) {
+	      case PATTERN_MATCH: {
+		Pattern p = Pattern.compile(pName);
+		for (IPrincipal principal : directory.queryAllPrincipals()) {
+		    if (principal.isBuiltin() && p.matcher(principal.getName()).find()) {
+			principals.add(principal);
+		    } else if (p.matcher(principal.getNetbiosName()).find()) {
+			principals.add(principal);
+		    }
+		}
+		break;
+	      }
+
+	      case NOT_EQUAL:
+		for (IPrincipal principal : directory.queryAllPrincipals()) {
+		    if (principal.isBuiltin() && !pName.equals(principal.getName())) {
+			principals.add(principal);
+		    } else if (!pName.equals(principal.getNetbiosName())) {
+			principals.add(principal);
+		    }
+		}
+		break;
+
+	      case CASE_INSENSITIVE_EQUALS:
+	      case EQUALS: {
+		principals.add(directory.queryPrincipal(pName));
+		break;
+	      }
+
+	      default:
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	    }
+	} else {
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OBJECT, obj.getClass().getName(), obj.getId());
+	    throw new CollectException(msg, FlagEnumeration.ERROR);
+	}
+	Map<String, IPrincipal> filtered = new HashMap<String, IPrincipal>();
+	for (IPrincipal p : principals) {
+	    filtered.put(p.getSid(), p);
+	}
+	info.principalMap = new HashMap<String, IPrincipal>();
+	for (IPrincipal p : filtered.values()) {
+	    switch(p.getType()) {
+	      case GROUP:
+		for (IPrincipal member : directory.getAllPrincipals(p, includeGroups, resolveGroups)) {
+		    info.principalMap.put(member.getSid(), member);
+		}
+		break;
+	      case USER:
+		info.principalMap.put(p.getSid(), p);
+		break;
+	    }
+	}
+	return info;
+    }
 
     /**
      * Create a new wrapped FileeffectiverightsItem based on the base FileeffectiverightsItem, IPrincipal and IACE.
