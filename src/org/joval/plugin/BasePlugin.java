@@ -12,6 +12,7 @@ import java.net.ConnectException;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -99,6 +100,7 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 
     private PropertyResourceBundle resources;
     private Map<Class, IAdapter> adapters;
+    private Statistics statistics;
     private Collection<Class> notapplicable;
     private Collection<IBatch> pending;
 
@@ -171,6 +173,10 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 	    adapters.clear();
 	    adapters = null;
 	}
+	if (statistics != null) {
+	    statistics.dumpTrace(logger);
+	    statistics = null;
+	}
 	if (notapplicable != null) {
 	    notapplicable.clear();
 	    notapplicable = null;
@@ -201,7 +207,12 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	if (adapters.containsKey(obj.getClass())) {
-	    return adapters.get(obj.getClass()).getItems(obj, rc);
+	    try {
+		statistics.start(obj);
+		return adapters.get(obj.getClass()).getItems(obj, rc);
+	    } finally {
+		statistics.stop(obj);
+	    }
 	} else if (notapplicable.contains(obj.getClass())) {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.STATUS_NOT_APPLICABLE, obj.getClass().getName());
 	    throw new CollectException(msg, FlagEnumeration.NOT_APPLICABLE);
@@ -220,6 +231,7 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 	    if (!notapplicable.contains(clazz) && adapter instanceof IBatch) {
 		IBatch batch = (IBatch)adapter;
 		if (batch.queue(request)) {
+		    statistics.queue(batch, request);
 		    if (pending == null) {
 			pending = new HashSet<IBatch>();
 		    }
@@ -242,7 +254,12 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 	    return results;
 	}
 	for (IBatch batch : pending) {
-	    results.addAll(batch.exec());
+	    try {
+		statistics.start(batch);
+		results.addAll(batch.exec());
+	    } finally {
+		statistics.stop(batch);
+	    }
 	}
 	pending = null;
 	return results;
@@ -259,15 +276,169 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 	}
 	if (adapters == null) {
 	    adapters = new HashMap<Class, IAdapter>();
+	    statistics = new Statistics();
 	    Collection<IAdapter> coll = getAdapters();
 	    if (coll != null) {
 		adapters = new HashMap<Class, IAdapter>();
 		for (IAdapter adapter : coll) {
 		    for (Class clazz : adapter.init(session, notapplicable)) {
 			adapters.put(clazz, adapter);
+			statistics.add(clazz);
 		    }
 		}
 	    }
+	}
+    }
+
+    static class Statistics {
+	private Map<Class, TimeKeeper> timekeepers;
+	private Map<Class, Class> batchAssoc;
+
+	Statistics() {
+	    timekeepers = new HashMap<Class, TimeKeeper>();
+	    batchAssoc = new HashMap<Class, Class>();
+	}
+
+	void add(Class clazz) {
+	    timekeepers.put(clazz, new TimeKeeper());
+	}
+
+	void start(ObjectType object) {
+	    TimeKeeper tk = timekeepers.get(object.getClass());
+	    if (tk != null) {
+		tk.start(object.getId());
+	    }
+	}
+
+	void stop(ObjectType object) {
+	    TimeKeeper tk = timekeepers.get(object.getClass());
+	    if (tk != null) {
+		tk.stop(object.getId());
+	    }
+	}
+
+	void queue(IBatch batch, IRequest request) {
+	    ObjectType object = request.getObject();
+	    if (!batchAssoc.containsKey(batch.getClass())) {
+		batchAssoc.put(batch.getClass(), object.getClass());
+	    }
+	    TimeKeeper tk = timekeepers.get(object.getClass());
+	    if (tk != null) {
+		tk.queue(object);
+	    }
+	}
+
+	void start(IBatch batch) {
+	    TimeKeeper tk = timekeepers.get(batchAssoc.get(batch.getClass()));
+	    if (tk != null) {
+		tk.startBatch();
+	    }
+	}
+
+	void stop(IBatch batch) {
+	    TimeKeeper tk = timekeepers.get(batchAssoc.get(batch.getClass()));
+	    if (tk != null) {
+		tk.stopBatch();
+	    }
+	}
+
+	void dumpTrace(LocLogger logger) {
+	    logger.trace("Adapter Statistics:");
+	    for (Map.Entry<Class, TimeKeeper> entry : timekeepers.entrySet()) {
+		TimeKeeper tk = entry.getValue();
+		if (tk.size() > 0) {
+		    logger.trace("  Adapter " + entry.getKey().getName());
+		    entry.getValue().dumpTrace(logger);
+		}
+	    }
+	}
+    }
+
+    static class TimeKeeper {
+	private Map<String, Duration> objects;
+	private Collection<String> batched;
+	private Duration batchDuration;
+
+	TimeKeeper() {
+	    objects = new HashMap<String, Duration>();
+	}
+
+	void start(String objectId) {
+	    objects.put(objectId, new Duration(true));
+	}
+
+	void stop(String objectId) {
+	    Duration d = objects.get(objectId);
+	    if (d != null) {
+		d.stop();
+	    }
+	}
+
+	void queue(ObjectType object) {
+	    if (batched == null) {
+		batched = new ArrayList<String>();
+		batchDuration = new Duration(false);
+	    }
+	    batched.add(object.getId());
+	}
+
+	void startBatch() {
+	    batchDuration.start();
+	}
+
+	void stopBatch() {
+	    batchDuration.stop();
+	}
+
+	int size() {
+	    return objects.size() + (batched == null? 0 : batched.size());
+	}
+
+	void dumpTrace(LocLogger logger) {
+	    if (batched != null && batchDuration.isValid()) {
+		logger.trace("    Batch duration: " + batchDuration.duration() + "ms");
+		if (batched.size() > 0) {
+		    logger.trace("    Batched Objects:");
+		    for (String id : batched) {
+			logger.trace("      " + id);
+		    }
+		}
+	    }
+	    if (objects.size() > 0) {
+		logger.trace("    Objects:");
+		for (Map.Entry<String, Duration> entry : objects.entrySet()) {
+		    logger.trace("      " + entry.getKey() + ": " + entry.getValue().duration() + "ms");
+		}
+	    }
+	}
+    }
+
+    static class Duration {
+	private long start, stop;
+
+	Duration(boolean autostart) {
+	    stop = 0;
+	    if (autostart) {
+		start();
+	    } else {
+		start = 0;
+	    }
+	}
+
+	void start() {
+	    start = System.currentTimeMillis();
+	}
+
+	void stop() {
+	    stop = System.currentTimeMillis();
+	}
+
+	boolean isValid() {
+	    return stop > start;
+	}
+
+	long duration() {
+	    return stop - start;
 	}
     }
 }
