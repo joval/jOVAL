@@ -194,9 +194,6 @@ public class DpkginfoAdapter implements IAdapter {
 	    EntityItemEVRStringType evrType = Factories.sc.core.createEntityItemEVRStringType();
 	    evrType.setDatatype(SimpleDatatypeEnumeration.EVR_STRING.value());
 	    StringBuffer evr = new StringBuffer(epoch).append(":").append(version);
-	    if (release != null) {
-		evr.append("-").append(release);
-	    }
 	    evrType.setValue(evr.toString());
 	    item.setEvr(evrType);
 
