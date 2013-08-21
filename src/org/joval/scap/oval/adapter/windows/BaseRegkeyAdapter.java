@@ -22,6 +22,7 @@ import jsaf.intf.windows.registry.IRegistry;
 import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageLevelEnumeration;
 import scap.oval.common.MessageType;
@@ -164,7 +165,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter,
 		}
 		break;
 	      case PATTERN_MATCH: {
-		Pattern p = Pattern.compile(name);
+		Pattern p = StringTools.pattern(name);
 		for (IRegistry.Hive hive : IRegistry.Hive.values()) {
 		    if (p.matcher(hive.getName()).find()) {
 			hives.add(hive);
@@ -361,7 +362,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter,
 
 	      case PATTERN_MATCH:
 		search = true;
-		conditions.add(searcher.condition(FIELD_KEY, TYPE_PATTERN, Pattern.compile(keypath)));
+		conditions.add(searcher.condition(FIELD_KEY, TYPE_PATTERN, StringTools.pattern(keypath)));
 		break;
 
 	      default:

@@ -233,7 +233,7 @@ public class RunlevelAdapter implements IAdapter {
      */
     private void initUnixRunlevels(String baseDir) throws IOException {
 	IFile base = session.getFilesystem().getFile(baseDir);
-	for (IFile dir : base.listFiles(Pattern.compile("rc[\\p{Alnum}]\\.d"))) {
+	for (IFile dir : base.listFiles(StringTools.pattern("rc[:alnum:]\\.d"))) {
 	    if (dir.isDirectory()) {
 		String rl = dir.getName().substring(2, 3);
 		Hashtable<String, StartStop> runlevel = runlevels.get(rl);

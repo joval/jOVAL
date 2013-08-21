@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Collection;
 import java.util.NoSuchElementException;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -17,6 +16,7 @@ import jsaf.intf.windows.identity.IDirectory;
 import jsaf.intf.windows.identity.IGroup;
 import jsaf.intf.windows.identity.IUser;
 import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -82,7 +82,7 @@ public class UserSid55Adapter implements IAdapter {
     
 	      case PATTERN_MATCH:
 		try {
-		    Pattern p = Pattern.compile(sid);
+		    Pattern p = StringTools.pattern(sid);
 		    for (IUser u : directory.queryAllUsers()) {
 			if (p.matcher(u.getSid()).find()) {
 			    items.add(makeItem(u));

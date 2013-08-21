@@ -230,7 +230,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 		}
 		break;
 	      case PATTERN_MATCH:
-		conditions.add(new ISearchable.GenericCondition(FIELD_VALUE, TYPE_PATTERN, Pattern.compile(name)));
+		conditions.add(new ISearchable.GenericCondition(FIELD_VALUE, TYPE_PATTERN, StringTools.pattern(name)));
 		break;
 	      default:
 		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
@@ -262,7 +262,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 
 		  case PATTERN_MATCH:
 		    try {
-			Pattern p = Pattern.compile((String)rObj.getName().getValue().getValue());
+			Pattern p = StringTools.pattern((String)rObj.getName().getValue().getValue());
 			for (IValue value : key.listValues(p)) {
 			    items.add(getItem(base, value));
 			}

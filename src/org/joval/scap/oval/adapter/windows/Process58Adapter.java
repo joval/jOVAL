@@ -100,7 +100,7 @@ public class Process58Adapter implements IAdapter {
 
 	  case PATTERN_MATCH:
 	    try {
-		Pattern pattern = Pattern.compile(commandLine);
+		Pattern pattern = StringTools.pattern(commandLine);
 		for (String pid : processes.listSections()) {
 		    IProperty props = processes.getSection(pid);
 		    Matcher m = pattern.matcher(props.getProperty("CommandLine"));

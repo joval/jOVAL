@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -134,7 +133,7 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 		OperationEnumeration op = rObj.getTrusteeSid().getOperation();
 		switch(op) {
 		  case PATTERN_MATCH: {
-		    Pattern p = Pattern.compile(pSid);
+		    Pattern p = StringTools.pattern(pSid);
 		    for (IPrincipal principal : directory.queryAllPrincipals()) {
 			if (p.matcher(principal.getSid()).find()) {
 			    principals.add(principal);
@@ -172,7 +171,7 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 		OperationEnumeration op = rObj.getTrusteeName().getOperation();
 		switch(op) {
 		  case PATTERN_MATCH: {
-		    Pattern p = Pattern.compile(pName);
+		    Pattern p = StringTools.pattern(pName);
 		    for (IPrincipal principal : directory.queryAllPrincipals()) {
 			if (principal.isBuiltin() && p.matcher(principal.getName()).find()) {
 			    principals.add(principal);

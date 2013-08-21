@@ -87,7 +87,6 @@ SCAP=$(COMPONENTS)/scap
 SCAP_LIB=$(SCAP)/scap-schema-$(SCAP_VERSION).jar
 JOVAL_CORE=$(COMPONENTS)/engine
 JOVAL_CORE_LIB=$(JOVAL_CORE)/jOVAL.jar
-JOVAL_CORE_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(JOVAL_CORE)/$(LIBDIR)/*)))
 PLUGIN_LOCAL=$(COMPONENTS)/plugin
 PLUGIN_LOCAL_LIB=$(PLUGIN_LOCAL)/jOVAL-Plugin.jar
 PLUGIN_LOCAL_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(PLUGIN_LOCAL)/$(LIBDIR)/*)))

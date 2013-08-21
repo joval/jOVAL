@@ -17,6 +17,7 @@ import jsaf.intf.windows.identity.IDirectory;
 import jsaf.intf.windows.identity.IGroup;
 import jsaf.intf.windows.identity.IUser;
 import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -89,7 +90,7 @@ public class GroupAdapter implements IAdapter {
     
 	      case PATTERN_MATCH:
 		try {
-		    Pattern p = Pattern.compile(group);
+		    Pattern p = StringTools.pattern(group);
 		    for (IGroup g : directory.queryAllGroups()) {
 			Matcher m = null;
 			if (directory.isLocal(g.getNetbiosName())) {

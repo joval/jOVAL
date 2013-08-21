@@ -112,7 +112,7 @@ public class AccesstokenAdapter implements IAdapter {
 			}
 		    }
 		} else {
-		    Pattern pattern = Pattern.compile(principalStr);
+		    Pattern pattern = StringTools.pattern(principalStr);
 		    for (IPrincipal p : allPrincipals) {
 			Matcher m = pattern.matcher(getCanonicalizedPrincipalName(p));
 			if (m.find()) {

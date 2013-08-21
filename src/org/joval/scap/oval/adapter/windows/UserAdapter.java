@@ -24,6 +24,7 @@ import jsaf.intf.windows.wmi.ISWbemProperty;
 import jsaf.intf.windows.wmi.ISWbemPropertySet;
 import jsaf.intf.windows.wmi.IWmiProvider;
 import jsaf.provider.windows.Timestamp;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -103,7 +104,7 @@ public class UserAdapter implements IAdapter {
 
 	      case PATTERN_MATCH:
 		try {
-		    Pattern p = Pattern.compile(user);
+		    Pattern p = StringTools.pattern(user);
 		    for (IUser u : directory.queryAllUsers()) {
 			Matcher m = null;
 			if (directory.isLocal(u.getNetbiosName())) {

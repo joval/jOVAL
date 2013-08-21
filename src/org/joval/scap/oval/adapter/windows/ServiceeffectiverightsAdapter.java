@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -87,7 +86,7 @@ public class ServiceeffectiverightsAdapter extends BaseServiceAdapter<Serviceeff
 	    OperationEnumeration op = sObj.getTrusteeSid().getOperation();
 	    switch(op) {
 	      case PATTERN_MATCH: {
-		Pattern p = Pattern.compile(sid);
+		Pattern p = StringTools.pattern(sid);
 		for (IPrincipal principal : directory.queryAllPrincipals()) {
 		    if (p.matcher(principal.getSid()).find()) {
 			principals.add(principal);

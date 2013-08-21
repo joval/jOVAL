@@ -12,6 +12,7 @@ import jsaf.intf.io.IFilesystem;
 import jsaf.intf.io.IReader;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.systemcharacteristics.core.InterfacesType;
 import scap.oval.systemcharacteristics.core.InterfaceType;
@@ -63,7 +64,7 @@ class UnixSystemInfo {
 
 	      default:
 		IFilesystem fs = session.getFilesystem();
-		for (IFile file : fs.getFile("/etc", IFile.Flags.NOCACHE).listFiles(Pattern.compile("^.*-release$"))) {
+		for (IFile file : fs.getFile("/etc", IFile.Flags.NOCACHE).listFiles(StringTools.pattern("^.*-release$"))) {
 		    info.setOsName(SafeCLI.exec("cat " + file.getPath(), session, IUnixSession.Timeout.S));
 		    break;
 		}

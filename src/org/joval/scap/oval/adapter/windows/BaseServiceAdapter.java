@@ -103,7 +103,7 @@ public abstract class BaseServiceAdapter<T extends ItemType> implements IAdapter
 	    }
 	    break;
 	  case PATTERN_MATCH: {
-	    Pattern p = Pattern.compile(name);
+	    Pattern p = StringTools.pattern(name);
 	    for (String serviceName : serviceNames) {
 		if (p.matcher(serviceName).find()) {
 		    names.add(serviceName);

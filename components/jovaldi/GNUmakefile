@@ -7,7 +7,7 @@ include $(TOP)/common.mk
 
 PRODUCTNAME=jovaldi
 
-API=$(JSAF_CORE_LIB)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCAP_LIB)$(CLN)$(SVRL)
+API=$(JSAF_CORE_LIB)$(CLN)$(JSAF_CORE_DEPS)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(SCAP_LIB)$(CLN)$(SVRL)
 CLASSPATH="$(CLASSLIB)$(CLN)$LIBS)$(CLN)$(API)$(CLN)$(SRC)"
 
 include classes.mk
@@ -61,7 +61,7 @@ $(DIST)/32: all $(DIST)/32/jre
 	cp $(SCAP_LIB) $(DIST)/32/lib
 	cp $(SVRL) $(DIST)/32/lib
 	cp $(JOVAL_CORE_LIB) $(DIST)/32/lib
-	cp $(JOVAL_CORE)/$(LIBDIR)/*.jar $(DIST)/32/lib
+	cp $(JSAF_CORE)/$(LIBDIR)/*.jar $(DIST)/32/lib
 	cp $(JSAF_CORE_LIB) $(DIST)/32/lib
 	rm -rf $(DIST)/32/plugin/default
 	mkdir -p $(DIST)/32/plugin/default/lib
@@ -90,7 +90,7 @@ $(DIST)/64: all $(DIST)/64/jre
 	cp $(SCAP_LIB) $(DIST)/64/lib
 	cp $(SVRL) $(DIST)/64/lib
 	cp $(JOVAL_CORE_LIB) $(DIST)/64/lib
-	cp $(JOVAL_CORE)/$(LIBDIR)/*.jar $(DIST)/64/lib
+	cp $(JSAF_CORE)/$(LIBDIR)/*.jar $(DIST)/64/lib
 	cp $(JSAF_CORE_LIB) $(DIST)/64/lib
 	rm -rf $(DIST)/64/plugin/default
 	mkdir -p $(DIST)/64/plugin/default/lib

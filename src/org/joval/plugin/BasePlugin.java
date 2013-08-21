@@ -112,7 +112,7 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
      */
     protected BasePlugin() throws IOException {
 	logger = JOVALMsg.getLogger();
-	ClassLoader cl = LocalPlugin.class.getClassLoader();
+	ClassLoader cl = BasePlugin.class.getClassLoader();
 	Locale locale = Locale.getDefault();
 	URL url = cl.getResource(BASENAME + ".resources_" + locale.toString() + ".properties");
 	if (url == null) {

@@ -127,7 +127,7 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 		    IFile dir = session.getFilesystem().getFile(prefs);
 		    if (dir.isDirectory()) {
 			Pattern p = StringTools.pattern(appid);
-			for (IFile f : dir.listFiles(Pattern.compile(".+\\.plist$"))) {
+			for (IFile f : dir.listFiles(StringTools.pattern(".+\\.plist$"))) {
 			    String fname = dir.getName();
 			    String id = fname.substring(0, fname.length() - 6);
 			    if (p.matcher(id).find()) {

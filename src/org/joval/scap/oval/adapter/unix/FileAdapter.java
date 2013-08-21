@@ -17,8 +17,6 @@ import java.util.Iterator;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.MatchResult;
 
 import jsaf.Message;
 import jsaf.intf.io.IFile;

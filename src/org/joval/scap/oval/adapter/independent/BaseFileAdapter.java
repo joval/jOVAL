@@ -32,6 +32,7 @@ import jsaf.intf.windows.io.IWindowsFilesystem;
 import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageLevelEnumeration;
 import scap.oval.common.MessageType;
@@ -508,7 +509,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		    break;
 
 		  case CASE_INSENSITIVE_EQUALS: {
-		    Pattern p = Pattern.compile("^(?i)" + Matcher.quoteReplacement(filepath) + "$");
+		    Pattern p = StringTools.pattern("^(?i)" + Matcher.quoteReplacement(filepath) + "$");
 		    from = searcher.guessParent(p, Boolean.TRUE);
 		    conditions.add(searcher.condition(FIELD_PATH, TYPE_PATTERN, p));
 		    conditions.add(ISearchable.RECURSE);
@@ -517,7 +518,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		  }
 
 		  case PATTERN_MATCH: {
-		    Pattern p = Pattern.compile(filepath);
+		    Pattern p = StringTools.pattern(filepath);
 		    from = searcher.guessParent(p, Boolean.TRUE);
 		    conditions.add(searcher.condition(FIELD_PATH, TYPE_PATTERN, p));
 		    conditions.add(ISearchable.RECURSE);
@@ -603,7 +604,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		    break;
 
 		  case CASE_INSENSITIVE_EQUALS: {
-		    Pattern p = Pattern.compile("^(?i)" + Matcher.quoteReplacement(path) + "$");
+		    Pattern p = StringTools.pattern("^(?i)" + Matcher.quoteReplacement(path) + "$");
 		    from = searcher.guessParent(p);
 		    conditions.add(searcher.condition(FIELD_DIRNAME, TYPE_PATTERN, p));
 		    search = true;
@@ -611,7 +612,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		  }
 
 		  case PATTERN_MATCH: {
-		    Pattern p = Pattern.compile(path);
+		    Pattern p = StringTools.pattern(path);
 		    from = searcher.guessParent(p);
 		    conditions.add(searcher.condition(FIELD_DIRNAME, TYPE_PATTERN, p));
 		    search = true;
@@ -666,10 +667,10 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 			    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(1)));
 			}
 			if (filenameOp == OperationEnumeration.CASE_INSENSITIVE_EQUALS) {
-			    Pattern p = Pattern.compile("^(?i)" + Matcher.quoteReplacement(filename) + "$");
+			    Pattern p = StringTools.pattern("^(?i)" + Matcher.quoteReplacement(filename) + "$");
 			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_PATTERN, p));
 			} else if (filenameOp == OperationEnumeration.PATTERN_MATCH) {
-			    Pattern p = Pattern.compile(filename);
+			    Pattern p = StringTools.pattern(filename);
 			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_PATTERN, p));
 			} else {
 			    SafeCLI.checkArgument(filename, session);
@@ -701,7 +702,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		if (from == null) {
 		    Collection<IFilesystem.IMount> mounts = null;
 		    if (local) {
-			Pattern p = Pattern.compile(new StringBuffer("^").append(localFsType).append("$").toString());
+			Pattern p = StringTools.pattern(new StringBuffer("^").append(localFsType).append("$").toString());
 			mounts = fs.getMounts(p, true);
 		    } else {
 			mounts = fs.getMounts();

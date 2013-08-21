@@ -8,8 +8,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;

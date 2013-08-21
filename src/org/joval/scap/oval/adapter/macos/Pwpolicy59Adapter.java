@@ -6,7 +6,6 @@ package org.joval.scap.oval.adapter.macos;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
-import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
 import jsaf.intf.system.ISession;

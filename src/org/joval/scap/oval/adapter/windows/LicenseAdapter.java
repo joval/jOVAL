@@ -14,6 +14,7 @@ import jsaf.intf.windows.registry.ILicenseData;
 import jsaf.intf.windows.registry.IRegistry;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.io.LittleEndian;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -87,7 +88,7 @@ public class LicenseAdapter implements IAdapter {
 
 		      case PATTERN_MATCH:
 			for (ILicenseData.IEntry entry : entries.values()) {
-			    if (Pattern.compile(entryName).matcher(entry.getName()).find()) {
+			    if (StringTools.pattern(entryName).matcher(entry.getName()).find()) {
 				items.add(getItem(entry));
 			    }
 			}

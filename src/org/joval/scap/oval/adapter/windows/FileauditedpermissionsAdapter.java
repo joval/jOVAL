@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -135,9 +134,9 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 		      case PATTERN_MATCH:
 			Pattern p = null;
 			if (pSid == null) {
-			    p = Pattern.compile(pName);
+			    p = StringTools.pattern(pName);
 			} else {
-			    p = Pattern.compile(pSid);
+			    p = StringTools.pattern(pSid);
 			}
 			//
 			// Note: per the specification, the scope is limited to the trustees referenced by the security
