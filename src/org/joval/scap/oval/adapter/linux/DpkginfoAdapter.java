@@ -157,29 +157,29 @@ public class DpkginfoAdapter implements IAdapter {
 	    archType.setValue(tok.nextToken());
 	    item.setArch(archType);
 
-	    String version = tok.nextToken();
+	    String version_release = tok.nextToken();
 
 	    DpkginfoItem.Epoch epochType = Factories.sc.linux.createDpkginfoItemEpoch();
-	    int ptr = version.indexOf(":");
+	    int ptr = version_release.indexOf(":");
 	    String epoch = null;
 	    if (ptr == -1) {
 		epochType.setValue("(none)");
 		epoch = "0";
 	    } else {
-		epoch = version.substring(0,ptr);
+		epoch = version_release.substring(0,ptr);
 		epochType.setValue(epoch);
-		version = version.substring(ptr+1);
+		version_release = version_release.substring(ptr+1);
 	    }
 	    item.setEpoch(epochType);
 
 	    DpkginfoItem.Version versionType = Factories.sc.linux.createDpkginfoItemVersion();
-	    ptr = version.indexOf("-");
+	    ptr = version_release.indexOf("-");
 	    String release = null;
 	    if (ptr == -1) {
-		versionType.setValue(version);
+		versionType.setValue(version_release);
 	    } else {
-		versionType.setValue(version.substring(0,ptr));
-		release = version.substring(ptr+1);
+		versionType.setValue(version_release.substring(0,ptr));
+		release = version_release.substring(ptr+1);
 	    }
 	    item.setDpkginfoVersion(versionType);
 
@@ -193,7 +193,7 @@ public class DpkginfoAdapter implements IAdapter {
 
 	    EntityItemEVRStringType evrType = Factories.sc.core.createEntityItemEVRStringType();
 	    evrType.setDatatype(SimpleDatatypeEnumeration.EVR_STRING.value());
-	    StringBuffer evr = new StringBuffer(epoch).append(":").append(version);
+	    StringBuffer evr = new StringBuffer(epoch).append(":").append(version_release);
 	    evrType.setValue(evr.toString());
 	    item.setEvr(evrType);
 

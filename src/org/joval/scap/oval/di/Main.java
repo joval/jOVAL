@@ -17,6 +17,7 @@ import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
@@ -473,7 +475,17 @@ public class Main implements IObserver<IOvalEngine.Message> {
 	    print(getMessage("MESSAGE_DEFINITION_TABLE_HEAD"));
 	    print(getMessage("MESSAGE_DEFINITION_TABLE_DIV"));
 
-	    for (DefinitionType d : results.getOvalResults().getResults().getSystem().get(0).getDefinitions().getDefinition()) {
+	    TreeSet<DefinitionType> ordered = new TreeSet<DefinitionType>(
+		new Comparator<DefinitionType>() {
+		    public int compare(DefinitionType o1, DefinitionType o2) {
+			String o1s = new StringBuffer(o1.getResult().toString()).append(o1.getDefinitionId()).toString();
+			String o2s = new StringBuffer(o2.getResult().toString()).append(o2.getDefinitionId()).toString();
+			return o1s.compareTo(o2s);
+		    }
+		}
+	    );
+	    ordered.addAll(results.getOvalResults().getResults().getSystem().get(0).getDefinitions().getDefinition());
+	    for (DefinitionType d : ordered) {
 		String id = d.getDefinitionId();
 		String result = d.getResult().toString().toLowerCase();
 		print(getMessage("MESSAGE_DEFINITION_TABLE_ROW", String.format("%-40s", id), result));

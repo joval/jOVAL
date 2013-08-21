@@ -14,15 +14,19 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
+import java.util.TreeSet;
 
 import jsaf.intf.system.ISession;
 import jsaf.provider.SessionFactory;
+import jsaf.util.StringTools;
 
 import ch.qos.cal10n.IMessageConveyor;
 import org.slf4j.cal10n.LocLogger;
@@ -306,14 +310,14 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 	void start(ObjectType object) {
 	    TimeKeeper tk = timekeepers.get(object.getClass());
 	    if (tk != null) {
-		tk.start(object.getId());
+		tk.start(object);
 	    }
 	}
 
 	void stop(ObjectType object) {
 	    TimeKeeper tk = timekeepers.get(object.getClass());
 	    if (tk != null) {
-		tk.stop(object.getId());
+		tk.stop(object);
 	    }
 	}
 
@@ -355,20 +359,20 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
     }
 
     static class TimeKeeper {
-	private Map<String, Duration> objects;
-	private Collection<String> batched;
+	private Map<ObjectType, Duration> objects;
+	private Map<String, Integer> batched;
 	private Duration batchDuration;
 
 	TimeKeeper() {
-	    objects = new HashMap<String, Duration>();
+	    objects = new HashMap<ObjectType, Duration>();
 	}
 
-	void start(String objectId) {
-	    objects.put(objectId, new Duration(true));
+	void start(ObjectType object) {
+	    objects.put(object, new Duration(true));
 	}
 
-	void stop(String objectId) {
-	    Duration d = objects.get(objectId);
+	void stop(ObjectType object) {
+	    Duration d = objects.get(object);
 	    if (d != null) {
 		d.stop();
 	    }
@@ -376,10 +380,15 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 
 	void queue(ObjectType object) {
 	    if (batched == null) {
-		batched = new ArrayList<String>();
+		batched = new HashMap<String, Integer>();
 		batchDuration = new Duration(false);
 	    }
-	    batched.add(object.getId());
+	    String id = object.getId();
+	    if (batched.containsKey(id)) {
+		batched.put(id, new Integer(batched.get(id).intValue()+1));
+	    } else {
+		batched.put(id, new Integer(1));
+	    }
 	}
 
 	void startBatch() {
@@ -399,17 +408,57 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 		logger.trace("    Batch duration: " + batchDuration.duration() + "ms");
 		if (batched.size() > 0) {
 		    logger.trace("    Batched Objects:");
-		    for (String id : batched) {
-			logger.trace("      " + id);
+		    TreeSet<Map.Entry<String, Integer>> ordered =
+			new TreeSet<Map.Entry<String, Integer>>(new EntryStringKeyComparator<Integer>());
+		    ordered.addAll(batched.entrySet());
+		    for (Map.Entry<String, Integer> entry : ordered) {
+			String id = entry.getKey();
+			int instances = entry.getValue().intValue();
+			switch(instances) {
+			  case 1:
+			    logger.trace("      " + id);
+			    break;
+			  default:
+			    logger.trace("      " + id + " (" + instances + " permutations)");
+			    break;
+			}
 		    }
 		}
 	    }
 	    if (objects.size() > 0) {
 		logger.trace("    Objects:");
-		for (Map.Entry<String, Duration> entry : objects.entrySet()) {
-		    logger.trace("      " + entry.getKey() + ": " + entry.getValue().duration() + "ms");
+		Map<String, List<Duration>> grouped = new HashMap<String, List<Duration>>();
+		for (Map.Entry<ObjectType, Duration> entry : objects.entrySet()) {
+		    String id = entry.getKey().getId();
+		    if (!grouped.containsKey(id)) {
+			grouped.put(id, new ArrayList<Duration>());
+		    }
+		    grouped.get(id).add(entry.getValue());
+		}
+		TreeSet<Map.Entry<String, List<Duration>>> ordered =
+			new TreeSet<Map.Entry<String, List<Duration>>>(new EntryStringKeyComparator<List<Duration>>());
+		ordered.addAll(grouped.entrySet());
+		for (Map.Entry<String, List<Duration>> entry : ordered) {
+		    String id = entry.getKey();
+		    List<Duration> permutations = entry.getValue();
+		    if (permutations.size() == 1) {
+			logger.trace("      " + id + ": " + permutations.get(0).duration() + "ms");
+		    } else {
+			int i=0;
+			for (Duration instance : permutations) {
+			    logger.trace("      " + id + " (permutation " + i++ + "): " + instance.duration() + "ms");
+			}
+		    }
 		}
 	    }
+	}
+    }
+
+    static class EntryStringKeyComparator<T> implements Comparator<Map.Entry<String, ? super T>> {
+	EntryStringKeyComparator() {}
+
+	public int compare(Map.Entry<String, ? super T> o1, Map.Entry<String, ? super T> o2) {
+	    return o1.getKey().compareTo(o2.getKey());
 	}
     }
 
