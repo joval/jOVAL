@@ -1842,7 +1842,7 @@ public class Engine implements IOvalEngine, IProvider {
 				result.addResult(compare(state, item, rc));
 			    } catch (TestException e) {
 				logger.warn(JOVALMsg.ERROR_TESTEXCEPTION, testId, e.getMessage());
-				logger.debug(JOVALMsg.ERROR_EXCEPTION, e);
+				logger.debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 
 				MessageType message = Factories.common.createMessageType();
 				message.setLevel(MessageLevelEnumeration.ERROR);
