@@ -3,10 +3,15 @@
 
 package org.joval.scap.xccdf.engine;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
@@ -28,6 +33,8 @@ import java.util.PropertyResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.xml.sax.SAXException;
+
+import jsaf.util.StringTools;
 
 import scap.xccdf.CheckContentRefType;
 import scap.xccdf.CheckType;
@@ -153,7 +160,7 @@ public class XPERT {
 	boolean query = false, verify = true, verbose = false;
 	File logFile = new File(CWD, "xpert.log");
 	String pluginName = "default";
-	File configFile = new File(CWD, IPlugin.DEFAULT_FILE);
+	String configSource = null;
 	File ksFile = new File(new File(BASE_DIR, "security"), "cacerts.jks");
 	String ksPass = "jOVAL s3cure";
 
@@ -242,7 +249,7 @@ public class XPERT {
 		} else if (argv[i].equals("-plugin")) {
 		    pluginName = argv[++i];
 		} else if (argv[i].equals("-config")) {
-		    configFile = new File(argv[++i]);
+		    configSource = argv[++i];
 		} else {
 		    System.out.println(getMessage("warning.cli.arg", argv[i]));
 		}
@@ -271,6 +278,61 @@ public class XPERT {
 	    exitCode = 1;
 	    try {
 		logger = LogFormatter.createDuplex(logFile, level);
+		logger.info(getMessage("message.start", new Date()));
+
+		//
+		// Configure the jOVAL plugin
+		//
+		if (!query) {
+		    try {
+			Properties config = new Properties();
+			InputStream in = null;
+			try {
+			    if (configSource == null) {
+				File f = new File(CWD, IPlugin.DEFAULT_FILE);
+				if (f.exists()) {
+				    in = new FileInputStream(f);
+				}
+			    } else {
+				if ("-".equals(configSource)) {
+				    System.out.println(getMessage("message.plugin.config"));
+				    ByteArrayOutputStream buff = new ByteArrayOutputStream();
+				    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+				    String line = null;
+				    while((line = reader.readLine()) != null) {
+					if ("#EOF".equals(line)) {
+					    break;
+					} else {
+					    buff.write(line.getBytes(StringTools.UTF8));
+					    buff.write(StringTools.LOCAL_CR.getBytes(StringTools.UTF8));
+					}
+				    }
+				    buff.close();
+				    in = new ByteArrayInputStream(buff.toByteArray());
+				} else {
+				    in = new FileInputStream(new File(configSource));
+				}
+			    }
+			    if (in != null) {
+				config.load(in);
+			    }
+			} finally {
+			    if (in != null) {
+				try {
+				    in.close();
+				} catch (IOException e) {
+				}
+			    }
+			}
+			plugin.configure(config);
+		    } catch (Exception e) {
+			throw new XPERTException(getMessage("error.plugin", e.getMessage(), logFile));
+		    }
+		}
+
+		//
+		// Read the input document
+		//
 		IDatastream ds = null;
 		String sourceName = source.getName();
 		if (source.isFile() && source.getName().toLowerCase().endsWith(".xml")) {
@@ -346,6 +408,10 @@ public class XPERT {
 		} else {
 		    throw new XPERTException(getMessage("error.source", source.toString()));
 		}
+
+		//
+		// Perform the scan
+		//
 		if (!query) {
 		    if (benchmarkId == null) {
 			//
@@ -378,20 +444,6 @@ public class XPERT {
 			}
 		    }
 		    IScapContext ctx = ds.getContext(benchmarkId, profileId);
-		    logger.info(getMessage("message.start", new Date()));
-		    try {
-			//
-			// Configure the jOVAL plugin
-			//
-			Properties config = new Properties();
-			if (configFile.isFile()) {
-			    config.load(new FileInputStream(configFile));
-			}
-			plugin.configure(config);
-		    } catch (Exception e) {
-			throw new XPERTException(getMessage("error.plugin", e.getMessage(), logFile));
-		    }
-
 		    try {
 			Engine engine = new Engine(plugin);
 			engine.setContext(ctx);

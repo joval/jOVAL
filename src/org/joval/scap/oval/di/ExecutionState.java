@@ -3,6 +3,11 @@
 
 package org.joval.scap.oval.di;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,6 +17,8 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
+
+import jsaf.util.StringTools;
 
 import org.joval.intf.plugin.IPlugin;
 import org.joval.plugin.PluginFactory;
@@ -67,6 +74,7 @@ public class ExecutionState {
 
     IPlugin plugin;
     Properties pluginConfig = null;
+    String configSource = null;
 
     File dataFile;
     File resultsXML;
@@ -270,14 +278,7 @@ public class ExecutionState {
 		} else if (argv[i].equals("-plugin")) {
 		    pluginName = argv[++i];
 		} else if (argv[i].equals("-config")) {
-		    pluginConfig = new Properties();
-		    try {
-			pluginConfig.load(new FileInputStream(new File(argv[++i])));
-		    } catch (IOException e) {
-			Main.logException(e);
-			Main.print(Main.getMessage("ERROR_PLUGIN_CONFIG", e.getMessage()));
-			return false;
-		    }
+		    configSource = argv[++i];
 		} else {
 		    Main.print(Main.getMessage("WARNING_ARG", argv[i]));
 		}
@@ -313,10 +314,48 @@ public class ExecutionState {
 	try {
 	    if (plugin != null) {
 		if (pluginConfig == null) {
-		    File config = new File(CWD, IPlugin.DEFAULT_FILE);
-		    if (config.exists()) {
-			pluginConfig = new Properties();
-			pluginConfig.load(new FileInputStream(config));
+		    pluginConfig = new Properties();
+		    InputStream in = null;
+		    try {
+			if (configSource == null) {
+			    File config = new File(CWD, IPlugin.DEFAULT_FILE);
+			    if (config.exists()) {
+				in = new FileInputStream(config);
+			    }
+			} else {
+			    if ("-".equals(configSource)) {
+				System.out.println(Main.getMessage("MESSAGE_PLUGIN_CONFIG"));
+				ByteArrayOutputStream buff = new ByteArrayOutputStream();
+				BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+				String line = null;
+				while((line = reader.readLine()) != null) {
+				    if ("#EOF".equals(line)) {
+					break;
+				    } else {
+					buff.write(line.getBytes(StringTools.UTF8));
+					buff.write(StringTools.LOCAL_CR.getBytes(StringTools.UTF8));
+				    }
+				}
+				buff.close();
+				in = new ByteArrayInputStream(buff.toByteArray());
+			    } else {
+				in = new FileInputStream(new File(configSource));
+			    }
+			}
+			if (in != null) {
+			    pluginConfig.load(in);
+			}
+		    } catch (IOException e) {
+			Main.logException(e);
+			Main.print(Main.getMessage("ERROR_PLUGIN_CONFIG", e.getMessage()));
+			return false;
+		    } finally {
+			if (in != null) {
+			    try {
+				in.close();
+			    } catch (IOException e) {
+			    }
+			}
 		    }
 		}
 		plugin.configure(pluginConfig);
