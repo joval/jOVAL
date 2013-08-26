@@ -22,5 +22,5 @@ JSAF_HOME=$(TOP)/../jSAF
 # JRE[ARCH]_HOME is the install path for the JRE that will be bundled with the distribution of
 # architecture ARCH.
 #
-JRE32_HOME=$(TOP)/../../tools/jre170_25_x86
+JRE32_HOME=$(TOP)/../../tools/jre170_21_x86
 JRE64_HOME=$(JAVA_HOME)/jre

@@ -127,7 +127,7 @@ public class DpkginfoAdapter implements IAdapter {
 	if (!initialized) {
 	    try {
 		StringBuffer cmd = new StringBuffer(DPKG_QUERY);
-		cmd.append(" -W -f='${Package}\\t${Architecture}\\t${Version}\\n'");
+		cmd.append(" -W -f='${Status}\\t${Package}\\t${Architecture}\\t${Version}\\n'");
 		for (String line : SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.M)) {
 		    DpkginfoItem item = parsePackage(line);
 		    if (item != null) {
@@ -144,8 +144,16 @@ public class DpkginfoAdapter implements IAdapter {
 
     private DpkginfoItem parsePackage(String line) {
 	StringTokenizer tok = new StringTokenizer(line);
-	if (tok.countTokens() == 3) {
+	if (tok.countTokens() == 4) {
 	    DpkginfoItem item = Factories.sc.linux.createDpkginfoItem();
+
+	    //
+	    // Only return installed packages
+	    //
+	    String status = tok.nextToken();
+	    if (status.toLowerCase().indexOf(installed) == -1) {
+		return null;
+	    }
 
 	    EntityItemStringType nameType = Factories.sc.core.createEntityItemStringType();
 	    nameType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
