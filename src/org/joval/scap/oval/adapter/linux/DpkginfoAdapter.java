@@ -151,7 +151,7 @@ public class DpkginfoAdapter implements IAdapter {
 	    // Only return installed packages
 	    //
 	    String status = tok.nextToken();
-	    if (status.toLowerCase().indexOf(installed) == -1) {
+	    if (status.toLowerCase().indexOf("installed") == -1) {
 		return null;
 	    }
 

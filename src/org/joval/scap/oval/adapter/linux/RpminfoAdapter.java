@@ -50,7 +50,7 @@ import org.joval.util.JOVALMsg;
 public class RpminfoAdapter implements IAdapter, IBatch {
     private IUnixSession session;
     private Collection<String> packageList;
-    private Map<String, RpminfoItem> packageMap;
+    private Map<String, RpminfoItemData> packageMap;
     private boolean loaded = false;
 
     // Implement IAdapter
@@ -62,7 +62,7 @@ public class RpminfoAdapter implements IAdapter, IBatch {
 	    switch(this.session.getFlavor()) {
 	      case AIX:
 	      case LINUX:
-		packageMap = new HashMap<String, RpminfoItem>();
+		packageMap = new HashMap<String, RpminfoItemData>();
 		classes.add(RpminfoObject.class);
 		break;
 	    }
@@ -79,7 +79,7 @@ public class RpminfoAdapter implements IAdapter, IBatch {
 	switch(rObj.getName().getOperation()) {
 	  case EQUALS:
 	    try {
-		items.addAll(getItems(SafeCLI.checkArgument((String)rObj.getName().getValue(), session)));
+		items.addAll(getItems(SafeCLI.checkArgument((String)rObj.getName().getValue(), session), rObj));
 	    } catch (Exception e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -96,7 +96,7 @@ public class RpminfoAdapter implements IAdapter, IBatch {
 		Pattern p = StringTools.pattern((String)rObj.getName().getValue());
 		for (String packageName : packageMap.keySet()) {
 		    if (p.matcher(packageName).find()) {
-			items.add(packageMap.get(packageName));
+			items.add(packageMap.get(packageName).toItem(rObj.getBehaviors()));
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
@@ -113,7 +113,7 @@ public class RpminfoAdapter implements IAdapter, IBatch {
 	    String name = (String)rObj.getName().getValue();
 	    for (String packageName : packageMap.keySet()) {
 		if (!packageName.equals(name)) {
-		    items.add(packageMap.get(packageName));
+		    items.add(packageMap.get(packageName).toItem(rObj.getBehaviors()));
 		}
 	    }
 	    break;
@@ -190,10 +190,10 @@ public class RpminfoAdapter implements IAdapter, IBatch {
 			//
 			StringBuffer cmd = new StringBuffer("echo -e \"").append(sb.toString()).append("\"");
 			cmd.append(" | xargs -I{} rpm -ql ").append(getBaseCommand()).append(" '{}'");
-			RpminfoItem item = null;
+			RpminfoItemData data = null;
 			Iterator<String> iter = SafeCLI.manyLines(cmd.toString(), null, session);
-			while ((item = nextRpmInfo(iter)) != null) {
-			    packageMap.put((String)item.getName().getValue(), item);
+			while ((data = nextRpmInfo(iter)) != null) {
+			    packageMap.put((String)data.name.getValue(), data);
 			}
 		    }
 		}
@@ -206,14 +206,14 @@ public class RpminfoAdapter implements IAdapter, IBatch {
 		    String name = (String)rObj.getName().getValue();
 		    Collection<RpminfoItem> result = new ArrayList<RpminfoItem>();
 		    if (packageMap.containsKey(name)) {
-			result.add(packageMap.get(name));
+			result.add(packageMap.get(name).toItem(rObj.getBehaviors()));
 		    } else {
 			//
 			// Look for a "short name" match
 			//
-			for (Map.Entry<String, RpminfoItem> entry : packageMap.entrySet()) {
+			for (Map.Entry<String, RpminfoItemData> entry : packageMap.entrySet()) {
 			    if (entry.getKey().startsWith(name + "-")) {
-				result.add(entry.getValue());
+				result.add(entry.getValue().toItem(rObj.getBehaviors()));
 				break;
 			    }
 			}
@@ -278,16 +278,16 @@ public class RpminfoAdapter implements IAdapter, IBatch {
 	}
 	try {
 	    packageList = new HashSet<String>();
-	    packageMap = new HashMap<String, RpminfoItem>();
+	    packageMap = new HashMap<String, RpminfoItemData>();
 	    StringBuffer cmd = new StringBuffer("rpm -qa | xargs -I{} ");
 	    cmd.append(getBaseCommand()).append(" '{}'");
 
-	    RpminfoItem item = null;
+	    RpminfoItemData data = null;
 	    Iterator<String> iter = SafeCLI.manyLines(cmd.toString(), null, session);
-	    while ((item = nextRpmInfo(iter)) != null) {
-		String packageName = (String)item.getName().getValue();
+	    while ((data = nextRpmInfo(iter)) != null) {
+		String packageName = (String)data.name.getValue();
 		packageList.add(packageName);
-		packageMap.put(packageName, item);
+		packageMap.put(packageName, data);
 	    }
 	    loaded = true;
 	} catch (Exception e) {
@@ -298,20 +298,20 @@ public class RpminfoAdapter implements IAdapter, IBatch {
     /**
      * Get RpminfoItems matching a single package name (potentially a "short name", which can lead to multiple results).
      */
-    private Collection<RpminfoItem> getItems(String packageName) throws Exception {
+    private Collection<RpminfoItem> getItems(String packageName, RpminfoObject rObj) throws Exception {
 	Collection<RpminfoItem> result = new ArrayList<RpminfoItem>();
 	if (packageMap.containsKey(packageName)) {
 	    //
 	    // Return a previously-found exact match
 	    //
-	    result.add(packageMap.get(packageName));
+	    result.add(packageMap.get(packageName).toItem(rObj.getBehaviors()));
 	} else if (loaded) {
 	    //
 	    // Look for a "short name" match
 	    //
-	    for (Map.Entry<String, RpminfoItem> entry : packageMap.entrySet()) {
+	    for (Map.Entry<String, RpminfoItemData> entry : packageMap.entrySet()) {
 		if (entry.getKey().startsWith(packageName + "-")) {
-		    result.add(entry.getValue());
+		    result.add(entry.getValue().toItem(rObj.getBehaviors()));
 		    break;
 		}
 	    }
@@ -321,90 +321,127 @@ public class RpminfoAdapter implements IAdapter, IBatch {
 	    //
 	    session.getLogger().trace(JOVALMsg.STATUS_RPMINFO_RPM, packageName);
 	    String command = new StringBuffer(getBaseCommand()).append(" '").append(packageName).append("'").toString();
-	    Iterator<String> data = SafeCLI.multiLine(command, session, IUnixSession.Timeout.S).iterator();
-	    RpminfoItem item = null;
-	    while ((item = nextRpmInfo(data)) != null) {
-		packageMap.put((String)item.getName().getValue(), item);
-		result.add(item);
+	    Iterator<String> output = SafeCLI.multiLine(command, session, IUnixSession.Timeout.S).iterator();
+	    RpminfoItemData data = null;
+	    while ((data = nextRpmInfo(output)) != null) {
+		packageMap.put((String)data.name.getValue(), data);
+		result.add(data.toItem(rObj.getBehaviors()));
 	    }
 	}
 	return result;
     }
 
     /**
-     * Builds the next RpminfoItem from the command output. Returns null when there is no more RPM data in the iterator.
+     * Builds the next RpminfoItemData from the command output. Returns null when there is no more RPM data in the iterator.
      */
-    private RpminfoItem nextRpmInfo(Iterator<String> lines) {
-	RpminfoItem item = null;
+    private RpminfoItemData nextRpmInfo(Iterator<String> lines) {
+	RpminfoItemData data = null;
 	while(lines.hasNext()) {
 	    String line = lines.next();
 	    if (line.length() == 0 || line.indexOf("not installed") != -1) {
-		if (item != null) {
-		    return item;
+		if (data != null) {
+		    return data;
 		}
 	    } else if (line.startsWith("NAME: ")) {
-		item = Factories.sc.linux.createRpminfoItem();
-		EntityItemStringType name = Factories.sc.core.createEntityItemStringType();
-		name.setValue(line.substring(6));
-		item.setName(name);
+		data = new RpminfoItemData();
+		data.name = Factories.sc.core.createEntityItemStringType();
+		data.name.setValue(line.substring(6));
 	    } else if (line.startsWith("ARCH: ")) {
-		EntityItemStringType arch = Factories.sc.core.createEntityItemStringType();
-		arch.setValue(line.substring(6));
-		item.setArch(arch);
+		data.arch = Factories.sc.core.createEntityItemStringType();
+		data.arch.setValue(line.substring(6));
 	    } else if (line.startsWith("VERSION: ")) {
-		RpminfoItem.Version version = Factories.sc.linux.createRpminfoItemVersion();
-		version.setValue(line.substring(9));
-		item.setRpmVersion(version);
+		data.version = Factories.sc.linux.createRpminfoItemVersion();
+		data.version.setValue(line.substring(9));
 	    } else if (line.startsWith("RELEASE: ")) {
-		RpminfoItem.Release release = Factories.sc.linux.createRpminfoItemRelease();
-		release.setValue(line.substring(9));
-		item.setRelease(release);
+		data.release = Factories.sc.linux.createRpminfoItemRelease();
+		data.release.setValue(line.substring(9));
 	    } else if (line.startsWith("EPOCH: ")) {
-		RpminfoItem.Epoch epoch = Factories.sc.linux.createRpminfoItemEpoch();
+		data.epoch = Factories.sc.linux.createRpminfoItemEpoch();
 		String s = line.substring(7);
 		if ("(none)".equals(s)) {
 		    s = "0";
 		}
-		epoch.setValue(s);
-		item.setEpoch(epoch);
+		data.epoch.setValue(s);
 
-		EntityItemEVRStringType evr = Factories.sc.core.createEntityItemEVRStringType();
+		data.evr = Factories.sc.core.createEntityItemEVRStringType();
 		StringBuffer value = new StringBuffer(s);
-		value.append(":").append((String)item.getRpmVersion().getValue());
-		value.append("-").append((String)item.getRelease().getValue());
-		evr.setValue(value.toString());
-		evr.setDatatype(SimpleDatatypeEnumeration.EVR_STRING.value());
-		item.setEvr(evr);
+		value.append(":").append((String)data.version.getValue());
+		value.append("-").append((String)data.release.getValue());
+		data.evr.setValue(value.toString());
+		data.evr.setDatatype(SimpleDatatypeEnumeration.EVR_STRING.value());
 
-		EntityItemStringType extendedName = Factories.sc.core.createEntityItemStringType();
-		value = new StringBuffer((String)item.getName().getValue());
-		value.append("-").append((String)item.getEpoch().getValue());
-		value.append(":").append((String)item.getRpmVersion().getValue());
-		value.append("-").append((String)item.getRelease().getValue());
-		value.append(".").append((String)item.getArch().getValue());
-		extendedName.setValue(value.toString());
-		item.setExtendedName(extendedName);
+		data.extendedName = Factories.sc.core.createEntityItemStringType();
+		value = new StringBuffer((String)data.name.getValue());
+		value.append("-").append((String)data.epoch.getValue());
+		value.append(":").append((String)data.version.getValue());
+		value.append("-").append((String)data.release.getValue());
+		value.append(".").append((String)data.arch.getValue());
+		data.extendedName.setValue(value.toString());
 	    } else if (line.startsWith("SIGNATURE: ")) {
 		String s = line.substring(11);
-		EntityItemStringType signature = Factories.sc.core.createEntityItemStringType();
+		data.signature = Factories.sc.core.createEntityItemStringType();
 		if (s.toUpperCase().indexOf("(NONE)") != -1) {
-		    signature.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		    data.signature.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 		} else if (s.indexOf("Key ID") == -1) {
-		    signature.setStatus(StatusEnumeration.ERROR);
+		    data.signature.setStatus(StatusEnumeration.ERROR);
 		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_RPMINFO_SIGKEY, s));
-		    item.getMessage().add(msg);
+		    data.addMessage(msg);
 		} else {
-		    signature.setValue(s.substring(s.indexOf("Key ID")+7).trim());
+		    data.signature.setValue(s.substring(s.indexOf("Key ID")+7).trim());
 		}
-		item.setSignatureKeyid(signature);
 	    } else if (line.startsWith("/")) {
-		EntityItemStringType filepath = Factories.sc.core.createEntityItemStringType();
-		filepath.setValue(line);
-		item.getFilepath().add(filepath);
+		data.addFilepath(line);
 	    }
 	}
-	return item;
+	return data;
+    }
+
+    class RpminfoItemData {
+	EntityItemStringType name, arch, extendedName;
+	RpminfoItem.Version version;
+	RpminfoItem.Release release;
+	RpminfoItem.Epoch epoch;
+	EntityItemEVRStringType evr;
+	EntityItemStringType signature;
+	List<EntityItemStringType> filepaths;
+	List<MessageType> messages;
+
+	RpminfoItemData() {
+	    filepaths = new ArrayList<EntityItemStringType>();
+	}
+
+	RpminfoItem toItem(RpmInfoBehaviors behaviors) {
+	    RpminfoItem item = Factories.sc.linux.createRpminfoItem();
+	    item.setName(name);
+	    item.setArch(arch);
+	    item.setRpmVersion(version);
+	    item.setRelease(release);
+	    item.setEpoch(epoch);
+	    item.setEvr(evr);
+	    item.setExtendedName(extendedName);
+	    item.setSignatureKeyid(signature);
+	    if (behaviors != null && behaviors.getFilepaths()) {
+		item.getFilepath().addAll(filepaths);
+	    }
+	    if (messages != null) {
+		item.getMessage().addAll(messages);
+	    }
+	    return item;
+	}
+
+	void addFilepath(String path) {
+	    EntityItemStringType filepath = Factories.sc.core.createEntityItemStringType();
+	    filepath.setValue(path);
+	    filepaths.add(filepath);
+	}
+
+	void addMessage(MessageType msg) {
+	    if (messages == null) {
+		messages = new ArrayList<MessageType>();
+	    }
+	    messages.add(msg);
+	}
     }
 }
