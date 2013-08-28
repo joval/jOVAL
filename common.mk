@@ -46,11 +46,18 @@ SPACE:=$(NULL) # end of the line
 SHELL=/bin/sh
 CWD=$(shell pwd)
 
+JAVAC=$(JAVA_HOME)/bin/javac
+JAR=$(JAVA_HOME)/bin/jar
+CLASSLIB=$(JAVA_HOME)/jre/lib/rt.jar
 JAVA=$(JAVA_HOME)/bin/java
 JAVA_VERSION=1.6
 ifeq (1.7, $(findstring 1.7,`$(JAVA) -version`))
+    XJC=$(JAVA_HOME)/bin/xjc
     JAVA_VERSION=1.7
+else
+    XJC=$(JAVA) -jar $(JAXB_HOME)/lib/jaxb-xjc.jar
 endif
+XJCFLAGS=-enableIntrospection
 
 ifeq (x, x$(JRE64_HOME))
     JRE_HOME=$(JRE32_HOME)
@@ -59,11 +66,6 @@ else
 endif
 JRE=$(JRE_HOME)/bin/java
 
-XJC=$(JAVA_HOME)/bin/xjc
-XJCFLAGS=-enableIntrospection
-JAVAC=$(JAVA_HOME)/bin/javac
-JAR=$(JAVA_HOME)/bin/jar
-CLASSLIB=$(JAVA_HOME)/jre/lib/rt.jar
 BUILD=build
 DIST=dist
 RSRC=rsrc

@@ -244,10 +244,10 @@ public class Report implements IReport, ILoggable {
     public Collection<RuleDiagnostics> getDiagnostics(String assetId, String benchmarkId, String profileId)
 		throws NoSuchElementException, ScapException {
 
+	Map<String, Object> reports = resolveCatalog();
 	ArrayList<RuleDiagnostics> results = new ArrayList<RuleDiagnostics>();
-	Catalog catalog = getCatalog();
 	for (RuleResultType result : getTestResult(assetId, benchmarkId, profileId).getRuleResult()) {
-	    results.add(getDiagnostics(result, catalog));
+	    results.add(getDiagnostics(result, reports));
 	}
 	return results;
     }
@@ -552,6 +552,110 @@ public class Report implements IReport, ILoggable {
 	}
     }
 
+    /**
+     * Get a map, indexed by href, of unmarshalled JAXB elements.
+     */
+    private Map<String, Object> resolveCatalog() throws ScapException {
+	Map<String, Object> resolved = new HashMap<String, Object>();
+	for (Object obj : getCatalog().getPublicOrSystemOrUri()) {
+	    if (obj instanceof JAXBElement) {
+		obj = ((JAXBElement)obj).getValue();
+	    }
+	    if (obj instanceof Uri) {
+		Uri uri = (Uri)obj;
+		String report_id = uri.getName();
+		String href = uri.getUri().substring(1);
+		Element subreport = reports.get(report_id);
+		String system = subreport.getNamespaceURI();
+		try {
+		    if (SystemEnumeration.OCIL.namespace().equals(system)) {
+			Unmarshaller unmarshaller = SchemaRegistry.OCIL.getJAXBContext().createUnmarshaller();
+			OCILType ocil = (OCILType)((JAXBElement)unmarshaller.unmarshal(subreport)).getValue();
+			resolved.put(href, ocil);
+		    } else if (SystemEnumeration.OVAL.namespace().equals(system)) {
+			Unmarshaller unmarshaller = SchemaRegistry.OVAL_RESULTS.getJAXBContext().createUnmarshaller();
+			OvalResults oval = (OvalResults)unmarshaller.unmarshal(subreport);
+			resolved.put(href, oval);
+		    } else if (SystemEnumeration.SCE.namespace().equals(system)) {
+			Unmarshaller unmarshaller = SchemaRegistry.SCE.getJAXBContext().createUnmarshaller();
+			SceResultsType sceres = (SceResultsType)((JAXBElement)unmarshaller.unmarshal(subreport)).getValue();
+			resolved.put(href, sceres);
+		    } else if (SystemEnumeration.XCCDF.namespace().equals(system)) {
+			Unmarshaller unmarshaller = SchemaRegistry.XCCDF.getJAXBContext().createUnmarshaller();
+			TestResultType xccdf = (TestResultType)((JAXBElement)unmarshaller.unmarshal(subreport)).getValue();
+			resolved.put(href, xccdf);
+		    }
+		} catch (JAXBException e) {
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    throw new ArfException(e);
+		}
+	    }
+	}
+	return resolved;
+    }
+
+    /**
+     * Get diagnostics for the specified rule, given a pre-resolved map of reports.
+     */
+    private RuleDiagnostics getDiagnostics(RuleResultType rrt, Map<String, Object> resolved) throws ScapException {
+	RuleDiagnostics rd = new RuleDiagnostics();
+	rd.setRuleResult(rrt);
+	rd.setRuleId(rrt.getIdref());
+
+	//
+	// Create a collection of checks that apply to the selected rule
+	//
+	Collection<CheckType> checks = new ArrayList<CheckType>();
+	if (rrt.isSetCheck()) {
+	    checks.add(rrt.getCheck().get(0));
+	} else if (rrt.isSetComplexCheck()) {
+	    checks.addAll(getChecks(rrt.getComplexCheck()));
+	}
+
+	for (CheckType check : checks) {
+	    CheckDiagnostics cd = new CheckDiagnostics();
+	    String system = check.getSystem();
+	    String href = check.getCheckContentRef().get(0).getHref();
+	    String name = check.getCheckContentRef().get(0).getName();
+	    cd.setCheck(check);
+	    Object report = resolved.get(href);
+	    if (SystemEnumeration.OCIL.namespace().equals(system) && report instanceof OCILType) {
+		OCILType ocil = (OCILType)report;
+		setDiagnosticInfo(cd, ScapFactory.createChecklist(ocil), name);
+	    } else if (SystemEnumeration.OVAL.namespace().equals(system) && report instanceof OvalResults) {
+		OvalResults oval = (OvalResults)report;
+		if (name == null) {
+		    cd.setDefinitions(oval.getOvalDefinitions().getDefinitions());
+		    cd.setTests(oval.getOvalDefinitions().getTests());
+		    cd.setObjects(oval.getOvalDefinitions().getObjects());
+		    cd.setStates(oval.getOvalDefinitions().getStates());
+		    SystemType st = oval.getResults().getSystem().get(0);
+		    cd.setDefinitionResults(st.getDefinitions());
+		    cd.setTestResults(st.getTests());
+		    cd.setCollectedObjects(st.getOvalSystemCharacteristics().getCollectedObjects());
+		    cd.setItems(st.getOvalSystemCharacteristics().getSystemData());
+		} else {
+		    cd.setDefinitions(org.joval.scap.oval.Factories.definitions.core.createDefinitionsType());
+		    cd.setDefinitionResults(org.joval.scap.oval.Factories.results.createDefinitionsType());
+		    cd.setTests(org.joval.scap.oval.Factories.definitions.core.createTestsType());
+		    cd.setTestResults(org.joval.scap.oval.Factories.results.createTestsType());
+		    cd.setObjects(org.joval.scap.oval.Factories.definitions.core.createObjectsType());
+		    cd.setCollectedObjects(org.joval.scap.oval.Factories.sc.core.createCollectedObjectsType());
+		    cd.setStates(org.joval.scap.oval.Factories.definitions.core.createStatesType());
+		    cd.setItems(org.joval.scap.oval.Factories.sc.core.createSystemDataType());
+		    setDiagnosticInfo(cd, OvalFactory.createResults(oval), name);
+		}
+	    } else if (SystemEnumeration.SCE.namespace().equals(system) && report instanceof SceResultsType) {
+		cd.setSceResults((SceResultsType)report);
+	    }
+	    rd.getCheckDiagnostics().add(cd);
+	}
+	return rd;
+    }
+
+    /**
+     * Get diagnostics for the specified rule, given a catalog.
+     */
     private RuleDiagnostics getDiagnostics(RuleResultType rrt, Catalog catalog) throws ScapException {
 	RuleDiagnostics rd = new RuleDiagnostics();
 	rd.setRuleResult(rrt);
@@ -567,7 +671,6 @@ public class Report implements IReport, ILoggable {
 	    checks.addAll(getChecks(rrt.getComplexCheck()));
 	}
 
-	Collection<RuleDiagnostics> results = new ArrayList<RuleDiagnostics>();
 	for (CheckType check : checks) {
 	    CheckDiagnostics cd = new CheckDiagnostics();
 	    cd.setCheck(check);
