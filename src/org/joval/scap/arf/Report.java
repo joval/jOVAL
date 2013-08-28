@@ -310,12 +310,12 @@ public class Report implements IReport, ILoggable {
 	// Create a new catalog limited to the report subset.
 	//
 	Catalog result = Factories.catalog.createCatalog();
-	for (Object obj : getCatalog().getPublicOrSystemOrUri()) {
-	    obj = ((JAXBElement)obj).getValue();
+	for (Object elt : getCatalog().getPublicOrSystemOrUri()) {
+	    Object obj = ((JAXBElement)elt).getValue();
 	    if (obj instanceof Uri) {
 		Uri uri = (Uri)obj;
 		if (reports.contains(uri.getName())) {
-		    result.getPublicOrSystemOrUri().add(uri);
+		    result.getPublicOrSystemOrUri().add(elt);
 		}
 	    }
 	}
