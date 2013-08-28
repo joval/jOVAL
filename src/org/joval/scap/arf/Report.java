@@ -107,6 +107,16 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class Report implements IReport, ILoggable {
+    /**
+     * URI for the SCE results schema.
+     */
+    public static final String SCERES = "http://open-scap.org/page/SCE_result_file";
+
+    /**
+     * URI for the OVAL results schema.
+     */
+    public static final String OVALRES = "http://oval.mitre.org/XMLSchema/oval-results-5";
+
     public static final AssetReportCollection getAssetReportCollection(File f) throws ArfException {
 	return getAssetReportCollection(new StreamSource(f));
     }
@@ -244,7 +254,7 @@ public class Report implements IReport, ILoggable {
     public Collection<RuleDiagnostics> getDiagnostics(String assetId, String benchmarkId, String profileId)
 		throws NoSuchElementException, ScapException {
 
-	Map<String, Object> reports = resolveCatalog();
+	Map<String, Object> reports = resolveCatalog(assetId);
 	ArrayList<RuleDiagnostics> results = new ArrayList<RuleDiagnostics>();
 	for (RuleResultType result : getTestResult(assetId, benchmarkId, profileId).getRuleResult()) {
 	    results.add(getDiagnostics(result, reports));
@@ -255,10 +265,11 @@ public class Report implements IReport, ILoggable {
     public RuleDiagnostics getDiagnostics(String assetId, String benchmarkId, String profileId, String ruleId)
 		throws NoSuchElementException, ScapException {
 
+	Catalog catalog = getCatalog(assetId);
 	RuleResultType rrt = null;
 	for (RuleResultType result : getTestResult(assetId, benchmarkId, profileId).getRuleResult()) {
 	    if (result.getIdref().equals(ruleId)) {
-		return getDiagnostics(result, getCatalog());
+		return getDiagnostics(result, catalog);
 	    }
 	}
 	throw new NoSuchElementException(ruleId);
@@ -281,6 +292,34 @@ public class Report implements IReport, ILoggable {
 	    }
 	}
 	throw new NoSuchElementException();
+    }
+
+    public Catalog getCatalog(String assetId) throws ArfException, NoSuchElementException {
+	//
+	// Find the IDs of all the reports about the specified asset
+	//
+	HashSet<String> reports = new HashSet<String>();
+	for (RelationshipType rel : arc.getRelationships().getRelationship()) {
+	    if (rel.getType().equals(Factories.IS_ABOUT)) {
+		if (rel.getRef().contains(assetId)) {
+		    reports.add(rel.getSubject());
+		}
+	    }
+	}
+	//
+	// Create a new catalog limited to the report subset.
+	//
+	Catalog result = Factories.catalog.createCatalog();
+	for (Object obj : getCatalog().getPublicOrSystemOrUri()) {
+	    obj = ((JAXBElement)obj).getValue();
+	    if (obj instanceof Uri) {
+		Uri uri = (Uri)obj;
+		if (reports.contains(uri.getName())) {
+		    result.getPublicOrSystemOrUri().add(uri);
+		}
+	    }
+	}
+	return result;
     }
 
     public AssetReportCollection getAssetReportCollection() {
@@ -555,32 +594,30 @@ public class Report implements IReport, ILoggable {
     /**
      * Get a map, indexed by href, of unmarshalled JAXB elements.
      */
-    private Map<String, Object> resolveCatalog() throws ScapException {
+    private Map<String, Object> resolveCatalog(String assetId) throws ScapException {
 	Map<String, Object> resolved = new HashMap<String, Object>();
-	for (Object obj : getCatalog().getPublicOrSystemOrUri()) {
-	    if (obj instanceof JAXBElement) {
-		obj = ((JAXBElement)obj).getValue();
-	    }
+	for (Object obj : getCatalog(assetId).getPublicOrSystemOrUri()) {
+	    obj = ((JAXBElement)obj).getValue();
 	    if (obj instanceof Uri) {
 		Uri uri = (Uri)obj;
 		String report_id = uri.getName();
 		String href = uri.getUri().substring(1);
 		Element subreport = reports.get(report_id);
-		String system = subreport.getNamespaceURI();
+		String namespaceURI = subreport.getNamespaceURI();
 		try {
-		    if (SystemEnumeration.OCIL.namespace().equals(system)) {
+		    if (SystemEnumeration.OCIL.namespace().equals(namespaceURI)) {
 			Unmarshaller unmarshaller = SchemaRegistry.OCIL.getJAXBContext().createUnmarshaller();
 			OCILType ocil = (OCILType)((JAXBElement)unmarshaller.unmarshal(subreport)).getValue();
 			resolved.put(href, ocil);
-		    } else if (SystemEnumeration.OVAL.namespace().equals(system)) {
+		    } else if (OVALRES.equals(namespaceURI)) {
 			Unmarshaller unmarshaller = SchemaRegistry.OVAL_RESULTS.getJAXBContext().createUnmarshaller();
 			OvalResults oval = (OvalResults)unmarshaller.unmarshal(subreport);
 			resolved.put(href, oval);
-		    } else if (SystemEnumeration.SCE.namespace().equals(system)) {
+		    } else if (SCERES.equals(namespaceURI)) {
 			Unmarshaller unmarshaller = SchemaRegistry.SCE.getJAXBContext().createUnmarshaller();
 			SceResultsType sceres = (SceResultsType)((JAXBElement)unmarshaller.unmarshal(subreport)).getValue();
 			resolved.put(href, sceres);
-		    } else if (SystemEnumeration.XCCDF.namespace().equals(system)) {
+		    } else if (SystemEnumeration.XCCDF.namespace().equals(namespaceURI)) {
 			Unmarshaller unmarshaller = SchemaRegistry.XCCDF.getJAXBContext().createUnmarshaller();
 			TestResultType xccdf = (TestResultType)((JAXBElement)unmarshaller.unmarshal(subreport)).getValue();
 			resolved.put(href, xccdf);

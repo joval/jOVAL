@@ -77,6 +77,13 @@ public interface IReport extends ITransformable {
     Catalog getCatalog() throws ArfException, NoSuchElementException;
 
     /**
+     * Just like getCatalog(), but filtered to report URIs pertaining to the specified asset.
+     *
+     * @see getCatalog()
+     */
+    Catalog getCatalog(String assetId) throws ArfException, NoSuchElementException;
+
+    /**
      * Get the underlying JAXB type.
      */
     AssetReportCollection getAssetReportCollection();
