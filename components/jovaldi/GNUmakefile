@@ -63,13 +63,9 @@ $(DIST)/32: all $(DIST)/32/jre
 	cp $(JOVAL_CORE_LIB) $(DIST)/32/lib
 	cp $(JSAF_CORE)/$(LIBDIR)/*.jar $(DIST)/32/lib
 	cp $(JSAF_CORE_LIB) $(DIST)/32/lib
+	mkdir -p $(DIST)/32/plugin
 	rm -rf $(DIST)/32/plugin/default
-	mkdir -p $(DIST)/32/plugin/default/lib
-	cp -R $(JSAF_PROVIDER)/$(LIBDIR)/* $(DIST)/32/plugin/default/lib
-	cp $(JSAF_PROVIDER_LIB) $(DIST)/32/plugin/default/lib
-	cp -R $(PLUGIN_LOCAL)/$(RSRC)/plugin.properties $(DIST)/32/plugin/default/plugin.properties
-	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST)/32/plugin/default/lib
-	cp $(PLUGIN_LOCAL_LIB) $(DIST)/32/plugin/default/lib
+	cp -R $(PLUGIN_LOCAL)/$(DIST) $(DIST)/32/plugin/default
 
 $(DIST)/32/jre: $(JRE32_HOME)
 	mkdir -p $@
@@ -92,13 +88,9 @@ $(DIST)/64: all $(DIST)/64/jre
 	cp $(JOVAL_CORE_LIB) $(DIST)/64/lib
 	cp $(JSAF_CORE)/$(LIBDIR)/*.jar $(DIST)/64/lib
 	cp $(JSAF_CORE_LIB) $(DIST)/64/lib
+	mkdir -p $(DIST)/64/plugin
 	rm -rf $(DIST)/64/plugin/default
-	mkdir -p $(DIST)/64/plugin/default/lib
-	cp -R $(JSAF_PROVIDER)/$(LIBDIR)/* $(DIST)/64/plugin/default/lib
-	cp $(JSAF_PROVIDER_LIB) $(DIST)/64/plugin/default/lib
-	cp -R $(PLUGIN_LOCAL)/$(RSRC)/plugin.properties $(DIST)/64/plugin/default/plugin.properties
-	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST)/64/plugin/default/lib
-	cp $(PLUGIN_LOCAL_LIB) $(DIST)/64/plugin/default/lib
+	cp -R $(PLUGIN_LOCAL)/$(DIST) $(DIST)/64/plugin/default
 
 $(DIST)/64/jre: $(JRE64_HOME)
 	mkdir -p $@

@@ -23,6 +23,17 @@ $(PLUGIN_LOCAL_LIB): classes resources
 test:
 	$(JRE) -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.test.Default test.properties
 
+dist: all
+	mkdir -p $(DIST)/lib
+	cp -R $(RSRC)/plugin.properties $(DIST)
+	cp -R $(JSAF_PROVIDER)/$(LIBDIR)/* $(DIST)/lib
+	cp $(JSAF_PROVIDER_LIB) $(DIST)/lib
+	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST)/lib
+	cp $(PLUGIN_LOCAL_LIB) $(DIST)/lib
+
+dist-clean: clean
+	rm -rf $(DIST)
+
 clean:
 	rm -rf $(BUILD)
 	rm -f $(PLUGIN_LOCAL_LIB)
