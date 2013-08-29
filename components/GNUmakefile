@@ -34,7 +34,7 @@ _engine: _jsaf-core _scap
 	@$(MAKE) --keep-going --directory=engine all
 
 _plugin: _engine _jsaf-provider _jpe
-	@$(MAKE) --keep-going --directory=plugin all
+	@$(MAKE) --keep-going --directory=plugin dist
 
 _jsaf-core:
 	@$(MAKE) --keep-going --directory=$(JSAF_CORE) all
