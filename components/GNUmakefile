@@ -28,11 +28,12 @@ clean: logic-clean
 	@$(MAKE) --keep-going --directory=$(JSAF_COMPONENTS) clean
 	@$(MAKE) --keep-going --directory=scap clean
 	@$(MAKE) --keep-going --directory=schematron clean
+	@$(MAKE) --keep-going --directory=$(JPE_HOME) clean
 
 _engine: _jsaf-core _scap
 	@$(MAKE) --keep-going --directory=engine all
 
-_plugin: _engine _jsaf-provider
+_plugin: _engine _jsaf-provider _jpe
 	@$(MAKE) --keep-going --directory=plugin all
 
 _jsaf-core:
@@ -40,6 +41,9 @@ _jsaf-core:
 
 _jsaf-provider: _jsaf-core
 	@$(MAKE) --keep-going --directory=$(JSAF_PROVIDER) all
+
+_jpe:
+	@$(MAKE) --keep-going --directory=$(JPE_HOME) all
 
 _scap:
 	@$(MAKE) --keep-going --directory=scap all

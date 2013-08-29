@@ -20,6 +20,12 @@ JAVA_HOME=$(TOP)/../../tools/jdk1.6.0_26
 JSAF_HOME=$(TOP)/../jSAF
 
 #
+# JPE_HOME is the location of the jPE FOSS git repository
+# See http://github.org/joval/jPE
+#
+JPE_HOME=$(TOP)/../jPE
+
+#
 # JRE[ARCH]_HOME is the install path for the JRE that will be bundled with the distribution of
 # architecture ARCH.
 #

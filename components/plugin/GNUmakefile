@@ -5,7 +5,7 @@ TOP=../..
 
 include $(TOP)/common.mk
 
-API=$(JSAF_CORE_LIB)$(CLN)$(JSAF_CORE_DEPS)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(SCAP_LIB)
+API=$(JSAF_CORE_LIB)$(CLN)$(JSAF_CORE_DEPS)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(SCAP_LIB)$(CLN)$(JPE_LIB)
 CLASSPATH="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIBS)$(CLN)$(SRC)"
 RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIBS)$(CLN)$(PLUGIN_LOCAL_LIB)"
 
@@ -28,6 +28,7 @@ dist: all
 	cp -R $(RSRC)/plugin.properties $(DIST)
 	cp -R $(JSAF_PROVIDER)/$(LIBDIR)/* $(DIST)/lib
 	cp $(JSAF_PROVIDER_LIB) $(DIST)/lib
+	cp $(JPE_LIB) $(DIST)/lib
 	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST)/lib
 	cp $(PLUGIN_LOCAL_LIB) $(DIST)/lib
 

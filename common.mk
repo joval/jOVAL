@@ -84,6 +84,8 @@ JSAF_PROVIDER=$(JSAF_COMPONENTS)/provider
 JSAF_PROVIDER_LIB=$(JSAF_PROVIDER)/jSAF-Provider.jar
 JSAF_PROVIDER_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(JSAF_PROVIDER)/$(LIBDIR)/*)))
 
+JPE_LIB=$(JPE_HOME)/jPE.jar
+
 SVRL=$(COMPONENTS)/schematron/schema/svrl.jar
 SCAP=$(COMPONENTS)/scap
 SCAP_LIB=$(SCAP)/scap-schema-$(SCAP_VERSION).jar
