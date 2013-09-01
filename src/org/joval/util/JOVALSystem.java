@@ -35,6 +35,11 @@ public class JOVALSystem {
     public static final String SYSTEM_PROP_VERSION = "version";
 
     /**
+     * Property indicating the default data directory.
+     */
+    public static final String SYSTEM_PROP_DATADIR = "data.directory";
+
+    /**
      * Property indicating the product build date.
      */
     public static final String SYSTEM_PROP_BUILD_DATE = "build.date";
@@ -71,22 +76,28 @@ public class JOVALSystem {
      * Return a directory suitable for storing transient application data, like state information that may persist
      * between invocations.  This is either a directory called .jOVAL beneath the user's home directory, or on Windows,
      * it will be a directory named jOVAL in the appropriate AppData storage location.
+     *
+     * This location can also be determined by setting the SYSTEM_PROP_DATADIR jOVAL system property. 
      */
     public static synchronized File getDataDirectory() {
 	File dataDir = null;
-	if (System.getProperty("os.name").toLowerCase().indexOf("windows") != -1) {
-	    String s = System.getenv("LOCALAPPDATA");
-	    if (s == null) {
-		s = System.getenv("APPDATA");
+	if (sysProps.containsKey(SYSTEM_PROP_DATADIR)) {
+	    dataDir = new File(sysProps.getProperty(SYSTEM_PROP_DATADIR));
+	} else {
+	    if (System.getProperty("os.name").toLowerCase().indexOf("windows") != -1) {
+		String s = System.getenv("LOCALAPPDATA");
+		if (s == null) {
+		    s = System.getenv("APPDATA");
+		}
+		if (s != null) {
+		    File appDataDir = new File(s);
+		    dataDir = new File(appDataDir, "jOVAL");
+		}
 	    }
-	    if (s != null) {
-		File appDataDir = new File(s);
-		dataDir = new File(appDataDir, "jOVAL");
+	    if (dataDir == null) {
+		File homeDir = new File(System.getProperty("user.home"));
+		dataDir = new File(homeDir, ".jOVAL");
 	    }
-	}
-	if (dataDir == null) {
-	    File homeDir = new File(System.getProperty("user.home"));
-	    dataDir = new File(homeDir, ".jOVAL");
 	}
 	if (!dataDir.exists()) {
 	    dataDir.mkdirs();
