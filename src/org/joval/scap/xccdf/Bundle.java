@@ -103,6 +103,19 @@ public class Bundle implements IDatastream {
 	}
     }
 
+    /**
+     * Release the ZIP file (if created from a ZIP).
+     */
+    public void close() {
+	if (zip != null) {
+	    try {
+		zip.close();
+	    } catch (IOException e) {
+	    }
+	    zip = null;
+	}
+    }
+
     // Implement IDatastream
 
     public IDictionary getDictionary() {
@@ -250,12 +263,7 @@ public class Bundle implements IDatastream {
 
     @Override
     protected void finalize() {
-	if (zip != null) {
-	    try {
-		zip.close();
-	    } catch (IOException e) {
-	    }
-	}
+	close();
     }
 
     class Context extends ScapContext {
@@ -264,6 +272,11 @@ public class Bundle implements IDatastream {
 	}
 
 	// Implement IScapContext
+
+	@Override
+	public void close() {
+	    Bundle.this.close();
+	}
 
 	public IChecklist getOcil(String href) throws NoSuchElementException, OcilException {
 	    return Bundle.this.getOcil(href);

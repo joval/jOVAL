@@ -36,6 +36,11 @@ import org.joval.scap.xccdf.XccdfException;
  */
 public interface IScapContext {
     /**
+     * Close any resources associated with the context.
+     */
+    void close();
+
+    /**
      * Get the CPE dictionary for the context.
      */
     IDictionary getDictionary();

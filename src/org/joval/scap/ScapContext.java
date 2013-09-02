@@ -196,6 +196,10 @@ public abstract class ScapContext implements IScapContext {
 
     // Implement IScapContext
 
+    public void close() {
+	// no-op
+    }
+
     public IDictionary getDictionary() {
 	return dictionary;
     }
