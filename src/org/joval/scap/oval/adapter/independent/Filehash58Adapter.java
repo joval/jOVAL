@@ -203,6 +203,11 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	return Arrays.asList(getClass().getResourceAsStream("Filehash.psm1"));
     }
 
+    @Override
+    protected List<InputStream> getPowershellAssemblies() {
+	return Arrays.asList(getClass().getResourceAsStream("SHA224.dll"));
+    }
+
     // Internal
 
     protected Filehash58Item getItem(Filehash58Item base, Algorithm alg, String checksum) {
@@ -300,9 +305,6 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	    break;
 
 	  case WINDOWS: {
-	    if (alg == Algorithm.SHA224) {
-		throw new NoSuchAlgorithmException(alg.osId);
-	    }
 	    String enc = getRunspace(view).invoke("Get-FileHash -Algorithm " + alg.osId + " -Path \"" + f.getPath() + "\"");
 	    checksum = LittleEndian.toHexString(Base64.decode(enc));
 	    break;

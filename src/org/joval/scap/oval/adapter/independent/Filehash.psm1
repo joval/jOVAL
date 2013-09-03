@@ -4,11 +4,14 @@
 function Get-FileHash {
   param(
     [Parameter(ValueFromPipeline=$true)][String]$Path=$null,
-    [ValidateSet("MD5", "SHA1", "SHA256", "SHA384", "SHA512")]$Algorithm=$(throw "Mandatory parameter -Algorithm missing.")
+    [ValidateSet("MD5", "SHA1", "SHA224", "SHA256", "SHA384", "SHA512")]$Algorithm=$(throw "Mandatory parameter -Algorithm missing.")
   )
 
   PROCESS {
-    $hasher = [System.Security.Cryptography.HashAlgorithm]::Create($Algorithm)
+    switch ($Algorithm) {
+      "SHA224"  { $hasher = [Mono.Security.Cryptography.SHA224Managed]::Create() }
+      default { $hasher = [System.Security.Cryptography.HashAlgorithm]::Create($Algorithm) }
+    }
     $hash = $hasher.ComputeHash([System.IO.File]::OpenRead($Path))
     Write-Output([System.Convert]::ToBase64String($hash))
   }

@@ -15,7 +15,7 @@ full: _engine _plugin _schematron
 # Target to build everything but the data models
 rebuild:
 	@$(MAKE) --keep-going --directory=engine all
-	@$(MAKE) --keep-going --directory=plugin all
+	@$(MAKE) --keep-going --directory=plugin dist
 	@$(MAKE) --keep-going --directory=jovaldi dist
 
 # Target to delete everything but the data models
