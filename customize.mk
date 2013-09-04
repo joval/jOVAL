@@ -29,7 +29,7 @@ JPE_HOME=$(TOP)/../jPE
 # JRE[ARCH]_HOME is the install path for the JRE that will be bundled with the distribution of
 # architecture ARCH.
 #
-JRE32_HOME=$(TOP)/../../tools/jre170_21_x86
+JRE32_HOME=$(TOP)/../../tools/jre160_31_x86
 JRE64_HOME=$(TOP)/../../tools/jre160_31_x64
 #JRE64_HOME=$(JAVA_HOME)/jre
 

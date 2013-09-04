@@ -241,7 +241,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		)
 		||
 		(
-		    !fObj.isSetBehaviors() &&
+		    batchable(fObj.getBehaviors()) &&
 		    fObj.isSetFilename() &&
 		    !fObj.isFilenameNil() &&
 		    fObj.getFilename().getOperation() == OperationEnumeration.EQUALS &&
@@ -447,6 +447,24 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 	} else {
 	    return null;
 	}
+    }
+
+    /**
+     * Determine whether the file recursion aspects of an object's behaviors prevent it from being batched.
+     */
+    protected boolean batchable(ReflectedFileBehaviors behaviors) {
+	if (behaviors == null) {
+	    return true;
+	}
+	if (session instanceof IWindowsSession) {
+	    if (((IWindowsSession)session).getNativeView() != getView(behaviors)) {
+	        return false;
+	    }
+	}
+	if (!behaviors.getRecurseDirection().equals("none") || behaviors.getDepth() != 0) {
+	    return false;
+	}
+	return true;
     }
 
     /**

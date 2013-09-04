@@ -9,6 +9,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.HashMap;
 import java.util.List;
@@ -80,8 +81,8 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
     @Override
     public Collection<IResult> exec() {
 	Map<IRequest, IResult> resultMap = new HashMap<IRequest, IResult>();
-	Map<String, IRequest> requestMap = new HashMap<String, IRequest>();
-	Map<String, FileeffectiverightsItem> baseItems = new HashMap<String, FileeffectiverightsItem>();
+	Map<Integer, IRequest> requestMap = new HashMap<Integer, IRequest>();
+	Map<Integer, FileeffectiverightsItem> baseItems = new HashMap<Integer, FileeffectiverightsItem>();
 	try {
 	    //
 	    // Build a massive command...
@@ -91,17 +92,21 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 	    IFile[] files = session.getFilesystem().getFiles(paths);
 	    for (int i=0; i < files.length; i++) {
 		IRequest request = queue.get(i);
+		Integer identifier = new Integer(i);
+		requestMap.put(identifier, request);
 		IRequestContext rc = request.getContext();
 		ObjectType obj = request.getObject();
 		ReflectedFileObject fObj = new ReflectedFileObject(obj);
 		IFile f = files[i];
 		if (f == null) {
-		    resultMap.put(request, new Batch.Result(new ArrayList<FileeffectiverightsItem>(), rc));
+		    @SuppressWarnings("unchecked")
+		    Collection<FileeffectiverightsItem> empty = (Collection<FileeffectiverightsItem>)Collections.EMPTY_LIST;
+		    resultMap.put(request, new Batch.Result(empty, rc));
 		} else {
 		    try {
-			baseItems.put(obj.getId(), (FileeffectiverightsItem)getBaseItem(obj, f));
+			baseItems.put(identifier, (FileeffectiverightsItem)getBaseItem(obj, f));
 			StringBuffer sb = new StringBuffer("\"{\";");
-			sb.append("\"Object: ").append(obj.getId()).append("\";");
+			sb.append("\"Object: ").append(identifier.toString()).append("\";");
 			int sidNum=0;
 			for (String sid : getObjectInfo(obj).principalMap.keySet()) {
 			    if (sidNum++ > 0) {
@@ -113,7 +118,6 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 			sb.append(" -Name \"").append(f.getPath()).append("\";");
 			sb.append("\"}\";");
 			cmd.append(sb);
-			requestMap.put(obj.getId(), request);
 		    } catch (CollectException e) {
 			resultMap.put(request, new Batch.Result(e, rc));
 		    } catch (Exception e) {
@@ -151,45 +155,6 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
     }
 
     // Protected
-
-    /**
-     * Similar to super.batchable, except that behaviors are allowed provided they do not pertain to the file.
-     */
-    @Override
-    protected boolean batchable(IRequest request) {
-	ObjectType obj = request.getObject();
-	FileBehaviors behaviors = null;
-	if (obj instanceof Fileeffectiverights53Object) {
-	    Fileeffectiverights53Object fObj = (Fileeffectiverights53Object)obj;
-	    if (fObj.isSetBehaviors()) {
-		behaviors = fObj.getBehaviors();
-	    }
-	} else if (obj instanceof FileeffectiverightsObject) {
-	    FileeffectiverightsObject fObj = (FileeffectiverightsObject)obj;
-	    if (fObj.isSetBehaviors()) {
-		behaviors = fObj.getBehaviors();
-	    }
-	}
-	if (behaviors != null) {
-	    if (((IWindowsSession)session).getNativeView() != getView(behaviors) ||
-		(behaviors.isSetRecurseDirection() && !behaviors.getRecurseDirection().equals("none")) ||
-		(behaviors.isSetMaxDepth() && !BigInteger.ZERO.equals(behaviors.getMaxDepth()))) {
-		return false;
-	    }
-	}
-	ReflectedFileObject fObj = new ReflectedFileObject(obj);
-	return  (
-		    fObj.isSetFilepath() &&
-		    fObj.getFilepath().getOperation() == OperationEnumeration.EQUALS
-		)
-		||
-		(
-		    fObj.isSetFilename() &&
-		    !fObj.isFilenameNil() &&
-		    fObj.getFilename().getOperation() == OperationEnumeration.EQUALS &&
-		    fObj.getPath().getOperation() == OperationEnumeration.EQUALS
-		);
-    }
 
     protected Class getItemClass() {
 	return FileeffectiverightsItem.class;
@@ -265,15 +230,15 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
      */
     static class ObjectItems {
 	Collection<FileeffectiverightsItem> items;
-	String objectId;
+	Integer objectId;
 
 	ObjectItems() {
 	    items = new ArrayList<FileeffectiverightsItem>();
 	}
     }
 
-    private ObjectItems nextItems(Iterator<String> input, Map<String, IRequest> requestMap,
-		Map<String, FileeffectiverightsItem> baseItems) {
+    private ObjectItems nextItems(Iterator<String> input, Map<Integer, IRequest> requestMap,
+		Map<Integer, FileeffectiverightsItem> baseItems) {
 
         boolean start = false;
         while(input.hasNext()) {
@@ -288,7 +253,7 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 		String line = input.next().trim();
 		if (line.startsWith("Object:")) {
 		    ObjectItems items = new ObjectItems();
-		    items.objectId = line.substring(7).trim();
+		    items.objectId = new Integer(line.substring(7).trim());
 		    FileeffectiverightsItem baseItem = baseItems.get(items.objectId);
 		    while(input.hasNext()) {
 			line = input.next().trim();
