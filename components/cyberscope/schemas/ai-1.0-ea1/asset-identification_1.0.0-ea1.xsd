@@ -15,7 +15,7 @@
 			<date>2010-07-23</date>
 		</xs:appinfo>
 	</xs:annotation>
-<!-- Commented out by jOVAL, to avoid the overhead of including the massive ISO schemas associated with GMI
+<!-- Commented out by jOVAL, to avoid having to inclide schemas for ISO_19136 and ISO_19139.
 	<xs:import namespace="http://www.opengis.net/gml/3.2" schemaLocation="../ISO_19136/gml/gml.xsd"/>
 -->
 	<xs:import namespace="urn:oasis:names:tc:ciq:xal:3" schemaLocation="../oasis/xAL.xsd"/>
@@ -340,7 +340,7 @@
 			<xs:documentation>The address where an asset is located.</xs:documentation>
 		</xs:annotation>
 	</xs:element>
-<!-- Commented out by jOVAL, to avoid the overhead of including the massive ISO schemas associated with GMI
+<!-- Commented out by jOVAL, to avoid having to include schemas for ISO_19136 and ISO_19139.
 	<xs:element name="LocationPoint" type="gml:PointType" substitutionGroup="tns:Location">
 		<xs:annotation>
 			<xs:documentation>The geographic point where an asset is located.</xs:documentation>
