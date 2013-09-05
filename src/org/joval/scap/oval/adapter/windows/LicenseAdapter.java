@@ -5,13 +5,17 @@ package org.joval.scap.oval.adapter.windows;
 
 import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
 import jsaf.intf.system.ISession;
-import jsaf.intf.windows.registry.ILicenseData;
+import jsaf.intf.windows.registry.IBinaryValue;
+import jsaf.intf.windows.registry.IKey;
 import jsaf.intf.windows.registry.IRegistry;
+import jsaf.intf.windows.registry.IValue;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.io.LittleEndian;
 import jsaf.util.StringTools;
@@ -42,6 +46,7 @@ import org.joval.util.JOVALMsg;
  */
 public class LicenseAdapter implements IAdapter {
     private IWindowsSession session;
+    private License license;
 
     // Implement IAdapter
 
@@ -66,7 +71,10 @@ public class LicenseAdapter implements IAdapter {
 	    } else {
 		reg = session.getRegistry(IWindowsSession.View._32BIT);
 	    }
-	    Map<String, ILicenseData.IEntry> entries = reg.getLicenseData().getEntries();
+	    if (license == null) {
+		license = new License(reg);
+	    }
+	    Map<String, License.Entry> entries = license.getEntries();
 	    if (lObj.isSetName()) {
 		EntityObjectStringType name = lObj.getName();
 		if (name != null && name.isSetValue()) {
@@ -79,7 +87,7 @@ public class LicenseAdapter implements IAdapter {
 			break;
 
 		      case NOT_EQUAL:
-			for (ILicenseData.IEntry entry : entries.values()) {
+			for (License.Entry entry : entries.values()) {
 			    if (!entry.getName().equals(entryName)) {
 				items.add(getItem(entry));
 			    }
@@ -87,7 +95,7 @@ public class LicenseAdapter implements IAdapter {
 			break;
 
 		      case PATTERN_MATCH:
-			for (ILicenseData.IEntry entry : entries.values()) {
+			for (License.Entry entry : entries.values()) {
 			    if (StringTools.pattern(entryName).matcher(entry.getName()).find()) {
 				items.add(getItem(entry));
 			    }
@@ -100,7 +108,7 @@ public class LicenseAdapter implements IAdapter {
 		    }
 		}
 	    } else {
-		for (ILicenseData.IEntry entry : entries.values()) {
+		for (License.Entry entry : entries.values()) {
 		    items.add(getItem(entry));
 		}
 	    }
@@ -116,7 +124,7 @@ public class LicenseAdapter implements IAdapter {
 
     // Private
 
-    private LicenseItem getItem(ILicenseData.IEntry entry) {
+    private LicenseItem getItem(License.Entry entry) {
 	LicenseItem item = Factories.sc.windows.createLicenseItem();
 
 	EntityItemStringType nameType = Factories.sc.core.createEntityItemStringType();
@@ -127,9 +135,9 @@ public class LicenseAdapter implements IAdapter {
 	EntityItemRegistryTypeType registryType = Factories.sc.windows.createEntityItemRegistryTypeType();
 	EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
 	switch(entry.getType()) {
-	  case ILicenseData.IEntry.TYPE_BINARY: {
+	  case License.Entry.TYPE_BINARY: {
 	    valueType.setDatatype(SimpleDatatypeEnumeration.BINARY.value());
-	    byte[] data = ((ILicenseData.IBinaryEntry)entry).getData();
+	    byte[] data = ((License.BinaryEntry)entry).getData();
 	    StringBuffer sb = new StringBuffer();
 	    for (int i=0; i < data.length; i++) {
 		sb.append(LittleEndian.toHexString(data[i]));
@@ -138,15 +146,15 @@ public class LicenseAdapter implements IAdapter {
 	    registryType.setValue("reg_binary");
 	    break;
 	  }
-	  case ILicenseData.IEntry.TYPE_DWORD: {
+	  case License.Entry.TYPE_DWORD: {
 	    valueType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	    valueType.setValue(Integer.toString(((ILicenseData.IDwordEntry)entry).getData()));
+	    valueType.setValue(Integer.toString(((License.DwordEntry)entry).getData()));
 	    registryType.setValue("reg_dword");
 	    break;
 	  }
-	  case ILicenseData.IEntry.TYPE_SZ: {
+	  case License.Entry.TYPE_SZ: {
 	    valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
-	    valueType.setValue(((ILicenseData.IStringEntry)entry).getData());
+	    valueType.setValue(((License.StringEntry)entry).getData());
 	    registryType.setValue("reg_sz");
 	    break;
 	  }
@@ -155,5 +163,173 @@ public class LicenseAdapter implements IAdapter {
 	item.setValue(valueType);
 
 	return item;
+    }
+
+    /**
+     * A class that can interpret a License registry key.
+     * See http://www.geoffchappell.com/viewer.htm?doc=studies/windows/km/ntoskrnl/api/ex/slmem/productpolicy.htm
+     */
+    static class License {
+	private Map<String, Entry> entries;
+
+	License(IRegistry reg) throws Exception {
+	    entries = new HashMap<String, Entry>();
+	    IKey key = reg.getKey(IRegistry.Hive.HKLM, "SYSTEM\\CurrentControlSet\\Control\\ProductOptions");
+	    IValue value = key.getValue("ProductPolicy");
+	    switch(value.getType()) {
+	      case REG_BINARY: {
+		byte[] buff = ((IBinaryValue)value).getData();
+		//
+		// Read the header
+		//
+		int len		= LittleEndian.getUInt(buff, 0x00);
+		int valueLen	= LittleEndian.getUInt(buff, 0x04);
+		int endSize	= LittleEndian.getUInt(buff, 0x08);
+		int junk	= LittleEndian.getUInt(buff, 0x0C);
+		int version	= LittleEndian.getUInt(buff, 0x10);
+
+		if (version == 1) {
+		    if (len == buff.length) {
+			int offset = 0x14;
+			for (int bytesRead=0; bytesRead < valueLen; ) {
+			    Entry entry = (Entry)readEntry(buff, offset);
+			    entries.put(entry.getName(), entry);
+			    bytesRead = bytesRead + entry.length();
+			    offset = offset + entry.length();
+			}
+		    } else {
+			throw new RuntimeException("Unexpected buffer length: " + buff.length + " (" + len + " expected)");
+		    }
+		} else {
+		    throw new RuntimeException("Unexpected version number: " + version);
+		}
+		break;
+	      }
+
+	      default:
+		throw new RuntimeException("Unexpected type: " + value.getType());
+	    }
+	}
+
+	Map<String, Entry> getEntries() {
+	    return entries;
+	}
+
+	// Private
+
+	private Entry readEntry(byte[] buff, int offset) throws Exception {
+	    short len		= LittleEndian.getUShort(buff, offset);
+	    short nameLen	= LittleEndian.getUShort(buff, offset + 0x02);
+	    short dataType	= LittleEndian.getUShort(buff, offset + 0x04);
+	    short dataLen	= LittleEndian.getUShort(buff, offset + 0x06);
+	    int flags		= LittleEndian.getUInt(buff, offset + 0x08);
+	    int padding		= LittleEndian.getUInt(buff, offset + 0x0C);
+	    String name		= LittleEndian.getSzUTF16LEString(buff, offset + 0x10, (int)nameLen);
+	    byte[] data		= Arrays.copyOfRange(buff, offset + 0x10 + nameLen, offset + 0x10 + nameLen + dataLen);
+
+	    switch(dataType) {
+	      case Entry.TYPE_DWORD:
+		if (dataLen == 4) {
+		    return new DwordEntry(len, name, data);
+		} else {
+		    throw new RuntimeException("Illegal length for DWORD data: " + dataLen);
+		}
+
+	      case Entry.TYPE_SZ:
+		return new StringEntry(len, name, data);
+
+	      case Entry.TYPE_BINARY:
+	      default:
+		return new BinaryEntry(len, name, data);
+	    }
+	}
+
+	static abstract class Entry {
+	    static final int TYPE_SZ = 1;
+	    static final int TYPE_BINARY = 2;
+	    static final int TYPE_DWORD = 4;
+
+	    private int len;
+
+	    int dataType;
+	    String name;
+
+	    Entry(int len, int dataType, String name) {
+		this.len = len;
+		this.dataType = dataType;
+		this.name = name;
+	    }
+
+	    int length() {
+		return len;
+	    }
+
+	    int getType() {
+		return dataType;
+	    }
+
+	    public String getName() {
+		return name;
+	    }
+	}
+
+	static class BinaryEntry extends Entry {
+	    private byte[] data;
+
+	    BinaryEntry(int len, String name, byte[] data) {
+		super(len, TYPE_BINARY, name);
+		this.data = data;
+	    }
+
+	    byte[] getData() {
+		return data;
+	    }
+
+	    @Override
+	    public String toString() {
+		StringBuffer sb = new StringBuffer(name);
+		sb.append(": BINARY: ");
+		for (int i=0; i < data.length; i++) {
+		    sb.append(LittleEndian.toHexString(data[i]));
+		}
+		return sb.toString();
+	    }
+	}
+
+	static class DwordEntry extends Entry {
+	    private int data;
+
+	    DwordEntry(int len, String name, byte[] data) {
+		super(len, TYPE_DWORD, name);
+		this.data = LittleEndian.getUInt(data, 0);
+	    }
+
+	    int getData() {
+		return data;
+	    }
+
+	    @Override
+	    public String toString() {
+		return name + ": DWORD: " + Integer.toHexString(data);
+	    }
+	}
+
+	static class StringEntry extends Entry {
+	    private String data;
+
+	    StringEntry(int len, String name, byte[] data) {
+		super(len, TYPE_SZ, name);
+		this.data = LittleEndian.getSzUTF16LEString(data, 0, data.length);
+	    }
+
+	    String getData() {
+		return data;
+	    }
+
+	    @Override
+	    public String toString() {
+		return name + ": String: " + data;
+	    }
+	}
     }
 }

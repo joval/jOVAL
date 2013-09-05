@@ -65,7 +65,6 @@ import org.joval.intf.scap.oval.IResults;
 import org.joval.scap.oval.xml.OvalNamespacePrefixMapper;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
-import org.joval.xml.XSLTools;
 
 /**
  * The purpose of this class is to mirror the apparent relational storage structure used by Ovaldi to generate the system-
