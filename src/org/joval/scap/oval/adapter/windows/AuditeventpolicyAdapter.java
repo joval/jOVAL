@@ -5,6 +5,7 @@ package org.joval.scap.oval.adapter.windows;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
@@ -14,6 +15,7 @@ import jsaf.intf.io.IFilesystem;
 import jsaf.intf.system.ISession;
 import jsaf.intf.util.IProperty;
 import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.util.IniFile;
 import jsaf.util.SafeCLI;
 import jsaf.util.StringTools;
@@ -63,120 +65,85 @@ public class AuditeventpolicyAdapter implements IAdapter {
 	if (error != null) {
 	    throw error;
 	} else if (items == null) {
-	    makeItem();
+	    items = makeItems();
 	}
 	return items;
     }
 
     // Private
 
-    private void makeItem() throws CollectException {
+    private Collection<AuditeventpolicyItem> makeItems() throws CollectException {
 	try {
-	    long timeout = session.getTimeout(ISession.Timeout.M);
-	    String tempDir = session.getTempDir();
-	    StringBuffer sb = new StringBuffer(tempDir);
-	    if (!tempDir.endsWith(session.getFilesystem().getDelimiter())) {
-		sb.append(session.getFilesystem().getDelimiter());
+	    //
+	    // Get a runspace if there are any in the pool, or create a new one, and load the Get-AuditEventPolicies
+	    // Powershell module code.
+	    //
+	    IWindowsSession.View view = session.getNativeView();
+	    IRunspace runspace = null;
+	    for (IRunspace rs : session.getRunspacePool().enumerate()) {
+		if (rs.getView() == view) {
+		    runspace = rs;
+		    break;
+		}
 	    }
-	    sb.append("secpol.inf");
-	    String secpol = sb.toString();
-	    String cmd = "secedit.exe /export /areas SECURITYPOLICY /cfg " + secpol;
-	    SafeCLI.ExecData data = SafeCLI.execData(cmd, null, session, timeout);
-	    int code = data.getExitCode();
-	    switch(code) {
-	      case 0: // success
-		IFile file = null;
-		try {
-		    file = session.getFilesystem().getFile(secpol, IFile.Flags.READWRITE);
-		    IniFile config = new IniFile(file.getInputStream(), StringTools.UTF16LE);
-		    items = new ArrayList<AuditeventpolicyItem>();
-		    AuditeventpolicyItem item = Factories.sc.windows.createAuditeventpolicyItem();
-		    IProperty prop = config.getSection("Event Audit");
-		    for (String key : prop) {
-			try {
-			    if ("AuditAccountLogon".equals(key)) {
-				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-				type.setValue(getPolicyValue(prop.getIntProperty(key)));
-				item.setAccountLogon(type);
-			    } else if ("AuditAccountManage".equals(key)) {
-				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-				type.setValue(getPolicyValue(prop.getIntProperty(key)));
-				item.setAccountManagement(type);
-			    } else if ("AuditProcessTracking".equals(key)) {
-				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-				type.setValue(getPolicyValue(prop.getIntProperty(key)));
-				item.setDetailedTracking(type);
-			    } else if ("AuditDSAccess".equals(key)) {
-				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-				type.setValue(getPolicyValue(prop.getIntProperty(key)));
-				item.setDirectoryServiceAccess(type);
-			    } else if ("AuditLogonEvents".equals(key)) {
-				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-				type.setValue(getPolicyValue(prop.getIntProperty(key)));
-				item.setLogon(type);
-			    } else if ("AuditObjectAccess".equals(key)) {
-				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-				type.setValue(getPolicyValue(prop.getIntProperty(key)));
-				item.setObjectAccess(type);
-			    } else if ("AuditPolicyChange".equals(key)) {
-				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-				type.setValue(getPolicyValue(prop.getIntProperty(key)));
-				item.setPolicyChange(type);
-			    } else if ("AuditPrivilegeUse".equals(key)) {
-				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-				type.setValue(getPolicyValue(prop.getIntProperty(key)));
-				item.setPrivilegeUse(type);
-			    } else if ("AuditSystemEvents".equals(key)) {
-				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-				type.setValue(getPolicyValue(prop.getIntProperty(key)));
-				item.setSystem(type);
-			    }
-			} catch (IllegalArgumentException e) {
-			    session.getLogger().warn(JOVALMsg.ERROR_WIN_SECEDIT_VALUE, e.getMessage(), key);
-			}
-		    }
-		    items.add(item);
-		} catch (NoSuchElementException e) {
-		    error = new CollectException(e.getMessage(), FlagEnumeration.NOT_APPLICABLE);
-		    throw error;
-		} catch (IOException e) {
-		    session.getLogger().warn(Message.ERROR_IO, secpol, e.getMessage());
-		} finally {
-		    if (file != null) {
-			file.delete();
+	    if (runspace == null) {
+		runspace = session.getRunspacePool().spawn(view);
+	    }
+	    if (runspace != null) {
+		runspace.loadAssembly(getClass().getResourceAsStream("Auditeventpolicy.dll"));
+		runspace.loadModule(getClass().getResourceAsStream("Auditeventpolicy.psm1"));
+	    }
+
+	    AuditeventpolicyItem item = Factories.sc.windows.createAuditeventpolicyItem();
+	    for (String line : runspace.invoke("Get-AuditEventPolicies").split("\r\n")) {
+		int ptr = line.indexOf(":");
+		if (ptr != -1) {
+		    String key = line.substring(0,ptr);
+		    String val = line.substring(ptr+1).trim();
+		    if ("ACCOUNT_LOGON".equals(key)) {
+			EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			type.setValue(val);
+			item.setAccountLogon(type);
+		    } else if ("ACCOUNT_MANAGEMENT".equals(key)) {
+			EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			type.setValue(val);
+			item.setAccountManagement(type);
+		    } else if ("DETAILED_TRACKING".equals(key)) {
+			EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			type.setValue(val);
+			item.setDetailedTracking(type);
+		    } else if ("DIRECTORY_SERVICE_ACCESS".equals(key)) {
+			EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			type.setValue(val);
+			item.setDirectoryServiceAccess(type);
+		    } else if ("LOGON".equals(key)) {
+			EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			type.setValue(val);
+			item.setLogon(type);
+		    } else if ("OBJECT_ACCESS".equals(key)) {
+			EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			type.setValue(val);
+			item.setObjectAccess(type);
+		    } else if ("POLICY_CHANGE".equals(key)) {
+			EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			type.setValue(val);
+			item.setPolicyChange(type);
+		    } else if ("PRIVILEGE_USE".equals(key)) {
+			EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			type.setValue(val);
+			item.setPrivilegeUse(type);
+		    } else if ("SYSTEM".equals(key)) {
+			EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			type.setValue(val);
+			item.setSystem(type);
 		    }
 		}
-		break;
-
-	      default:
-		String output = new String(data.getData());
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_SECEDIT_CODE, Integer.toString(code), output);
-		throw new Exception(msg);
 	    }
-	} catch (CollectException e) {
-	    throw e;
+	    return Arrays.asList(item);
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    error = new CollectException(e.getMessage(), FlagEnumeration.ERROR);
 	    throw error;
-	}
-    }
-
-    /**
-     * Convert the policy int in the INF file to the OVAL String value.
-     */
-    private String getPolicyValue(int val) throws IllegalArgumentException {
-	switch(val) {
-	  case 0:
-	    return "AUDIT_NONE";
-	  case 1:
-	    return "AUDIT_SUCCESS";
-	  case 2:
-	    return "AUDIT_FAILURE";
-	  case 3:
-	    return "AUDIT_SUCCESS_FAILURE";
-	  default:
-	    throw new IllegalArgumentException(Integer.toString(val));
 	}
     }
 }

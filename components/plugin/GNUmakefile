@@ -53,6 +53,7 @@ resources:
 	cp $(RSRC)/assembly/SHA224.dll $(BUILD)/org/joval/scap/oval/adapter/independent/
 	cp $(SRC)/org/joval/scap/oval/adapter/windows/*.psm1 $(BUILD)/org/joval/scap/oval/adapter/windows/
 	cp $(RSRC)/assembly/Accesstoken.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
+	cp $(RSRC)/assembly/Auditeventpolicy.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 	cp $(RSRC)/assembly/Effectiverights.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 	cp $(RSRC)/assembly/Lockoutpolicy.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 	cp $(RSRC)/assembly/Process58.dll $(BUILD)/org/joval/scap/oval/adapter/windows/

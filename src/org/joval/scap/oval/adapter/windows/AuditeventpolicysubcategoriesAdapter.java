@@ -4,10 +4,12 @@
 package org.joval.scap.oval.adapter.windows;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 import jsaf.intf.system.ISession;
 import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.util.SafeCLI;
 
 import scap.oval.common.MessageType;
@@ -54,188 +56,159 @@ public class AuditeventpolicysubcategoriesAdapter implements IAdapter {
 	if (error != null) {
 	    throw error;
 	} else if (items == null) {
-	    makeItem();
+	    items = makeItems();
 	}
 	return items;
     }
 
     // Private
 
-    enum AuditType {
-	NONE("No Auditing", "AUDIT_NONE"),
-	SUCCESS("Success", "AUDIT_SUCCESS"),
-	SUCCESS_AND_FAILURE("Success and Failure", "AUDIT_SUCCESS_FAILURE"), // NB: precedes Failure!
-	FAILURE("Failure", "AUDIT_FAILURE");
-
-	private String key;
-	private EntityItemAuditType entity;
-
-	private AuditType(String key, String value) {
-	    this.key = key;
-	    entity = Factories.sc.windows.createEntityItemAuditType();
-	    entity.setValue(value);
-	}
-
-	String key() {
-	    return key;
-	}
-
-	EntityItemAuditType entity() {
-	    return entity;
-	}
-
-	static AuditType fromLine(String line) throws IllegalArgumentException {
-	    if (line.startsWith("  ")) {
-		for (AuditType type : values()) {
-		    if (line.trim().endsWith(type.key())) {
-			return type;
-		    }
-		}
-	    }
-	    throw new IllegalArgumentException(line);
-	}
-    }
-
-    private void makeItem() throws CollectException {
+    private Collection<AuditeventpolicysubcategoriesItem> makeItems() throws CollectException {
 	try {
-	    long timeout = session.getTimeout(ISession.Timeout.M);
-	    String[] env = session.getEnvironment().toArray();
-	    SafeCLI.ExecData data = SafeCLI.execData("AuditPol /get /category:*", env, session, timeout);
-	    int code = data.getExitCode();
-	    switch(code) {
-	      case 0: // success
-		items = new ArrayList<AuditeventpolicysubcategoriesItem>();
-		AuditeventpolicysubcategoriesItem item = Factories.sc.windows.createAuditeventpolicysubcategoriesItem();
-		for (String line : data.getLines()) {
-		    if (line.startsWith("  ")) { // skip category lines
-			try {
-			    AuditType type = AuditType.fromLine(line);
-			    line = line.trim();
-			    String subcategory = line.substring(0, line.length() - type.key().length()).trim();
-			    if ("Security System Extension".equals(subcategory)) {
-				item.setSecuritySystemExtension(type.entity());
-			    } else if ("System Integrity".equals(subcategory)) {
-				item.setSystemIntegrity(type.entity());
-			    } else if ("IPsec Driver".equals(subcategory)) {
-				item.setIpsecDriver(type.entity());
-			    } else if ("Other System Events".equals(subcategory)) {
-				item.setOtherSystemEvents(type.entity());
-			    } else if ("Security State Change".equals(subcategory)) {
-				item.setSecurityStateChange(type.entity());
-			    } else if ("Logon".equals(subcategory)) {
-				item.setLogon(type.entity());
-			    } else if ("Logoff".equals(subcategory)) {
-				item.setLogoff(type.entity());
-			    } else if ("Account Lockout".equals(subcategory)) {
-				item.setAccountLockout(type.entity());
-			    } else if ("IPsec Main Mode".equals(subcategory)) {
-				item.setIpsecMainMode(type.entity());
-			    } else if ("IPsec Quick Mode".equals(subcategory)) {
-				item.setIpsecQuickMode(type.entity());
-			    } else if ("IPsec Extended Mode".equals(subcategory)) {
-				item.setIpsecExtendedMode(type.entity());
-			    } else if ("Special Logon".equals(subcategory)) {
-				item.setSpecialLogon(type.entity());
-			    } else if ("Other Logon/Logoff Events".equals(subcategory)) {
-				item.setOtherLogonLogoffEvents(type.entity());
-			    } else if ("Network Policy Server".equals(subcategory)) {
-				item.setNetworkPolicyServer(type.entity());
-			    } else if ("File System".equals(subcategory)) {
-				item.setFileSystem(type.entity());
-			    } else if ("Registry".equals(subcategory)) {
-				item.setRegistry(type.entity());
-			    } else if ("Kernel Object".equals(subcategory)) {
-				item.setKernelObject(type.entity());
-			    } else if ("SAM".equals(subcategory)) {
-				item.setSam(type.entity());
-			    } else if ("Certification Services".equals(subcategory)) {
-				item.setCertificationServices(type.entity());
-			    } else if ("Application Generated".equals(subcategory)) {
-				item.setApplicationGenerated(type.entity());
-			    } else if ("Handle Manipulation".equals(subcategory)) {
-				item.setHandleManipulation(type.entity());
-			    } else if ("File Share".equals(subcategory)) {
-				item.setFileShare(type.entity());
-			    } else if ("Filtering Platform Packet Drop".equals(subcategory)) {
-				item.setFilteringPlatformPacketDrop(type.entity());
-			    } else if ("Filtering Platform Connection".equals(subcategory)) {
-				item.setFilteringPlatformConnection(type.entity());
-			    } else if ("Other Object Access Events".equals(subcategory)) {
-				item.setOtherObjectAccessEvents(type.entity());
-			    } else if ("Detailed File Share".equals(subcategory)) {
-				item.setDetailedFileShare(type.entity());
-			    } else if ("Sensitive Privilege Use".equals(subcategory)) {
-				item.setSensitivePrivilegeUse(type.entity());
-			    } else if ("Non Sensitive Privilege Use".equals(subcategory)) {
-				item.setNonSensitivePrivilegeUse(type.entity());
-			    } else if ("Other Privilege Use Events".equals(subcategory)) {
-				item.setOtherPrivilegeUseEvents(type.entity());
-			    } else if ("Process Termination".equals(subcategory)) {
-				item.setProcessTermination(type.entity());
-			    } else if ("DPAPI Activity".equals(subcategory)) {
-				item.setDpapiActivity(type.entity());
-			    } else if ("RPC Events".equals(subcategory)) {
-				item.setRpcEvents(type.entity());
-			    } else if ("Process Creation".equals(subcategory)) {
-				item.setProcessCreation(type.entity());
-			    } else if ("Audit Policy Change".equals(subcategory)) {
-				item.setAuditPolicyChange(type.entity());
-			    } else if ("Authentication Policy Change".equals(subcategory)) {
-				item.setAuthenticationPolicyChange(type.entity());
-			    } else if ("Authorization Policy Change".equals(subcategory)) {
-				item.setAuthorizationPolicyChange(type.entity());
-			    } else if ("MPSSVC Rule-Level Policy Change".equals(subcategory)) {
-				item.setMpssvcRuleLevelPolicyChange(type.entity());
-			    } else if ("Filtering Platform Policy Change".equals(subcategory)) {
-				item.setFilteringPlatformPolicyChange(type.entity());
-			    } else if ("Other Policy Change Events".equals(subcategory)) {
-				item.setOtherPolicyChangeEvents(type.entity());
-			    } else if ("User Account Management".equals(subcategory)) {
-				item.setUserAccountManagement(type.entity());
-			    } else if ("Computer Account Management".equals(subcategory)) {
-				item.setComputerAccountManagement(type.entity());
-			    } else if ("Security Group Management".equals(subcategory)) {
-				item.setSecurityGroupManagement(type.entity());
-			    } else if ("Distribution Group Management".equals(subcategory)) {
-				item.setDistributionGroupManagement(type.entity());
-			    } else if ("Application Group Management".equals(subcategory)) {
-				item.setApplicationGroupManagement(type.entity());
-			    } else if ("Other Account Management Events".equals(subcategory)) {
-				item.setOtherAccountManagementEvents(type.entity());
-			    } else if ("Directory Service Changes".equals(subcategory)) {
-				item.setDirectoryServiceChanges(type.entity());
-			    } else if ("Directory Service Replication".equals(subcategory)) {
-				item.setDirectoryServiceReplication(type.entity());
-			    } else if ("Detailed Directory Service Replication".equals(subcategory)) {
-				item.setDetailedDirectoryServiceReplication(type.entity());
-			    } else if ("Directory Service Access".equals(subcategory)) {
-				item.setDirectoryServiceAccess(type.entity());
-			    } else if ("Kerberos Service Ticket Operations".equals(subcategory)) {
-				item.setKerberosServiceTicketOperations(type.entity());
-			    } else if ("Kerberos Ticket Events".equals(subcategory)) {
-				item.setKerberosTicketEvents(type.entity());
-			    } else if ("Other Account Logon Events".equals(subcategory)) {
-				item.setOtherAccountLogonEvents(type.entity());
-			    } else if ("Kerberos Authentication Service".equals(subcategory)) {
-				item.setKerberosAuthenticationService(type.entity());
-			    } else if ("Credential Validation".equals(subcategory)) {
-				item.setCredentialValidation(type.entity());
-			    } else {
-				session.getLogger().warn(JOVALMsg.ERROR_WIN_AUDITPOL_SUBCATEGORY, subcategory);
-			    }
-			} catch (IllegalArgumentException e) {
-			    session.getLogger().warn(JOVALMsg.ERROR_WIN_AUDITPOL_SETTING, line);
+            //
+            // Get a runspace if there are any in the pool, or create a new one, and load the Get-AuditEventPolicies
+            // Powershell module code.
+            //
+            IWindowsSession.View view = session.getNativeView();
+            IRunspace runspace = null;
+            for (IRunspace rs : session.getRunspacePool().enumerate()) {
+                if (rs.getView() == view) {
+                    runspace = rs;
+                    break;
+                }
+            }
+            if (runspace == null) {
+                runspace = session.getRunspacePool().spawn(view);
+            }
+            if (runspace != null) {
+                runspace.loadAssembly(getClass().getResourceAsStream("Auditeventpolicy.dll"));
+                runspace.loadModule(getClass().getResourceAsStream("Auditeventpolicy.psm1"));
+            }
+
+	    AuditeventpolicysubcategoriesItem item = Factories.sc.windows.createAuditeventpolicysubcategoriesItem();
+	    for (String line : runspace.invoke("Get-AuditEventSubcategoryPolicies").split("\r\n")) {
+		if (line.startsWith("  ")) { // skip category lines
+		    int ptr = line.indexOf(":");
+		    if (ptr != -1) {
+			String subcategory = line.substring(2,ptr);
+			EntityItemAuditType value = Factories.sc.windows.createEntityItemAuditType();
+			value.setValue(line.substring(ptr+1).trim());
+			if ("SECURITY_SYSTEM_EXTENSION".equals(subcategory)) {
+			    item.setSecuritySystemExtension(value);
+			} else if ("SYSTEM_INTEGRITY".equals(subcategory)) {
+			    item.setSystemIntegrity(value);
+			} else if ("IPSEC_DRIVER".equals(subcategory)) {
+			    item.setIpsecDriver(value);
+			} else if ("OTHER_SYSTEM_EVENTS".equals(subcategory)) {
+			    item.setOtherSystemEvents(value);
+			} else if ("SECURITY_STATE_CHANGE".equals(subcategory)) {
+			    item.setSecurityStateChange(value);
+			} else if ("LOGON".equals(subcategory)) {
+			    item.setLogon(value);
+			} else if ("LOGOFF".equals(subcategory)) {
+			    item.setLogoff(value);
+			} else if ("ACCOUNT_LOCKOUT".equals(subcategory)) {
+			    item.setAccountLockout(value);
+			} else if ("IPSEC_MAIN_MODE".equals(subcategory)) {
+			    item.setIpsecMainMode(value);
+			} else if ("IPSEC_QUICK_MODE".equals(subcategory)) {
+			    item.setIpsecQuickMode(value);
+			} else if ("IPSEC_EXTENDED_MODE".equals(subcategory)) {
+			    item.setIpsecExtendedMode(value);
+			} else if ("SPECIAL_LOGON".equals(subcategory)) {
+			    item.setSpecialLogon(value);
+			} else if ("OTHER_LOGON_LOGOFF_EVENTS".equals(subcategory)) {
+			    item.setOtherLogonLogoffEvents(value);
+			} else if ("NETWORK_POLICY_SERVER".equals(subcategory)) {
+			    item.setNetworkPolicyServer(value);
+			} else if ("FILE_SYSTEM".equals(subcategory)) {
+			    item.setFileSystem(value);
+			} else if ("REGISTRY".equals(subcategory)) {
+			    item.setRegistry(value);
+			} else if ("KERNEL_OBJECT".equals(subcategory)) {
+			    item.setKernelObject(value);
+			} else if ("SAM".equals(subcategory)) {
+			    item.setSam(value);
+			} else if ("CERTIFICATION_SERVICES".equals(subcategory)) {
+			    item.setCertificationServices(value);
+			} else if ("APPLICATION_GENERATED".equals(subcategory)) {
+			    item.setApplicationGenerated(value);
+			} else if ("HANDLE_MANIPULATION".equals(subcategory)) {
+			    item.setHandleManipulation(value);
+			} else if ("FILE_SHARE".equals(subcategory)) {
+			    item.setFileShare(value);
+			} else if ("FILTERING_PLATFORM_PACKET_DROP".equals(subcategory)) {
+			    item.setFilteringPlatformPacketDrop(value);
+			} else if ("FILTERING_PLATFORM_CONNECTION".equals(subcategory)) {
+			    item.setFilteringPlatformConnection(value);
+			} else if ("OTHER_OBJECT_ACCESS_EVENTS".equals(subcategory)) {
+			    item.setOtherObjectAccessEvents(value);
+			} else if ("DETAILED_FILE_SHARE".equals(subcategory)) {
+			    item.setDetailedFileShare(value);
+			} else if ("SENSITIVE_PRIVILEGE_USE".equals(subcategory)) {
+			    item.setSensitivePrivilegeUse(value);
+			} else if ("NON_SENSITIVE_PRIVILEGE_USE".equals(subcategory)) {
+			    item.setNonSensitivePrivilegeUse(value);
+			} else if ("OTHER_PRIVILEGE_USE_EVENTS".equals(subcategory)) {
+			    item.setOtherPrivilegeUseEvents(value);
+			} else if ("PROCESS_TERMINATION".equals(subcategory)) {
+			    item.setProcessTermination(value);
+			} else if ("DPAPI_ACTIVITY".equals(subcategory)) {
+			    item.setDpapiActivity(value);
+			} else if ("RPC_EVENTS".equals(subcategory)) {
+			    item.setRpcEvents(value);
+			} else if ("PROCESS_CREATION".equals(subcategory)) {
+			    item.setProcessCreation(value);
+			} else if ("AUDIT_POLICY_CHANGE".equals(subcategory)) {
+			    item.setAuditPolicyChange(value);
+			} else if ("AUTHENTICATION_POLICY_CHANGE".equals(subcategory)) {
+			    item.setAuthenticationPolicyChange(value);
+			} else if ("AUTHORIZATION_POLICY_CHANGE".equals(subcategory)) {
+			    item.setAuthorizationPolicyChange(value);
+			} else if ("MPSSVC_RULE_LEVEL_POLICY_CHANGE".equals(subcategory)) {
+			    item.setMpssvcRuleLevelPolicyChange(value);
+			} else if ("FILTERING_PLATFORM_POLICY_CHANGE".equals(subcategory)) {
+			    item.setFilteringPlatformPolicyChange(value);
+			} else if ("OTHER_POLICY_CHANGE_EVENTS".equals(subcategory)) {
+			    item.setOtherPolicyChangeEvents(value);
+			} else if ("USER_ACCOUNT_MANAGEMENT".equals(subcategory)) {
+			    item.setUserAccountManagement(value);
+			} else if ("COMPUTER_ACCOUNT_MANAGEMENT".equals(subcategory)) {
+			    item.setComputerAccountManagement(value);
+			} else if ("SECURITY_GROUP_MANAGEMENT".equals(subcategory)) {
+			    item.setSecurityGroupManagement(value);
+			} else if ("DISTRIBUTION_GROUP_MANAGEMENT".equals(subcategory)) {
+			    item.setDistributionGroupManagement(value);
+			} else if ("APPLICATION_GROUP_MANAGEMENT".equals(subcategory)) {
+			    item.setApplicationGroupManagement(value);
+			} else if ("OTHER_ACCOUNT_MANAGEMENT_EVENTS".equals(subcategory)) {
+			    item.setOtherAccountManagementEvents(value);
+			} else if ("DIRECTORY_SERVICE_CHANGES".equals(subcategory)) {
+			    item.setDirectoryServiceChanges(value);
+			} else if ("DIRECTORY_SERVICE_REPLICATION".equals(subcategory)) {
+			    item.setDirectoryServiceReplication(value);
+			} else if ("DETAILED_DIRECTORY_SERVICE_REPLICATION".equals(subcategory)) {
+			    item.setDetailedDirectoryServiceReplication(value);
+			} else if ("DIRECTORY_SERVICE_ACCESS".equals(subcategory)) {
+			    item.setDirectoryServiceAccess(value);
+			} else if ("KERBEROS_SERVICE_TICKET_OPERATIONS".equals(subcategory)) {
+			    item.setKerberosServiceTicketOperations(value);
+			} else if ("KERBEROS_TICKET_EVENTS".equals(subcategory)) {
+//DAS: there is no such audit event policy subcategory
+			    item.setKerberosTicketEvents(value);
+			} else if ("OTHER_ACCOUNT_LOGON_EVENTS".equals(subcategory)) {
+			    item.setOtherAccountLogonEvents(value);
+			} else if ("KERBEROS_AUTHENTICATION_SERVICE".equals(subcategory)) {
+			    item.setKerberosAuthenticationService(value);
+			} else if ("CREDENTIAL_VALIDATION".equals(subcategory)) {
+			    item.setCredentialValidation(value);
+			} else {
+			    session.getLogger().warn(JOVALMsg.ERROR_WIN_AUDITPOL_SUBCATEGORY, subcategory);
 			}
 		    }
 		}
-		items.add(item);
-		break;
-
-	      default:
-		String output = new String(data.getData());
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_AUDITPOL_CODE, Integer.toString(code), output);
-		throw new Exception(msg);
 	    }
+	    return Arrays.asList(item);
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    error = new CollectException(e.getMessage(), FlagEnumeration.ERROR);
