@@ -7,6 +7,7 @@ namespace jOVAL.Metabase {
     using System.Diagnostics;
     using System.Collections;
     using System.Collections.Generic;
+    using System.IO;
     using System.Text;
 
     [GuidAttribute("479ED58D-2833-4078-9401-7535B182B6A8")]
@@ -25,6 +26,25 @@ namespace jOVAL.Metabase {
 	    baseInterface = (IMSAdminBase)adminBase;
 	}
 
+	/**
+	 * Test whether a key exists at the specified path.
+	 */
+	public static bool TestKey(String keyPath) {
+	    bool found = false;
+	    try {
+		IntPtr hMDHandle = IntPtr.Zero;
+		baseInterface.OpenKey(METADATA_MASTER_ROOT_HANDLE, keyPath, METADATA_PERMISSION_READ, 20, out hMDHandle);
+		baseInterface.CloseKey(hMDHandle);
+		found = true;
+	    } catch (DirectoryNotFoundException) {
+		// HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND)
+	    }
+	    return found;
+	}
+
+	/**
+	 * Returns an empty list if the path is invalid, or if there are no children.
+	 */
 	public static List<String> ListSubkeys(String keyPath) {
 	    List<String> subkeys = new List<String>();
 	    try {
@@ -36,11 +56,13 @@ namespace jOVAL.Metabase {
 		}
 	    } catch (COMException e) {
 		switch((UInt32)e.ErrorCode) {
-		  case 0x80070103: // All done
+		  case 0x80070103: // HRESULT_FROM_WIN32(ERROR_NO_MORE_ITEMS)
 		    break;
 		  default:
 		    throw e;
 		}
+	    } catch (DirectoryNotFoundException) {
+		// HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND)
 	    }
 	    return subkeys;
 	}
@@ -52,35 +74,39 @@ namespace jOVAL.Metabase {
 	    VALUE
 	}
 
+	/**
+	 * Returns an empty list if the path is invalid, or if there are no children.
+	 */
 	public static List<Dictionary<DataField, String>> ListData(String keyPath) {
 	    List<Dictionary<DataField, String>> data = new List<Dictionary<DataField, String>>();
 	    UInt32 index = 0;
 	    bool done = false;
 	    while(!done) {
 		METADATA_RECORD metaDataRecord = new METADATA_RECORD();
-		UInt32 len = 0;
+		uint len = 0;
 		try {
 		    baseInterface.EnumData(METADATA_MASTER_ROOT_HANDLE, keyPath, ref metaDataRecord, index, out len);
 		} catch (COMException e) {
 		    switch((UInt32)e.ErrorCode) {
-		      case 0x8007007A: // Length too small
-			if (len == 0) {
-			    len = 1024; // DAS: there's an apparent bug where len isn't getting set!
-			}
+		      case 0x8007007A: // HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)
+			if (len == 0) len = 32768;
 			metaDataRecord.pbMDData = Marshal.AllocCoTaskMem((int)len);
 			if (metaDataRecord.pbMDData == IntPtr.Zero) {
 			    throw new ExternalException("Unable to allocate memory for Metabase data buffer.");
 			}
-			metaDataRecord.dwMDDataLen = len;
+			metaDataRecord.dwMDDataLen = (UInt32)len;
 			baseInterface.EnumData(METADATA_MASTER_ROOT_HANDLE, keyPath, ref metaDataRecord, index, out len);
 			data.Add(ToData(metaDataRecord));
 			break;
-		      case 0x80070103: // All done
+		      case 0x80070103: // HRESULT_FROM_WIN32(ERROR_NO_MORE_ITEMS)
 			done = true;
 			break;
 		      default:
 			throw e;
 		    }
+		} catch (DirectoryNotFoundException) {
+		    // HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND)
+		    done = true;
 		} finally {
 		    if (metaDataRecord.pbMDData != IntPtr.Zero) {
 			Marshal.FreeCoTaskMem(metaDataRecord.pbMDData);
@@ -91,6 +117,9 @@ namespace jOVAL.Metabase {
 	    return data;
 	}
 
+	/**
+	 * Returns null if there is no data for the ID.
+	 */
 	public static Dictionary<DataField, String> GetData(String keyPath, UInt32 dataId) {
 	    METADATA_RECORD metaDataRecord = new METADATA_RECORD();
 	    metaDataRecord.dwMDIdentifier = dataId;
@@ -98,27 +127,29 @@ namespace jOVAL.Metabase {
 	    metaDataRecord.dwMDUserType = (UInt32)METADATA_USER_TYPE.IIS_MD_UT_SERVER;
 	    metaDataRecord.dwMDDataType = (UInt32)METADATA_TYPES.ALL_METADATA;
 	    try {
-		UInt32 len = 0;
+		uint len = 0;
 		try {
 		    baseInterface.GetData(METADATA_MASTER_ROOT_HANDLE, keyPath, ref metaDataRecord, out len);
 		} catch (COMException e) {
 		    switch((UInt32)e.ErrorCode) {
-		      case 0x8007007A: // Length too small
-			if (len == 0) {
-			    len = 1024; // DAS: there's an apparent bug where len isn't getting set!
-			}
+		      case 0x8007007A: // HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)
+			if (len == 0) len = 32768;
 			metaDataRecord.pbMDData = Marshal.AllocCoTaskMem((int)len);
 			if (metaDataRecord.pbMDData == IntPtr.Zero) {
 			    throw new ExternalException("Unable to allocate memory for Metabase data buffer.");
 			}
-			metaDataRecord.dwMDDataLen = len;
+			metaDataRecord.dwMDDataLen = (UInt32)len;
 			baseInterface.GetData(METADATA_MASTER_ROOT_HANDLE, keyPath, ref metaDataRecord, out len);
+			return ToData(metaDataRecord);
+		      case 0x800CC801: // MD_ERROR_DATA_NOT_FOUND
 			break;
 		      default:
 			throw e;
 		    }
+		} catch (DirectoryNotFoundException) {
+		    // HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND)
 		}
-		return ToData(metaDataRecord);
+		return null;
 	    } finally {
 		if (metaDataRecord.pbMDData != IntPtr.Zero) {
 		    Marshal.FreeCoTaskMem(metaDataRecord.pbMDData);
@@ -182,8 +213,7 @@ namespace jOVAL.Metabase {
     }
 
     [ComImport, Guid("a9e69610-b80d-11d0-b9b9-00a0c922e750")]
-    public class MSAdminBase
-    {
+    public class MSAdminBase {
     }
 
     [ComImport, Guid("70B51430-B6CA-11d0-B9B9-00A0C922E750"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -210,7 +240,7 @@ namespace jOVAL.Metabase {
 	void GetData(IntPtr hMDHandle,
 	    [MarshalAs(UnmanagedType.LPWStr)] String pszMDPath,
 	    [MarshalAs(UnmanagedType.Struct)] ref METADATA_RECORD pmdrMDData,
-	    out UInt32 pdwMDRequiredDataLen);
+	    [param: MarshalAs(UnmanagedType.U4), Out()]out uint pdwMDRequiredDataLen);
 	void DeleteData(IntPtr hMDHandle,
 	    [MarshalAs(UnmanagedType.LPWStr)] String pszMDPath,
 	    UInt32 dwMDIdentifier,
@@ -219,7 +249,7 @@ namespace jOVAL.Metabase {
 	    [MarshalAs(UnmanagedType.LPWStr)] String pszMDPath,
 	    [MarshalAs(UnmanagedType.Struct)] ref METADATA_RECORD pmdrMDData,
 	    UInt32 dwMDEnumDataIndex,
-	    out UInt32 pdwMDRequiredDataLen);
+	    [param: MarshalAs(UnmanagedType.U4), Out()]out uint pdwMDRequiredDataLen);
 	void GetAllData();
 	void DeleteAllData();
 	void CopyData();

@@ -51,6 +51,7 @@ CLASSES=\
 	org.joval.scap.oval.adapter.windows.GroupSidAdapter				\
 	org.joval.scap.oval.adapter.windows.LicenseAdapter				\
 	org.joval.scap.oval.adapter.windows.LockoutpolicyAdapter			\
+	org.joval.scap.oval.adapter.windows.MetabaseAdapter				\
 	org.joval.scap.oval.adapter.windows.PasswordpolicyAdapter			\
 	org.joval.scap.oval.adapter.windows.Process58Adapter				\
 	org.joval.scap.oval.adapter.windows.RegistryAdapter				\
