@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
@@ -21,6 +22,7 @@ import jsaf.intf.windows.wmi.IWmiProvider;
 import jsaf.provider.windows.powershell.PowershellException;
 import jsaf.provider.windows.wmi.WmiException;
 import jsaf.util.Base64;
+import jsaf.util.SafeCLI;
 import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
@@ -90,7 +92,8 @@ public class MetabaseAdapter implements IAdapter {
 	    switch(op) {
 	      case CASE_INSENSITIVE_EQUALS:
 	      case EQUALS: {
-		StringBuffer sb = new StringBuffer("[jOVAL.Metabase.Probe]::TestKey(\"").append(s).append("\")");
+		StringBuffer sb = new StringBuffer("[jOVAL.Metabase.Probe]::TestKey(");
+		sb.append("\"").append(SafeCLI.checkArgument(s, session)).append("\")");
 		if ("true".equalsIgnoreCase(runspace.invoke(sb.toString()))) {
 		    keys.add(s);
 		}
@@ -125,12 +128,16 @@ public class MetabaseAdapter implements IAdapter {
 
 	      case PATTERN_MATCH: {
 		StringBuffer sb = new StringBuffer("Find-MetabaseKeys");
-		sb.append(" -Path \"").append("/").append("\"");
-		sb.append(" -Pattern \"").append(s).append("\"");
-		sb.append(" | Transfer-Encode");
-		String data = new String(Base64.decode(runspace.invoke(sb.toString())), StringTools.UTF8);
-		for (String subkey : data.split("\r\n")) {
-		    keys.add(subkey);
+		Pattern p = Pattern.compile(s);
+		String path = getSearchRoot(p);
+		if (path != null) {
+		    sb.append(" -Path \"").append(path).append("\"");
+		    sb.append(" -Pattern \"").append(StringTools.regexPosix2Powershell(p.pattern())).append("\"");
+		    sb.append(" | Transfer-Encode");
+		    String data = new String(Base64.decode(runspace.invoke(sb.toString())), StringTools.UTF8);
+		    for (String subkey : data.split("\r\n")) {
+			keys.add(subkey);
+		    }
 		}
 		break;
 	      }
@@ -150,21 +157,19 @@ public class MetabaseAdapter implements IAdapter {
 		    items.add(makeItem(key));
 		}
 	    } else {
-		Map<String, List<Map<String, String>>> data = getData(keys);
-
 		op = metabaseId.getValue().getOperation();
 		switch(op) {
-		  case EQUALS:
-		    for (Map.Entry<String, List<Map<String, String>>> entry : data.entrySet()) {
-			for (Map<String, String> datum : entry.getValue()) {
-			    if (((String)metabaseId.getValue().getValue()).equals(datum.get("DATA_ID"))) {
-				items.add(makeItem(entry.getKey(), datum));
-			    }
-			}
+		  case EQUALS: {
+		    String id = (String)metabaseId.getValue().getValue();
+		    Map<String, Map<String, String>> data = getData(keys, id);
+		    for (Map.Entry<String, Map<String, String>> entry : data.entrySet()) {
+			items.add(makeItem(entry.getKey(), entry.getValue()));
 		    }
 		    break;
+		  }
 
-		  case NOT_EQUAL:
+		  case NOT_EQUAL: {
+		    Map<String, List<Map<String, String>>> data = getData(keys);
 		    for (Map.Entry<String, List<Map<String, String>>> entry : data.entrySet()) {
 			for (Map<String, String> datum : entry.getValue()) {
 			    if (!((String)metabaseId.getValue().getValue()).equals(datum.get("DATA_ID"))) {
@@ -173,12 +178,15 @@ public class MetabaseAdapter implements IAdapter {
 			}
 		    }
 		    break;
+		  }
 
 		  default:
 		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
 		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
 	    }
+	} catch (PatternSyntaxException e) {
+	    throw new CollectException(e, FlagEnumeration.ERROR);
 	} catch (IOException e) {
 	    throw new CollectException(e, FlagEnumeration.ERROR);
 	} catch (PowershellException e) {
@@ -253,11 +261,45 @@ public class MetabaseAdapter implements IAdapter {
 	return item;
     }
 
+    /**
+     * Get the specified datum (ID) for all the specified keys.
+     */
+    private Map<String, Map<String, String>> getData(List<String> keys, String id) throws IOException, PowershellException {
+	StringBuffer sb = new StringBuffer();
+	for (String key : keys) {
+	    if (sb.length() > 0) {
+		sb.append(",");
+	    }
+	    sb.append("\"").append(key).append("\"");
+	}
+	sb.append(" | Get-MetabaseData -ID ").append(id);
+	sb.append(" | Transfer-Encode");
+	String s = runspace.invoke(sb.toString(), session.getTimeout(IWindowsSession.Timeout.L));
+	Map<String, Map<String, String>> result = new HashMap<String, Map<String, String>>();
+	String key = null;
+	for (String line : new String(Base64.decode(s), StringTools.UTF8).split("\r\n")) {
+	    if (line.startsWith("Key:")) {
+		key = line.substring(4).trim();
+	    } else if (key != null) {
+		int ptr = line.indexOf(":");
+		if (ptr != -1) {
+		    String name = line.substring(0,ptr);
+		    String value = line.substring(ptr+1).trim();
+		    if (!result.containsKey(key)) {
+			result.put(key, new HashMap<String, String>());
+		    }
+		    result.get(key).put(name, value);
+		}
+	    }
+	}
+	return result;
+    }
+
     private static final String OPEN = "{";
     private static final String CLOSE = "}";
 
     /**
-     * Get data for all the specified keys.
+     * Get all data for all the specified keys.
      */
     private Map<String, List<Map<String, String>>> getData(List<String> keys) throws IOException, PowershellException {
 	StringBuffer sb = new StringBuffer();
@@ -265,7 +307,7 @@ public class MetabaseAdapter implements IAdapter {
 	    if (sb.length() > 0) {
 		sb.append(",");
 	    }
-	    sb.append("\"").append(key).append("\"");
+	    sb.append("\"").append(SafeCLI.checkArgument(key, session)).append("\"");
 	}
 	sb.append(" | Get-MetabaseData | Transfer-Encode");
 	String s = runspace.invoke(sb.toString(), session.getTimeout(IWindowsSession.Timeout.L));
@@ -296,6 +338,34 @@ public class MetabaseAdapter implements IAdapter {
 	    }
 	}
 	return result;
+    }
+
+    /**
+     * Returns null if the pattern cannot possibly be found in a Metabase.
+     */
+    private String getSearchRoot(Pattern p) {
+	String s = p.pattern();
+	if (s.startsWith("^")) {
+	    s = s.substring(1);
+	    if (s.startsWith("/")) {
+		StringBuffer sb = new StringBuffer("/");
+		StringTokenizer tok = new StringTokenizer(s.substring(1), "/");
+		while(tok.hasMoreTokens()) {
+		    String token = tok.nextToken();
+		    if (StringTools.containsRegex(token)) {
+			return sb.toString();
+		    } else if (sb.length() > 1) {
+			sb.append("/").append(token);
+		    } else {
+			sb.append(token);
+		    }
+		}
+		return sb.toString();
+	    } else {
+		return null;
+	    }
+	}
+	return "/";
     }
 
     /**

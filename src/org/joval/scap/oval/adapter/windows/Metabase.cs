@@ -82,22 +82,39 @@ namespace jOVAL.Metabase {
 	    UInt32 index = 0;
 	    bool done = false;
 	    while(!done) {
-		METADATA_RECORD metaDataRecord = new METADATA_RECORD();
+		METADATA_RECORD record = new METADATA_RECORD();
 		uint len = 0;
 		try {
-		    baseInterface.EnumData(METADATA_MASTER_ROOT_HANDLE, keyPath, ref metaDataRecord, index, out len);
+		    baseInterface.EnumData(METADATA_MASTER_ROOT_HANDLE, keyPath, ref record, index, out len);
 		} catch (COMException e) {
 		    switch((UInt32)e.ErrorCode) {
-		      case 0x8007007A: // HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)
-			if (len == 0) len = 32768;
-			metaDataRecord.pbMDData = Marshal.AllocCoTaskMem((int)len);
-			if (metaDataRecord.pbMDData == IntPtr.Zero) {
-			    throw new ExternalException("Unable to allocate memory for Metabase data buffer.");
+		      case 0x8007007A: { // HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)
+			bool retrieved = false;
+			while (!retrieved) {
+			    try {
+				if (len == 0) {
+				    len = 1024;
+				} else {
+				    len = 2 * len;
+				}
+				record.pbMDData = Marshal.AllocCoTaskMem((int)len);
+				if (record.pbMDData == IntPtr.Zero) {
+				    throw new ExternalException("Unable to allocate memory for Metabase data buffer.");
+				}
+				record.dwMDDataLen = (UInt32)len;
+				baseInterface.EnumData(METADATA_MASTER_ROOT_HANDLE, keyPath, ref record, index, out len);
+				retrieved = true;
+			    } catch (COMException e2) {
+				if ((UInt32)e2.ErrorCode == 0x8007007A) {
+				    Marshal.FreeCoTaskMem(record.pbMDData);
+				} else {
+				    throw e2;
+				}
+			    }
 			}
-			metaDataRecord.dwMDDataLen = (UInt32)len;
-			baseInterface.EnumData(METADATA_MASTER_ROOT_HANDLE, keyPath, ref metaDataRecord, index, out len);
-			data.Add(ToData(metaDataRecord));
+			data.Add(ToData(record));
 			break;
+		      }
 		      case 0x80070103: // HRESULT_FROM_WIN32(ERROR_NO_MORE_ITEMS)
 			done = true;
 			break;
@@ -108,8 +125,8 @@ namespace jOVAL.Metabase {
 		    // HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND)
 		    done = true;
 		} finally {
-		    if (metaDataRecord.pbMDData != IntPtr.Zero) {
-			Marshal.FreeCoTaskMem(metaDataRecord.pbMDData);
+		    if (record.pbMDData != IntPtr.Zero) {
+			Marshal.FreeCoTaskMem(record.pbMDData);
 		    }
 		}
 		index++;
@@ -121,26 +138,42 @@ namespace jOVAL.Metabase {
 	 * Returns null if there is no data for the ID.
 	 */
 	public static Dictionary<DataField, String> GetData(String keyPath, UInt32 dataId) {
-	    METADATA_RECORD metaDataRecord = new METADATA_RECORD();
-	    metaDataRecord.dwMDIdentifier = dataId;
-	    metaDataRecord.dwMDAttributes = (UInt32)METADATA_ATTRIBUTES.METADATA_INHERIT;
-	    metaDataRecord.dwMDUserType = (UInt32)METADATA_USER_TYPE.IIS_MD_UT_SERVER;
-	    metaDataRecord.dwMDDataType = (UInt32)METADATA_TYPES.ALL_METADATA;
+	    METADATA_RECORD record = new METADATA_RECORD();
+	    record.dwMDIdentifier = dataId;
+	    record.dwMDAttributes = (UInt32)METADATA_ATTRIBUTES.METADATA_INHERIT;
+	    record.dwMDUserType = (UInt32)METADATA_USER_TYPE.IIS_MD_UT_SERVER;
+	    record.dwMDDataType = (UInt32)METADATA_TYPES.ALL_METADATA;
 	    try {
 		uint len = 0;
 		try {
-		    baseInterface.GetData(METADATA_MASTER_ROOT_HANDLE, keyPath, ref metaDataRecord, out len);
+		    baseInterface.GetData(METADATA_MASTER_ROOT_HANDLE, keyPath, ref record, out len);
 		} catch (COMException e) {
 		    switch((UInt32)e.ErrorCode) {
 		      case 0x8007007A: // HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)
-			if (len == 0) len = 32768;
-			metaDataRecord.pbMDData = Marshal.AllocCoTaskMem((int)len);
-			if (metaDataRecord.pbMDData == IntPtr.Zero) {
-			    throw new ExternalException("Unable to allocate memory for Metabase data buffer.");
+			bool retrieved = false;
+			while (!retrieved) {
+			    try {
+				if (len == 0) {
+				    len = 1024;
+				} else {
+				    len = 2 * len;
+				}
+				record.pbMDData = Marshal.AllocCoTaskMem((int)len);
+				if (record.pbMDData == IntPtr.Zero) {
+				    throw new ExternalException("Unable to allocate memory for Metabase data buffer.");
+				}
+				record.dwMDDataLen = (UInt32)len;
+				baseInterface.GetData(METADATA_MASTER_ROOT_HANDLE, keyPath, ref record, out len);
+				retrieved = true;
+			    } catch (COMException e2) {
+				if ((UInt32)e2.ErrorCode == 0x8007007A) {
+				    Marshal.FreeCoTaskMem(record.pbMDData);
+				} else {
+				    throw e2;
+				}
+			    }
 			}
-			metaDataRecord.dwMDDataLen = (UInt32)len;
-			baseInterface.GetData(METADATA_MASTER_ROOT_HANDLE, keyPath, ref metaDataRecord, out len);
-			return ToData(metaDataRecord);
+			return ToData(record);
 		      case 0x800CC801: // MD_ERROR_DATA_NOT_FOUND
 			break;
 		      default:
@@ -151,12 +184,15 @@ namespace jOVAL.Metabase {
 		}
 		return null;
 	    } finally {
-		if (metaDataRecord.pbMDData != IntPtr.Zero) {
-		    Marshal.FreeCoTaskMem(metaDataRecord.pbMDData);
+		if (record.pbMDData != IntPtr.Zero) {
+		    Marshal.FreeCoTaskMem(record.pbMDData);
 		}
 	    }
 	}
 
+	/**
+	 * Create a Dictionary based on the METADATA_RECORD.
+	 */
 	private static Dictionary<DataField, String> ToData(METADATA_RECORD metaDataRecord) {
 	    Dictionary<DataField, String> result = new Dictionary<DataField, String>();
 	    result.Add(DataField.DATA_ID, metaDataRecord.dwMDIdentifier.ToString());
@@ -203,6 +239,9 @@ namespace jOVAL.Metabase {
 	    return result;
 	}
 
+	/**
+	 * Convert a byte[] to a Hex string.
+	 */
 	public static string ByteArrayToString(byte[] ba) {
 	    StringBuilder hex = new StringBuilder(ba.Length * 2);
 	    foreach (byte b in ba) {
