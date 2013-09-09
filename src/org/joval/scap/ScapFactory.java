@@ -183,7 +183,10 @@ public class ScapFactory {
 	return new OEMEngine(plugin, SystemEnumeration.ANY);
     }
 
-    public static IXccdfEngine createEngine(IPlugin plugin, SystemEnumeration systems) {
+    /**
+     * Create an XCCDF processing engine for the specified System types.
+     */
+    public static IXccdfEngine createEngine(IPlugin plugin, SystemEnumeration... systems) {
 	return new OEMEngine(plugin, systems);
     }
 
