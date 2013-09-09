@@ -1860,9 +1860,12 @@ public class Engine implements IOvalEngine, IProvider {
 		    check.addResult(ResultEnumeration.ERROR);
 		    break;
 
+		  //
+		  // This should not be possible.
+		  //
 		  case NOT_COLLECTED:
-		    check.addResult(ResultEnumeration.NOT_EVALUATED);
-		    break;
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_OVAL_STATES, objectId, "COMPLETE", "NOT_COLLECTED");
+		    throw new OvalException(msg);
 		}
 
 		testResult.getTestedItem().add(testedItem);

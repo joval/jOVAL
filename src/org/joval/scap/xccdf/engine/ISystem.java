@@ -39,7 +39,7 @@ interface ISystem {
      *
      * @return reports, indexed by source document URI
      */
-    Map<String, ITransformable> exec(IPlugin plugin);
+    Map<String, ? extends ITransformable> exec(IPlugin plugin);
 
     /**
      * Get the result for a rule.

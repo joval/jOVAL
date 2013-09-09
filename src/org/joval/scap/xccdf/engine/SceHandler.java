@@ -28,6 +28,7 @@ import org.joval.intf.scap.sce.IScriptResult;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.scap.xccdf.IXccdfEngine;
 import org.joval.intf.xml.ITransformable;
+import org.joval.scap.ScapException;
 import org.joval.scap.ScapFactory;
 import org.joval.scap.sce.Result;
 import org.joval.scap.sce.SceException;
@@ -69,6 +70,9 @@ public class SceHandler implements ISystem {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
+	if (check.isSetCheckContent()) {
+	    throw new ScapException(JOVALMsg.getMessage(JOVALMsg.ERROR_SCAP_CHECKCONTENT));
+	}
 	for (CheckContentRefType ref : check.getCheckContentRef()) {
 	    if (ref.isSetHref()) {
 		String href = ref.getHref();
@@ -83,9 +87,7 @@ public class SceHandler implements ISystem {
 	}
     }
 
-    public Map<String, ITransformable> exec(IPlugin plugin) {
-	Map<String, ITransformable> reports = new HashMap<String, ITransformable>();
-	reports.putAll(results);
+    public Map<String, ? extends ITransformable> exec(IPlugin plugin) {
 	ISession session = plugin.getSession();
 	for (Map.Entry<String, Wrapper> entry : scripts.entrySet()) {
 	    String href = entry.getKey();
@@ -98,9 +100,8 @@ public class SceHandler implements ISystem {
 		result = new Result(href, e);
 	    }
 	    results.put(href, result);
-	    reports.put(href, result);
 	}
-	return reports;
+	return results;
     }
 
     public IResult getResult(CheckType check, boolean multi) throws IllegalArgumentException {

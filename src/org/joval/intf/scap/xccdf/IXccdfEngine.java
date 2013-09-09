@@ -67,43 +67,9 @@ public interface IXccdfEngine extends Runnable {
 	OVAL_ENGINE,
 
 	/**
-	 * Message indicating that the engine is missing information about an OCIL checklist result. The argument is
-	 * an OcilMessageArgument.
-	 *
-	 * @see org.joval.intf.scap.ocil.IChecklist
-	 */
-	OCIL_MISSING,
-
-	/**
 	 * Message indicating that the engine is about to run an SCE script. The argument is the script href (String).
 	 */
 	SCE_SCRIPT;
-    }
-
-    /**
-     * Specification for the argument accompanying a MESSAGE_OCIL notification message.
-     */
-    interface OcilMessageArgument {
-	/**
-	 * Get the href pertaining to this argument.
-	 */
-	String getHref();
-
-	/**
-	 * Get the OCIL checklist corresponding to the href.
-	 */
-	IChecklist getChecklist();
-
-	/**
-	 * Get the IDs of the questionnaires in the checklist for which results are required. Results are unique, but
-         * listed in the order in which they are first referenced by the XCCDF document.
-	 */
-	List<String> getQuestionnaireIds();
-
-	/**
-	 * Get the variable value exports for the checklist.
-	 */
-	IVariables getVariables();
     }
 
     enum Result {

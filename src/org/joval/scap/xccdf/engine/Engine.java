@@ -50,7 +50,6 @@ import scap.oval.variables.VariableType;
 import scap.xccdf.BenchmarkType;
 import scap.xccdf.CcOperatorEnumType;
 import scap.xccdf.CheckContentRefType;
-import scap.xccdf.CheckExportType;
 import scap.xccdf.CheckType;
 import scap.xccdf.ComplexCheckType;
 import scap.xccdf.CPE2IdrefType;
@@ -75,7 +74,6 @@ import scap.xccdf.TestResultType;
 import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.arf.IReport;
 import org.joval.intf.scap.ocil.IChecklist;
-import org.joval.intf.scap.ocil.IVariables;
 import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.intf.scap.oval.IOvalEngine;
@@ -95,7 +93,6 @@ import org.joval.scap.arf.ArfException;
 import org.joval.scap.arf.Report;
 import org.joval.scap.cpe.CpeException;
 import org.joval.scap.ocil.OcilException;
-import org.joval.scap.ocil.Variables;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.oval.engine.OperatorData;
@@ -116,86 +113,6 @@ import org.joval.xml.DOMTools;
 public class Engine implements IXccdfEngine {
     public static final ObjectFactory FACTORY = new ObjectFactory();
 
-    public static Collection<OcilMessageArgument> getOcilExports(IScapContext ctx) throws OcilException {
-	Map<String, List<String>> qMap = new HashMap<String, List<String>>();
-	Map<String, Variables> vMap = new HashMap<String, Variables>();
-	for (RuleType rule : ctx.getSelectedRules()) {
-	    if (rule.isSetCheck()) {
-		for (CheckType check : rule.getCheck()) {
-		    addExports(check, ctx, qMap, vMap);
-		}
-	    } else if (rule.isSetComplexCheck()) {
-		addExports(rule.getComplexCheck(), ctx, qMap, vMap);
-	    }
-	}
-
-	//
-	// Export variables and OCIL XML for each HREF in the context.
-	//
-	Collection<OcilMessageArgument> results = new ArrayList<OcilMessageArgument>();
-	for (Map.Entry<String, List<String>> entry : qMap.entrySet()) {
-	    String href = entry.getKey();
-	    try {
-		IChecklist checklist = ctx.getOcil(href);
-		IVariables vars = vMap.get(href);
-		results.add(new Argument(href, checklist, entry.getValue(), vars));
-	    } catch (NoSuchElementException e) {
-		throw new OcilException(e);
-	    }
-	}
-	return results;
-    }
-
-    private static void addExports(ComplexCheckType check, IScapContext ctx, Map<String, List<String>> qMap,
-		Map<String, Variables> vMap) throws OcilException {
-
-	for (Object obj : check.getCheckOrComplexCheck()) {
-	    if (obj instanceof CheckType) {
-		addExports((CheckType)obj, ctx, qMap, vMap);
-	    } else if (obj instanceof ComplexCheckType) {
-		addExports((ComplexCheckType)obj, ctx, qMap, vMap);
-	    }
-	}
-    }
-
-    private static void addExports(CheckType check, IScapContext ctx, Map<String, List<String>> qMap,
-		Map<String, Variables> vMap) throws OcilException {
-
-	if (check.getSystem().equals(OcilHandler.NAMESPACE)) {
-	    if (check.isSetCheckContentRef()) {
-		Variables vars = null;
-		for (CheckContentRefType ref : check.getCheckContentRef()) {
-		    String href = ref.getHref();
-		    String qId = ref.getName();
-		    List<String> qIds = null;
-		    if (qMap.containsKey(href)) {
-			qIds = qMap.get(href);
-		    } else {
-			qIds = new ArrayList<String>();
-			qMap.put(href, qIds);
-		    }
-		    if (qIds.contains(qId)) {
-			qIds.add(qId);
-		    }
-		    if (vMap.containsKey(href)) {
-			vars = vMap.get(href);
-		    } else {
-			vars = new Variables();
-			vMap.put(href, vars);
-		    }
-		    for (CheckExportType export : check.getCheckExport()) {
-			String ocilVariableId = export.getExportName();
-			String valueId = export.getValueId();
-			for (String s : ctx.getValues().get(valueId)) {
-			    vars.addValue(ocilVariableId, s);
-			}
-			vars.setComment(ocilVariableId, valueId);
-		    }
-		}
-	    }
-	}
-    }
-
     private static final String PRODUCT_NAME;
     private static DatatypeFactory datatypeFactory = null;
     static {
@@ -215,6 +132,7 @@ public class Engine implements IXccdfEngine {
 	COMPLETE_ERR;
     }
 
+    private SystemEnumeration[] systems;
     private IScapContext ctx;
     private IPlugin plugin;
     private SystemInfoType sysinfo;
@@ -235,8 +153,13 @@ public class Engine implements IXccdfEngine {
     /**
      * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL plugin.
      */
-    protected Engine(IPlugin plugin) {
+    protected Engine(IPlugin plugin, SystemEnumeration... systems) {
 	this.plugin = plugin;
+	if (systems.length == 1 && systems[0] == SystemEnumeration.ANY) {
+	    this.systems = new SystemEnumeration[] {SystemEnumeration.OCIL, SystemEnumeration.OVAL, SystemEnumeration.SCE};
+	} else {
+	    this.systems = systems;
+	}
 	logger = plugin.getLogger();
 	producer = new Producer<Message>();
 	reset();
@@ -413,15 +336,6 @@ public class Engine implements IXccdfEngine {
 	    } else {
 		profileId = ctx.getProfile().getProfileId();
 	    }
-	    if (checklists.size() == 0) {
-		Collection<OcilMessageArgument> exports = getOcilExports(ctx);
-		if (exports.size() > 0) {
-		    for (OcilMessageArgument arg : exports) {
-			producer.sendNotify(IXccdfEngine.Message.OCIL_MISSING, arg);
-		    }
-		    throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_OCIL_REQUIRED));
-		}
-	    }
 
 	    // De-duplicate rule selections
 	    HashSet<String> selectedIds = new HashSet<String>();
@@ -545,17 +459,7 @@ public class Engine implements IXccdfEngine {
      */
     private void processXccdf(TestResultType testResult) throws Exception {
 	producer.sendNotify(Message.RULES_PHASE_START, null);
-
-	Map<String, ISystem> handlers = new HashMap<String, ISystem>();
-	if (checklists.size() > 0) {
-	    OcilHandler ocil = new OcilHandler(ctx, checklists);
-	    ocil.setStartTime(testResult);
-	    handlers.put(ocil.getNamespace(), ocil);
-	}
-	ISystem oval = new OvalHandler(ctx, producer, ovalResults);
-	handlers.put(oval.getNamespace(), oval);
-	ISystem sce = new SceHandler(ctx, producer, scriptResults);
-	handlers.put(sce.getNamespace(), sce);
+	Map<String, ISystem> handlers = initHandlers(testResult);
 
 	//
 	// Add all the selected rules to the handlers
@@ -644,6 +548,28 @@ public class Engine implements IXccdfEngine {
 		logger.warn(JOVALMsg.ERROR_XCCDF_MODEL, e.getMessage());
 	    }
 	}
+    }
+
+    private Map<String, ISystem> initHandlers(TestResultType testResult) {
+	Map<String, ISystem> handlers = new HashMap<String, ISystem>();
+	for (SystemEnumeration system : systems) {
+	    switch(system) {
+	      case OCIL:
+		OcilHandler ocil = new OcilHandler(ctx, checklists);
+		ocil.setStartTime(testResult);
+		handlers.put(SystemEnumeration.OCIL.namespace(), ocil);
+		break;
+
+	      case OVAL:
+		handlers.put(SystemEnumeration.OVAL.namespace(), new OvalHandler(ctx, producer, ovalResults));
+		break;
+
+	      case SCE:
+		handlers.put(SystemEnumeration.SCE.namespace(), new SceHandler(ctx, producer, scriptResults));
+		break;
+	    }
+	}
+	return handlers;
     }
 
     /**
@@ -737,19 +663,17 @@ public class Engine implements IXccdfEngine {
     }
 
     /**
-     * Change the ResultEnumType returned by check(s) as required by the rule.
+     * Change the ResultEnumType returned by check(s) as required by the role.
      */
     private ResultEnumType getRuleResult(RuleType rule, ResultEnumType result) {
 	RoleEnumType role = rule.getRole();
 	switch(role) {
-	  case UNSCORED:
-	    return ResultEnumType.INFORMATIONAL;
+	  case UNCHECKED:
+	    return ResultEnumType.NOTCHECKED;
 
 	  case FULL:
-	    return result;
-
 	  default:
-	    throw new IllegalArgumentException(role.toString());
+	    return result;
 	}
     }
 
@@ -1006,41 +930,6 @@ public class Engine implements IXccdfEngine {
     }
 
     /**
-     * Implementation of OcilMessageArgument.
-     */
-    static class Argument implements OcilMessageArgument {
-	private String href;
-	private IChecklist checklist;
-	private List<String> questionnaireIds;
-	private IVariables variables;
-
-	Argument(String href, IChecklist checklist, List<String> questionnaireIds, IVariables variables) {
-	    this.href = href;
-	    this.checklist = checklist;
-	    this.questionnaireIds = questionnaireIds;
-	    this.variables = variables;
-	}
-
-	// Implement IXccdfEngine.OcilMessageArgument
-
-	public String getHref() {
-	    return href;
-	}
-
-	public IChecklist getChecklist() {
-	    return checklist;
-	}
-
-	public List<String> getQuestionnaireIds() {
-	    return questionnaireIds;
-	}
-
-	public IVariables getVariables() {
-	    return variables;
-	}
-    }
-
-    /**
      * An IObserver for an IOvalEngine, that tracks all the definitions that are evaluated.
      */
     class DefinitionMonitor implements IObserver<IOvalEngine.Message> {
@@ -1144,7 +1033,7 @@ public class Engine implements IXccdfEngine {
 
 	DefaultScoreKeeper(DefaultScoreKeeper parent, RuleType rule) {
 	    this(parent.results);
-	    if (results.containsKey(rule.getId())) {
+	    if (results.containsKey(rule.getId()) && rule.getRole() != RoleEnumType.UNSCORED) {
 		switch(results.get(rule.getId()).getResult()) {
 		  case NOTAPPLICABLE:
 		  case NOTCHECKED:
@@ -1215,7 +1104,7 @@ public class Engine implements IXccdfEngine {
 
 	FlatScoreKeeper(FlatScoreKeeper parent, RuleType rule) {
 	    this(parent.weighted, parent.results);
-	    if (results.containsKey(rule.getId())) {
+	    if (results.containsKey(rule.getId()) && rule.getRole() != RoleEnumType.UNSCORED) {
 		switch(results.get(rule.getId()).getResult()) {
 		  case NOTAPPLICABLE:
 		  case NOTCHECKED:

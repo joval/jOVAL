@@ -29,6 +29,7 @@ import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.scap.xccdf.IXccdfEngine;
 import org.joval.intf.xml.ITransformable;
+import org.joval.scap.ScapException;
 import org.joval.scap.ocil.OcilException;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.util.JOVALMsg;
@@ -46,7 +47,7 @@ public class OcilHandler implements ISystem {
     private IScapContext ctx;
     private XMLGregorianCalendar startTime;
     private Map<String, Map<String, String>> results;
-    private Map<String, ITransformable> reports;
+    private Map<String, ? extends ITransformable> reports;
 
     /**
      * Create an OCIL handler utility for the given context and href-indexed Checklists (results).
@@ -54,25 +55,7 @@ public class OcilHandler implements ISystem {
     public OcilHandler(IScapContext ctx, Map<String, IChecklist> checklists) throws IllegalArgumentException {
 	this.ctx = ctx;
 	results = new HashMap<String, Map<String, String>>();
-	reports = new HashMap<String, ITransformable>();
-
-	if (checklists.size() == 1 && "".equals(checklists.keySet().iterator().next())) {
-	    //
-	    // If exactly one checklist was supplied, and without specifying an href, then treat is as a default checklist
-	    // for all the OCIL hrefs in the context.
-	    //
-	    // For reporting purposes, however, it is only added once.
-	    //
-	    IChecklist checklist = checklists.values().iterator().next();
-	    reports.put("", checklist);
-
-	    checklists = new HashMap<String, IChecklist>();
-	    for (String href : getOcilHrefs()) {
-		checklists.put(href, checklist);
-	    }
-	} else {
-	    reports.putAll(checklists);
-	}
+	reports = checklists;
 
 	for (Map.Entry<String, IChecklist> entry : checklists.entrySet()) {
 	    String href = entry.getKey();
@@ -124,11 +107,16 @@ public class OcilHandler implements ISystem {
 	return NAMESPACE;
     }
 
-    public void add(CheckType check) {
-	// No-op
+    public void add(CheckType check) throws Exception {
+	if (!NAMESPACE.equals(check.getSystem())) {
+	    throw new IllegalArgumentException(check.getSystem());
+	}
+	if (check.isSetCheckContent()) {
+	    throw new ScapException(JOVALMsg.getMessage(JOVALMsg.ERROR_SCAP_CHECKCONTENT));
+	}
     }
 
-    public Map<String, ITransformable> exec(IPlugin plugin) {
+    public Map<String, ? extends ITransformable> exec(IPlugin plugin) {
 	return reports;
     }
 
@@ -136,10 +124,6 @@ public class OcilHandler implements ISystem {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
-	if (check.isSetCheckContent()) {
-	    // TBD (DAS): inline content is not supported
-	}
-
 	for (CheckContentRefType ref : check.getCheckContentRef()) {
 	    if (results.containsKey(ref.getHref())) {
 		CheckData data = new CheckData(check.getNegate());
@@ -149,7 +133,7 @@ public class OcilHandler implements ISystem {
 		    if (ocilResults.containsKey(name)) {
 			data.add(convertResult(ocilResults.get(name)));
 		    } else {
-			data.add(ResultEnumType.NOTCHECKED);
+			data.add(ResultEnumType.UNKNOWN);
 		    }
 		} else if (multi) {
 		    CheckResult cr = new CheckResult();
@@ -194,24 +178,5 @@ public class OcilHandler implements ISystem {
 	} else {
 	    return ResultEnumType.UNKNOWN;
 	}
-    }
-
-    /**
-     * Gather all the hrefs of all the OCIL check references.
-     */
-    private HashSet<String> getOcilHrefs() {
-	HashSet<String> hrefs = new HashSet<String>();
-	for (RuleType rule : ctx.getSelectedRules()) {
-	    for (CheckType check : rule.getCheck()) {
-		if (NAMESPACE.equals(check.getSystem())) {
-		    for (CheckContentRefType ref : check.getCheckContentRef()) {
-			if (ref.isSetHref()) {
-			    hrefs.add(ref.getHref());
-			}
-		    }
-		}
-	    }
-	}
-	return hrefs;
     }
 }

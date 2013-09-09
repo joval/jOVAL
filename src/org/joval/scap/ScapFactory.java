@@ -7,10 +7,20 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.openscap.sce.results.SceResultsType;
 import scap.ocil.core.OCILType;
+import scap.xccdf.CheckType;
+import scap.xccdf.CheckExportType;
+import scap.xccdf.CheckContentRefType;
+import scap.xccdf.ComplexCheckType;
+import scap.xccdf.RuleType;
 
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.IScapContext;
@@ -18,15 +28,19 @@ import org.joval.intf.scap.arf.IReport;
 import org.joval.intf.scap.datastream.IDatastream;
 import org.joval.intf.scap.datastream.IDatastreamCollection;
 import org.joval.intf.scap.ocil.IChecklist;
+import org.joval.intf.scap.ocil.IExport;
+import org.joval.intf.scap.ocil.IVariables;
 import org.joval.intf.scap.sce.IScriptResult;
 import org.joval.intf.scap.xccdf.ITailoring;
 import org.joval.intf.scap.xccdf.IXccdfEngine;
+import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.scap.ScapException;
 import org.joval.scap.arf.ArfException;
 import org.joval.scap.arf.Report;
 import org.joval.scap.datastream.DatastreamCollection;
 import org.joval.scap.ocil.Checklist;
 import org.joval.scap.ocil.OcilException;
+import org.joval.scap.ocil.Variables;
 import org.joval.scap.sce.Result;
 import org.joval.scap.xccdf.Bundle;
 import org.joval.scap.xccdf.Tailoring;
@@ -132,22 +146,134 @@ public class ScapFactory {
     /**
      * Discover all the OCIL exports (hrefs, variables and checklists) for the given context.
      */
-    public static Collection<IXccdfEngine.OcilMessageArgument> getOcilExports(IScapContext ctx) throws OcilException {
-	return Engine.getOcilExports(ctx);
+    public static Collection<IExport> getOcilExports(IScapContext ctx) throws OcilException {
+	Map<String, List<String>> qMap = new HashMap<String, List<String>>();
+	Map<String, Variables> vMap = new HashMap<String, Variables>();
+	for (RuleType rule : ctx.getSelectedRules()) {
+	    if (rule.isSetCheck()) {
+		for (CheckType check : rule.getCheck()) {
+		    addExports(check, ctx, qMap, vMap);
+		}
+	    } else if (rule.isSetComplexCheck()) {
+		addExports(rule.getComplexCheck(), ctx, qMap, vMap);
+	    }
+	}
+
+	//
+	// Export variables and OCIL XML for each HREF in the context.
+	//
+	Collection<IExport> results = new ArrayList<IExport>();
+	for (Map.Entry<String, List<String>> entry : qMap.entrySet()) {
+	    String href = entry.getKey();
+	    try {
+		IChecklist checklist = ctx.getOcil(href);
+		IVariables vars = vMap.get(href);
+		results.add(new OcilExport(href, checklist, entry.getValue(), vars));
+	    } catch (NoSuchElementException e) {
+		throw new OcilException(e);
+	    }
+	}
+	return results;
     }
 
     /**
-     * Create an XCCDF processing engine.
+     * Create an XCCDF processing engine for all supported System types.
      */
     public static IXccdfEngine createEngine(IPlugin plugin) {
-	return new OEMEngine(plugin);
+	return new OEMEngine(plugin, SystemEnumeration.ANY);
+    }
+
+    public static IXccdfEngine createEngine(IPlugin plugin, SystemEnumeration systems) {
+	return new OEMEngine(plugin, systems);
     }
 
     // Private
 
     private static class OEMEngine extends Engine {
-	OEMEngine(IPlugin plugin) {
-	    super(plugin);
+	OEMEngine(IPlugin plugin, SystemEnumeration... systems) {
+	    super(plugin, systems);
+	}
+    }
+
+    private static void addExports(ComplexCheckType check, IScapContext ctx, Map<String, List<String>> qMap,
+		Map<String, Variables> vMap) throws OcilException {
+
+	for (Object obj : check.getCheckOrComplexCheck()) {
+	    if (obj instanceof CheckType) {
+		addExports((CheckType)obj, ctx, qMap, vMap);
+	    } else if (obj instanceof ComplexCheckType) {
+		addExports((ComplexCheckType)obj, ctx, qMap, vMap);
+	    }
+	}
+    }
+
+    private static void addExports(CheckType check, IScapContext ctx, Map<String, List<String>> qMap,
+		Map<String, Variables> vMap) throws OcilException {
+
+	if (check.getSystem().equals(SystemEnumeration.OCIL.namespace())) {
+	    if (check.isSetCheckContentRef()) {
+		Variables vars = null;
+		for (CheckContentRefType ref : check.getCheckContentRef()) {
+		    String href = ref.getHref();
+		    String qId = ref.getName();
+		    List<String> qIds = null;
+		    if (qMap.containsKey(href)) {
+			qIds = qMap.get(href);
+		    } else {
+			qIds = new ArrayList<String>();
+			qMap.put(href, qIds);
+		    }
+		    if (qIds.contains(qId)) {
+			qIds.add(qId);
+		    }
+		    if (vMap.containsKey(href)) {
+			vars = vMap.get(href);
+		    } else {
+			vars = new Variables();
+			vMap.put(href, vars);
+		    }
+		    for (CheckExportType export : check.getCheckExport()) {
+			String ocilVariableId = export.getExportName();
+			String valueId = export.getValueId();
+			for (String s : ctx.getValues().get(valueId)) {
+			    vars.addValue(ocilVariableId, s);
+			}
+			vars.setComment(ocilVariableId, valueId);
+		    }
+		}
+	    }
+	}
+    }
+
+    static class OcilExport implements IExport {
+	private String href;
+	private IChecklist checklist;
+	private List<String> questionnaireIds;
+	private IVariables variables;
+
+	OcilExport(String href, IChecklist checklist, List<String> questionnaireIds, IVariables variables) {
+	    this.href = href;
+	    this.checklist = checklist;
+	    this.questionnaireIds = questionnaireIds;
+	    this.variables = variables;
+	}
+
+	// implement IExport
+
+	public String getHref() {
+	    return href;
+	}
+
+	public IChecklist getChecklist() {
+	    return checklist;
+	}
+
+	public List<String> getQuestionnaireIds() {
+	    return questionnaireIds;
+	}
+
+	public IVariables getVariables() {
+	    return variables;
 	}
     }
 }

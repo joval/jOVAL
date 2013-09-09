@@ -49,6 +49,7 @@ import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.arf.IReport;
 import org.joval.intf.scap.datastream.IDatastream;
 import org.joval.intf.scap.ocil.IChecklist;
+import org.joval.intf.scap.ocil.IExport;
 import org.joval.intf.scap.oval.IOvalEngine;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.scap.xccdf.IXccdfEngine;
@@ -67,6 +68,7 @@ import org.joval.scap.oval.OvalException;
 import org.joval.scap.xccdf.Benchmark;
 import org.joval.scap.xccdf.Bundle;
 import org.joval.scap.xccdf.XccdfException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
 import org.joval.xml.XSLTools;
@@ -155,6 +157,7 @@ public class XPERT {
 	File transformFile = new File(xmlDir, "xccdf_results_to_html.xsl");
 	File reportHTML = new File("xpert-report.html");
 	File ocilDir = new File("ocil-export");
+	SystemEnumeration[] systems = {SystemEnumeration.ANY};
 
 	Level level = Level.INFO;
 	boolean query = false, verify = true, verbose = false;
@@ -174,7 +177,7 @@ public class XPERT {
 	    } else if (argv[i].equals("-v")) {
 		verbose = true;
 	    } else if (argv[i].equals("-n")) {
-		checklists.put("", Checklist.EMPTY);
+		systems = new SystemEnumeration[] {SystemEnumeration.OVAL, SystemEnumeration.SCE};
 	    } else if ((i + 1) < argv.length) {
 		if (argv[i].equals("-d")) {
 		    source = new File(argv[++i]);
@@ -413,6 +416,9 @@ public class XPERT {
 		// Perform the scan
 		//
 		if (!query) {
+		    //
+		    // Create the SCAP context
+		    //
 		    if (benchmarkId == null) {
 			//
 			// Determine whether there's a singleton benchmark in the datastream
@@ -444,34 +450,40 @@ public class XPERT {
 			}
 		    }
 		    IScapContext ctx = ds.getContext(benchmarkId, profileId);
-		    try {
-			Engine engine = new Engine(plugin);
-			engine.setContext(ctx);
-			if (checklists.size() == 1) {
-			    HashSet<String> ocilURIs = new HashSet<String>();
-			    for (RuleType rule : ctx.getSelectedRules()) {
-				Collection<CheckType> checks = null;
-				if (rule.isSetCheck()) {
-				    checks = rule.getCheck();
-				} else if (rule.isSetComplexCheck()) {
-				    checks = getChecks(rule.getComplexCheck());
+
+		    //
+		    // Export OCIL and quit, if required
+		    //
+		    if (systems[0] == SystemEnumeration.ANY && checklists.size() == 0) {
+			Collection<IExport> exports = ScapFactory.getOcilExports(ctx);
+			if (exports.size() > 0) {
+			    for (IExport export : exports) {
+				String base = export.getHref();
+				if (base.endsWith(".xml")) {
+				    base = base.substring(0, base.length() - 4);
 				}
-				if (checks != null) {
-				    for (CheckType check : checks) {
-					if (SystemEnumeration.OCIL.namespace().equals(check.getSystem())) {
-					    for (CheckContentRefType ref : check.getCheckContentRef()) {
-						ocilURIs.add(ref.getHref());
-					    }
-					}
+				try {
+				    if (!ocilDir.exists()) {
+					ocilDir.mkdirs();
 				    }
+				    File checklist = new File(ocilDir, base + ".xml");
+				    logger.warning("Exporting OCIL checklist to file: " + checklist.toString());
+				    export.getChecklist().writeXML(checklist);
+				    File variables = new File(ocilDir, base + "-variables.xml");
+				    logger.warning("Exporting OCIL variables to file: " + variables.toString());
+				    export.getVariables().writeXML(variables);
+				} catch (IOException e) {
+				    e.printStackTrace();
 				}
 			    }
-			    if (ocilURIs.size() == 1) {
-				engine.addChecklist(ocilURIs.iterator().next(), checklists.values().iterator().next());
-			    } else {
-				engine.addChecklist("", checklists.values().iterator().next());
-			    }
-			} else {
+			    throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_OCIL_REQUIRED));
+			}
+		    }
+
+		    try {
+			Engine engine = new Engine(plugin, systems);
+			engine.setContext(ctx);
+			if (checklists.size() > 0) {
 			    for (Map.Entry<String, IChecklist> entry : checklists.entrySet()) {
 				engine.addChecklist(entry.getKey(), entry.getValue());
 			    }
@@ -524,9 +536,6 @@ public class XPERT {
 			  case ERR:
 			    throw engine.getError();
 			}
-		    } catch (OcilException e) {
-			logger.severe(getMessage("error.ocil", e.getMessage()));
-			logger.info(getMessage("message.ocil.export", ocilDir));
 		    } catch (UnknownHostException e) {
 			logger.severe(getMessage("error.host.unknown", e.getMessage()));
 		    } catch (ConnectException e) {
@@ -535,6 +544,9 @@ public class XPERT {
 		}
 	    } catch (IOException e) {
 		logger.severe(LogFormatter.toString(e));
+	    } catch (OcilException e) {
+		logger.severe(getMessage("error.ocil", e.getMessage()));
+		logger.info(getMessage("message.ocil.export", ocilDir));
 	    } catch (ScapException e) {
 		logger.warning(LogFormatter.toString(e));
 		exitCode = 2;
@@ -608,27 +620,6 @@ public class XPERT {
 		logger.info("Executing OVAL tests");
 		IOvalEngine oe = (IOvalEngine)arg;
 		oe.getNotificationProducer().addObserver(new OvalObserver(oe.getNotificationProducer()));
-		break;
-
-	      case OCIL_MISSING:
-		IXccdfEngine.OcilMessageArgument oma = (IXccdfEngine.OcilMessageArgument)arg;
-		String base = oma.getHref();
-		if (base.endsWith(".xml")) {
-		    base = base.substring(0, base.length() - 4);
-		}
-		try {
-		    if (!ocilDir.exists()) {
-			ocilDir.mkdirs();
-		    }
-		    File checklist = new File(ocilDir, base + ".xml");
-		    logger.warning("Exporting OCIL checklist to file: " + checklist.toString());
-		    oma.getChecklist().writeXML(checklist);
-		    File variables = new File(ocilDir, base + "-variables.xml");
-		    logger.warning("Exporting OCIL variables to file: " + variables.toString());
-		    oma.getVariables().writeXML(variables);
-		} catch (IOException e) {
-		    e.printStackTrace();
-		}
 		break;
 
 	      case SCE_SCRIPT:

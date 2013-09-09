@@ -34,10 +34,12 @@ import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.scap.xccdf.IXccdfEngine;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.xml.ITransformable;
+import org.joval.scap.ScapException;
 import org.joval.scap.ScapFactory;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.xccdf.XccdfException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.Producer;
 
 /**
@@ -57,7 +59,11 @@ public class OvalHandler implements ISystem {
     public OvalHandler(IScapContext ctx, Producer<IXccdfEngine.Message> producer, Map<String, IResults> results) {
 	this.ctx = ctx;
 	this.producer = producer;
-	this.results = results;
+	if (results == null) {
+	    this.results = new HashMap<String, IResults>();
+	} else {
+	    this.results = results;
+	}
 	engines = new HashMap<String, EngineData>();
     }
 
@@ -72,9 +78,8 @@ public class OvalHandler implements ISystem {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
 	if (check.isSetCheckContent()) {
-	    // TBD (DAS): inline content is not supported
+	    throw new ScapException(JOVALMsg.getMessage(JOVALMsg.ERROR_SCAP_CHECKCONTENT));
 	}
-
 	for (CheckContentRefType ref : check.getCheckContentRef()) {
 	    String href = ref.getHref();
 	    if (!results.containsKey(href)) {
@@ -121,9 +126,7 @@ public class OvalHandler implements ISystem {
 	}
     }
 
-    public Map<String, ITransformable> exec(IPlugin plugin) {
-	Map<String, ITransformable> reports = new HashMap<String, ITransformable>();
-	reports.putAll(results);
+    public Map<String, ? extends ITransformable> exec(IPlugin plugin) {
 	Iterator<Map.Entry<String, EngineData>> iter = engines.entrySet().iterator();
 	while(iter.hasNext()) {
 	    Map.Entry<String, EngineData> entry = iter.next();
@@ -135,7 +138,7 @@ public class OvalHandler implements ISystem {
 		engine.run();
 		switch(engine.getResult()) {
 	  	  case OK:
-		    reports.put(href, engine.getResults());
+		    results.put(href, engine.getResults());
 		    break;
 		  case ERR:
 		    engine.getError().printStackTrace();
@@ -146,25 +149,22 @@ public class OvalHandler implements ISystem {
 		iter.remove();
 	    }
 	}
-	return reports;
+	return results;
     }
 
     public IResult getResult(CheckType check, boolean multi) throws OvalException, IllegalArgumentException {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
-
 	for (CheckContentRefType ref : check.getCheckContentRef()) {
-	    IResults ovalResult = null;
 	    String href = ref.getHref();
 	    if (results.containsKey(href)) {
-		ovalResult = results.get(href);
+		return getResult(check, multi, ref, results.get(href));
 	    } else if (engines.containsKey(href)) {
 		IOvalEngine engine = engines.get(href).getEngine();
 		switch(engine.getResult()) {
 		  case OK:
-		    ovalResult = engine.getResults();
-		    break;
+		    return getResult(check, multi, ref, engine.getResults());
 		  case ERR:
 		    MessageType message = ScapFactory.XCCDF.createMessageType();
 		    message.setSeverity(MsgSevEnumType.ERROR);
@@ -174,45 +174,48 @@ public class OvalHandler implements ISystem {
 		    return cr;
 		}
 	    }
-	    if (ovalResult != null) {
-		CheckData data = new CheckData(check.getNegate());
-		if (ref.isSetName()) {
-		    try {
-			String definitionId = ref.getName();
-			ClassEnumeration definitionClass = ovalResult.getDefinition(definitionId).getClazz();
-			ResultEnumeration definitionResult = ovalResult.getDefinitionResult(definitionId);
-			data.add(convertResult(definitionClass, definitionResult));
-		    } catch (NoSuchElementException e) {
-			data.add(ResultEnumType.UNKNOWN);
-		    }
-		} else if (multi) {
-		    CheckResult cr = new CheckResult();
-		    for (DefinitionType def : ovalResult.getDefinitionResults()) {
-			data = new CheckData(check.getNegate());
-			String definitionId = def.getDefinitionId();
-			ClassEnumeration definitionClass = ovalResult.getDefinition(definitionId).getClazz();
-			ResultEnumeration definitionResult = ovalResult.getDefinitionResult(definitionId);
-			data.add(convertResult(definitionClass, definitionResult));
-			InstanceResultType inst = Engine.FACTORY.createInstanceResultType();
-			inst.setValue(def.getDefinitionId());
-			cr.getResults().add(new CheckResult(data.getResult(CcOperatorEnumType.AND), check, inst));
-		    }
-		    return cr;
-		} else {
-		    for (DefinitionType def : ovalResult.getDefinitionResults()) {
-			String definitionId = def.getDefinitionId();
-			ClassEnumeration definitionClass = def.getClazz();
-			ResultEnumeration definitionResult = ovalResult.getDefinitionResult(definitionId);
-			data.add(convertResult(definitionClass, definitionResult));
-		    }
-		}
-		return new CheckResult(data.getResult(CcOperatorEnumType.AND), check);
-	    }
 	}
 	return new CheckResult(ResultEnumType.NOTCHECKED, check);
     }
 
     // Private
+
+    private IResult getResult(CheckType check, boolean multi, CheckContentRefType ref, IResults ovalResult)
+		throws OvalException {
+
+	CheckData data = new CheckData(check.getNegate());
+	if (ref.isSetName()) {
+	    try {
+		String definitionId = ref.getName();
+		ClassEnumeration definitionClass = ovalResult.getDefinition(definitionId).getClazz();
+		ResultEnumeration definitionResult = ovalResult.getDefinitionResult(definitionId);
+		data.add(convertResult(definitionClass, definitionResult));
+	    } catch (NoSuchElementException e) {
+		data.add(ResultEnumType.UNKNOWN);
+	    }
+	} else if (multi) {
+	    CheckResult cr = new CheckResult();
+	    for (DefinitionType def : ovalResult.getDefinitionResults()) {
+		data = new CheckData(check.getNegate());
+		String definitionId = def.getDefinitionId();
+		ClassEnumeration definitionClass = ovalResult.getDefinition(definitionId).getClazz();
+		ResultEnumeration definitionResult = ovalResult.getDefinitionResult(definitionId);
+		data.add(convertResult(definitionClass, definitionResult));
+		InstanceResultType inst = Engine.FACTORY.createInstanceResultType();
+		inst.setValue(def.getDefinitionId());
+		cr.getResults().add(new CheckResult(data.getResult(CcOperatorEnumType.AND), check, inst));
+	    }
+	    return cr;
+	} else {
+	    for (DefinitionType def : ovalResult.getDefinitionResults()) {
+		String definitionId = def.getDefinitionId();
+		ClassEnumeration definitionClass = def.getClazz();
+		ResultEnumeration definitionResult = ovalResult.getDefinitionResult(definitionId);
+		data.add(convertResult(definitionClass, definitionResult));
+	    }
+	}
+	return new CheckResult(data.getResult(CcOperatorEnumType.AND), check);
+    }
 
     /**
      * Map an OVAL result to an XCCDF result.
