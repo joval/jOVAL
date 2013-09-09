@@ -421,6 +421,7 @@ public class Engine implements IXccdfEngine {
 			}
 		    }
 		    testResult.getRuleResult().add(rrt);
+		    logger.info(JOVALMsg.STATUS_XCCDF_RULE, ruleId, rrt.getResult());
 		}
 	    }
 	    subreports.put(testResult.getBenchmark().getHref(), new TestResult(testResult));
