@@ -141,6 +141,7 @@ public class Engine implements IXccdfEngine {
     private Map<String, IResults> ovalResults;
     private Map<String, IScriptResult> scriptResults;
     private Map<String, Boolean> platforms;
+    private Map<ScoringModel, ScoreKeeper> scores;
     private IReport report;
     private String requestId;
     private Map<String, ITransformable> subreports;
@@ -304,6 +305,19 @@ public class Engine implements IXccdfEngine {
 	  case RUNNING:
 	  default:
 	    throw new IllegalThreadStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
+	}
+    }
+
+    public IScore getScore(String modelUri) throws IllegalArgumentException, IllegalStateException {
+	switch(state) {
+	  case COMPLETE_ERR:
+	  case CONFIGURE:
+	  case RUNNING:
+	  default:
+	    throw new IllegalThreadStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
+
+	  case COMPLETE_OK:
+	    return scores.get(ScoringModel.fromUri(modelUri));
 	}
     }
 
@@ -534,20 +548,20 @@ public class Engine implements IXccdfEngine {
 	}
 	// Compute scores for all the supported models.
 	// Note - only selected rules will be in the resultMap at this point
+	scores = new HashMap<ScoringModel, ScoreKeeper>();
 	BenchmarkType bt = ctx.getBenchmark().getBenchmark();
 	for (ScoringModel model : ScoringModel.values()) {
-	    try {
-		ScoreKeeper sk = computeScore(resultMap, bt, model);
-		ScoreType scoreType = FACTORY.createScoreType();
-		scoreType.setSystem(model.uri());
-		String score = Float.toString(sk.getScore());
-		scoreType.setValue(new BigDecimal(score));
-		scoreType.setMaximum(new BigDecimal(Float.toString(sk.getMaxScore())));
-		testResult.getScore().add(scoreType);
-		logger.info(JOVALMsg.STATUS_XCCDF_SCORE, model.uri(), score);
-	    } catch (IllegalArgumentException e) {
-		logger.warn(JOVALMsg.ERROR_XCCDF_MODEL, e.getMessage());
-	    }
+	    ScoreKeeper sk = computeScore(resultMap, bt, model);
+	    scores.put(model, sk);
+
+	    String score = Double.toString(sk.getScore());
+	    logger.info(JOVALMsg.STATUS_XCCDF_SCORE, model.uri(), score);
+
+	    ScoreType scoreType = FACTORY.createScoreType();
+	    scoreType.setSystem(model.uri());
+	    scoreType.setValue(new BigDecimal(score));
+	    scoreType.setMaximum(new BigDecimal(Double.toString(sk.getMaxScore())));
+	    testResult.getScore().add(scoreType);
 	}
     }
 
@@ -971,6 +985,15 @@ public class Engine implements IXccdfEngine {
 	String uri() {
 	    return uri;
 	}
+
+	static ScoringModel fromUri(String uri) throws IllegalArgumentException {
+	    for (ScoringModel model : values()) {
+		if (model.uri().equals(uri)) {
+		    return model;
+		}
+	    }
+	    throw new IllegalArgumentException(uri);
+	}
     }
 
     /**
@@ -978,44 +1001,59 @@ public class Engine implements IXccdfEngine {
      *
      * @param results a HashMap containing the results of all (i.e., exclusively) the /selected/ rules
      */
-    ScoreKeeper computeScore(HashMap<String, RuleResultType> results, BenchmarkType bt, ScoringModel model)
-		throws IllegalArgumentException {
-
+    ScoreKeeper computeScore(HashMap<String, RuleResultType> results, BenchmarkType bt, ScoringModel model) {
 	List<SelectableItemType> items = bt.getGroupOrRule();
 	switch(model) {
-	  case DEFAULT:
-	    return new DefaultScoreKeeper(new DefaultScoreKeeper(results), items);
 	  case FLAT:
 	    return new FlatScoreKeeper(new FlatScoreKeeper(true, results), items);
 	  case FLAT_UNWEIGHTED:
 	    return new FlatScoreKeeper(new FlatScoreKeeper(false, results), items);
 	  case ABSOLUTE:
 	    return new AbsoluteScoreKeeper(new AbsoluteScoreKeeper(results), items);
+	  case DEFAULT:
 	  default:
-	    throw new IllegalArgumentException(model.toString());
+	    return new DefaultScoreKeeper(new DefaultScoreKeeper(results), items);
 	}
     }
 
     /**
      * The base class for ScoreKeepers.
      */
-    abstract static class ScoreKeeper {
+    abstract static class ScoreKeeper implements IScore {
 	HashMap<String, RuleResultType> results;
-	float score, max_score, count;
+	HashMap<String, Double> impacts;
+	int count;
+	double score, max_score;
 
-	ScoreKeeper(HashMap<String, RuleResultType> results) {
+	ScoreKeeper(HashMap<String, RuleResultType> results, HashMap<String, Double> impacts) {
 	    this.results = results;
+	    this.impacts = impacts == null ? new HashMap<String, Double>() : impacts;
 	    score = 0;
 	    max_score = 0;
 	    count = 0;
 	}
 
-	float getScore() {
+	// Implement IScore
+
+	public abstract String getModel();
+
+	public double getScore() {
 	    return score;
 	}
 
-	float getMaxScore() {
+	public double getMaxScore() {
 	    return max_score;
+	}
+
+	/**
+	 * Return the number of "points" the specified rule contributes to the maximum score.
+	 */
+	public double getImpact(String ruleId) {
+	    if (impacts.containsKey(ruleId)) {
+		return impacts.get(ruleId).doubleValue();
+	    } else {
+		return 0;
+	    }
 	}
     }
 
@@ -1023,19 +1061,28 @@ public class Engine implements IXccdfEngine {
      * ScoreKeeper implementation for ScoringModel.DEFAULT.
      */
     class DefaultScoreKeeper extends ScoreKeeper {
-	private int accumulator;
-	private float weightedScore;
+	private double accumulator, weightedScore;
+	private String ruleId;
+	private List<DefaultScoreKeeper> children;
 
 	DefaultScoreKeeper(HashMap<String, RuleResultType> results) {
-	    super(results);
+	    this(results, null);
+	}
+
+	DefaultScoreKeeper(HashMap<String, RuleResultType> results, HashMap<String, Double> impacts) {
+	    super(results, impacts);
 	    accumulator = 0;
 	    weightedScore = 0;
+	    ruleId = null;
+	    children = null;
 	}
 
 	DefaultScoreKeeper(DefaultScoreKeeper parent, RuleType rule) {
-	    this(parent.results);
-	    if (results.containsKey(rule.getId()) && rule.getRole() != RoleEnumType.UNSCORED) {
-		switch(results.get(rule.getId()).getResult()) {
+	    this(parent.results, parent.impacts);
+	    ruleId = rule.getId();
+	    if (results.containsKey(ruleId) && rule.getRole() != RoleEnumType.UNSCORED) {
+		int impact = 0;
+		switch(results.get(ruleId).getResult()) {
 		  case NOTAPPLICABLE:
 		  case NOTCHECKED:
 		  case INFORMATIONAL:
@@ -1045,26 +1092,33 @@ public class Engine implements IXccdfEngine {
 		    score++;
 		    // fall-thru
 		  default:
+		    impact++;
 		    count++;
 		    break;
 		}
-		if (count == 0) {
-		    score = 0;
-		} else {
+		if (count != 0) {
 		    count = 1;
-		    score = 100 * score / count;
+		    score = 100 * score;
+		    impact = 100 * impact;
 		}
-		weightedScore = ctx.getRule(rule.getId()).getWeight().intValue() * score;
+		double weight = ctx.getRule(ruleId).getWeight().doubleValue();
+		weightedScore = weight * score;
+		impacts.put(ruleId, new Double(weight * impact));
 	    }
 	}
 
 	DefaultScoreKeeper(DefaultScoreKeeper parent, GroupType group) {
 	    this(parent, group.getGroupOrRule());
-	    weightedScore = group.getWeight().intValue() * score;
+	    double weight = group.getWeight().doubleValue();
+	    weightedScore = weight * score;
+	    for (DefaultScoreKeeper child : children) {
+		child.amplify(weight);
+	    }
 	}
 
 	DefaultScoreKeeper(DefaultScoreKeeper parent, List<SelectableItemType> items) throws IllegalArgumentException {
-	    super(parent.results);
+	    super(parent.results, parent.impacts);
+	    children = new ArrayList<DefaultScoreKeeper>();
 	    for (SelectableItemType item : items) {
 		DefaultScoreKeeper child = null;
 		if (item instanceof RuleType) {
@@ -1076,19 +1130,49 @@ public class Engine implements IXccdfEngine {
 		    throw new IllegalArgumentException(item.getClass().getName());
 		}
 		if (child.count != 0) {
+		    children.add(child);
 		    score += child.weightedScore;
 		    count++;
-		    accumulator += item.getWeight().intValue();
+		    accumulator += item.getWeight().doubleValue();
 		}
 	    }
 	    if (accumulator > 0) {
 		score = (score / accumulator);
+		for (DefaultScoreKeeper child : children) {
+		    child.attenuate(accumulator);
+		}
 	    }
 	}
 
+	public String getModel() {
+	    return ScoringModel.DEFAULT.uri();
+	}
+
 	@Override
-	float getMaxScore() {
+	public double getMaxScore() {
 	    return 100;
+	}
+
+	// Private
+
+	private void amplify(double factor) {
+	    if (ruleId != null && impacts.containsKey(ruleId)) {
+		impacts.put(ruleId, new Double(impacts.get(ruleId).doubleValue() * factor));
+	    } else if (children != null) {
+		for (DefaultScoreKeeper child : children) {
+		    child.amplify(factor);
+		}
+	    }
+	}
+
+	private void attenuate(double factor) {
+	    if (ruleId != null && impacts.containsKey(ruleId)) {
+		impacts.put(ruleId, new Double(impacts.get(ruleId).doubleValue() / factor));
+	    } else if (children != null) {
+		for (DefaultScoreKeeper child : children) {
+		    child.attenuate(factor);
+		}
+	    }
 	}
     }
 
@@ -1099,14 +1183,20 @@ public class Engine implements IXccdfEngine {
 	private boolean weighted;
 
 	FlatScoreKeeper(boolean weighted, HashMap<String, RuleResultType> results) {
-	    super(results);
+	    this(weighted, results, null);
+	}
+
+	FlatScoreKeeper(boolean weighted, HashMap<String, RuleResultType> results, HashMap<String, Double> impacts) {
+	    super(results, impacts);
 	    this.weighted = weighted;
 	}
 
 	FlatScoreKeeper(FlatScoreKeeper parent, RuleType rule) {
-	    this(parent.weighted, parent.results);
-	    if (results.containsKey(rule.getId()) && rule.getRole() != RoleEnumType.UNSCORED) {
-		switch(results.get(rule.getId()).getResult()) {
+	    this(parent.weighted, parent.results, parent.impacts);
+	    String ruleId = rule.getId();
+	    if (results.containsKey(ruleId) && rule.getRole() != RoleEnumType.UNSCORED) {
+		double impact = 0;
+		switch(results.get(ruleId).getResult()) {
 		  case NOTAPPLICABLE:
 		  case NOTCHECKED:
 		  case INFORMATIONAL:
@@ -1116,28 +1206,33 @@ public class Engine implements IXccdfEngine {
 		    score++;
 		    // fall-thru
 		  default:
+		    impact++;
 		    count++;
 		    break;
 		}
 		if (count != 0) {
-		    int weight = ctx.getRule(rule.getId()).getWeight().intValue();
+		    double weight = ctx.getRule(rule.getId()).getWeight().doubleValue();
 		    if (weighted) {
 			max_score += weight;
 			score = (weight * score / count);
+			impact = (weight * impact / count);
 		    } else {
 			if (weight == 0) {
 			    score = 0;
+			    impact = 0;
 			} else {
 			    max_score += count;
 			    score = (score / count);
+			    impact = (impact / count);
 			}
 		    }
+		    impacts.put(ruleId, new Double(impact));
 		}
 	    }
 	}
 
 	FlatScoreKeeper(FlatScoreKeeper parent, List<SelectableItemType> items) throws IllegalArgumentException {
-	    this(parent.weighted, parent.results);
+	    this(parent.weighted, parent.results, parent.impacts);
 	    for (SelectableItemType item : items) {
 		FlatScoreKeeper child = null;
 		if (item instanceof RuleType) {
@@ -1151,6 +1246,14 @@ public class Engine implements IXccdfEngine {
 		max_score += child.max_score;
 	    }
 	}
+
+	public String getModel() {
+	    if (weighted) {
+		return ScoringModel.FLAT.uri();
+	    } else {
+		return ScoringModel.FLAT_UNWEIGHTED.uri();
+	    }
+	}
     }
 
     /**
@@ -1158,15 +1261,19 @@ public class Engine implements IXccdfEngine {
      */
     class AbsoluteScoreKeeper extends FlatScoreKeeper {
 	AbsoluteScoreKeeper(HashMap<String, RuleResultType> results) {
-	    super(true, results);
+	    super(true, results, null);
 	}
 
 	AbsoluteScoreKeeper(AbsoluteScoreKeeper parent, List<SelectableItemType> items) throws IllegalArgumentException {
 	    super(parent, items);
 	}
 
+	public String getModel() {
+	    return ScoringModel.ABSOLUTE.uri();
+	}
+
 	@Override
-	float getScore() {
+	public double getScore() {
 	    if (super.getScore() == super.getMaxScore()) {
 		return 1;
 	    } else {
@@ -1175,8 +1282,13 @@ public class Engine implements IXccdfEngine {
 	}
 
 	@Override
-	float getMaxScore() {
+	public double getMaxScore() {
 	    return 1;
+	}
+
+	@Override
+	public double getImpact(String ruleId) {
+	    return super.getImpact(ruleId) == 0 ? 0 : 1;
 	}
     }
 

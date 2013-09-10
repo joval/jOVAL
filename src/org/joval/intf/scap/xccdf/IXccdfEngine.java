@@ -85,6 +85,31 @@ public interface IXccdfEngine extends Runnable {
     }
 
     /**
+     * An interface that describes a score for an XCCDF result.
+     */
+    interface IScore {
+        /**
+         * Get the model used to compute the score.
+         */
+        String getModel();
+
+        /**
+         * Get the score.
+         */
+        double getScore();
+
+        /**
+         * Get the maximum score possible.
+         */
+        double getMaxScore();
+
+        /**
+         * Return the number of "points" towards the maximum score that are contributed by the specified rule.
+         */
+        double getImpact(String ruleId);
+    }
+
+    /**
      * Stop the engine's processing and close all open resources.  This will leave the engine in an error state.
      */
     void destroy();
@@ -132,16 +157,25 @@ public interface IXccdfEngine extends Runnable {
     /**
      * Returns Result.OK or Result.ERR
      *
-     * @throws IllegalThreadStateException if the engine hasn't run, or is running.
+     * @throws IllegalThreadStateException if the engine hasn't run, is running, or completed with an error.
      */
     Result getResult() throws IllegalThreadStateException;
+
+    /**
+     * Returns an IScore interface that can be used to access scoring information for a particular model.
+     *
+     * @param modelUri One of the supported scoring model URIs defined in section 7.3.2 of the XCCDF specification.
+     *
+     * @throws IllegalThreadStateException if the engine hasn't run, or is running.
+     */
+    IScore getScore(String modelUri) throws IllegalArgumentException, IllegalStateException;
 
     /**
      * Generate an ARF report. Only valid after the run() method has finished (if getResult returned Result.OK).
      * The XCCDF report is always included (even when called without arguments). Additional subreports can be
      * specified by check system using the SystemEnumeration.
      *
-     * @throws IllegalThreadStateException if the engine hasn't run, or is running.
+     * @throws IllegalThreadStateException if the engine hasn't run, is running, or completed with an error.
      */
     IReport getReport(SystemEnumeration... systems) throws IllegalThreadStateException, ArfException;
 
