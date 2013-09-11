@@ -174,7 +174,7 @@ public class Ip6AddressType extends AbstractType {
 	if (getMask() == other.getMask()) {
 	    return toBigInteger().compareTo(other.toBigInteger());
 	} else {
-	    JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CIDR_MASKS, getMask(), other.getMask());
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CIDR_MASKS, getMask(), other.getMask());
 	    throw new IllegalArgumentException(msg);
 	}
     }
