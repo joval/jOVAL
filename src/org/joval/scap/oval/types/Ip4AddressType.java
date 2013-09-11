@@ -30,8 +30,67 @@ public class Ip4AddressType extends AbstractType {
 	if (ptr == -1) {
 	    ipStr = str;
 	} else {
-	    maskVal = Integer.parseInt(str.substring(ptr+1));
 	    ipStr = str.substring(0, ptr);
+
+	    String s = str.substring(ptr+1);
+	    if (s.indexOf(".") == -1)  {
+		//
+		// Mask is expressed in the form of an integer, from 0-32
+		//
+		maskVal = Integer.parseInt(str.substring(ptr+1));
+	    } else {
+		//
+		// Mask is expressed as a subnet, in octets
+		//
+		StringTokenizer tok = new StringTokenizer(".");
+		if (tok.countTokens() > 4) {
+		    throw new IllegalArgumentException(str);
+		}
+		maskVal = 0;
+		while (tok.hasMoreTokens()) {
+		    short n = (short)(Short.parseShort(tok.nextToken()));
+		    if (128 == (n & 128)) {
+			maskVal++;
+		    } else {
+			break;
+		    }
+		    if (64 == (n & 64)) {
+			maskVal++;
+		    } else {
+			break;
+		    }
+		    if (32 == (n & 32)) {
+			maskVal++;
+		    } else {
+			break;
+		    }
+		    if (16 == (n & 16)) {
+			maskVal++;
+		    } else {
+			break;
+		    }
+		    if (8 == (n & 8)) {
+			maskVal++;
+		    } else {
+			break;
+		    }
+		    if (4 == (n & 4)) {
+			maskVal++;
+		    } else {
+			break;
+		    }
+		    if (2 == (n & 2)) {
+			maskVal++;
+		    } else {
+			break;
+		    }
+		    if (1 == (n & 1)) {
+			maskVal++;
+		    } else {
+			break;
+		    }
+		}
+	    }
 	}
 
 	//
