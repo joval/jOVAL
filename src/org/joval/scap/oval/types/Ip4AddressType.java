@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.util.StringTokenizer;
 
 import org.joval.intf.scap.oval.IType;
+import org.joval.util.JOVALMsg;
 
 /**
  * A type class for dealing with individual addresses or CIDR ranges for IPv4.
@@ -198,6 +199,7 @@ public class Ip4AddressType extends AbstractType {
 	if (getMask() == other.getMask()) {
 	    return toBigInteger().compareTo(other.toBigInteger());
 	} else {
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CIDR_MASKS, getMask(), other.getMask());
 	    throw new IllegalArgumentException(Integer.toString(other.getMask()));
 	}
     }
