@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -78,9 +77,9 @@ public class RpminfoAdapter extends BaseRpmAdapter implements IBatch {
 	    loadPackageMap();
 	    try {
 		Pattern p = StringTools.pattern((String)rObj.getName().getValue());
-		for (String packageName : packageMap.keySet()) {
-		    if (p.matcher(packageName).find()) {
-			items.add(toItem(packageMap.get(packageName), rObj.getBehaviors()));
+		for (RpmData datum : packageMap.values()) {
+		    if (p.matcher(datum.name).find()) {
+			items.add(toItem(datum, rObj.getBehaviors()));
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
@@ -95,9 +94,9 @@ public class RpminfoAdapter extends BaseRpmAdapter implements IBatch {
 	  case NOT_EQUAL: {
 	    loadPackageMap();
 	    String name = (String)rObj.getName().getValue();
-	    for (String packageName : packageMap.keySet()) {
-		if (!packageName.equals(name)) {
-		    items.add(toItem(packageMap.get(packageName), rObj.getBehaviors()));
+	    for (RpmData datum : packageMap.values()) {
+		if (!datum.name.equals(name)) {
+		    items.add(toItem(datum, rObj.getBehaviors()));
 		}
 	    }
 	    break;
@@ -152,11 +151,10 @@ public class RpminfoAdapter extends BaseRpmAdapter implements IBatch {
 			    //
 			    // Check for a "short name" match
 			    //
+			    String prefix = new StringBuffer(name).append("-").toString();
 			    for (String packageName : packageList) {
-				if (packageName.startsWith(name + "-")) {
-				    if (!packageMap.containsKey(packageName)) {
-					check = true;
-				    }
+				if (!packageMap.containsKey(packageName) && packageName.startsWith(prefix)) {
+				    check = true;
 				    break;
 				}
 			    }
@@ -170,7 +168,7 @@ public class RpminfoAdapter extends BaseRpmAdapter implements IBatch {
 		    }
 
 		    //
-		    // Gather information about packages in a single pass, and it all to the package map.
+		    // Gather information about packages in a single pass, and add it all to the package map.
 		    //
 		    if (sb.length() > 0) {
 			//
@@ -200,7 +198,7 @@ public class RpminfoAdapter extends BaseRpmAdapter implements IBatch {
 			// Look for a "short name" match
 			//
 			for (Map.Entry<String, RpmData> entry : packageMap.entrySet()) {
-			    if (entry.getKey().startsWith(name + "-")) {
+			    if (matches(name, entry.getValue())) {
 				result.add(toItem(entry.getValue(), rObj.getBehaviors()));
 				break;
 			    }

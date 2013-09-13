@@ -76,8 +76,8 @@ public abstract class BaseRpmAdapter implements IAdapter {
 	    RpmData data = null;
 	    Iterator<String> iter = SafeCLI.manyLines(cmd.toString(), null, session);
 	    while ((data = nextRpmData(iter)) != null) {
-		packageList.add(data.name);
-		packageMap.put(data.name, data);
+		packageList.add(data.extendedName);
+		packageMap.put(data.extendedName, data);
 	    }
 	    packageMapLoaded = true;
 	} catch (Exception e) {
@@ -100,7 +100,7 @@ public abstract class BaseRpmAdapter implements IAdapter {
 	    // Look for a "short name" match
 	    //
 	    for (Map.Entry<String, RpmData> entry : packageMap.entrySet()) {
-		if (entry.getKey().startsWith(packageName + "-")) {
+		if (matches(packageName, entry.getValue())) {
 		    result.add(entry.getValue());
 		    break;
 		}
@@ -115,7 +115,7 @@ public abstract class BaseRpmAdapter implements IAdapter {
 	    Iterator<String> output = SafeCLI.multiLine(sb.toString(), session, IUnixSession.Timeout.S).iterator();
 	    RpmData data = null;
 	    while ((data = nextRpmData(output)) != null) {
-		packageMap.put(data.name, data);
+		packageMap.put(data.extendedName, data);
 		result.add(data);
 	    }
 	}
@@ -207,6 +207,31 @@ public abstract class BaseRpmAdapter implements IAdapter {
 	    }
 	}
 	return data;
+    }
+
+    boolean matches(String shortName, RpmData datum) {
+	if (shortName.equals(datum.name)) {
+	    return true;
+	}
+	if (datum.epoch.equals("0")) {
+	    if (shortName.equals(datum.name + "-" + datum.version)) {
+		return true;
+	    }
+	    if (shortName.equals(datum.name + "-" + datum.version + "-" + datum.release)) {
+		return true;
+	    }
+	} else {
+	    if (shortName.equals(datum.name + "-" + datum.epoch)) {
+		return true;
+	    }
+	    if (shortName.equals(datum.name + "-" + datum.epoch + "-" + datum.version)) {
+		return true;
+	    }
+	    if (shortName.equals(datum.name + "-" + datum.epoch + "-" + datum.version + "-" + datum.release)) {
+		return true;
+	    }
+	}
+	return false;
     }
 
     static class RpmData {
