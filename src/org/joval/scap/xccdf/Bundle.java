@@ -76,11 +76,13 @@ public class Bundle implements IDatastream {
 		    if (!entry.isDirectory() && entry.getName().toLowerCase().endsWith(".xml")) {
 			InputStream in = null;
 			try {
-			    if (entry.getName().toLowerCase().indexOf("xccdf") != -1) {
+			    if (entry.getName().indexOf("/") != -1) {
+				// only scan the top-level directory
+			    } else if (entry.getName().toLowerCase().endsWith("-xccdf.xml")) {
 				in = zip.getInputStream(entry);
 				IBenchmark benchmark = new Benchmark(entry.getName(), Benchmark.getBenchmarkType(in));
 				benchmarks.put(benchmark.getId(), benchmark);
-			    } else if (entry.getName().toLowerCase().indexOf("cpe-dictionary") != -1) {
+			    } else if (entry.getName().toLowerCase().endsWith("-cpe-dictionary.xml")) {
 				in = zip.getInputStream(entry);
 				dictionary = new Dictionary(Dictionary.getCpeList(in));
 			    }
