@@ -15,11 +15,9 @@ CLASSES=\
 	org.joval.scap.oval.adapter.independent.Textfilecontent54Adapter		\
 	org.joval.scap.oval.adapter.independent.TextfilecontentAdapter			\
 	org.joval.scap.oval.adapter.independent.XmlfilecontentAdapter			\
-	org.joval.scap.oval.adapter.linux.BaseRpmAdapter				\
 	org.joval.scap.oval.adapter.linux.DpkginfoAdapter				\
 	org.joval.scap.oval.adapter.linux.PartitionAdapter				\
-	org.joval.scap.oval.adapter.linux.RpminfoAdapter				\
-	org.joval.scap.oval.adapter.linux.RpmverifyAdapter				\
+	org.joval.scap.oval.adapter.linux.RpmAdapter					\
 	org.joval.scap.oval.adapter.linux.SelinuxAdapter				\
 	org.joval.scap.oval.adapter.linux.SelinuxbooleanAdapter				\
 	org.joval.scap.oval.adapter.linux.SelinuxsecuritycontextAdapter			\
