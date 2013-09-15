@@ -22,6 +22,7 @@ org.joval.scap.oval.adapter.macos.AccountinfoAdapter
 org.joval.scap.oval.adapter.macos.PlistAdapter
 org.joval.scap.oval.adapter.macos.Pwpolicy59Adapter
 org.joval.scap.oval.adapter.solaris.IsainfoAdapter
+org.joval.scap.oval.adapter.solaris.NddAdapter
 org.joval.scap.oval.adapter.solaris.PackageAdapter
 org.joval.scap.oval.adapter.solaris.Patch54Adapter
 org.joval.scap.oval.adapter.solaris.PatchAdapter
