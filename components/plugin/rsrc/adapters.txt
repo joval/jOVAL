@@ -5,6 +5,7 @@
 #
 org.joval.scap.oval.adapter.aix.FilesetAdapter
 org.joval.scap.oval.adapter.aix.FixAdapter
+org.joval.scap.oval.adapter.aix.NoAdapter
 org.joval.scap.oval.adapter.aix.OslevelAdapter
 org.joval.scap.oval.adapter.independent.Environmentvariable58Adapter
 org.joval.scap.oval.adapter.independent.EnvironmentvariableAdapter
