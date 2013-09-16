@@ -383,6 +383,7 @@ public class RpmAdapter implements IAdapter, IBatch {
 	} catch (CollectException e) {
 	    throw e;
 	} catch (Exception e) {
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw new CollectException(e, FlagEnumeration.ERROR);
 	}
     }
