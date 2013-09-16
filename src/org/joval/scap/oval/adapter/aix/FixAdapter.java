@@ -5,9 +5,12 @@ package org.joval.scap.oval.adapter.aix;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
@@ -39,6 +42,7 @@ import org.joval.util.JOVALMsg;
  */
 public class FixAdapter implements IAdapter {
     private IUnixSession session;
+    private Collection<String> fixList;
 
     // Implement IAdapter
 
@@ -55,32 +59,64 @@ public class FixAdapter implements IAdapter {
 
     public Collection<FixItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	FixObject fObj = (FixObject)obj;
-	Collection<FixItem> items = new ArrayList<FixItem>();
-	switch(fObj.getAparNumber().getOperation()) {
-	  case EQUALS:
-	    try {
-		items.add(getItem(SafeCLI.checkArgument((String)fObj.getAparNumber().getValue(), session)));
-	    } catch (NoSuchElementException e) {
-		// we'll return an empty list
-	    } catch (Exception e) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(e.getMessage());
-		rc.addMessage(msg);
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	try {
+	    Collection<FixItem> items = new ArrayList<FixItem>();
+	    switch(fObj.getAparNumber().getOperation()) {
+	      case EQUALS:
+		try {
+		    items.add(getItem(SafeCLI.checkArgument((String)fObj.getAparNumber().getValue(), session)));
+		} catch (NoSuchElementException e) {
+		    // we'll return an empty list
+		}
+		break;
+
+	      case PATTERN_MATCH:
+		Pattern p = Pattern.compile((String)fObj.getAparNumber().getValue());
+		for (String apar : getFixList()) {
+		    if (p.matcher(apar).find()) {
+			try {
+			    items.add(getItem(apar));
+			} catch (NoSuchElementException e) {
+			}
+		    }
+		}
+		break;
+
+	      default:
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, fObj.getAparNumber().getOperation());
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
-	    break;
-
-	  default: {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, fObj.getAparNumber().getOperation());
-	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-	  }
+	    return items;
+	} catch (CollectException e) {
+	    throw e;
+	} catch (Exception e) {
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new CollectException(e, FlagEnumeration.ERROR);
 	}
-
-	return items;
     }
 
     // Private
+
+    private Collection<String> getFixList() {
+	if (fixList == null) {
+	    fixList = new HashSet<String>();
+	    try {
+		Iterator<String> iter = SafeCLI.manyLines("/usr/sbin/instfix -i", null, session);
+		String line = null;
+		while(iter.hasNext()) {
+		    line = iter.next();
+		    int ptr = line.indexOf("for ");
+		    if (ptr != -1) {
+			StringTokenizer tok = new StringTokenizer(line.substring(ptr+4));
+			fixList.add(tok.nextToken());
+		    }
+		}
+	    } catch (Exception e) {
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+	}
+	return fixList;
+    }
 
     private FixItem getItem(String apar) throws Exception {
 	session.getLogger().trace(JOVALMsg.STATUS_AIX_FIX, apar);
@@ -95,16 +131,15 @@ public class FixAdapter implements IAdapter {
 	aparNumber.setValue(apar);
 	item.setAparNumber(aparNumber);
 
-	List<String> lines = SafeCLI.multiLine("/usr/sbin/instfix -iavk '" + apar + "'", session, IUnixSession.Timeout.M);
-	Iterator<String> iter = lines.iterator();
-
+	String cmd = "/usr/sbin/instfix -iavk '" + apar + "'";
+	Iterator<String> iter = SafeCLI.manyLines(cmd, null, session);
 	String line = null;
 	while(iter.hasNext()) {
 	    line = iter.next();
 	    if (line.startsWith(abstractLine)) {
-		EntityItemStringType _abstract = Factories.sc.core.createEntityItemStringType();
-		_abstract.setValue(line.substring(abstractLine.length()).trim());
-		item.setAbstract(_abstract);
+		EntityItemStringType abstractType = Factories.sc.core.createEntityItemStringType();
+		abstractType.setValue(line.substring(abstractLine.length()).trim());
+		item.setAbstract(abstractType);
 	    } else if (line.startsWith(symptomLine)) {
 		StringBuffer sb = new StringBuffer();
 		while(iter.hasNext()) {
@@ -119,9 +154,9 @@ public class FixAdapter implements IAdapter {
 		    }
 		}
 		if (sb.length() > 0) {
-		    EntityItemStringType symptom = Factories.sc.core.createEntityItemStringType();
-		    symptom.setValue(sb.toString());
-		    item.setSymptom(symptom);
+		    EntityItemStringType symptomType = Factories.sc.core.createEntityItemStringType();
+		    symptomType.setValue(sb.toString().trim());
+		    item.setSymptom(symptomType);
 		}
 	    }
 	}

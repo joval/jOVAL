@@ -168,7 +168,7 @@ public class PackageAdapter implements IAdapter {
 	    try {
 		String cmd = new StringBuffer(prefix).append(" ").append(pkginst).toString();
 		PkgchkReader reader = new PkgchkReader(pkginst, pObj);
-		SafeCLI.exec(cmd, null, null, session, timeout, reader, IReaderGobbler.DEVNULL);//DAS
+		SafeCLI.exec(cmd, null, null, session, timeout, reader, null);
 		items.addAll(reader.getItems());
 	    } catch (CollectException e) {
 		throw e;

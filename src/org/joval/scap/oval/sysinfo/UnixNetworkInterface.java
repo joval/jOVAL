@@ -5,6 +5,7 @@ package org.joval.scap.oval.sysinfo;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -23,9 +24,14 @@ class UnixNetworkInterface {
 	ArrayList<String> lines = new ArrayList<String>();
 	List<String> rawOutput = null;
 	switch(session.getFlavor()) {
-	  case AIX:
-	    rawOutput = SafeCLI.multiLine("/etc/ifconfig -a", session, IUnixSession.Timeout.S);
+	  case AIX: {
+	    rawOutput = new ArrayList<String>();
+	    Iterator<String> iter = SafeCLI.manyLines("/etc/ifconfig -a", null, session);
+	    while(iter.hasNext()) {
+		rawOutput.add(iter.next());
+	    }
 	    break;
+	  }
 	  default:
 	    rawOutput = SafeCLI.multiLine("/sbin/ifconfig -a", session, IUnixSession.Timeout.S);
 	    break;

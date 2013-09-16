@@ -4,16 +4,14 @@
 package org.joval.scap.oval.adapter.aix;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
 
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
 
-import scap.oval.common.MessageType;
-import scap.oval.common.MessageLevelEnumeration;
 import scap.oval.common.SimpleDatatypeEnumeration;
 import scap.oval.definitions.core.EntityObjectStringType;
 import scap.oval.definitions.core.ObjectType;
@@ -24,6 +22,7 @@ import scap.oval.systemcharacteristics.core.EntityItemVersionType;
 import scap.oval.systemcharacteristics.aix.OslevelItem;
 
 import org.joval.intf.plugin.IAdapter;
+import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
 
@@ -49,21 +48,20 @@ public class OslevelAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<OslevelItem> getItems(ObjectType obj, IRequestContext rc) {
-	Collection<OslevelItem> items = new ArrayList<OslevelItem>();
+    public Collection<OslevelItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	try {
 	    OslevelItem item = Factories.sc.aix.createOslevelItem();
 	    EntityItemVersionType maintenanceLevel = Factories.sc.core.createEntityItemVersionType();
-	    maintenanceLevel.setValue(SafeCLI.exec("uname -r", session, IUnixSession.Timeout.S));
+	    String raw = SafeCLI.exec("uname -vr", session, IUnixSession.Timeout.S);
+	    StringTokenizer tok = new StringTokenizer(raw);
+	    String release = tok.nextToken();
+	    String version = tok.nextToken();
+	    maintenanceLevel.setValue(new StringBuffer(version).append(".").append(release).toString());
 	    maintenanceLevel.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 	    item.setMaintenanceLevel(maintenanceLevel);
-	    items.add(item);
+	    return Arrays.asList(item);
 	} catch (Exception e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(e.getMessage());
-	    rc.addMessage(msg);
+	    throw new CollectException(e, FlagEnumeration.ERROR);
 	}
-	return items;
     }
 }
