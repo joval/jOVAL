@@ -23,6 +23,21 @@ $(PLUGIN_LOCAL_LIB): classes resources
 test:
 	$(JRE) -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.test.Default test.properties
 
+native:
+	cat CSharpCompiler.ps1 | powershell -File -
+
+native-clean:
+	rm -f $(RSRC)/assembly/Environmentvariable58.dll
+	rm -f $(RSRC)/assembly/SHA224.dll
+	rm -f $(RSRC)/assembly/Accesstoken.dll
+	rm -f $(RSRC)/assembly/Auditeventpolicy.dll
+	rm -f $(RSRC)/assembly/Effectiverights.dll
+	rm -f $(RSRC)/assembly/Lockoutpolicy.dll
+	rm -f $(RSRC)/assembly/Metabase.dll
+	rm -f $(RSRC)/assembly/Process58.dll
+	rm -f $(RSRC)/assembly/Registry.dll
+	rm -f $(RSRC)/assembly/Systemmetric.dll
+
 dist: all
 	mkdir -p $(DIST)/lib
 	cp -R $(RSRC)/plugin.properties $(DIST)
