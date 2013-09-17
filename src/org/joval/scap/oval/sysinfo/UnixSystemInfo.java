@@ -95,17 +95,11 @@ class UnixSystemInfo {
 	    InterfacesType interfacesType = Factories.sc.core.createInterfacesType();
 	    List<UnixNetworkInterface> interfaces = UnixNetworkInterface.getInterfaces(session);
 	    for (UnixNetworkInterface intf : interfaces) {
-		InterfaceType interfaceType = Factories.sc.core.createInterfaceType();
-		interfaceType.setMacAddress(intf.getMacAddress());
-		interfaceType.setInterfaceName(intf.getDescription());
-
-		if (intf.getIpV4Address() != null) {
-		    interfaceType.setIpAddress(intf.getIpV4Address());
-		} else if (intf.getIpV6Address() != null) {
-		    interfaceType.setIpAddress(intf.getIpV6Address());
-		}
-
-		if (interfaceType.getIpAddress() != null) {
+		for (UnixNetworkInterface.IPAddress addr : intf.getIPAddresses()) {
+		    InterfaceType interfaceType = Factories.sc.core.createInterfaceType();
+		    interfaceType.setMacAddress(intf.getHardwareAddress());
+		    interfaceType.setInterfaceName(intf.getName());
+		    interfaceType.setIpAddress(addr.getAddress());
 		    interfacesType.getInterface().add(interfaceType);
 		}
 	    }

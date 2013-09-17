@@ -33,6 +33,7 @@ CLASSES=\
 	org.joval.scap.oval.adapter.solaris.SmfAdapter					\
 	org.joval.scap.oval.adapter.unix.FileAdapter					\
 	org.joval.scap.oval.adapter.unix.InetdAdapter					\
+	org.joval.scap.oval.adapter.unix.InterfaceAdapter				\
 	org.joval.scap.oval.adapter.unix.PasswordAdapter				\
 	org.joval.scap.oval.adapter.unix.ProcessAdapter					\
 	org.joval.scap.oval.adapter.unix.RunlevelAdapter				\
