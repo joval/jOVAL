@@ -91,8 +91,6 @@ JSAF_PROVIDER_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(JS
 JPE_LIB=$(JPE_HOME)/jPE.jar
 
 SVRL=$(COMPONENTS)/schematron/schema/svrl.jar
-CYBERSCOPE=$(COMPONENTS)/cyberscope
-CYBERSCOPE_LIB=$(CYBERSCOPE)/cyberscope-schema.jar
 SCAP=$(COMPONENTS)/scap
 SCAP_LIB=$(SCAP)/scap-schema-$(SCAP_VERSION).jar
 JOVAL_CORE=$(COMPONENTS)/engine

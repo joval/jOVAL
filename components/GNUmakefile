@@ -5,10 +5,10 @@ TOP=..
 
 include $(TOP)/common.mk
 
-all: _engine _plugin _schematron _cyberscope
+all: _engine _plugin _schematron
 	@$(MAKE) --keep-going --directory=jovaldi dist
 
-full: _engine _plugin _schematron _cyberscope
+full: _engine _plugin _schematron
 	@$(MAKE) --keep-going --directory=jovaldi dist-all
 
 
@@ -47,9 +47,6 @@ _jpe:
 
 _scap:
 	@$(MAKE) --keep-going --directory=scap all
-
-_cyberscope:
-	@$(MAKE) --keep-going --directory=cyberscope all
 
 _schematron:
 	@$(MAKE) --keep-going --directory=schematron all
