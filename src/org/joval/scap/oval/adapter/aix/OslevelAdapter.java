@@ -52,11 +52,7 @@ public class OslevelAdapter implements IAdapter {
 	try {
 	    OslevelItem item = Factories.sc.aix.createOslevelItem();
 	    EntityItemVersionType maintenanceLevel = Factories.sc.core.createEntityItemVersionType();
-	    String raw = SafeCLI.exec("uname -vr", session, IUnixSession.Timeout.S);
-	    StringTokenizer tok = new StringTokenizer(raw);
-	    String release = tok.nextToken();
-	    String version = tok.nextToken();
-	    maintenanceLevel.setValue(new StringBuffer(version).append(".").append(release).toString());
+	    maintenanceLevel.setValue(SafeCLI.exec("oslevel", session, IUnixSession.Timeout.S).trim());
 	    maintenanceLevel.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 	    item.setMaintenanceLevel(maintenanceLevel);
 	    return Arrays.asList(item);

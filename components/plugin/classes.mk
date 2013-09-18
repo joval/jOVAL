@@ -5,6 +5,7 @@ CLASSES=\
 	org.joval.plugin.LocalPlugin							\
 	org.joval.scap.oval.adapter.aix.FilesetAdapter					\
 	org.joval.scap.oval.adapter.aix.FixAdapter					\
+	org.joval.scap.oval.adapter.aix.InterimFixAdapter				\
 	org.joval.scap.oval.adapter.aix.NoAdapter					\
 	org.joval.scap.oval.adapter.aix.OslevelAdapter					\
 	org.joval.scap.oval.adapter.independent.BaseFileAdapter				\

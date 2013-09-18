@@ -17,8 +17,6 @@ import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
 import jsaf.util.StringTools;
 
-import scap.oval.common.MessageType;
-import scap.oval.common.MessageLevelEnumeration;
 import scap.oval.common.SimpleDatatypeEnumeration;
 import scap.oval.definitions.core.ObjectType;
 import scap.oval.definitions.aix.FixObject;

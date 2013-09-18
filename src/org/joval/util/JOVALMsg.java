@@ -30,6 +30,7 @@ import org.slf4j.cal10n.LocLoggerFactory;
 public enum JOVALMsg {
     ERROR_AD_DOMAIN_UNKNOWN,
     ERROR_ADAPTER_MISSING,
+    ERROR_AIX_EMGR_STATE,
     ERROR_ARF_BAD_SOURCE,
     ERROR_ARF_CATALOG,
     ERROR_BAD_COMPONENT,
