@@ -59,7 +59,6 @@ $(DIST)/32: all $(DIST)/32/jre
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST)/32/xml
 	cp $(PRODUCTNAME).jar $(DIST)/32/lib
 	cp $(SCAP_LIB) $(DIST)/32/lib
-	cp $(CYBERSCOPE_LIB) $(DIST)/32/lib
 	cp $(SVRL) $(DIST)/32/lib
 	cp $(JOVAL_CORE_LIB) $(DIST)/32/lib
 	cp $(JSAF_CORE)/$(LIBDIR)/*.jar $(DIST)/32/lib
@@ -85,7 +84,6 @@ $(DIST)/64: all $(DIST)/64/jre
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST)/64/xml
 	cp $(PRODUCTNAME).jar $(DIST)/64/lib
 	cp $(SCAP_LIB) $(DIST)/64/lib
-	cp $(CYBERSCOPE_LIB) $(DIST)/64/lib
 	cp $(SVRL) $(DIST)/64/lib
 	cp $(JOVAL_CORE_LIB) $(DIST)/64/lib
 	cp $(JSAF_CORE)/$(LIBDIR)/*.jar $(DIST)/64/lib

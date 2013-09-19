@@ -20,6 +20,35 @@ import jsaf.util.SafeCLI;
  * @version %I% %G%
  */
 public class UnixNetworkInterface {
+    /**
+     * Convert a hex string to an IPv4 address string (i.e., A.B.C.D).
+     */
+    public static String toIp4AddressString(String hex) {
+	if (hex.indexOf(".") != -1) {
+	    return hex;
+	}
+	if (hex.startsWith("0x")) {
+	    hex = hex.substring(2);
+	}
+	StringBuffer sb = new StringBuffer();
+	for (int i=0; i < 4; i++) {
+	    int num = 0;
+	    int start = i * 2;
+	    int end = start + 2;
+	    if (end <= hex.length()) {
+		num = Integer.parseInt(hex.substring(start, end), 16);
+	    }
+	    if (i > 0) {
+		sb.append(".");
+	    }
+	    sb.append(Integer.toString(num));
+	}
+	return sb.toString();
+    }
+
+    /**
+     * Given a UNIX session, fetch information about the network interfaces.
+     */
     public static List<UnixNetworkInterface> getInterfaces(IUnixSession session) throws Exception {
 	ArrayList<UnixNetworkInterface> interfaces = new ArrayList<UnixNetworkInterface>();
 	ArrayList<String> lines = new ArrayList<String>();
@@ -166,27 +195,7 @@ public class UnixNetworkInterface {
 	    this.version = version;
 	    this.addr = addr;
 	    if (version == Version.V4) {
-		if (mask.indexOf(".") == -1) {
-		    if (mask.startsWith("0x")) {
-			mask = mask.substring(2);
-		    }
-		    StringBuffer sb = new StringBuffer();
-		    for (int i=0; i < 4; i++) {
-			int num = 0;
-			int start = i * 2;
-			int end = start + 2;
-			if (end <= mask.length()) {
-			    num = Integer.parseInt(mask.substring(start, end), 16);
-			}
-			if (i > 0) {
-			    sb.append(".");
-			}
-			sb.append(Integer.toString(num));
-		    }
-		    this.mask = sb.toString();
-		} else {
-		    this.mask = mask;
-		}
+		this.mask = toIp4AddressString(mask);
 	    }
 	    this.broadcast = broadcast;
 	}
