@@ -87,12 +87,8 @@ public class OvalHandler implements ISystem {
 		if (engines.containsKey(href)) {
 		    ed = engines.get(href);
 		} else {
-		    try {
-			ed = new EngineData(ctx.getOval(href));
-			engines.put(href, ed);
-		    } catch (NoSuchElementException e) {
-			continue;
-		    }
+		    ed = new EngineData(ctx.getOval(href));
+		    engines.put(href, ed);
 		}
 
 		//
