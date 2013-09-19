@@ -103,6 +103,18 @@ public class RoutingtableAdapter implements IAdapter {
 		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
 		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
+
+	    //
+	    // Make sure only the proper type of route is returned.
+	    //
+	    String datatype = iObj.getDestination().getDatatype();
+	    Iterator<RoutingtableItem> iter = items.iterator();
+	    while(iter.hasNext()) {
+		RoutingtableItem item = iter.next();
+		if (!datatype.equals(item.getDestination().getDatatype())) {
+		    iter.remove();
+		}
+	    }
 	    return items;
 	} catch (CollectException e) {
 	    throw e;
@@ -125,7 +137,7 @@ public class RoutingtableAdapter implements IAdapter {
 		    sb.append(":");
 		}
 		int start = i * 4;
-		int end = i + 4;
+		int end = start + 4;
 		sb.append(hex.substring(start, end));
 	    }
 	    return sb.toString();
@@ -133,6 +145,22 @@ public class RoutingtableAdapter implements IAdapter {
 	    return toIp6AddressString(hex.substring(0,hex.indexOf("%")));
 	} else {
 	    return hex;
+	}
+    }
+
+    /**
+     * 0c0afe -> fe0a0c
+     */
+    private String reverseEndian(String hex) {
+	if (hex.length() % 2 == 0) {
+	    StringBuffer sb = new StringBuffer();
+	    for (int i=hex.length(); i > 0; i-=2) {
+		int begin = i - 2;
+		sb.append(hex.substring(begin, i));
+	    }
+	    return sb.toString();
+	} else {
+	    throw new IllegalArgumentException(hex);
 	}
     }
 
@@ -150,7 +178,11 @@ public class RoutingtableAdapter implements IAdapter {
 	    if ("default".equals(address)) {
 		    address = "0.0.0.0";
 	    }
-	    addr.setValue(UnixNetworkInterface.toIp4AddressString(address));
+	    try {
+		addr.setValue(UnixNetworkInterface.toIp4AddressString(address));
+	    } catch (IllegalArgumentException e) {
+		addr.setValue(address); // this will not be valid...
+	    }
 	    addr.setDatatype(SimpleDatatypeEnumeration.IPV_4_ADDRESS.value());
 	}
 	return addr;
@@ -331,16 +363,16 @@ public class RoutingtableAdapter implements IAdapter {
 		    }
 
 		    RoutingtableItem item = Factories.sc.unix.createRoutingtableItem();
-		    item.setDestination(makeIPAddressType(tok.nextToken(), true));
+		    item.setDestination(makeIPAddressType(reverseEndian(tok.nextToken()), true));
 		    String mask = tok.nextToken();
 		    String source = tok.nextToken();
 		    mask = tok.nextToken();
-		    item.setGateway(makeIPAddressType(tok.nextToken(), true));
+		    item.setGateway(makeIPAddressType(reverseEndian(tok.nextToken()), true));
 		    String metric = tok.nextToken();
 		    String refCounter = tok.nextToken();
 		    String useCounter = tok.nextToken();
 
-		    int flags = Integer.parseInt(tok.nextToken(), 16);
+		    int flags = (int)Long.parseLong(tok.nextToken(), 16);
 		    for (LinuxRoutingTableFlag flag : LinuxRoutingTableFlag.values()) {
 			if (flag.test(flags)) {
 			    EntityItemRoutingTableFlagsType flagType =
@@ -379,8 +411,8 @@ public class RoutingtableAdapter implements IAdapter {
 		    interfaceName.setValue(tok.nextToken());
 		    item.setInterfaceName(interfaceName);
 
-		    item.setDestination(makeIPAddressType(tok.nextToken(), false));
-		    item.setGateway(makeIPAddressType(tok.nextToken(), false));
+		    item.setDestination(makeIPAddressType(reverseEndian(tok.nextToken()), false));
+		    item.setGateway(makeIPAddressType(reverseEndian(tok.nextToken()), false));
 
 		    int flags = Integer.parseInt(tok.nextToken(), 16);
 		    for (LinuxRoutingTableFlag flag : LinuxRoutingTableFlag.values()) {
@@ -514,8 +546,8 @@ public class RoutingtableAdapter implements IAdapter {
 	for (String line : lines) {
 	    if (line.trim().length() == 0 || line.startsWith("Routing tables") || line.startsWith("Destination")) {
 		continue;
-	    } else if (line.startsWith("Route Tree")) {
-		ipv6 = line.indexOf("Internet v6") != -1;
+	    } else if (line.startsWith("Internet")) {
+		ipv6 = line.indexOf("Internet6") != -1;
 	    } else {
 		StringTokenizer tok = new StringTokenizer(line);
 		if (tok.countTokens() >= 4) {
