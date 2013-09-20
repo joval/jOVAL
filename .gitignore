@@ -4,8 +4,6 @@ id_rsa
 gen-src/
 build/
 dist/
-components/cyberscope/cyberscope-schema.jar
-components/cyberscope/docs/api/
 components/engine/jOVAL.jar
 components/jovaldi/jovaldi.jar
 components/scap/docs/api/

@@ -597,20 +597,20 @@ CLASSES=\
 	scap.oval.definitions.ios.VersionState	\
 	scap.oval.definitions.ios.VersionTest	\
 	scap.oval.definitions.junos.EntityStateJunosReleaseTypeType	\
-	scap.oval.definitions.junos.GlobalObject	\
-	scap.oval.definitions.junos.GlobalState	\
-	scap.oval.definitions.junos.GlobalTest	\
-	scap.oval.definitions.junos.LineObject	\
-	scap.oval.definitions.junos.LineState	\
-	scap.oval.definitions.junos.LineTest	\
 	scap.oval.definitions.junos.ObjectFactory	\
 	scap.oval.definitions.junos.package-info	\
+	scap.oval.definitions.junos.ShowObject	\
+	scap.oval.definitions.junos.ShowState	\
+	scap.oval.definitions.junos.ShowTest	\
 	scap.oval.definitions.junos.VersionObject	\
 	scap.oval.definitions.junos.VersionState	\
 	scap.oval.definitions.junos.VersionTest	\
-	scap.oval.definitions.junos.XmlLineObject	\
-	scap.oval.definitions.junos.XmlLineState	\
-	scap.oval.definitions.junos.XmlLineTest	\
+	scap.oval.definitions.junos.XmlConfigObject	\
+	scap.oval.definitions.junos.XmlConfigState	\
+	scap.oval.definitions.junos.XmlConfigTest	\
+	scap.oval.definitions.junos.XmlShowObject	\
+	scap.oval.definitions.junos.XmlShowState	\
+	scap.oval.definitions.junos.XmlShowTest	\
 	scap.oval.definitions.linux.DpkginfoObject	\
 	scap.oval.definitions.linux.DpkginfoState	\
 	scap.oval.definitions.linux.DpkginfoTest	\
@@ -1166,12 +1166,12 @@ CLASSES=\
 	scap.oval.systemcharacteristics.ios.TclshItem	\
 	scap.oval.systemcharacteristics.ios.VersionItem	\
 	scap.oval.systemcharacteristics.junos.EntityItemJunosReleaseTypeType	\
-	scap.oval.systemcharacteristics.junos.GlobalItem	\
-	scap.oval.systemcharacteristics.junos.LineItem	\
 	scap.oval.systemcharacteristics.junos.ObjectFactory	\
 	scap.oval.systemcharacteristics.junos.package-info	\
+	scap.oval.systemcharacteristics.junos.ShowItem	\
 	scap.oval.systemcharacteristics.junos.VersionItem	\
-	scap.oval.systemcharacteristics.junos.XmlLineItem	\
+	scap.oval.systemcharacteristics.junos.XmlConfigItem	\
+	scap.oval.systemcharacteristics.junos.XmlShowItem	\
 	scap.oval.systemcharacteristics.linux.DpkginfoItem	\
 	scap.oval.systemcharacteristics.linux.EntityItemProtocolType	\
 	scap.oval.systemcharacteristics.linux.EntityItemRpmVerifyResultType	\
