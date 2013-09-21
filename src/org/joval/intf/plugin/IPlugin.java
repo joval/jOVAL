@@ -71,14 +71,9 @@ public interface IPlugin extends ILoggable {
     String PROP_HELPTEXT	= "helpText";
 
     /**
-     * Get a property from the container, e.g., PROP_*.
+     * Get a (localized) property from the container, e.g., PROP_*.
      */
     public String getProperty(String key);
-
-    /**
-     * Retrieve a localized message from the container.
-     */
-    public String getMessage(String key, Object... arguments);
 
     /**
      * Configure the IPlugin using the specified Properties.

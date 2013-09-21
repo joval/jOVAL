@@ -149,10 +149,6 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 	return resources.getString(key);
     }
 
-    public String getMessage(String key, Object... arguments) {
-	return MessageFormat.format(resources.getString(key), arguments);
-    }
-
     public boolean isConnected() {
 	return session.isConnected();
     }
@@ -267,6 +263,12 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 	}
 	pending = null;
 	return results;
+    }
+
+    // Internal
+
+    protected String getMessage(String key, Object... arguments) {
+	return MessageFormat.format(resources.getString(key), arguments);
     }
 
     // Private

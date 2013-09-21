@@ -30,11 +30,13 @@ public interface IProvider {
      *            an IProvider may be called numerous times with different ObjectTypes, all having the same object ID.  An
      *            adapter should therefore make no effort to cache data keying on the object ID.
      *
-     * @param rc  @see IRequestContext
+     * @param rc A request context, which can be used to associate messages with the object in the OVAL results.
      *
      * @throws CollectException if items cannot be collected for the request for some reason, such as an unsupported
      *            platform for the adapter, or an unsupported operation on the object.  The OVAL object will have a
      *            resulting status specified by the exception.
+     *
+     * @see org.joval.intf.scap.oval.IProvider.IRequestContext
      */
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException;
 

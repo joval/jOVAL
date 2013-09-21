@@ -240,7 +240,7 @@ public class ShadowAdapter implements IAdapter {
 	    }
 
 	    //
-	    // Create the basic PasswordItems
+	    // Create the basic ShadowItems
 	    //
 	    for (String line : lines) {
 		if (line.length() == 0 || line.startsWith("#")) {
