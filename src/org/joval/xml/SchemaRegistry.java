@@ -120,20 +120,45 @@ public enum SchemaRegistry {
 	this.resource = resource;
     }
 
-    private static final String[] RESOURCES = {
-	"arf.properties", "ds.properties", "oval.properties", "cpe.properties", "xccdf.properties", "ocil.properties",
-	"sce.properties", "svrl.properties", "diagnostic.properties", "cyberscope.properties"
+    /**
+     * Enumeration of resource files that should be available to the classloader.
+     */
+    private enum Resource {
+	ARF("arf.properties", true),
+	DS("ds.properties", true),
+	OVAL("oval.properties", true),
+	CPE("cpe.properties", true),
+	XCCDF("xccdf.properties", true),
+	OCIL("ocil.properties", true),
+	SCE("sce.properties", true),
+	SVRL("svrl.properties", false),
+	DIAG("diagnostic.properties", true),
+	CYBERSCOPE("cyberscope.properties", false);
+
+	private String resource;
+	private boolean mandatory;
+
+	private Resource(String resource, boolean mandatory) {
+	    this.resource = resource;
+	    this.mandatory = mandatory;
+	}
+
+	InputStream getStream(ClassLoader cl) {
+	    InputStream in = cl.getResourceAsStream(resource);
+	    if (mandatory && in == null) {
+		throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, resource));
+	    }
+	    return in;
+	}
     };
 
     private static Properties schemaProps;
     static {
 	schemaProps = new Properties();
 	ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	for (String res : RESOURCES) {
-	    InputStream rsc = cl.getResourceAsStream(res);
-	    if (rsc == null) {
-		JOVALMsg.getLogger().warn(JOVALMsg.ERROR_MISSING_RESOURCE, res);
-	    } else {
+	for (Resource res : Resource.values()) {
+	    InputStream rsc = res.getStream(cl);
+	    if (rsc != null) {
 		try {
 		    schemaProps.load(rsc);
 		} catch (IOException e) {

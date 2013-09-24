@@ -36,6 +36,7 @@ native-clean:
 	rm -f $(RSRC)/assembly/Metabase.dll
 	rm -f $(RSRC)/assembly/Process58.dll
 	rm -f $(RSRC)/assembly/Registry.dll
+	rm -f $(RSRC)/assembly/Service.dll
 	rm -f $(RSRC)/assembly/Systemmetric.dll
 
 dist: all
@@ -76,6 +77,7 @@ resources:
 	cp $(RSRC)/assembly/Metabase.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 	cp $(RSRC)/assembly/Process58.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 	cp $(RSRC)/assembly/Registry.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
+	cp $(RSRC)/assembly/Service.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 	cp $(RSRC)/assembly/Systemmetric.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 
 classes: classdirs $(CLASS_FILES)

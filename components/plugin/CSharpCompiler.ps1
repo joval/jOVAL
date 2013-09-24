@@ -9,6 +9,7 @@ function Compile {
 
     $Params = New-Object System.CodeDom.Compiler.CompilerParameters
     $Params.ReferencedAssemblies.Add("System.dll");
+    $Params.ReferencedAssemblies.Add("System.serviceprocess.dll");
     $Params.GenerateExecutable = $false
     $Params.IncludeDebugInformation = $false
     $Params.WarningLevel = 3
@@ -52,4 +53,5 @@ Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Lockoutpolicy.cs"
 Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Metabase.cs" -Output "rsrc\assembly\Metabase.dll"
 Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Process58.cs" -Output "rsrc\assembly\Process58.dll"
 Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Registry.cs" -Output "rsrc\assembly\Registry.dll"
+Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Service.cs" -Output "rsrc\assembly\Service.dll"
 Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Systemmetric.cs" -Output "rsrc\assembly\Systemmetric.dll"

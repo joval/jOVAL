@@ -61,6 +61,7 @@ CLASSES=\
 	org.joval.scap.oval.adapter.windows.Process58Adapter				\
 	org.joval.scap.oval.adapter.windows.RegistryAdapter				\
 	org.joval.scap.oval.adapter.windows.RegkeyeffectiverightsAdapter		\
+	org.joval.scap.oval.adapter.windows.ServiceAdapter				\
 	org.joval.scap.oval.adapter.windows.ServiceeffectiverightsAdapter		\
 	org.joval.scap.oval.adapter.windows.SidAdapter					\
 	org.joval.scap.oval.adapter.windows.SidSidAdapter				\

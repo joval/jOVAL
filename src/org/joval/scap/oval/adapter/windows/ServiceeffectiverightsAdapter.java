@@ -52,20 +52,11 @@ import org.joval.util.JOVALMsg;
 public class ServiceeffectiverightsAdapter extends BaseServiceAdapter<ServiceeffectiverightsItem> {
     private IDirectory directory;
 
-    // Implement IAdapter
-
-    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
-	Collection<Class> classes = new ArrayList<Class>();
-	if (session instanceof IWindowsSession) {
-	    super.init((IWindowsSession)session);
-	    classes.add(ServiceeffectiverightsObject.class);
-	} else {
-	    notapplicable.add(ServiceeffectiverightsObject.class);
-	}
-	return classes;
-    }
-
     // Protected
+
+    protected Class getObjectClass() {
+	return ServiceeffectiverightsObject.class;
+    }
 
     protected Class getItemClass() {
 	return ServiceeffectiverightsItem.class;
@@ -125,11 +116,11 @@ public class ServiceeffectiverightsAdapter extends BaseServiceAdapter<Serviceeff
 		    cmd.append(",");
 		}
 		sid = principal.getSid();
-		cmd.append("\"").append(sid).append("\"");
+		cmd.append("'").append(sid).append("'");
 		principalMap.put(sid, principal);
 	    }
-	    cmd.append(" | Get-EffectiveRights -ObjectType Service ");
-	    cmd.append(" -Name \"").append(serviceName).append("\"");
+	    cmd.append(" | Get-EffectiveRights -ObjectType Service");
+	    cmd.append(" -Name '").append(serviceName).append("'");
 	    for (String line : getRunspace().invoke(cmd.toString()).split("\r\n")) {
 		int ptr = line.indexOf(":");
 		if (ptr != -1) {
