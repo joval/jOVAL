@@ -69,6 +69,7 @@ CLASSES=\
 	org.joval.scap.oval.adapter.windows.UserAdapter					\
 	org.joval.scap.oval.adapter.windows.UserSid55Adapter				\
 	org.joval.scap.oval.adapter.windows.UserSidAdapter				\
+	org.joval.scap.oval.adapter.windows.VolumeAdapter				\
 	org.joval.scap.oval.adapter.windows.Wmi57Adapter				\
 	org.joval.scap.oval.adapter.windows.WmiAdapter					\
 	org.joval.scap.oval.adapter.windows.WuaupdatesearcherAdapter			\
