@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.zip.Adler32;
@@ -111,7 +112,6 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	variableTable = new HashMap<String, Collection<VariableValueType>>();
 	objectItemTable = new HashMap<String, Collection<BigInteger>>();
 	objectVariableTable = new HashMap<String, Collection<String>>();
-	variableTable = new HashMap<String, Collection<VariableValueType>>();
 	try {
 	    marshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext().createMarshaller();
 	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.SC);
@@ -381,15 +381,45 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	variables.add(variableId);
     }
 
-    public boolean containsObject(String objectId) {
-	return objectTable.containsKey(objectId);
-    }
-
     public FlagEnumeration getObjectFlag(String id) throws NoSuchElementException {
 	if (!objectTable.containsKey(id)) {
 	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
 	}
 	return objectTable.get(id).flag;
+    }
+
+    public boolean containsObject(String objectId) {
+	return objectTable.containsKey(objectId);
+    }
+
+    public void prune(Collection<String> objectIds) {
+	// Discover items to retain
+	HashSet<BigInteger> retainedItems = new HashSet<BigInteger>();
+	for (String objectId : objectIds) {
+	    if (objectItemTable.containsKey(objectId)) {
+		retainedItems.addAll(objectItemTable.get(objectId));
+	    }
+	}
+	// Remove all other items
+	Iterator<Map.Entry<BigInteger, JAXBElement<? extends ItemType>>> itemTableIter = itemTable.entrySet().iterator();
+	while(itemTableIter.hasNext()) {
+	    Map.Entry<BigInteger, JAXBElement<? extends ItemType>> entry = itemTableIter.next();
+	    if (!retainedItems.contains(entry.getKey())) {
+		itemTableIter.remove();
+	    }
+	}
+
+	// Remove all references to other objects
+	Iterator<Map.Entry<String, ObjectData>> objectTableIter = objectTable.entrySet().iterator();
+	while(objectTableIter.hasNext()) {
+	    Map.Entry<String, ObjectData> entry  = objectTableIter.next();
+	    if (!objectIds.contains(entry.getKey())) {
+		objectTableIter.remove();
+		variableTable.remove(entry.getKey());
+		objectItemTable.remove(entry.getKey());
+		objectVariableTable.remove(entry.getKey());
+	    }
+	}
     }
 
     public Collection<JAXBElement<? extends ItemType>> getItemsByObjectId(String id) throws NoSuchElementException {
@@ -407,23 +437,6 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    return items;
 	}
 	throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
-    }
-
-    public Collection<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException {
-	if (!objectTable.containsKey(id)) {
-	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
-	}
-	Collection<VariableValueType> variables = new ArrayList<VariableValueType>();
-	if (objectVariableTable.containsKey(id)) {
-	    for (String variableId : objectVariableTable.get(id)) {
-		if (variableTable.containsKey(variableId)) {
-		    variables.addAll(variableTable.get(variableId));
-		} else {
-		    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_VARIABLE, variableId));
-		}
-	    }
-	}
-	return variables;
     }
 
     public void writeXML(File f) {
@@ -452,6 +465,23 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     }
 
     // Private
+
+    private Collection<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException {
+	if (!objectTable.containsKey(id)) {
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
+	}
+	Collection<VariableValueType> variables = new ArrayList<VariableValueType>();
+	if (objectVariableTable.containsKey(id)) {
+	    for (String variableId : objectVariableTable.get(id)) {
+		if (variableTable.containsKey(variableId)) {
+		    variables.addAll(variableTable.get(variableId));
+		} else {
+		    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_VARIABLE, variableId));
+		}
+	    }
+	}
+	return variables;
+    }
 
     /**
      * Canonicalize the item by stripping out its ID (if any) marshalling it to XML, and returning the bytes.

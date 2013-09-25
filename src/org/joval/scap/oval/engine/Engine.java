@@ -38,6 +38,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
+import jsaf.intf.util.ILoggable;
 import jsaf.util.StringTools;
 import org.slf4j.cal10n.LocLogger;
 
@@ -380,9 +381,8 @@ public class Engine implements IOvalEngine, IProvider {
 			}
 		    }
 		}
-		SystemCharacteristics sc = new SystemCharacteristics(plugin.getSystemInfo());
-		sc.setLogger(logger);
-		this.sc = sc;
+		sc = new SystemCharacteristics(plugin.getSystemInfo());
+		((ILoggable)sc).setLogger(logger);
 	    }
 
 	    //
@@ -406,17 +406,17 @@ public class Engine implements IOvalEngine, IProvider {
 			allowedObjectIds.add(obj.getId());
 		    }
 		    for (VariableType var : definitions.getVariables()) {
-			variableObjectIds.addAll(getObjectReferences(var));
+			variableObjectIds.addAll(getObjectReferences(var, true));
 		    }
 		    break;
 
 		  case DIRECTED:
 		  default:
 		    for (DefinitionType def : allowed) {
-			allowedObjectIds.addAll(getObjectReferences(def));
+			allowedObjectIds.addAll(getObjectReferences(def, true));
 		    }
 		    for (VariableType var : definitions.getVariables()) {
-			for (String id : getObjectReferences(var)) {
+			for (String id : getObjectReferences(var, true)) {
 			    if (allowedObjectIds.contains(id)) {
 				variableObjectIds.add(id);
 			    }
@@ -450,8 +450,27 @@ public class Engine implements IOvalEngine, IProvider {
 		for (ObjectType obj : deferred) {
 		    scanObject(new RequestContext(obj));
 		}
-
 		producer.sendNotify(Message.OBJECT_PHASE_END, null);
+
+		//
+		// For directed-mode scans, we slim down the system characteristics by pruning out items that only
+		// pertain to indirectly-scanned objects. The objects that are directly referenced by tests will
+		// already have variable value notations and item references, so the indirectly-collected item data
+		// can be discarded as superfluous.
+		//
+		// This has been added specifically to prevent jOVAL from running out of memory when processing
+		// RedHat OpenSCAP content, which has an object that refers to all files on disk, which gets filtered
+		// several times by other objects that are directly referenced by tests.
+		//
+		switch(mode) {
+		  case DIRECTED:
+		    allowedObjectIds.clear();
+		    for (DefinitionType def : allowed) {
+			allowedObjectIds.addAll(getObjectReferences(def, false));
+		    }
+		    sc.prune(allowedObjectIds);
+		    break;
+		}
 		producer.sendNotify(Message.SYSTEMCHARACTERISTICS, sc);
 
 		if (doDisconnect) {
@@ -2908,8 +2927,11 @@ public class Engine implements IOvalEngine, IProvider {
     /**
      * Recursively determine all the Object IDs referred to by the specified definition, extend_definition, criteria,
      * criterion, test, object, state, filter, set, variable or component.
+     *
+     * @param obj the object whose object references are to be recursively resolved
+     * @param indirect specifies whether or not indirect references should be followed (i.e., variables, filters and sets).
      */
-    private Collection<String> getObjectReferences(Object obj) throws OvalException {
+    private Collection<String> getObjectReferences(Object obj, boolean indirect) throws OvalException {
 	Collection<String> results = new HashSet<String>();
 	String reflectionId = null;
 	try {
@@ -2917,46 +2939,48 @@ public class Engine implements IOvalEngine, IProvider {
 		DefinitionType def = (DefinitionType)obj;
 		if (def.isSetCriteria()) {
 		    for (Object sub : def.getCriteria().getCriteriaOrCriterionOrExtendDefinition()) {
-			results.addAll(getObjectReferences(sub));
+			results.addAll(getObjectReferences(sub, indirect));
 		    }
 		}
 	    } else if (obj instanceof CriteriaType) {
 		for (Object sub : ((CriteriaType)obj).getCriteriaOrCriterionOrExtendDefinition()) {
-		    results.addAll(getObjectReferences(sub));
+		    results.addAll(getObjectReferences(sub, indirect));
 		}
 	    } else if (obj instanceof ExtendDefinitionType) {
-		return getObjectReferences(definitions.getDefinition(((ExtendDefinitionType)obj).getDefinitionRef()));
+		Object next = definitions.getDefinition(((ExtendDefinitionType)obj).getDefinitionRef());
+		return getObjectReferences(next, indirect);
 	    } else if (obj instanceof CriterionType) {
-		return getObjectReferences(definitions.getTest(((CriterionType)obj).getTestRef()).getValue());
+		return getObjectReferences(definitions.getTest(((CriterionType)obj).getTestRef()).getValue(), indirect);
 	    } else if (obj instanceof scap.oval.definitions.core.TestType) {
 		ObjectRefType oRef = (ObjectRefType)safeInvokeMethod(obj, "getObject");
 		if (oRef != null) {
-		    results.addAll(getObjectReferences(definitions.getObject(oRef.getObjectRef()).getValue()));
+		    results.addAll(getObjectReferences(definitions.getObject(oRef.getObjectRef()).getValue(), indirect));
 		}
 		Object oRefs = safeInvokeMethod(obj, "getState");
 		@SuppressWarnings("unchecked")
 		List<StateRefType> sRefs = (List<StateRefType>)oRefs;
 		if (sRefs != null) {
 		    for (StateRefType sRef : sRefs) {
-			results.addAll(getObjectReferences(definitions.getState(sRef.getStateRef()).getValue()));
+			results.addAll(getObjectReferences(definitions.getState(sRef.getStateRef()).getValue(), indirect));
 		    }
 		}
 	    } else if (obj instanceof ObjectType) {
 		ObjectType ot = (ObjectType)obj;
 		reflectionId = ot.getId();
 		results.add(ot.getId());
-		results.addAll(getObjectReferences(getObjectFilters(ot)));
-		results.addAll(getObjectReferences(getObjectSet(ot)));
+		results.addAll(getObjectReferences(getObjectFilters(ot), indirect));
+		results.addAll(getObjectReferences(getObjectSet(ot), indirect));
 		if (ot instanceof VariableObject) {
 		    VariableObject vo = (VariableObject)ot;
 		    if (vo.isSetVarRef()) {
-			results.addAll(getObjectReferences(definitions.getVariable((String)vo.getVarRef().getValue())));
+			Object next = definitions.getVariable((String)vo.getVarRef().getValue());
+			results.addAll(getObjectReferences(next, indirect));
 		    }
 		} else {
 		    for (Method method : getMethods(ot.getClass()).values()) {
 			String methodName = method.getName();
 			if (methodName.startsWith("get") && !OBJECT_METHOD_NAMES.contains(methodName)) {
-			    results.addAll(getObjectReferences(method.invoke(ot)));
+			    results.addAll(getObjectReferences(method.invoke(ot), indirect));
 			}
 		    }
 		}
@@ -2966,45 +2990,50 @@ public class Engine implements IOvalEngine, IProvider {
 		for (Method method : getMethods(obj.getClass()).values()) {
 		    String methodName = method.getName();
 		    if (methodName.startsWith("get") && !STATE_METHOD_NAMES.contains(methodName)) {
-			results.addAll(getObjectReferences(method.invoke(st)));
+			results.addAll(getObjectReferences(method.invoke(st), indirect));
 		    }
 		}
 	    } else if (obj instanceof Filter) {
-		return getObjectReferences(definitions.getState(((Filter)obj).getValue()));
+		if (indirect) {
+		    return getObjectReferences(definitions.getState(((Filter)obj).getValue()), indirect);
+		}
 	    } else if (obj instanceof Set) {
-		Set set = (Set)obj;
-		if (set.isSetObjectReference()) {
-		    for (String id : set.getObjectReference()) {
-			results.addAll(getObjectReferences(definitions.getObject(id).getValue()));
+		if (indirect) {
+		    Set set = (Set)obj;
+		    if (set.isSetObjectReference()) {
+			for (String id : set.getObjectReference()) {
+			    results.addAll(getObjectReferences(definitions.getObject(id).getValue(), indirect));
+			}
+			results.addAll(getObjectReferences(set.getFilter(), indirect));
+		    } else {
+			return getObjectReferences(set.getSet(), indirect);
 		    }
-		    results.addAll(getObjectReferences(set.getFilter()));
-		} else {
-		    return getObjectReferences(set.getSet());
 		}
 	    } else if (obj instanceof EntitySimpleBaseType) {
 		EntitySimpleBaseType simple = (EntitySimpleBaseType)obj;
-		if (simple.isSetVarRef()) {
-		    return getObjectReferences(definitions.getVariable(simple.getVarRef()));
+		if (indirect && simple.isSetVarRef()) {
+		    return getObjectReferences(definitions.getVariable(simple.getVarRef()), indirect);
 		}
 	    } else if (obj instanceof EntityComplexBaseType) {
 		EntityComplexBaseType complex = (EntityComplexBaseType)obj;
-		if (complex.isSetVarRef()) {
-		    return getObjectReferences(definitions.getVariable(complex.getVarRef()));
+		if (indirect && complex.isSetVarRef()) {
+		    return getObjectReferences(definitions.getVariable(complex.getVarRef()), indirect);
 		}
 	    } else if (obj instanceof List) {
 		for (Object elt : (List)obj) {
-		    results.addAll(getObjectReferences(elt));
+		    results.addAll(getObjectReferences(elt, indirect));
 		}
 	    } else if (obj instanceof ObjectComponentType) {
-		return getObjectReferences(definitions.getObject(((ObjectComponentType)obj).getObjectRef()).getValue());
+		Object next = definitions.getObject(((ObjectComponentType)obj).getObjectRef()).getValue();
+		return getObjectReferences(next, indirect);
 	    } else if (obj instanceof VariableComponentType) {
 		VariableType var = definitions.getVariable(((VariableComponentType)obj).getVarRef());
 		if (var instanceof LocalVariable) {
-		    return getObjectReferences(var);
+		    return getObjectReferences(var, indirect);
 		}
 	    } else if (obj != null) {
 		try {
-		    return getObjectReferences(getComponent(obj));
+		    return getObjectReferences(getComponent(obj), indirect);
 		} catch (OvalException e) {
 		    // not a component
 		}

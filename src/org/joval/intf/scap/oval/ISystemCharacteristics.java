@@ -45,6 +45,9 @@ public interface ISystemCharacteristics extends ITransformable {
      */
     BigInteger storeItem(ItemType item) throws OvalException;
 
+    /**
+     * Store the specified VariableValueType.
+     */
     void storeVariable(VariableValueType var);
 
     /**
@@ -70,13 +73,19 @@ public interface ISystemCharacteristics extends ITransformable {
     void relateVariable(String objectId, String variableId) throws NoSuchElementException;
 
     /**
+     * Get the flag for an object, given the specified object ID.
+     */
+    FlagEnumeration getObjectFlag(String id) throws NoSuchElementException;
+
+    /**
      * Test whether an ObjectType with the specified ID is present.
      */
     boolean containsObject(String objectId);
 
-    FlagEnumeration getObjectFlag(String id) throws NoSuchElementException;
-
-    Collection<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException;
+    /**
+     * Prune out all items that do not relate directly to the specified object IDs.
+     */
+    void prune(Collection<String> objectIds);
 
     /**
      * Get all the items associated with the specified object.

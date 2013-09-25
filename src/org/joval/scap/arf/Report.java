@@ -257,7 +257,16 @@ public class Report implements IReport, ILoggable {
 	Map<String, Object> reports = resolveCatalog(assetId);
 	ArrayList<RuleDiagnostics> results = new ArrayList<RuleDiagnostics>();
 	for (RuleResultType result : getTestResult(assetId, benchmarkId, profileId).getRuleResult()) {
-	    results.add(getDiagnostics(result, reports));
+	    switch(result.getResult()) {
+	      case NOTAPPLICABLE:
+	      case NOTSELECTED:
+	      case NOTCHECKED:
+		break;
+
+	      default:
+		results.add(getDiagnostics(result, reports));
+		break;
+	    }
 	}
 	return results;
     }

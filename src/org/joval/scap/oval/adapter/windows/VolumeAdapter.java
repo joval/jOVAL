@@ -223,70 +223,96 @@ public class VolumeAdapter implements IAdapter {
 	    try {
 		int flags = volume.getFlags();
 
+		// 0x1
 		EntityItemBoolType fileCaseSensitiveSearch = Factories.sc.core.createEntityItemBoolType();
 		fileCaseSensitiveSearch.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 		fileCaseSensitiveSearch.setValue(0x1 == (flags & 0x1) ? "1" : "0");
 		item.setFileCaseSensitiveSearch(fileCaseSensitiveSearch);
 
+		// 0x2
 		EntityItemBoolType fileCasePreservedNames = Factories.sc.core.createEntityItemBoolType();
 		fileCasePreservedNames.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 		fileCasePreservedNames.setValue(0x2 == (flags & 0x2) ? "1" : "0");
 		item.setFileCasePreservedNames(fileCasePreservedNames);
 
-		EntityItemBoolType fileFileCompression = Factories.sc.core.createEntityItemBoolType();
-		fileFileCompression.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		fileFileCompression.setValue(0x10 == (flags & 0x10) ? "1" : "0");
-		item.setFileFileCompression(fileFileCompression);
-
-		EntityItemBoolType fileNamedStreams = Factories.sc.core.createEntityItemBoolType();
-		fileNamedStreams.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		fileNamedStreams.setValue(0x40000 == (flags & 0x40000) ? "1" : "0");
-		item.setFileNamedStreams(fileNamedStreams);
-
-		EntityItemBoolType filePersistentAcls = Factories.sc.core.createEntityItemBoolType();
-		filePersistentAcls.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		filePersistentAcls.setValue(0x8 == (flags & 0x8) ? "1" : "0");
-		item.setFilePersistentAcls(filePersistentAcls);
-
-		EntityItemBoolType fileReadOnlyVolume = Factories.sc.core.createEntityItemBoolType();
-		fileReadOnlyVolume.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		fileReadOnlyVolume.setValue(0x80000 == (flags & 0x80000) ? "1" : "0");
-		item.setFileReadOnlyVolume(fileReadOnlyVolume);
-
-		EntityItemBoolType fileSupportsEncryption = Factories.sc.core.createEntityItemBoolType();
-		fileSupportsEncryption.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		fileSupportsEncryption.setValue(0x20000 == (flags & 0x20000) ? "1" : "0");
-		item.setFileSupportsEncryption(fileSupportsEncryption);
-
-		EntityItemBoolType fileSupportsObjectIds = Factories.sc.core.createEntityItemBoolType();
-		fileSupportsObjectIds.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		fileSupportsObjectIds.setValue(0x10000 == (flags & 0x10000) ? "1" : "0");
-		item.setFileSupportsObjectIds(fileSupportsObjectIds);
-
-		EntityItemBoolType fileSupportsReparsePoints = Factories.sc.core.createEntityItemBoolType();
-		fileSupportsReparsePoints.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		fileSupportsReparsePoints.setValue(0x80 == (flags & 0x80) ? "1" : "0");
-		item.setFileSupportsReparsePoints(fileSupportsReparsePoints);
-
-		EntityItemBoolType fileSupportsSparseFiles = Factories.sc.core.createEntityItemBoolType();
-		fileSupportsSparseFiles.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		fileSupportsSparseFiles.setValue(0x40 == (flags & 0x40) ? "1" : "0");
-		item.setFileSupportsSparseFiles(fileSupportsSparseFiles);
-
+		// 0x4
 		EntityItemBoolType fileUnicodeOnDisk = Factories.sc.core.createEntityItemBoolType();
 		fileUnicodeOnDisk.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 		fileUnicodeOnDisk.setValue(0x4 == (flags & 0x4) ? "1" : "0");
 		item.setFileUnicodeOnDisk(fileUnicodeOnDisk);
 
+		// 0x8
+		EntityItemBoolType filePersistentAcls = Factories.sc.core.createEntityItemBoolType();
+		filePersistentAcls.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+		filePersistentAcls.setValue(0x8 == (flags & 0x8) ? "1" : "0");
+		item.setFilePersistentAcls(filePersistentAcls);
+
+		// 0x10
+		EntityItemBoolType fileFileCompression = Factories.sc.core.createEntityItemBoolType();
+		fileFileCompression.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+		fileFileCompression.setValue(0x10 == (flags & 0x10) ? "1" : "0");
+		item.setFileFileCompression(fileFileCompression);
+
+		// 0x20
+		EntityItemBoolType fileVolumeQuotas = Factories.sc.core.createEntityItemBoolType();
+		fileVolumeQuotas.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+		fileVolumeQuotas.setValue(0x20 == (flags & 0x20) ? "1" : "0");
+		item.setFileVolumeQuotas(fileVolumeQuotas);
+
+		// 0x40
+		EntityItemBoolType fileSupportsSparseFiles = Factories.sc.core.createEntityItemBoolType();
+		fileSupportsSparseFiles.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+		fileSupportsSparseFiles.setValue(0x40 == (flags & 0x40) ? "1" : "0");
+		item.setFileSupportsSparseFiles(fileSupportsSparseFiles);
+
+		// 0x80
+		EntityItemBoolType fileSupportsReparsePoints = Factories.sc.core.createEntityItemBoolType();
+		fileSupportsReparsePoints.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+		fileSupportsReparsePoints.setValue(0x80 == (flags & 0x80) ? "1" : "0");
+		item.setFileSupportsReparsePoints(fileSupportsReparsePoints);
+
+		// 0x8000
 		EntityItemBoolType fileVolumeIsCompressed = Factories.sc.core.createEntityItemBoolType();
 		fileVolumeIsCompressed.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 		fileVolumeIsCompressed.setValue(0x8000 == (flags & 0x8000) ? "1" : "0");
 		item.setFileVolumeIsCompressed(fileVolumeIsCompressed);
 
-		EntityItemBoolType fileVolumeQuotas = Factories.sc.core.createEntityItemBoolType();
-		fileVolumeQuotas.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		fileVolumeQuotas.setValue(0x20 == (flags & 0x20) ? "1" : "0");
-		item.setFileVolumeQuotas(fileVolumeQuotas);
+		// 0x10000
+		EntityItemBoolType fileSupportsObjectIds = Factories.sc.core.createEntityItemBoolType();
+		fileSupportsObjectIds.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+		fileSupportsObjectIds.setValue(0x10000 == (flags & 0x10000) ? "1" : "0");
+		item.setFileSupportsObjectIds(fileSupportsObjectIds);
+
+		// 0x20000
+		EntityItemBoolType fileSupportsEncryption = Factories.sc.core.createEntityItemBoolType();
+		fileSupportsEncryption.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+		fileSupportsEncryption.setValue(0x20000 == (flags & 0x20000) ? "1" : "0");
+		item.setFileSupportsEncryption(fileSupportsEncryption);
+
+		// 0x40000
+		EntityItemBoolType fileNamedStreams = Factories.sc.core.createEntityItemBoolType();
+		fileNamedStreams.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+		fileNamedStreams.setValue(0x40000 == (flags & 0x40000) ? "1" : "0");
+		item.setFileNamedStreams(fileNamedStreams);
+
+		// 0x80000
+		EntityItemBoolType fileReadOnlyVolume = Factories.sc.core.createEntityItemBoolType();
+		fileReadOnlyVolume.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+		fileReadOnlyVolume.setValue(0x80000 == (flags & 0x80000) ? "1" : "0");
+		item.setFileReadOnlyVolume(fileReadOnlyVolume);
+
+		/*
+
+		REMIND (DAS): The following flags are not addressed by the OVAL volume_test:
+
+		0x00100000 FILE_SEQUENTIAL_WRITE_ONCE
+		0x00200000 FILE_SUPPORTS_TRANSACTIONS
+		0x00400000 FILE_SUPPORTS_HARD_LINKS
+		0x00800000 FILE_SUPPORTS_EXTENDED_ATTRIBUTES
+		0x01000000 FILE_SUPPORTS_OPEN_BY_FILE_ID
+		0x02000000 FILE_SUPPORTS_USN_JOURNAL
+
+		*/
 	    } catch (IOException e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.WARNING);
