@@ -181,18 +181,18 @@ public class RunlevelAdapter implements IAdapter {
 	EntityItemBoolType startType = Factories.sc.core.createEntityItemBoolType();
 	startType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	if (actions.start) {
-	    startType.setValue("true");
+	    startType.setValue("1");
 	} else {
-	    startType.setValue("false");
+	    startType.setValue("0");
 	}
 	item.setStart(startType);
 
 	EntityItemBoolType kill = Factories.sc.core.createEntityItemBoolType();
 	kill.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	if (actions.stop) {
-	    kill.setValue("true");
+	    kill.setValue("1");
 	} else {
-	    kill.setValue("false");
+	    kill.setValue("0");
 	}
 	item.setKill(kill);
 

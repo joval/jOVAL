@@ -299,115 +299,115 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 
 	boolean test = IACE.ACCESS_SYSTEM_SECURITY == (IACE.ACCESS_SYSTEM_SECURITY & mask);
 	EntityItemBoolType accessSystemSecurity = Factories.sc.core.createEntityItemBoolType();
-	accessSystemSecurity.setValue(Boolean.toString(test));
+	accessSystemSecurity.setValue(test ? "1" : "0");
 	accessSystemSecurity.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setAccessSystemSecurity(accessSystemSecurity);
 
 	test = IACE.FILE_GENERIC_ALL == (IACE.FILE_GENERIC_ALL & mask);
 	EntityItemBoolType genericAll = Factories.sc.core.createEntityItemBoolType();
-	genericAll.setValue(Boolean.toString(test));
+	genericAll.setValue(test ? "1" : "0");
 	genericAll.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericAll(genericAll);
 
 	test = IACE.FILE_GENERIC_EXECUTE == (IACE.FILE_GENERIC_EXECUTE & mask);
 	EntityItemBoolType genericExecute = Factories.sc.core.createEntityItemBoolType();
-	genericExecute.setValue(Boolean.toString(test));
+	genericExecute.setValue(test ? "1" : "0");
 	genericExecute.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericExecute(genericExecute);
 
 	test = IACE.FILE_GENERIC_READ == (IACE.FILE_GENERIC_READ & mask);
 	EntityItemBoolType genericRead = Factories.sc.core.createEntityItemBoolType();
-	genericRead.setValue(Boolean.toString(test));
+	genericRead.setValue(test ? "1" : "0");
 	genericRead.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericRead(genericRead);
 
 	test = IACE.FILE_GENERIC_WRITE == (IACE.FILE_GENERIC_WRITE & mask);
 	EntityItemBoolType genericWrite = Factories.sc.core.createEntityItemBoolType();
-	genericWrite.setValue(Boolean.toString(test));
+	genericWrite.setValue(test ? "1" : "0");
 	genericWrite.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericWrite(genericWrite);
 
 	test = IACE.DELETE == (IACE.DELETE & mask);
 	EntityItemBoolType standardDelete = Factories.sc.core.createEntityItemBoolType();
-	standardDelete.setValue(Boolean.toString(test));
+	standardDelete.setValue(test ? "1" : "0");
 	standardDelete.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardDelete(standardDelete);
 
 	test = IACE.READ_CONTROL == (IACE.READ_CONTROL & mask);
 	EntityItemBoolType standardReadControl = Factories.sc.core.createEntityItemBoolType();
-	standardReadControl.setValue(Boolean.toString(test));
+	standardReadControl.setValue(test ? "1" : "0");
 	standardReadControl.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardReadControl(standardReadControl);
 
 	test = IACE.SYNCHRONIZE == (IACE.SYNCHRONIZE & mask);
 	EntityItemBoolType standardSynchronize = Factories.sc.core.createEntityItemBoolType();
-	standardSynchronize.setValue(Boolean.toString(test));
+	standardSynchronize.setValue(test ? "1" : "0");
 	standardSynchronize.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardSynchronize(standardSynchronize);
 
 	test = IACE.WRITE_DAC == (IACE.WRITE_DAC & mask);
 	EntityItemBoolType standardWriteDac = Factories.sc.core.createEntityItemBoolType();
-	standardWriteDac.setValue(Boolean.toString(test));
+	standardWriteDac.setValue(test ? "1" : "0");
 	standardWriteDac.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardWriteDac(standardWriteDac);
 
 	test = IACE.WRITE_OWNER == (IACE.WRITE_OWNER & mask);
 	EntityItemBoolType standardWriteOwner = Factories.sc.core.createEntityItemBoolType();
-	standardWriteOwner.setValue(Boolean.toString(test));
+	standardWriteOwner.setValue(test ? "1" : "0");
 	standardWriteOwner.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardWriteOwner(standardWriteOwner);
 
 	test = IACE.KEY_CREATE_LINK == (IACE.KEY_CREATE_LINK & mask);
 	EntityItemBoolType keyCreateLink = Factories.sc.core.createEntityItemBoolType();
-	keyCreateLink.setValue(Boolean.toString(test));
+	keyCreateLink.setValue(test ? "1" : "0");
 	keyCreateLink.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeyCreateLink(keyCreateLink);
 
 	test = IACE.KEY_CREATE_SUB_KEY == (IACE.KEY_CREATE_SUB_KEY & mask);
 	EntityItemBoolType keyCreateSubKey = Factories.sc.core.createEntityItemBoolType();
-	keyCreateSubKey.setValue(Boolean.toString(test));
+	keyCreateSubKey.setValue(test ? "1" : "0");
 	keyCreateSubKey.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeyCreateSubKey(keyCreateSubKey);
 
 	test = IACE.KEY_ENUMERATE_SUB_KEYS == (IACE.KEY_ENUMERATE_SUB_KEYS & mask);
 	EntityItemBoolType keyEnumerateSubKeys = Factories.sc.core.createEntityItemBoolType();
-	keyEnumerateSubKeys.setValue(Boolean.toString(test));
+	keyEnumerateSubKeys.setValue(test ? "1" : "0");
 	keyEnumerateSubKeys.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeyEnumerateSubKeys(keyEnumerateSubKeys);
 
 	test = IACE.KEY_NOTIFY == (IACE.KEY_NOTIFY & mask);
 	EntityItemBoolType keyNotify = Factories.sc.core.createEntityItemBoolType();
-	keyNotify.setValue(Boolean.toString(test));
+	keyNotify.setValue(test ? "1" : "0");
 	keyNotify.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeyNotify(keyNotify);
 
 	test = IACE.KEY_QUERY_VALUE == (IACE.KEY_QUERY_VALUE & mask);
 	EntityItemBoolType keyQueryValue = Factories.sc.core.createEntityItemBoolType();
-	keyQueryValue.setValue(Boolean.toString(test));
+	keyQueryValue.setValue(test ? "1" : "0");
 	keyQueryValue.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeyQueryValue(keyQueryValue);
 
 	test = IACE.KEY_SET_VALUE == (IACE.KEY_SET_VALUE & mask);
 	EntityItemBoolType keySetValue = Factories.sc.core.createEntityItemBoolType();
-	keySetValue.setValue(Boolean.toString(test));
+	keySetValue.setValue(test ? "1" : "0");
 	keySetValue.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeySetValue(keySetValue);
 
 	test = IACE.KEY_WOW64_32_KEY == (IACE.KEY_WOW64_32_KEY & mask);
 	EntityItemBoolType keyWow6432Key = Factories.sc.core.createEntityItemBoolType();
-	keyWow6432Key.setValue(Boolean.toString(test));
+	keyWow6432Key.setValue(test ? "1" : "0");
 	keyWow6432Key.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeyWow6432Key(keyWow6432Key);
 
 	test = IACE.KEY_WOW64_64_KEY == (IACE.KEY_WOW64_64_KEY & mask);
 	EntityItemBoolType keyWow6464Key = Factories.sc.core.createEntityItemBoolType();
-	keyWow6464Key.setValue(Boolean.toString(test));
+	keyWow6464Key.setValue(test ? "1" : "0");
 	keyWow6464Key.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeyWow6464Key(keyWow6464Key);
 
 	test = IACE.KEY_WOW64_RES == (IACE.KEY_WOW64_RES & mask);
 	EntityItemBoolType keyWow64Res = Factories.sc.core.createEntityItemBoolType();
-	keyWow64Res.setValue(Boolean.toString(test));
+	keyWow64Res.setValue(test ? "1" : "0");
 	keyWow64Res.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeyWow64Res(keyWow64Res);
 

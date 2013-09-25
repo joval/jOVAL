@@ -544,7 +544,7 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 	    switch(num.type()) {
 	      case NSNumber.BOOLEAN:
 		value.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		value.setValue(Boolean.toString(num.boolValue()));
+		value.setValue(num.boolValue() ? "1" : "0");
 		break;
 	      case NSNumber.REAL:
 		value.setDatatype(SimpleDatatypeEnumeration.FLOAT.value());

@@ -182,91 +182,91 @@ public class ServiceeffectiverightsAdapter extends BaseServiceAdapter<Serviceeff
 
 	boolean test = IACE.DELETE == (IACE.DELETE & mask);
 	EntityItemBoolType standardDelete = Factories.sc.core.createEntityItemBoolType();
-	standardDelete.setValue(Boolean.toString(test));
+	standardDelete.setValue(test ? "1" : "0");
 	standardDelete.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardDelete(standardDelete);
 
 	test = IACE.READ_CONTROL == (IACE.READ_CONTROL & mask);
 	EntityItemBoolType standardReadControl = Factories.sc.core.createEntityItemBoolType();
-	standardReadControl.setValue(Boolean.toString(test));
+	standardReadControl.setValue(test ? "1" : "0");
 	standardReadControl.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardReadControl(standardReadControl);
 
 	test = IACE.WRITE_DAC == (IACE.WRITE_DAC & mask);
 	EntityItemBoolType standardWriteDac = Factories.sc.core.createEntityItemBoolType();
-	standardWriteDac.setValue(Boolean.toString(test));
+	standardWriteDac.setValue(test ? "1" : "0");
 	standardWriteDac.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardWriteDac(standardWriteDac);
 
 	test = IACE.WRITE_OWNER == (IACE.WRITE_OWNER & mask);
 	EntityItemBoolType standardWriteOwner = Factories.sc.core.createEntityItemBoolType();
-	standardWriteOwner.setValue(Boolean.toString(test));
+	standardWriteOwner.setValue(test ? "1" : "0");
 	standardWriteOwner.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardWriteOwner(standardWriteOwner);
 
 	test = IACE.FILE_GENERIC_READ == (IACE.FILE_GENERIC_READ & mask);
 	EntityItemBoolType genericRead = Factories.sc.core.createEntityItemBoolType();
-	genericRead.setValue(Boolean.toString(test));
+	genericRead.setValue(test ? "1" : "0");
 	genericRead.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericRead(genericRead);
 
 	test = IACE.FILE_GENERIC_WRITE == (IACE.FILE_GENERIC_WRITE & mask);
 	EntityItemBoolType genericWrite = Factories.sc.core.createEntityItemBoolType();
-	genericWrite.setValue(Boolean.toString(test));
+	genericWrite.setValue(test ? "1" : "0");
 	genericWrite.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericWrite(genericWrite);
 
 	test = IACE.FILE_GENERIC_EXECUTE == (IACE.FILE_GENERIC_EXECUTE & mask);
 	EntityItemBoolType genericExecute = Factories.sc.core.createEntityItemBoolType();
-	genericExecute.setValue(Boolean.toString(test));
+	genericExecute.setValue(test ? "1" : "0");
 	genericExecute.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericExecute(genericExecute);
 
 	test = IACE.SERVICE_QUERY_CONFIG == (IACE.SERVICE_QUERY_CONFIG & mask);
 	EntityItemBoolType serviceQueryConf = Factories.sc.core.createEntityItemBoolType();
-	serviceQueryConf.setValue(Boolean.toString(test));
+	serviceQueryConf.setValue(test ? "1" : "0");
 	serviceQueryConf.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setServiceQueryConf(serviceQueryConf);
 
 	test = IACE.SERVICE_CHANGE_CONFIG == (IACE.SERVICE_CHANGE_CONFIG & mask);
 	EntityItemBoolType serviceChangeConf = Factories.sc.core.createEntityItemBoolType();
-	serviceChangeConf.setValue(Boolean.toString(test));
+	serviceChangeConf.setValue(test ? "1" : "0");
 	serviceChangeConf.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setServiceChangeConf(serviceChangeConf);
 
 	test = IACE.SERVICE_QUERY_STATUS == (IACE.SERVICE_QUERY_STATUS & mask);
 	EntityItemBoolType serviceQueryStat = Factories.sc.core.createEntityItemBoolType();
-	serviceQueryStat.setValue(Boolean.toString(test));
+	serviceQueryStat.setValue(test ? "1" : "0");
 	serviceQueryStat.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setServiceQueryStat(serviceQueryStat);
 
 	test = IACE.SERVICE_ENUMERATE_DEPENDENTS == (IACE.SERVICE_ENUMERATE_DEPENDENTS & mask);
 	EntityItemBoolType serviceEnumDependents = Factories.sc.core.createEntityItemBoolType();
-	serviceEnumDependents.setValue(Boolean.toString(test));
+	serviceEnumDependents.setValue(test ? "1" : "0");
 	serviceEnumDependents.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setServiceEnumDependents(serviceEnumDependents);
 
 	test = IACE.SERVICE_START == (IACE.SERVICE_START & mask);
 	EntityItemBoolType serviceStart = Factories.sc.core.createEntityItemBoolType();
-	serviceStart.setValue(Boolean.toString(test));
+	serviceStart.setValue(test ? "1" : "0");
 	serviceStart.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setServiceStart(serviceStart);
 
 	test = IACE.SERVICE_PAUSE_CONTINUE == (IACE.SERVICE_PAUSE_CONTINUE & mask);
 	EntityItemBoolType servicePause = Factories.sc.core.createEntityItemBoolType();
-	servicePause.setValue(Boolean.toString(test));
+	servicePause.setValue(test ? "1" : "0");
 	servicePause.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setServicePause(servicePause);
 
 	test = IACE.SERVICE_INTERROGATE == (IACE.SERVICE_INTERROGATE & mask);
 	EntityItemBoolType serviceInterrogate = Factories.sc.core.createEntityItemBoolType();
-	serviceInterrogate.setValue(Boolean.toString(test));
+	serviceInterrogate.setValue(test ? "1" : "0");
 	serviceInterrogate.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setServiceInterrogate(serviceInterrogate);
 
 	test = IACE.SERVICE_USER_DEFINED_CONTROL == (IACE.SERVICE_USER_DEFINED_CONTROL & mask);
 	EntityItemBoolType serviceUserDefined = Factories.sc.core.createEntityItemBoolType();
-	serviceUserDefined.setValue(Boolean.toString(test));
+	serviceUserDefined.setValue(test ? "1" : "0");
 	serviceUserDefined.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setServiceUserDefined(serviceUserDefined);
 	return item;

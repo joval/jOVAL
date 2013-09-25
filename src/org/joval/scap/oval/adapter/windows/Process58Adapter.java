@@ -216,7 +216,7 @@ public class Process58Adapter implements IAdapter {
 	    } else if ("DepEnabled".equals(key)) {
 		EntityItemBoolType depEnabled = Factories.sc.core.createEntityItemBoolType();
 		depEnabled.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		depEnabled.setValue(prop.getProperty(key));
+		depEnabled.setValue(prop.getBooleanProperty(key) ? "1" : "0");
 		item.setDepEnabled(depEnabled);
 	    } else if ("PrimaryWindowText".equals(key)) {
 		EntityItemStringType primaryWindowText = Factories.sc.core.createEntityItemStringType();

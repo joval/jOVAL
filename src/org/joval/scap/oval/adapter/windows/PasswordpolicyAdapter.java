@@ -125,12 +125,12 @@ public class PasswordpolicyAdapter implements IAdapter {
 			} else if ("ClearTextPassword".equals(key)) {
 			    EntityItemBoolType type = Factories.sc.core.createEntityItemBoolType();
 			    type.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-			    type.setValue(prop.getProperty(key));
+			    type.setValue(prop.getBooleanProperty(key) ? "1" : "0");
 			    item.setReversibleEncryption(type);
 			} else if ("PasswordComplexity".equals(key)) {
 			    EntityItemBoolType type = Factories.sc.core.createEntityItemBoolType();
 			    type.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-			    type.setValue(prop.getProperty(key));
+			    type.setValue(prop.getBooleanProperty(key) ? "1" : "0");
 			    item.setPasswordComplexity(type);
 			}
 		    }

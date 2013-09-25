@@ -120,7 +120,7 @@ public class UserSid55Adapter implements IAdapter {
 	userSidType.setValue(user.getSid());
 	item.setUserSid(userSidType);
 	EntityItemBoolType enabledType = Factories.sc.core.createEntityItemBoolType();
-	enabledType.setValue(user.isEnabled() ? "true" : "false");
+	enabledType.setValue(user.isEnabled() ? "1" : "0");
 	enabledType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setEnabled(enabledType);
 	Collection<String> groupNetbiosNames = user.getGroupNetbiosNames();

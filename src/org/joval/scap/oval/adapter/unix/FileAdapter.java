@@ -162,62 +162,62 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	item.setGroupId(groupId);
 
 	EntityItemBoolType uRead = Factories.sc.core.createEntityItemBoolType();
-	uRead.setValue(Boolean.toString(ufi.uRead()));
+	uRead.setValue(ufi.uRead() ? "1" : "0");
 	uRead.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setUread(uRead);
 
 	EntityItemBoolType uWrite = Factories.sc.core.createEntityItemBoolType();
-	uWrite.setValue(Boolean.toString(ufi.uWrite()));
+	uWrite.setValue(ufi.uWrite() ? "1" : "0");
 	uWrite.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setUwrite(uWrite);
 
 	EntityItemBoolType uExec = Factories.sc.core.createEntityItemBoolType();
-	uExec.setValue(Boolean.toString(ufi.uExec()));
+	uExec.setValue(ufi.uExec() ? "1" : "0");
 	uExec.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setUexec(uExec);
 
 	EntityItemBoolType sUid = Factories.sc.core.createEntityItemBoolType();
-	sUid.setValue(Boolean.toString(ufi.sUid()));
+	sUid.setValue(ufi.sUid() ? "1" : "0");
 	sUid.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setSuid(sUid);
 
 	EntityItemBoolType gRead = Factories.sc.core.createEntityItemBoolType();
-	gRead.setValue(Boolean.toString(ufi.gRead()));
+	gRead.setValue(ufi.gRead() ? "1" : "0");
 	gRead.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGread(gRead);
 
 	EntityItemBoolType gWrite = Factories.sc.core.createEntityItemBoolType();
-	gWrite.setValue(Boolean.toString(ufi.gWrite()));
+	gWrite.setValue(ufi.gWrite() ? "1" : "0");
 	gWrite.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGwrite(gWrite);
 
 	EntityItemBoolType gExec = Factories.sc.core.createEntityItemBoolType();
-	gExec.setValue(Boolean.toString(ufi.gExec()));
+	gExec.setValue(ufi.gExec() ? "1" : "0");
 	gExec.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGexec(gExec);
 
 	EntityItemBoolType sGid = Factories.sc.core.createEntityItemBoolType();
-	sGid.setValue(Boolean.toString(ufi.sGid()));
+	sGid.setValue(ufi.sGid() ? "1" : "0");
 	sGid.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setSgid(sGid);
 
 	EntityItemBoolType oRead = Factories.sc.core.createEntityItemBoolType();
-	oRead.setValue(Boolean.toString(ufi.oRead()));
+	oRead.setValue(ufi.oRead() ? "1" : "0");
 	oRead.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setOread(oRead);
 
 	EntityItemBoolType oWrite = Factories.sc.core.createEntityItemBoolType();
-	oWrite.setValue(Boolean.toString(ufi.oWrite()));
+	oWrite.setValue(ufi.oWrite() ? "1" : "0");
 	oWrite.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setOwrite(oWrite);
 
 	EntityItemBoolType oExec = Factories.sc.core.createEntityItemBoolType();
-	oExec.setValue(Boolean.toString(ufi.oExec()));
+	oExec.setValue(ufi.oExec() ? "1" : "0");
 	oExec.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setOexec(oExec);
 
 	EntityItemBoolType sticky = Factories.sc.core.createEntityItemBoolType();
-	sticky.setValue(Boolean.toString(ufi.sticky()));
+	sticky.setValue(ufi.sticky() ? "1" : "0");
 	sticky.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setSticky(sticky);
 
@@ -226,7 +226,7 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	if (hasAcl == null) {
 	    aclType.setStatus(StatusEnumeration.NOT_COLLECTED);
 	} else {
-	    aclType.setValue(Boolean.toString(hasAcl));
+	    aclType.setValue(hasAcl ? "1" : "0");
 	}
 	aclType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setHasExtendedAcl(aclType);
