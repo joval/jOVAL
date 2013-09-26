@@ -83,9 +83,10 @@ public interface ISystemCharacteristics extends ITransformable {
     boolean containsObject(String objectId);
 
     /**
-     * Prune out all items that do not relate directly to the specified object IDs.
+     * Return a copy of this ISystemCharacteristics which has pruned out all items that do not relate directly to the
+     * specified object IDs.
      */
-    void prune(Collection<String> objectIds);
+    ISystemCharacteristics prune(Collection<String> objectIds);
 
     /**
      * Get all the items associated with the specified object.

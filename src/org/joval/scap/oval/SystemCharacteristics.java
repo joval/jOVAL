@@ -90,6 +90,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	}
     }
 
+    private boolean readonly = false;
     private LocLogger logger = JOVALMsg.getLogger();
     private GeneratorType generator;
     private SystemInfoType systemInfo;
@@ -223,6 +224,9 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     }
 
     public synchronized BigInteger storeItem(ItemType it) throws OvalException {
+	if (readonly) {
+	    throw new IllegalStateException("read-only");
+	}
 	JAXBElement<? extends ItemType> item = wrapItem(it);
 	BigInteger itemId = null;
 	if (item.getValue().isSetId()) {
@@ -285,6 +289,9 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     }
 
     public void storeVariable(VariableValueType var) {
+	if (readonly) {
+	    throw new IllegalStateException("read-only");
+	}
 	Collection<VariableValueType> vars = variableTable.get(var.getVariableId());
 	if (vars == null) {
 	    vars = new ArrayList<VariableValueType>();
@@ -303,6 +310,9 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     }
 
     public void setObject(String objectId, String comment, BigInteger version, FlagEnumeration flag, MessageType message) {
+	if (readonly) {
+	    throw new IllegalStateException("read-only");
+	}
 	ObjectData data = objectTable.get(objectId);
 	if (data == null) {
 	    data = new ObjectData(objectId);
@@ -352,6 +362,9 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     }
 
     public void relateItem(String objectId, BigInteger itemId) throws NoSuchElementException {
+	if (readonly) {
+	    throw new IllegalStateException("read-only");
+	}
 	if (!objectTable.containsKey(objectId)) {
 	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, objectId));
 	}
@@ -367,6 +380,9 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     }
 
     public void relateVariable(String objectId, String variableId) throws NoSuchElementException {
+	if (readonly) {
+	    throw new IllegalStateException("read-only");
+	}
 	if (!objectTable.containsKey(objectId)) {
 	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, objectId));
 	}
@@ -392,34 +408,31 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	return objectTable.containsKey(objectId);
     }
 
-    public void prune(Collection<String> objectIds) {
-	// Discover items to retain
-	HashSet<BigInteger> retainedItems = new HashSet<BigInteger>();
+    public ISystemCharacteristics prune(Collection<String> objectIds) {
+	SystemCharacteristics copy = new SystemCharacteristics();
+	copy.readonly = true;
+	copy.systemInfo = systemInfo;
+	copy.logger = logger;
 	for (String objectId : objectIds) {
-	    if (objectItemTable.containsKey(objectId)) {
-		retainedItems.addAll(objectItemTable.get(objectId));
+	    if (objectTable.containsKey(objectId)) {
+		copy.objectTable.put(objectId, objectTable.get(objectId));
+		if (objectItemTable.containsKey(objectId)) {
+		    Collection<BigInteger> itemIds = objectItemTable.get(objectId);
+		    copy.objectItemTable.put(objectId, itemIds);
+		    for (BigInteger itemId : itemIds) {
+			copy.itemTable.put(itemId, itemTable.get(itemId));
+		    }
+		}
+		if (objectVariableTable.containsKey(objectId)) {
+		    Collection<String> variableIds = objectVariableTable.get(objectId);
+		    copy.objectVariableTable.put(objectId, variableIds);
+		    for (String variableId : variableIds) {
+			copy.variableTable.put(variableId, variableTable.get(variableId));
+		    }
+		}
 	    }
 	}
-	// Remove all other items
-	Iterator<Map.Entry<BigInteger, JAXBElement<? extends ItemType>>> itemTableIter = itemTable.entrySet().iterator();
-	while(itemTableIter.hasNext()) {
-	    Map.Entry<BigInteger, JAXBElement<? extends ItemType>> entry = itemTableIter.next();
-	    if (!retainedItems.contains(entry.getKey())) {
-		itemTableIter.remove();
-	    }
-	}
-
-	// Remove all references to other objects
-	Iterator<Map.Entry<String, ObjectData>> objectTableIter = objectTable.entrySet().iterator();
-	while(objectTableIter.hasNext()) {
-	    Map.Entry<String, ObjectData> entry  = objectTableIter.next();
-	    if (!objectIds.contains(entry.getKey())) {
-		objectTableIter.remove();
-		variableTable.remove(entry.getKey());
-		objectItemTable.remove(entry.getKey());
-		objectVariableTable.remove(entry.getKey());
-	    }
-	}
+	return copy;
     }
 
     public Collection<JAXBElement<? extends ItemType>> getItemsByObjectId(String id) throws NoSuchElementException {
@@ -528,7 +541,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	}
     }
 
-    class ObjectData {
+    static class ObjectData {
 	String id;
 	String comment;
 	BigInteger version;

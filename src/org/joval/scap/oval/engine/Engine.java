@@ -451,6 +451,12 @@ public class Engine implements IOvalEngine, IProvider {
 		    scanObject(new RequestContext(obj));
 		}
 		producer.sendNotify(Message.OBJECT_PHASE_END, null);
+		producer.sendNotify(Message.SYSTEMCHARACTERISTICS, sc);
+
+		if (doDisconnect) {
+		    plugin.disconnect();
+		    doDisconnect = false;
+		}
 
 		//
 		// For directed-mode scans, we slim down the system characteristics by pruning out items that only
@@ -468,18 +474,18 @@ public class Engine implements IOvalEngine, IProvider {
 		    for (DefinitionType def : allowed) {
 			allowedObjectIds.addAll(getObjectReferences(def, false));
 		    }
-		    sc.prune(allowedObjectIds);
+		    results = new Results(definitions, sc.prune(allowedObjectIds));
+		    break;
+
+		  case EXHAUSTIVE:
+		  default:
+		    results = new Results(definitions, sc);
 		    break;
 		}
-		producer.sendNotify(Message.SYSTEMCHARACTERISTICS, sc);
-
-		if (doDisconnect) {
-		    plugin.disconnect();
-		    doDisconnect = false;
-		}
+	    } else {
+		results = new Results(definitions, sc);
 	    }
 
-	    results = new Results(definitions, sc);
 	    results.setLogger(logger);
 	    producer.sendNotify(Message.DEFINITION_PHASE_START, null);
 
