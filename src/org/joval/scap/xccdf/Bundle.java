@@ -96,7 +96,21 @@ public class Bundle implements IDatastream {
 			}
 		    }
 		}
+	    } catch (ScapException e) {
+		if (zip != null) {
+		    try {
+			zip.close();
+		    } catch (IOException e2) {
+		    }
+		}
+		throw e;
 	    } catch (IOException e) {
+		if (zip != null) {
+		    try {
+			zip.close();
+		    } catch (IOException e2) {
+		    }
+		}
 		throw new ScapException(e);
 	    }
 	} else {
