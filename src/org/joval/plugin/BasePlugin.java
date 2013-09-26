@@ -287,9 +287,13 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 	    if (coll != null) {
 		adapters = new HashMap<Class, IAdapter>();
 		for (IAdapter adapter : coll) {
-		    for (Class clazz : adapter.init(session, notapplicable)) {
-			adapters.put(clazz, adapter);
-			statistics.add(clazz);
+		    try {
+			for (Class clazz : adapter.init(session, notapplicable)) {
+			    adapters.put(clazz, adapter);
+			    statistics.add(clazz);
+			}
+		    } catch (Exception e) {
+			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    }
 		}
 	    }
