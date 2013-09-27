@@ -372,7 +372,7 @@ public class Engine implements IXccdfEngine {
 		logger.info(JOVALMsg.STATUS_XCCDF_RULES, selectedIds.size(), profileId);
 
 		//
-		// Perform the profile's platform applicability tests, and if it's applicable, the selected checks
+		// Perform the profile's platform applicability tests
 		//
 		producer.sendNotify(Message.PLATFORM_PHASE_START, null);
 		checkPlatforms(testResult);
@@ -393,14 +393,12 @@ public class Engine implements IXccdfEngine {
 			break;
 		    }
 		}
-		if (applicable) {
-		    producer.sendNotify(Message.PLATFORM_PHASE_END, Boolean.TRUE);
-		    processXccdf(testResult);
-		} else {
-		    testResult.setEndTime(getTimestamp());
-		    producer.sendNotify(Message.PLATFORM_PHASE_END, Boolean.FALSE);
-		    logger.info(JOVALMsg.WARNING_CPE_TARGET, plugin.getSession().getHostname());
-		}
+		producer.sendNotify(Message.PLATFORM_PHASE_END, Boolean.TRUE);
+
+		//
+		// Run the selected checks (if no platforms are applicable, this will do the right thing).
+		//
+		processXccdf(testResult);
 	    }
 	    if (doDisconnect) {
 		plugin.disconnect();
