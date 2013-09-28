@@ -289,53 +289,89 @@ public class ShadowAdapter implements IAdapter {
 			item.setEncryptMethod(encryptMethod);
 		    }
 
-		    try {
-			EntityItemIntType chgAllow = Factories.sc.core.createEntityItemIntType();
-			chgAllow.setValue(Integer.toString(Integer.parseInt(tokens.get(CHG_ALLOW))));
-			chgAllow.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			item.setChgAllow(chgAllow);
-		    } catch (NumberFormatException e) {
+		    EntityItemIntType chgAllow = Factories.sc.core.createEntityItemIntType();
+		    chgAllow.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    String s = tokens.get(CHG_ALLOW);
+		    if (s.length() == 0) {
+			chgAllow.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		    } else {
+			try {
+			    chgAllow.setValue(Integer.toString(Integer.parseInt(s)));
+			} catch (NumberFormatException e) {
+			    chgAllow.setStatus(StatusEnumeration.ERROR);
+			}
 		    }
+		    item.setChgAllow(chgAllow);
 
-		    try {
-			EntityItemIntType chgLst = Factories.sc.core.createEntityItemIntType();
-			chgLst.setValue(Integer.toString(Integer.parseInt(tokens.get(CHG_LST))));
-			chgLst.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			item.setChgLst(chgLst);
-		    } catch (NumberFormatException e) {
+		    EntityItemIntType chgLst = Factories.sc.core.createEntityItemIntType();
+		    chgLst.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    s = tokens.get(CHG_LST);
+		    if (s.length() == 0) {
+			chgLst.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		    } else {
+			try {
+			    chgLst.setValue(Integer.toString(Integer.parseInt(s)));
+			} catch (NumberFormatException e) {
+			    chgLst.setStatus(StatusEnumeration.ERROR);
+			}
 		    }
+		    item.setChgLst(chgLst);
 
-		    try {
-			EntityItemIntType chgReq = Factories.sc.core.createEntityItemIntType();
-			chgReq.setValue(Integer.toString(Integer.parseInt(tokens.get(CHG_REQ))));
-			chgReq.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			item.setChgReq(chgReq);
-		    } catch (NumberFormatException e) {
+		    EntityItemIntType chgReq = Factories.sc.core.createEntityItemIntType();
+		    chgReq.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    s = tokens.get(CHG_REQ);
+		    if (s.length() == 0) {
+			chgReq.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		    } else {
+			try {
+			    chgReq.setValue(Integer.toString(Integer.parseInt(s)));
+			} catch (NumberFormatException e) {
+			    chgReq.setStatus(StatusEnumeration.ERROR);
+			}
 		    }
+		    item.setChgReq(chgReq);
 
-		    try {
-			EntityItemIntType expDate = Factories.sc.core.createEntityItemIntType();
-			expDate.setValue(Integer.toString(Integer.parseInt(tokens.get(EXP_DATE))));
-			expDate.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			item.setExpDate(expDate);
-		    } catch (NumberFormatException e) {
+		    EntityItemIntType expDate = Factories.sc.core.createEntityItemIntType();
+		    expDate.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    s = tokens.get(EXP_DATE);
+		    if (s.length() == 0) {
+			expDate.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		    } else {
+			try {
+			    expDate.setValue(Integer.toString(Integer.parseInt(s)));
+			} catch (NumberFormatException e) {
+			    expDate.setStatus(StatusEnumeration.ERROR);
+			}
 		    }
+		    item.setExpDate(expDate);
 
-		    try {
-			EntityItemIntType expInact = Factories.sc.core.createEntityItemIntType();
-			expInact.setValue(Integer.toString(Integer.parseInt(tokens.get(EXP_INACT))));
-			expInact.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			item.setExpInact(expInact);
-		    } catch (NumberFormatException e) {
+		    EntityItemIntType expInact = Factories.sc.core.createEntityItemIntType();
+		    expInact.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    s = tokens.get(EXP_INACT);
+		    if (s.length() == 0) {
+			expInact.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		    } else {
+			try {
+			    expInact.setValue(Integer.toString(Integer.parseInt(s)));
+			} catch (NumberFormatException e) {
+			    expInact.setStatus(StatusEnumeration.ERROR);
+			}
 		    }
+		    item.setExpInact(expInact);
 
-		    try {
-			EntityItemIntType expWarn = Factories.sc.core.createEntityItemIntType();
-			expWarn.setValue(Integer.toString(Integer.parseInt(tokens.get(EXP_WARN))));
-			expWarn.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			item.setExpWarn(expWarn);
-		    } catch (NumberFormatException e) {
+		    EntityItemIntType expWarn = Factories.sc.core.createEntityItemIntType();
+		    expWarn.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    s = tokens.get(EXP_WARN);
+		    if (s.length() == 0) {
+			expWarn.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		    } else {
+			try {
+			    expWarn.setValue(Integer.toString(Integer.parseInt(s)));
+			} catch (NumberFormatException e) {
+			    expWarn.setStatus(StatusEnumeration.ERROR);
+			}
 		    }
+		    item.setExpWarn(expWarn);
 
 		    if (tokens.get(FLAG).length() > 0) {
 			EntityItemStringType flag = Factories.sc.core.createEntityItemStringType();
