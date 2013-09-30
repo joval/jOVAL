@@ -33,6 +33,7 @@ CLASSES=\
 	org.joval.scap.oval.adapter.solaris.PatchAdapter				\
 	org.joval.scap.oval.adapter.solaris.SmfAdapter					\
 	org.joval.scap.oval.adapter.unix.FileAdapter					\
+	org.joval.scap.oval.adapter.unix.FileextendedattributeAdapter			\
 	org.joval.scap.oval.adapter.unix.InetdAdapter					\
 	org.joval.scap.oval.adapter.unix.InterfaceAdapter				\
 	org.joval.scap.oval.adapter.unix.PasswordAdapter				\
@@ -58,6 +59,7 @@ CLASSES=\
 	org.joval.scap.oval.adapter.windows.LockoutpolicyAdapter			\
 	org.joval.scap.oval.adapter.windows.MetabaseAdapter				\
 	org.joval.scap.oval.adapter.windows.PasswordpolicyAdapter			\
+	org.joval.scap.oval.adapter.windows.PortAdapter					\
 	org.joval.scap.oval.adapter.windows.Process58Adapter				\
 	org.joval.scap.oval.adapter.windows.RegistryAdapter				\
 	org.joval.scap.oval.adapter.windows.RegkeyeffectiverightsAdapter		\

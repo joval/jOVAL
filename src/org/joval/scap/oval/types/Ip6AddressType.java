@@ -140,7 +140,11 @@ public class Ip6AddressType extends AbstractType {
     @Override
     public String toString() {
 	StringBuffer sb = new StringBuffer(getIpAddressString());
-	return sb.append("/").append(Integer.toString(maskVal)).toString();
+	if (maskVal == 128) {
+	    return sb.toString();
+	} else {
+	    return sb.append("/").append(Integer.toString(maskVal)).toString();
+	}
     }
 
     public boolean contains(Ip6AddressType other) {

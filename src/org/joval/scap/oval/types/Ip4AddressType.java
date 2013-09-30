@@ -165,7 +165,11 @@ public class Ip4AddressType extends AbstractType {
 
     public String toString() {
 	StringBuffer sb = new StringBuffer(getIpAddressString());
-	return sb.append("/").append(Integer.toString(maskVal)).toString();
+	if (maskVal == 32) {
+	    return sb.toString();
+	} else {
+	    return sb.append("/").append(Integer.toString(maskVal)).toString();
+	}
     }
 
     public boolean contains(Ip4AddressType other) {
