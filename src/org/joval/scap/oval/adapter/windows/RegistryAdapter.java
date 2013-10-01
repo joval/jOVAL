@@ -175,10 +175,8 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 			results.add(new Batch.Result(new ArrayList<ItemType>(), rc));
 		    } else {
 			try {
-			    Collection<ItemType> items = new ArrayList<ItemType>();
-			    for (Arguments args : getArguments(request.getObject(), rc)) {
-				items.addAll(getItems(args));
-			    }
+			    ObjectType obj = request.getObject();
+			    Collection<RegistryItem> items = getItems(obj, getKeys(obj, rc), rc);
 			    results.add(new Batch.Result(items, rc));
 			} catch (NoSuchElementException e) {
 			    // Value was not found
@@ -240,50 +238,51 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	return conditions;
     }
 
-    protected Collection<RegistryItem> getItems(Arguments args) throws Exception {
-	ObjectType obj = args.obj;
-	ItemType it = args.base;
-	IKey key = args.key;
-	IRequestContext rc = args.rc;
+    protected Collection<RegistryItem> getItems(ObjectType obj, Collection<IKey> keys, IRequestContext rc)
+		throws CollectException {
 
-	if (it instanceof RegistryItem) {
-	    RegistryItem base = (RegistryItem)it;
-	    RegistryObject rObj = (RegistryObject)obj;
-	    Collection<RegistryItem> items = new ArrayList<RegistryItem>();
+	RegistryObject rObj = (RegistryObject)obj;
+	Collection<RegistryItem> items = new ArrayList<RegistryItem>();
+	for (IKey key : keys) {
+	    RegistryItem base = (RegistryItem)getBaseItem(obj, key);
+	    try {
+		if (XSITools.isNil(rObj.getName())) {
+		    items.add(getItem(base, key));
+		} else {
+		    OperationEnumeration op = rObj.getName().getValue().getOperation();
+		    switch(op) {
+		      case EQUALS:
+			items.add(getItem(base, key.getValue((String)rObj.getName().getValue().getValue())));
+			break;
 
-	    if (XSITools.isNil(rObj.getName())) {
-		items.add(getItem(base, key));
-	    } else {
-		OperationEnumeration op = rObj.getName().getValue().getOperation();
-		switch(op) {
-		  case EQUALS:
-		    items.add(getItem(base, key.getValue((String)rObj.getName().getValue().getValue())));
-		    break;
-
-		  case PATTERN_MATCH:
-		    try {
-			Pattern p = StringTools.pattern((String)rObj.getName().getValue().getValue());
-			for (IValue value : key.listValues(p)) {
-			    items.add(getItem(base, value));
+		      case PATTERN_MATCH:
+			try {
+			    Pattern p = StringTools.pattern((String)rObj.getName().getValue().getValue());
+			    for (IValue value : key.listValues(p)) {
+				items.add(getItem(base, value));
+			    }
+			} catch (PatternSyntaxException e) {
+			    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage());
+			    throw new CollectException(msg, FlagEnumeration.ERROR);
 			}
-		    } catch (PatternSyntaxException e) {
-			MessageType msg = Factories.common.createMessageType();
-			msg.setLevel(MessageLevelEnumeration.ERROR);
-			msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-			rc.addMessage(msg);
-			session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		    }
-		    break;
+			break;
 
-		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		      default:
+			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		    }
 		}
+	    } catch (NoSuchElementException e) {
+		// ignore non-existent key
+	    } catch (CollectException e) {
+		throw e;
+	    } catch (Exception e) {
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		throw new CollectException(e, FlagEnumeration.ERROR);
 	    }
-	    return items;
 	}
-	String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, it.getClass().getName());
-	throw new CollectException(msg, FlagEnumeration.ERROR);
+	return items;
     }
 
     @Override

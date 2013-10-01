@@ -130,71 +130,71 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 		FileauditedpermissionsItem baseItem = (FileauditedpermissionsItem)getBaseItem(obj, f);
 		Map<String, List<AuditRule>> rules = auditRuleMap.get(f.getPath());
 		switch(op) {
-		      case PATTERN_MATCH:
-			Pattern p = null;
-			if (pSid == null) {
-			    p = StringTools.pattern(pName);
-			} else {
-			    p = StringTools.pattern(pSid);
-			}
-			//
-			// Note: per the specification, the scope is limited to the trustees referenced by the security
-			// descriptor, as opposed to the full scope of all known trustees.
-			//
-			for (Map.Entry<String, List<AuditRule>> entry : rules.entrySet()) {
-			    IPrincipal principal = null;
-			    try {
-				if (pSid == null) {
-				    IPrincipal temp = directory.queryPrincipalBySid(entry.getKey());
-				    if (temp.isBuiltin()) {
-					if (p.matcher(temp.getName()).find()) {
-					    principal = temp;
-					}
-				    } else if (p.matcher(temp.getNetbiosName()).find()) {
+		  case PATTERN_MATCH:
+		    Pattern p = null;
+		    if (pSid == null) {
+			p = StringTools.pattern(pName);
+		    } else {
+			p = StringTools.pattern(pSid);
+		    }
+		    //
+		    // Note: per the specification, the scope is limited to the trustees referenced by the security
+		    // descriptor, as opposed to the full scope of all known trustees.
+		    //
+		    for (Map.Entry<String, List<AuditRule>> entry : rules.entrySet()) {
+			IPrincipal principal = null;
+			try {
+			    if (pSid == null) {
+				IPrincipal temp = directory.queryPrincipalBySid(entry.getKey());
+				if (temp.isBuiltin()) {
+				    if (p.matcher(temp.getName()).find()) {
 					principal = temp;
 				    }
-				} else {
-				    if (p.matcher(entry.getKey()).find()) {
-					principal = directory.queryPrincipalBySid(entry.getKey());
-				    }
+				} else if (p.matcher(temp.getNetbiosName()).find()) {
+				    principal = temp;
 				}
-				if (principal != null) {
-				    items.add(makeItem(baseItem, principal, entry.getValue()));
+			    } else {
+				if (p.matcher(entry.getKey()).find()) {
+				    principal = directory.queryPrincipalBySid(entry.getKey());
 				}
-			    } catch (NoSuchElementException e) {
-				MessageType msg = Factories.common.createMessageType();
-				msg.setLevel(MessageLevelEnumeration.WARNING);
-				msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_NOPRINCIPAL, e.getMessage()));
-				rc.addMessage(msg);
 			    }
-			}
-			break;
-
-		      case CASE_INSENSITIVE_EQUALS:
-		      case EQUALS:
-		      case NOT_EQUAL:
-			Collection<IPrincipal> principals = null;
-			if (pSid == null) {
-			    principals = directory.getAllPrincipals(directory.queryPrincipal(pName), ig, rg);
-			} else {
-			    principals = directory.getAllPrincipals(directory.queryPrincipalBySid(pSid), ig, rg);
-			}
-			for (IPrincipal principal : principals) {
-			    switch(op) {
-			      case EQUALS:
-			      case CASE_INSENSITIVE_EQUALS:
-				items.add(makeItem(baseItem, principal, rules.get(principal.getSid())));
-				break;
-			      case NOT_EQUAL:
-				items.add(makeItem(baseItem, principal, rules.get(principal.getSid())));
-				break;
+			    if (principal != null) {
+				items.add(makeItem(baseItem, principal, entry.getValue()));
 			    }
+			} catch (NoSuchElementException e) {
+			    MessageType msg = Factories.common.createMessageType();
+			    msg.setLevel(MessageLevelEnumeration.WARNING);
+			    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_NOPRINCIPAL, e.getMessage()));
+			    rc.addMessage(msg);
 			}
-			break;
+		    }
+		    break;
 
-		      default:
-			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		  case CASE_INSENSITIVE_EQUALS:
+		  case EQUALS:
+		  case NOT_EQUAL:
+		    Collection<IPrincipal> principals = null;
+		    if (pSid == null) {
+			principals = directory.getAllPrincipals(directory.queryPrincipal(pName), ig, rg);
+		    } else {
+			principals = directory.getAllPrincipals(directory.queryPrincipalBySid(pSid), ig, rg);
+		    }
+		    for (IPrincipal principal : principals) {
+			switch(op) {
+			  case EQUALS:
+			  case CASE_INSENSITIVE_EQUALS:
+			    items.add(makeItem(baseItem, principal, rules.get(principal.getSid())));
+			    break;
+			  case NOT_EQUAL:
+			    items.add(makeItem(baseItem, principal, rules.get(principal.getSid())));
+			    break;
+			}
+		    }
+		    break;
+
+		  default:
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
 	    }
 	} catch (PatternSyntaxException e) {
@@ -271,12 +271,12 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 			    if (line.equals(CLOSE)) {
 				return fileAuditRules;
 			    } else {
-		        	int ptr1 = line.indexOf(":");
-		        	int ptr2 = line.indexOf(",");
-		        	String sid = line.substring(0,ptr1).trim();
-		        	int mask = Integer.valueOf(line.substring(ptr1+1,ptr2).trim());
-		        	int flags = Integer.valueOf(line.substring(ptr2+1).trim());
-		        	fileAuditRules.addRule(sid, new AuditRule(sid, mask, flags));
+				int ptr1 = line.indexOf(":");
+				int ptr2 = line.indexOf(",");
+				String sid = line.substring(0,ptr1).trim();
+				int mask = Integer.valueOf(line.substring(ptr1+1,ptr2).trim());
+				int flags = Integer.valueOf(line.substring(ptr2+1).trim());
+				fileAuditRules.addRule(sid, new AuditRule(sid, mask, flags));
 			    }
 			}
 		    }

@@ -78,45 +78,11 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	return RegkeyeffectiverightsItem.class;
     }
 
-    protected Collection<RegkeyeffectiverightsItem> getItems(Arguments args) throws Exception {
-	ObjectType obj = args.obj;
-	ItemType base = args.base;
-	IKey key = args.key;
-	IRequestContext rc = args.rc;
+    protected Collection<RegkeyeffectiverightsItem> getItems(ObjectType obj, Collection<IKey> keys, IRequestContext rc)
+		throws CollectException {
 
-	if (directory == null) {
-	    directory = session.getDirectory();
-	}
-
-	//
-	// Map the Key's hive to one of the names supported by the GetNamedSecurityInfo method.
-	//
-	// See: http://msdn.microsoft.com/en-us/library/windows/desktop/aa379593%28v=vs.85%29.aspx
-	//
-	String hive = null;
-	switch(key.getHive()) {
-	  case HKLM:
-	    hive = "MACHINE";
-	    break;
-	  case HKU:
-	    hive = "USERS";
-	    break;
-	  case HKCU:
-	    hive = "CURRENT_USER";
-	    break;
-	  case HKCR:
-	    hive = "CLASSES_ROOT";
-	    break;
-	  case HKCC:
-	    hive = "CONFIG";
-	    break;
-	  default:
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, key.getHive());
-	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-	}
-
+	directory = session.getDirectory();
 	Collection<RegkeyeffectiverightsItem> items = new ArrayList<RegkeyeffectiverightsItem>();
-	RegkeyeffectiverightsItem baseItem = (RegkeyeffectiverightsItem)base;
 	try {
 	    List<IPrincipal> principals = new ArrayList<IPrincipal>();
 	    IWindowsSession.View view = null;
@@ -215,36 +181,66 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 		principalMap.put(principal.getSid(), principal);
 	    }
 
-	    //
-	    // Create items
-	    //
-	    Map<String, IPrincipal> resolvedPrincipals = new HashMap<String, IPrincipal>();
-	    for (IPrincipal principal : principalMap.values()) {
-		switch(principal.getType()) {
-		  case USER:
-		    resolvedPrincipals.put(principal.getSid(), principal);
+	    for (IKey key : keys) {
+	        //
+	        // Map the Key's hive to one of the names supported by the GetNamedSecurityInfo method.
+	        //
+	        // See: http://msdn.microsoft.com/en-us/library/windows/desktop/aa379593%28v=vs.85%29.aspx
+	        //
+	        String hive = null;
+	        switch(key.getHive()) {
+	          case HKLM:
+		    hive = "MACHINE";
 		    break;
-		  case GROUP:
-		    for (IPrincipal p : directory.getAllPrincipals(principal, includeGroups, resolveGroups)) {
-			resolvedPrincipals.put(p.getSid(), p);
+	          case HKU:
+		    hive = "USERS";
+		    break;
+	          case HKCU:
+		    hive = "CURRENT_USER";
+		    break;
+	          case HKCR:
+		    hive = "CLASSES_ROOT";
+		    break;
+	          case HKCC:
+		    hive = "CONFIG";
+		    break;
+	          default:
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, key.getHive());
+		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	        }
+
+		//
+		// Create items
+		//
+	        RegkeyeffectiverightsItem baseItem = (RegkeyeffectiverightsItem)getBaseItem(obj, key);
+		Map<String, IPrincipal> resolvedPrincipals = new HashMap<String, IPrincipal>();
+		for (IPrincipal principal : principalMap.values()) {
+		    switch(principal.getType()) {
+		      case USER:
+			resolvedPrincipals.put(principal.getSid(), principal);
+			break;
+		      case GROUP:
+			for (IPrincipal p : directory.getAllPrincipals(principal, includeGroups, resolveGroups)) {
+			    resolvedPrincipals.put(p.getSid(), p);
+			}
+			break;
 		    }
-		    break;
 		}
-	    }
-	    StringBuffer cmd = new StringBuffer();
-	    for (Map.Entry<String, IPrincipal> entry : resolvedPrincipals.entrySet()) {
-		if (cmd.length() > 0) {
-		    cmd.append(",");
+		StringBuffer cmd = new StringBuffer();
+		for (Map.Entry<String, IPrincipal> entry : resolvedPrincipals.entrySet()) {
+		    if (cmd.length() > 0) {
+			cmd.append(",");
+		    }
+		    cmd.append("\"").append(entry.getKey()).append("\"");
 		}
-		cmd.append("\"").append(entry.getKey()).append("\"");
-	    }
-	    cmd.append(" | Get-EffectiveRights -ObjectType RegKey ");
-	    cmd.append(" -Name \"").append(hive).append("\\").append(key.getPath()).append("\"");
-	    for (String line : getRunspace(view).invoke(cmd.toString()).split("\r\n")) {
-		int ptr = line.indexOf(":");
-		String sid = line.substring(0,ptr);
-		int mask = Integer.parseInt(line.substring(ptr+1).trim());
-		items.add(makeItem(baseItem, resolvedPrincipals.get(sid), mask));
+		cmd.append(" | Get-EffectiveRights -ObjectType RegKey ");
+		cmd.append(" -Name \"").append(hive).append("\\").append(key.getPath()).append("\"");
+		for (String line : getRunspace(view).invoke(cmd.toString()).split("\r\n")) {
+		    int ptr = line.indexOf(":");
+		    String sid = line.substring(0,ptr);
+		    int mask = Integer.parseInt(line.substring(ptr+1).trim());
+		    items.add(makeItem(baseItem, resolvedPrincipals.get(sid), mask));
+		}
 	    }
 	} catch (NoSuchElementException e) {
 	    MessageType msg = Factories.common.createMessageType();
@@ -252,24 +248,13 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_NOPRINCIPAL, e.getMessage()));
 	    rc.addMessage(msg);
 	} catch (PatternSyntaxException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-	    rc.addMessage(msg);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (WmiException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, obj.getId(), e.getMessage()));
-	    rc.addMessage(msg);
+	    throw new CollectException(e, FlagEnumeration.ERROR);
 	} catch (CollectException e) {
 	    throw e;
 	} catch (Exception e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(e.getMessage());
-	    rc.addMessage(msg);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new CollectException(e, FlagEnumeration.ERROR);
 	}
 	return items;
     }
