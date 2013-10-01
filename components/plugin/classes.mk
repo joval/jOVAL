@@ -18,6 +18,7 @@ CLASSES=\
 	org.joval.scap.oval.adapter.independent.TextfilecontentAdapter			\
 	org.joval.scap.oval.adapter.independent.XmlfilecontentAdapter			\
 	org.joval.scap.oval.adapter.linux.DpkginfoAdapter				\
+	org.joval.scap.oval.adapter.linux.InetlisteningserversAdapter			\
 	org.joval.scap.oval.adapter.linux.PartitionAdapter				\
 	org.joval.scap.oval.adapter.linux.RpmAdapter					\
 	org.joval.scap.oval.adapter.linux.SelinuxAdapter				\
