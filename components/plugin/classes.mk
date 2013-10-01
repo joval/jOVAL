@@ -64,6 +64,7 @@ CLASSES=\
 	org.joval.scap.oval.adapter.windows.PortAdapter					\
 	org.joval.scap.oval.adapter.windows.ProcessAdapter				\
 	org.joval.scap.oval.adapter.windows.RegistryAdapter				\
+	org.joval.scap.oval.adapter.windows.RegkeyauditedpermissionsAdapter		\
 	org.joval.scap.oval.adapter.windows.RegkeyeffectiverightsAdapter		\
 	org.joval.scap.oval.adapter.windows.ServiceAdapter				\
 	org.joval.scap.oval.adapter.windows.ServiceeffectiverightsAdapter		\
