@@ -169,27 +169,27 @@ public class FileextendedattributeAdapter extends BaseFileAdapter<Fileextendedat
 	StringBuffer cmd = new StringBuffer();
 	switch(us.getFlavor()) {
 	  case LINUX:
-	    cmd.append("for attr in `getfattr ");
+	    cmd.append("for attr in `getfattr '");
 	    cmd.append(f.getPath());
-	    cmd.append(" | sed -e 's/#.*$//' -e '/^$/d'`; do getfattr -n $attr ");
+	    cmd.append("' 2>/dev/null | sed -e 's/#.*$//' -e '/^$/d'`; do getfattr -n $attr '");
 	    cmd.append(f.getPath());
-	    cmd.append("; done | sed -e 's/#.*$//' -e '/^$/d'");
+	    cmd.append("' 2>/dev/null; done | sed -e 's/#.*$//' -e '/^$/d'");
 	    break;
 
 	  case MACOSX:
-	    cmd.append("for attr in $(xattr ");
+	    cmd.append("for attr in $(xattr '");
 	    cmd.append(f.getPath());
-	    cmd.append("); do printf ${attr}=;xattr -p ${attr} ");
+	    cmd.append("'); do printf $attr=;xattr -p $attr '");
 	    cmd.append(f.getPath());
-	    cmd.append("; done");
+	    cmd.append("'; done");
 	    break;
 
 	  case SOLARIS:
-	    cmd.append("for attr in `runat ");
+	    cmd.append("for attr in `runat '");
 	    cmd.append(f.getPath());
-	    cmd.append(" ls`; do printf $attr=;runat ");
+	    cmd.append("' ls`; do printf $attr=;runat '");
 	    cmd.append(f.getPath());
-	    cmd.append(" cat $attr; done");
+	    cmd.append("' cat $attr; done");
 	    break;
 
 	  case AIX:
@@ -219,7 +219,8 @@ public class FileextendedattributeAdapter extends BaseFileAdapter<Fileextendedat
     private Map<String, String> getAIXExtendedAttributes(IFile f) throws Exception {
 	IMount mount = getMount(f);
 	if ("jfs2".equals(mount.getType())) {
-	    if ("v2".equals(getEAVersion(mount))) {
+	    String eav = getEAVersion(mount);
+	    if ("v2".equals(eav)) {
 		//
 		// AIX only supports extended attributes on JFS2 v2
 		//
@@ -227,7 +228,7 @@ public class FileextendedattributeAdapter extends BaseFileAdapter<Fileextendedat
 		String key = null;
 		StringBuffer value = null;
 		boolean blank = true;
-		for (String line : StringTools.toList(SafeCLI.manyLines("getea " + f.getPath(), null, us))) {
+		for (String line : StringTools.toList(SafeCLI.manyLines("getea '" + f.getPath() + "'", null, us))) {
 		    if (line.length() == 0) {
 			if (blank && value != null) {
 			    value.append("\n");
@@ -254,11 +255,11 @@ public class FileextendedattributeAdapter extends BaseFileAdapter<Fileextendedat
 		}
 		return attrs;
 	    } else {
-		String msg = JOVALMsg.getMessage(JOVALMsg.STATUS_AIX_FSTYPE, mount.getType());
+		String msg = JOVALMsg.getMessage(JOVALMsg.STATUS_AIX_JFS2EAFORMAT, eav);
 		throw new CollectException(msg, FlagEnumeration.NOT_APPLICABLE);
 	    }
 	} else {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.STATUS_AIX_JFS2EAFORMAT, mount.getType());
+	    String msg = JOVALMsg.getMessage(JOVALMsg.STATUS_AIX_FSTYPE, mount.getType());
 	    throw new CollectException(msg, FlagEnumeration.NOT_APPLICABLE);
 	}
     }
@@ -296,6 +297,7 @@ public class FileextendedattributeAdapter extends BaseFileAdapter<Fileextendedat
 	}
 	if (jfs2eav == null) {
 	    List<String> lines = SafeCLI.multiLine("lsjfs2", us, IUnixSession.Timeout.S);
+	    jfs2eav = new HashMap<String, String>();
 	    List<String> tokens = StringTools.toList(StringTools.tokenize(lines.get(0), ":", false));
 	    int mpIndex=-1, eafIndex=-1;
 	    for (int i=0; i < tokens.size(); i++) {
@@ -306,8 +308,8 @@ public class FileextendedattributeAdapter extends BaseFileAdapter<Fileextendedat
 		}
 	    }
 	    for (int i=1; i < lines.size(); i++) {
-		tokens = StringTools.toList(StringTools.tokenize(lines.get(0), ":", false));
-		jfs2eav.put(tokens.get(mpIndex), tokens.get(mpIndex));
+		tokens = StringTools.toList(StringTools.tokenize(lines.get(i), ":", false));
+		jfs2eav.put(tokens.get(mpIndex), tokens.get(eafIndex));
 	    }
 	}
 	return jfs2eav.get(mount.getPath());
