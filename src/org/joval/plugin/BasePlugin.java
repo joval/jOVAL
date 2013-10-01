@@ -353,11 +353,11 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 	}
 
 	void dumpTrace(LocLogger logger) {
-	    logger.trace("Adapter Statistics:");
+	    logger.debug("Adapter Statistics:");
 	    for (Map.Entry<Class, TimeKeeper> entry : timekeepers.entrySet()) {
 		TimeKeeper tk = entry.getValue();
 		if (tk.size() > 0) {
-		    logger.trace("  Adapter " + entry.getKey().getName());
+		    logger.debug("  Adapter " + entry.getKey().getName());
 		    entry.getValue().dumpTrace(logger);
 		}
 	    }
@@ -411,9 +411,9 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 
 	void dumpTrace(LocLogger logger) {
 	    if (batched != null && batchDuration.isValid()) {
-		logger.trace("    Batch duration: " + batchDuration.duration() + "ms");
+		logger.debug("    Batch duration: " + batchDuration.duration() + "ms");
 		if (batched.size() > 0) {
-		    logger.trace("    Batched Objects:");
+		    logger.debug("    Batched Objects:");
 		    TreeSet<Map.Entry<String, Integer>> ordered =
 			new TreeSet<Map.Entry<String, Integer>>(new EntryStringKeyComparator<Integer>());
 		    ordered.addAll(batched.entrySet());
@@ -422,17 +422,17 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 			int instances = entry.getValue().intValue();
 			switch(instances) {
 			  case 1:
-			    logger.trace("      " + id);
+			    logger.debug("      " + id);
 			    break;
 			  default:
-			    logger.trace("      " + id + " (" + instances + " permutations)");
+			    logger.debug("      " + id + " (" + instances + " permutations)");
 			    break;
 			}
 		    }
 		}
 	    }
 	    if (objects.size() > 0) {
-		logger.trace("    Objects:");
+		logger.debug("    Objects:");
 		Map<String, List<Duration>> grouped = new HashMap<String, List<Duration>>();
 		for (Map.Entry<ObjectType, Duration> entry : objects.entrySet()) {
 		    String id = entry.getKey().getId();
@@ -448,11 +448,11 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 		    String id = entry.getKey();
 		    List<Duration> permutations = entry.getValue();
 		    if (permutations.size() == 1) {
-			logger.trace("      " + id + ": " + permutations.get(0).duration() + "ms");
+			logger.debug("      " + id + ": " + permutations.get(0).duration() + "ms");
 		    } else {
 			int i=0;
 			for (Duration instance : permutations) {
-			    logger.trace("      " + id + " (permutation " + i++ + "): " + instance.duration() + "ms");
+			    logger.debug("      " + id + " (permutation " + i++ + "): " + instance.duration() + "ms");
 			}
 		    }
 		}

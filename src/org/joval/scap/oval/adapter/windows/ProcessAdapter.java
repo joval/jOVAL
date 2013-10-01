@@ -8,6 +8,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -26,7 +27,9 @@ import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
 import scap.oval.common.OperationEnumeration;
 import scap.oval.common.SimpleDatatypeEnumeration;
+import scap.oval.definitions.core.EntityObjectStringType;
 import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.windows.ProcessObject;
 import scap.oval.definitions.windows.Process58Object;
 import scap.oval.systemcharacteristics.core.ItemType;
 import scap.oval.systemcharacteristics.core.EntityItemBoolType;
@@ -47,7 +50,7 @@ import org.joval.util.JOVALMsg;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Process58Adapter implements IAdapter {
+public class ProcessAdapter implements IAdapter {
     private IWindowsSession session;
     private IRunspace runspace;
     private IniFile processes;
@@ -59,8 +62,10 @@ public class Process58Adapter implements IAdapter {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
+	    classes.add(ProcessObject.class);
 	    classes.add(Process58Object.class);
 	} else {
+	    notapplicable.add(ProcessObject.class);
 	    notapplicable.add(Process58Object.class);
 	}
 	return classes;
@@ -71,66 +76,32 @@ public class Process58Adapter implements IAdapter {
 	if (error != null) {
 	    rc.addMessage(error);
 	}
-
-	//
-	// First, create a map of processes based on the CommandLine
-	//
-	Process58Object pObj = (Process58Object)obj;
-	HashMap<String, IProperty> map = new HashMap<String, IProperty>();
-	OperationEnumeration op = pObj.getCommandLine().getOperation();
-	String commandLine = (String)pObj.getCommandLine().getValue();
-	switch(op) {
-	  case EQUALS:
-	  case CASE_INSENSITIVE_EQUALS:
-	  case NOT_EQUAL:
-	    for (String pid : processes.listSections()) {
-		IProperty props = processes.getSection(pid);
-		if (op == OperationEnumeration.EQUALS) {
-		    if (commandLine.equals(props.getProperty("CommandLine"))) {
-			map.put(pid, props);
-		    }
-		} else if (op == OperationEnumeration.CASE_INSENSITIVE_EQUALS &&
-			   commandLine.equalsIgnoreCase(props.getProperty("CommandLine"))) {
-		    map.put(pid, props);
-		} else if (op == OperationEnumeration.NOT_EQUAL && !commandLine.equals(props.getProperty("CommandLine"))) {
-		    map.put(pid, props);
-		}
-	    }
-	    break;
-
-	  case PATTERN_MATCH:
-	    try {
-		Pattern pattern = StringTools.pattern(commandLine);
-		for (String pid : processes.listSections()) {
-		    IProperty props = processes.getSection(pid);
-		    Matcher m = pattern.matcher(props.getProperty("CommandLine"));
-		    if (m.find()) {
-			map.put(pid, props);
-		    }
-		}
-	    } catch (PatternSyntaxException e) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-		rc.addMessage(msg);
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-	    break;
-
-	  default:
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	if (obj instanceof Process58Object) {
+	    return getItems((Process58Object)obj, rc);
+	} else {
+	    return getItems((ProcessObject)obj, rc);
 	}
+    }
 
-	//
-	// Then, filter the map based on the pid value
-	//
-	int pid = Integer.parseInt((String)pObj.getPid().getValue());
-	op = pObj.getPid().getOperation();
+    // Private
+
+    private Collection<ProcessItem> getItems(ProcessObject pObj, IRequestContext rc) throws CollectException {
 	Collection<ProcessItem> items = new ArrayList<ProcessItem>();
-	for (String key : map.keySet()) {
-	    int processId = Integer.parseInt(key);
-	    IProperty props = map.get(key);
+	for (Map.Entry<String, IProperty> entry : getProcesses(pObj.getCommandLine()).entrySet()) {
+	    int processId = Integer.parseInt(entry.getKey());
+	    IProperty props = entry.getValue();
+	    items.add(makeItem(processId, props));
+	}
+	return items;
+    }
+
+    private Collection<ProcessItem> getItems(Process58Object pObj, IRequestContext rc) throws CollectException {
+	int pid = Integer.parseInt((String)pObj.getPid().getValue());
+	OperationEnumeration op = pObj.getPid().getOperation();
+	Collection<ProcessItem> items = new ArrayList<ProcessItem>();
+	for (Map.Entry<String, IProperty> entry : getProcesses(pObj.getCommandLine()).entrySet()) {
+	    int processId = Integer.parseInt(entry.getKey());
+	    IProperty props = entry.getValue();
 	    switch(op) {
 	      case EQUALS:
 		if (processId == pid) {
@@ -170,7 +141,55 @@ public class Process58Adapter implements IAdapter {
 	return items;
     }
 
-    // Private
+    /**
+     * Get a map of processes based on the CommandLine.
+     */
+    private Map<String, IProperty> getProcesses(EntityObjectStringType commandLineType) throws CollectException {
+	HashMap<String, IProperty> map = new HashMap<String, IProperty>();
+	OperationEnumeration op = commandLineType.getOperation();
+	String commandLine = (String)commandLineType.getValue();
+	switch(op) {
+	  case EQUALS:
+	  case CASE_INSENSITIVE_EQUALS:
+	  case NOT_EQUAL:
+	    for (String pid : processes.listSections()) {
+		IProperty props = processes.getSection(pid);
+		if (op == OperationEnumeration.EQUALS) {
+		    if (commandLine.equals(props.getProperty("CommandLine"))) {
+			map.put(pid, props);
+		    }
+		} else if (op == OperationEnumeration.CASE_INSENSITIVE_EQUALS &&
+			   commandLine.equalsIgnoreCase(props.getProperty("CommandLine"))) {
+		    map.put(pid, props);
+		} else if (op == OperationEnumeration.NOT_EQUAL && !commandLine.equals(props.getProperty("CommandLine"))) {
+		    map.put(pid, props);
+		}
+	    }
+	    break;
+
+	  case PATTERN_MATCH:
+	    try {
+		Pattern pattern = StringTools.pattern(commandLine);
+		for (String pid : processes.listSections()) {
+		    IProperty props = processes.getSection(pid);
+		    Matcher m = pattern.matcher(props.getProperty("CommandLine"));
+		    if (m.find()) {
+			map.put(pid, props);
+		    }
+		}
+	    } catch (PatternSyntaxException e) {
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage());
+		throw new CollectException(msg, FlagEnumeration.ERROR);
+	    }
+	    break;
+
+	  default:
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	}
+	return map;
+    }
 
     private ProcessItem makeItem(int pid, IProperty prop) {
 	ProcessItem item = Factories.sc.windows.createProcessItem();
@@ -255,8 +274,8 @@ public class Process58Adapter implements IAdapter {
 		runspace = session.getRunspacePool().spawn(view);
 	    }
 	    if (runspace != null) {
-		runspace.loadAssembly(getClass().getResourceAsStream("Process58.dll"));
-		runspace.loadModule(getClass().getResourceAsStream("Process58.psm1"));
+		runspace.loadAssembly(getClass().getResourceAsStream("Process.dll"));
+		runspace.loadModule(getClass().getResourceAsStream("Process.psm1"));
 	    }
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

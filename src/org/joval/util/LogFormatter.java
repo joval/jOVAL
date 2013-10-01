@@ -63,6 +63,8 @@ public class LogFormatter extends Formatter {
 		level = Level.FINEST;
 	    } else if (logLevel.equalsIgnoreCase("finer")) {
 		level = Level.FINER;
+	    } else if (logLevel.equalsIgnoreCase("debug")) {
+		level = Level.FINE;
 	    } else if (logLevel.equalsIgnoreCase("warning")) {
 		level = Level.WARNING;
 	    } else if (logLevel.equalsIgnoreCase("severe")) {

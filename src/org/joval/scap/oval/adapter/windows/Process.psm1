@@ -18,14 +18,14 @@ function Get-ProcessInfo {
       "CreationDate={0}" -f $Process.CreationDate
     }
     try {
-      $dep = [jOVAL.Process58.Probe]::IsDepEnabled($Process.ProcessId);
+      $dep = [jOVAL.Process.Probe]::IsDepEnabled($Process.ProcessId);
       if ($dep -eq 0) {
         "DepEnabled=false"
       } elseif ($dep -eq 1) {
         "DepEnabled=true"
       }
     } catch {}
-    $title = [jOVAL.Process58.Probe]::GetWindowText($Process.ProcessId);
+    $title = [jOVAL.Process.Probe]::GetWindowText($Process.ProcessId);
     if ($title -ne $null) {
       "PrimaryWindowText={0}" -f $title
     }
