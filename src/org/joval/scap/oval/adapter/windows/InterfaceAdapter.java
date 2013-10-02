@@ -1,30 +1,33 @@
 // Copyright (C) 2013 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.scap.oval.adapter.unix;
+package org.joval.scap.oval.adapter.windows;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 import jsaf.intf.system.ISession;
-import jsaf.intf.unix.system.IUnixSession;
+import jsaf.intf.windows.system.IWindowsSession;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
 import scap.oval.common.OperationEnumeration;
 import scap.oval.common.SimpleDatatypeEnumeration;
 import scap.oval.definitions.core.ObjectType;
-import scap.oval.definitions.unix.InterfaceObject;
+import scap.oval.definitions.windows.InterfaceObject;
+import scap.oval.systemcharacteristics.core.EntityItemIntType;
 import scap.oval.systemcharacteristics.core.EntityItemIPAddressStringType;
 import scap.oval.systemcharacteristics.core.EntityItemStringType;
 import scap.oval.systemcharacteristics.core.FlagEnumeration;
 import scap.oval.systemcharacteristics.core.ItemType;
 import scap.oval.systemcharacteristics.core.StatusEnumeration;
-import scap.oval.systemcharacteristics.unix.EntityItemInterfaceType;
-import scap.oval.systemcharacteristics.unix.InterfaceItem;
+import scap.oval.systemcharacteristics.windows.EntityItemAddrTypeType;
+import scap.oval.systemcharacteristics.windows.EntityItemInterfaceTypeType;
+import scap.oval.systemcharacteristics.windows.InterfaceItem;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;
@@ -39,15 +42,15 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class InterfaceAdapter implements IAdapter {
-    private IUnixSession session;
+    private IWindowsSession session;
     private Map<String, Collection<InterfaceItem>> interfaces;
 
     // Implement IAdapter
 
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
-	if (session instanceof IUnixSession) {
-	    this.session = (IUnixSession)session;
+	if (session instanceof IWindowsSession) {
+	    this.session = (IWindowsSession)session;
 	    classes.add(InterfaceObject.class);
 	} else {
 	    notapplicable.add(InterfaceObject.class);
@@ -113,27 +116,38 @@ public class InterfaceAdapter implements IAdapter {
 	    return;
 	}
 	interfaces = new HashMap<String, Collection<InterfaceItem>>();
-	for (NetworkInterface intf : NetworkInterface.getInterfaces(session)) {
-	    EntityItemInterfaceType typeType = Factories.sc.unix.createEntityItemInterfaceType();
-	    switch(intf.getType()) {
-	      case ETHER:
-		typeType.setValue("ARPHRD_ETHER");
-		break;
-	      case LOOPBACK:
-		typeType.setValue("ARPHRD_LOOPBACK");
-		break;
-	      case PPP:
-		typeType.setValue("ARPHRD_PPP");
-		break;
-	      case SLIP:
-		typeType.setValue("ARPHRD_SLIP");
-		break;
-	      case TOKENRING:
-		typeType.setValue("ARPHRD_PRONET");
-		break;
-	      default:
+	List<NetworkInterface> intfs = NetworkInterface.getInterfaces(session);
+	for (int i=0; i < intfs.size(); i++) {
+	    NetworkInterface intf = intfs.get(i);
+	    if (intf == null) {
+		continue;
+	    }
+
+	    EntityItemIntType indexType = Factories.sc.core.createEntityItemIntType();
+	    indexType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	    indexType.setValue(Integer.toString(i));
+
+	    EntityItemInterfaceTypeType typeType = Factories.sc.windows.createEntityItemInterfaceTypeType();
+	    if (intf.getType() == null) {
 		typeType.setStatus(StatusEnumeration.NOT_COLLECTED);
-		break;
+	    } else {
+		switch(intf.getType()) {
+		  case ETHER:
+		    typeType.setValue("MIB_IF_TYPE_ETHERNET");
+		    break;
+		  case LOOPBACK:
+		    typeType.setValue("MIB_IF_TYPE_LOOPBACK");
+		    break;
+		  case FDDI:
+		    typeType.setValue("MIB_IF_TYPE_FDDI");
+		    break;
+		  case TOKENRING:
+		    typeType.setValue("MIB_IF_TYPE_TOKENRING");
+		    break;
+		  default:
+		    typeType.setValue("MIB_IF_TYPE_OTHER");
+		    break;
+		}
 	    }
 
 	    String name = intf.getName();
@@ -151,20 +165,17 @@ public class InterfaceAdapter implements IAdapter {
 		hardwareAddr.setValue(intf.getHardwareAddress());
 	    }
 
-	    Collection<EntityItemStringType> flags = new ArrayList<EntityItemStringType>();
-	    for (String flag : intf.getFlags()) {
-		EntityItemStringType flagType = Factories.sc.core.createEntityItemStringType();
-		flagType.setValue(flag);
-		flags.add(flagType);
-	    }
+	    EntityItemAddrTypeType addrType = Factories.sc.windows.createEntityItemAddrTypeType();
+	    addrType.setStatus(StatusEnumeration.NOT_COLLECTED);
 
-	    if (intf.getIPAddresses().size() > 0) {
+	    if (intf.getIPAddresses() != null && intf.getIPAddresses().size() > 0) {
 		for (NetworkInterface.IPAddress addr : intf.getIPAddresses()) {
-		    InterfaceItem item = Factories.sc.unix.createInterfaceItem();
+		    InterfaceItem item = Factories.sc.windows.createInterfaceItem();
+		    item.setIndex(indexType);
 		    item.setType(typeType);
 		    item.setName(nameType);
 		    item.setHardwareAddr(hardwareAddr);
-		    item.getFlag().addAll(flags);
+		    item.getAddrType().add(addrType);
 
 		    EntityItemIPAddressStringType inetAddr = Factories.sc.core.createEntityItemIPAddressStringType();
 		    switch(addr.getVersion()) {
@@ -187,6 +198,7 @@ public class InterfaceAdapter implements IAdapter {
 
 		      case V6:
 			inetAddr.setDatatype(SimpleDatatypeEnumeration.IPV_6_ADDRESS.value());
+System.out.println("DAS IP6: " + addr.getAddress() + "/" + addr.getMask());
 			if (addr.getMask() == null) {
 			    inetAddr.setValue(addr.getAddress());
 			} else {
@@ -199,11 +211,12 @@ public class InterfaceAdapter implements IAdapter {
 		    interfaces.get(name).add(item);
 		}
 	    } else {
-		InterfaceItem item = Factories.sc.unix.createInterfaceItem();
+		InterfaceItem item = Factories.sc.windows.createInterfaceItem();
+		item.setIndex(indexType);
 		item.setType(typeType);
 		item.setName(nameType);
 		item.setHardwareAddr(hardwareAddr);
-		item.getFlag().addAll(flags);
+		item.getAddrType().add(addrType);
 		EntityItemIPAddressStringType inetAddr = Factories.sc.core.createEntityItemIPAddressStringType();
 		inetAddr.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 		item.setInetAddr(inetAddr);

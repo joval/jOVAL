@@ -4,13 +4,23 @@
 package org.joval.scap.oval.sysinfo;
 
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import jsaf.intf.unix.system.IUnixSession;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.intf.windows.wmi.ISWbemObject;
+import jsaf.intf.windows.wmi.ISWbemProperty;
+import jsaf.intf.windows.wmi.ISWbemPropertySet;
+import jsaf.intf.windows.wmi.IWmiProvider;
 import jsaf.util.SafeCLI;
 
 /**
@@ -19,7 +29,7 @@ import jsaf.util.SafeCLI;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UnixNetworkInterface {
+public class NetworkInterface {
     /**
      * Convert a hex string to an IPv4 address string (i.e., A.B.C.D).
      */
@@ -46,11 +56,98 @@ public class UnixNetworkInterface {
 	return sb.toString();
     }
 
+    public static List<NetworkInterface> getInterfaces(IWindowsSession session) throws Exception {
+	IWmiProvider wmi = session.getWmiProvider();
+	Map<Integer, List<IPAddress>> addressMap = new HashMap<Integer, List<IPAddress>>();
+	for (ISWbemObject obj : wmi.execQuery(IWmiProvider.CIMv2, "Select * from Win32_NetworkAdapterConfiguration")) {
+	    ISWbemPropertySet props = obj.getProperties();
+	    Integer index = props.getItem("InterfaceIndex").getValueAsInteger();
+
+	    ISWbemProperty prop = props.getItem("InterfaceIndex");
+	    index = prop.getValueAsInteger();
+
+	    prop = props.getItem("IPAddress");
+	    if (prop != null) {
+		String[] addresses = prop.getValueAsArray();
+		if (addresses != null) {
+		    String[] subnets = props.getItem("IPSubnet").getValueAsArray();
+		    addressMap.put(index, new ArrayList<IPAddress>());
+		    for (int i=0; i < addresses.length; i++) {
+			String addr = addresses[i];
+			IPAddress.Version version = addr.indexOf(":") == -1 ? IPAddress.Version.V4 : IPAddress.Version.V6;
+			String mask = subnets[i];
+			String broadcast = null;
+			if (version == IPAddress.Version.V4) {
+			    ISWbemProperty zProp = props.getItem("IPUseZeroBroadcast");
+			    boolean useZeros = zProp == null ? false : zProp.getValueAsBoolean().booleanValue();
+			    broadcast = getBroadcastAddress(addr, mask, useZeros);
+			}
+			addressMap.get(index).add(new IPAddress(version, addr, broadcast, mask));
+		    }
+		}
+	    }
+	}
+
+	Map<Integer, NetworkInterface> interfaceMap = new HashMap<Integer, NetworkInterface>();
+	for (ISWbemObject obj : wmi.execQuery(IWmiProvider.CIMv2, "Select * from Win32_NetworkAdapter")) {
+	    ISWbemPropertySet props = obj.getProperties();
+	    Integer index = props.getItem("InterfaceIndex").getValueAsInteger();
+	    Collection<IPAddress> addresses = addressMap.get(index);
+
+	    Type type = null;
+	    ISWbemProperty prop = props.getItem("AdapterTypeId");
+	    if (prop != null) {
+		switch(prop.getValueAsInteger().intValue()) {
+		  case 0x0:
+		    type = Type.ETHER;
+		    break;
+		  case 0x1:
+		    type = Type.TOKENRING;
+		    break;
+		  case 0x2:
+		    type = Type.FDDI;
+		    break;
+		  case 0x3:
+		    // WAN - could be PPP or SLIP, so leave null (not collected)
+		    break;
+		  default:
+		    type = Type.UNKNOWN;
+		    break;
+		}
+	    }
+
+	    String name = null;
+	    prop = props.getItem("Name");
+	    if (prop != null) {
+		name = prop.getValueAsString();
+	    }
+
+	    String hwaddr = null;
+	    prop = props.getItem("MACAddress");
+	    if (prop != null) {
+		hwaddr = prop.getValueAsString();
+	    }
+
+	    interfaceMap.put(index, new NetworkInterface(type, name, hwaddr, addresses, null));
+	}
+
+	int len = interfaceMap.size();
+	for (Integer val : interfaceMap.keySet()) {
+	    int i = val.intValue();
+	    len = Math.max(len, i);
+	}
+	List<NetworkInterface> result = Arrays.asList(new NetworkInterface[len + 1]);
+	for (Map.Entry<Integer, NetworkInterface> entry : interfaceMap.entrySet()) {
+	    result.set(entry.getKey().intValue(), entry.getValue());
+	}
+	return result;
+    }
+
     /**
      * Given a UNIX session, fetch information about the network interfaces.
      */
-    public static List<UnixNetworkInterface> getInterfaces(IUnixSession session) throws Exception {
-	ArrayList<UnixNetworkInterface> interfaces = new ArrayList<UnixNetworkInterface>();
+    public static List<NetworkInterface> getInterfaces(IUnixSession session) throws Exception {
+	ArrayList<NetworkInterface> interfaces = new ArrayList<NetworkInterface>();
 	ArrayList<String> lines = new ArrayList<String>();
 	List<String> rawOutput = null;
 	switch(session.getFlavor()) {
@@ -136,7 +233,7 @@ public class UnixNetworkInterface {
     }
 
     public enum Type {
-	UNKNOWN, ETHER, LOOPBACK, PPP, SLIP, TOKENRING;
+	UNKNOWN, ETHER, FDDI, LOOPBACK, PPP, SLIP, TOKENRING;
     }
 
     public Type getType() {
@@ -194,10 +291,15 @@ public class UnixNetworkInterface {
 	IPAddress(Version version, String addr, String broadcast, String mask) {
 	    this.version = version;
 	    this.addr = addr;
-	    if (version == Version.V4) {
+	    switch(version) {
+	      case V4:
 		this.mask = toIp4AddressString(mask);
+		this.broadcast = broadcast;
+		break;
+	      case V6:
+		this.mask = mask;
+		break;
 	    }
-	    this.broadcast = broadcast;
 	}
     }
 
@@ -208,7 +310,7 @@ public class UnixNetworkInterface {
     private Collection<String> flags;
     private Collection<IPAddress> addresses;
 
-    private UnixNetworkInterface(Type type, String name, String hwaddr, Collection<IPAddress> addresses,
+    private NetworkInterface(Type type, String name, String hwaddr, Collection<IPAddress> addresses,
 		Collection<String> flags) {
 
 	this.type = type;
@@ -218,7 +320,7 @@ public class UnixNetworkInterface {
 	this.flags = flags;
     }
 
-    private static UnixNetworkInterface createDarwinInterface(ArrayList<String> lines) {
+    private static NetworkInterface createDarwinInterface(ArrayList<String> lines) {
 	Type type = Type.UNKNOWN;
 	Collection<IPAddress> addresses = new ArrayList<IPAddress>();
 	Collection<String> flags = new ArrayList<String>();
@@ -272,7 +374,10 @@ public class UnixNetworkInterface {
 			broadcast = tok.nextToken();
 		    }
 		}
-		addresses.add(new IPAddress(IPAddress.Version.V4, addr, null, mask));
+		if (broadcast == null) {
+		    broadcast = getBroadcastAddress(addr, mask, false);
+		}
+		addresses.add(new IPAddress(IPAddress.Version.V4, addr, broadcast, mask));
 	    } else if ("ether".equals(addressType)) {
 		if (type == Type.UNKNOWN) {
 		    type = Type.ETHER;
@@ -280,10 +385,10 @@ public class UnixNetworkInterface {
 		hwaddr = tok.nextToken();
 	    }
 	}
-	return new UnixNetworkInterface(type, name, hwaddr, addresses, flags);
+	return new NetworkInterface(type, name, hwaddr, addresses, flags);
     }
 
-    private static UnixNetworkInterface createUnixInterface(ArrayList<String> lines, IUnixSession.Flavor flavor) {
+    private static NetworkInterface createUnixInterface(ArrayList<String> lines, IUnixSession.Flavor flavor) {
 	Type type = Type.UNKNOWN;
 	Collection<IPAddress> addresses = new ArrayList<IPAddress>();
 	Collection<String> flags = new ArrayList<String>();
@@ -344,6 +449,9 @@ public class UnixNetworkInterface {
 			broadcast = tok.nextToken();
 		    }
 		}
+		if (broadcast == null) {
+		    broadcast = getBroadcastAddress(addr, mask, false);
+		}
 		addresses.add(new IPAddress(IPAddress.Version.V4, addr, broadcast, mask));
 	    } else if ("ether".equals(addressType)) {
 		if (type == Type.UNKNOWN) {
@@ -352,10 +460,10 @@ public class UnixNetworkInterface {
 		hwaddr = tok.nextToken();
 	    }
 	}
-	return new UnixNetworkInterface(type, name, hwaddr, addresses, flags);
+	return new NetworkInterface(type, name, hwaddr, addresses, flags);
     }
 
-    private static UnixNetworkInterface createLinuxInterface(ArrayList<String> lines) {
+    private static NetworkInterface createLinuxInterface(ArrayList<String> lines) {
 	Type type = Type.UNKNOWN;
 	Collection<IPAddress> addresses = new ArrayList<IPAddress>();
 	Collection<String> flags = new ArrayList<String>();
@@ -392,6 +500,9 @@ public class UnixNetworkInterface {
 			mask = s.substring(5);
 		    }
 		}
+		if (broadcast == null) {
+		    broadcast = getBroadcastAddress(addr, mask, false);
+		}
 		addresses.add(new IPAddress(IPAddress.Version.V4, addr, broadcast, mask));
 	    }
 	}
@@ -425,6 +536,28 @@ public class UnixNetworkInterface {
 		flags.add(tok.nextToken());
 	    }
 	}
-	return new UnixNetworkInterface(type, name, hwaddr, addresses, flags);
+	return new NetworkInterface(type, name, hwaddr, addresses, flags);
+    }
+
+    private static String getBroadcastAddress(String addrString, String maskString, boolean useZeros) {
+	if (addrString == null || maskString == null) {
+	    return null;
+	}
+	try {
+	    byte[] addr = InetAddress.getByName(addrString).getAddress();
+	    byte[] mask = InetAddress.getByName(maskString).getAddress();
+	    byte[] broadcast = new byte[addr.length];
+	    for (int i=0; i < addr.length; i++) {
+		broadcast[i] = (byte)((0xFF & addr[i]) & (0xFF & mask[i]));
+	    }
+	    if (!useZeros) {
+		for (int i=0; i < mask.length; i++) {
+		    broadcast[i] = (byte)((0xFF & broadcast[i]) | (0xFF ^ (0xFF & mask[i])));
+		}
+	    }
+	    return InetAddress.getByAddress(broadcast).toString().substring(1);
+	} catch (UnknownHostException e) {
+	}
+	return null;
     }
 }

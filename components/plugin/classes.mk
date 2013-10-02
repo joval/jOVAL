@@ -57,6 +57,7 @@ CLASSES=\
 	org.joval.scap.oval.adapter.windows.FileeffectiverightsAdapter			\
 	org.joval.scap.oval.adapter.windows.GroupAdapter				\
 	org.joval.scap.oval.adapter.windows.GroupSidAdapter				\
+	org.joval.scap.oval.adapter.windows.InterfaceAdapter				\
 	org.joval.scap.oval.adapter.windows.LicenseAdapter				\
 	org.joval.scap.oval.adapter.windows.LockoutpolicyAdapter			\
 	org.joval.scap.oval.adapter.windows.MetabaseAdapter				\
@@ -79,6 +80,6 @@ CLASSES=\
 	org.joval.scap.oval.adapter.windows.WmiAdapter					\
 	org.joval.scap.oval.adapter.windows.WuaupdatesearcherAdapter			\
 	org.joval.scap.oval.sysinfo.SysinfoFactory					\
-	org.joval.scap.oval.sysinfo.UnixNetworkInterface				\
+	org.joval.scap.oval.sysinfo.NetworkInterface					\
 	org.joval.scap.oval.sysinfo.UnixSystemInfo					\
 	org.joval.scap.oval.sysinfo.WindowsSystemInfo

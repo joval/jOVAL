@@ -45,11 +45,6 @@ class WindowsSystemInfo {
     static final String CURRENTVERSION_VAL	= "CurrentVersion";
     static final String PRODUCTNAME_VAL		= "ProductName";
 
-    static final String MAC_ADDR_FIELD		= "MACAddress";
-    static final String IP_ADDR_FIELD		= "IPAddress";
-    static final String DESCRIPTION_FIELD	= "Description";
-    static final String ADAPTER_WQL		= "select * from Win32_NetworkAdapterConfiguration";
-
     public static SystemInfoType getSystemInfo(IWindowsSession session) {
 	IRegistry registry = session.getRegistry(session.getNativeView());
 	IWmiProvider wmi = session.getWmiProvider();
@@ -79,27 +74,16 @@ class WindowsSystemInfo {
 
 	try {
 	    InterfacesType interfacesType = Factories.sc.core.createInterfacesType();
-	    ISWbemObjectSet result = wmi.execQuery(IWmiProvider.CIMv2, ADAPTER_WQL);
-	    Iterator <ISWbemObject>iter = result.iterator();
-	    while (iter.hasNext()) {
-		ISWbemPropertySet row = iter.next().getProperties();
-		ISWbemProperty macAddress = row.getItem(MAC_ADDR_FIELD);
-		if (macAddress != null) {
-		    ISWbemProperty ipAddress = row.getItem(IP_ADDR_FIELD);
-		    if (ipAddress != null) {
-			String[] ipAddresses = ipAddress.getValueAsArray();
-			if (ipAddresses != null) {
-			    for (int i=0; i < 2 && i < ipAddresses.length; i++) {
-				InterfaceType interfaceType = Factories.sc.core.createInterfaceType();
-				interfaceType.setMacAddress(macAddress.getValueAsString());
-				String description = row.getItem(DESCRIPTION_FIELD).getValueAsString();
-				if (description != null) {
-				    interfaceType.setInterfaceName(description);
-				}
-				interfaceType.setIpAddress(ipAddresses[i]);
-				interfacesType.getInterface().add(interfaceType);
-			    }
-			}
+	    for (NetworkInterface intf : NetworkInterface.getInterfaces(session)) {
+		if (intf == null) {
+		    continue;
+		} else if (intf.getIPAddresses() != null) {
+		    for (NetworkInterface.IPAddress addr : intf.getIPAddresses()) {
+			InterfaceType interfaceType = Factories.sc.core.createInterfaceType();
+			interfaceType.setMacAddress(intf.getHardwareAddress());
+			interfaceType.setInterfaceName(intf.getName());
+			interfaceType.setIpAddress(addr.getAddress());
+			interfacesType.getInterface().add(interfaceType);
 		    }
 		}
 	    }

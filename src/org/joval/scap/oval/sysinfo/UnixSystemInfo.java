@@ -93,9 +93,9 @@ class UnixSystemInfo {
 	//
 	try {
 	    InterfacesType interfacesType = Factories.sc.core.createInterfacesType();
-	    List<UnixNetworkInterface> interfaces = UnixNetworkInterface.getInterfaces(session);
-	    for (UnixNetworkInterface intf : interfaces) {
-		for (UnixNetworkInterface.IPAddress addr : intf.getIPAddresses()) {
+	    List<NetworkInterface> interfaces = NetworkInterface.getInterfaces(session);
+	    for (NetworkInterface intf : interfaces) {
+		for (NetworkInterface.IPAddress addr : intf.getIPAddresses()) {
 		    InterfaceType interfaceType = Factories.sc.core.createInterfaceType();
 		    interfaceType.setMacAddress(intf.getHardwareAddress());
 		    interfaceType.setInterfaceName(intf.getName());

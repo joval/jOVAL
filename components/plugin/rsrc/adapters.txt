@@ -52,6 +52,7 @@ org.joval.scap.oval.adapter.windows.FileauditedpermissionsAdapter
 org.joval.scap.oval.adapter.windows.FileeffectiverightsAdapter
 org.joval.scap.oval.adapter.windows.GroupAdapter
 org.joval.scap.oval.adapter.windows.GroupSidAdapter
+org.joval.scap.oval.adapter.windows.InterfaceAdapter
 org.joval.scap.oval.adapter.windows.LicenseAdapter
 org.joval.scap.oval.adapter.windows.LockoutpolicyAdapter
 org.joval.scap.oval.adapter.windows.MetabaseAdapter
