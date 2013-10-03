@@ -27,6 +27,7 @@ import scap.oval.systemcharacteristics.core.ItemType;
 import scap.oval.systemcharacteristics.core.EntityItemIntType;
 import scap.oval.systemcharacteristics.core.EntityItemStringType;
 import scap.oval.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.StatusEnumeration;
 import scap.oval.systemcharacteristics.linux.PartitionItem;
 
 import org.joval.intf.plugin.IAdapter;
@@ -43,6 +44,7 @@ import org.joval.util.JOVALMsg;
 public class PartitionAdapter implements IAdapter {
     private IUnixSession session;
     private HashMap<String, PartitionItem> partitions;
+    private HashMap<PartitionItem, MessageType> messages;
     private CollectException error;
 
     // Implement IAdapter
@@ -103,6 +105,11 @@ public class PartitionAdapter implements IAdapter {
 	    rc.addMessage(msg);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
+	for (PartitionItem item : items) {
+	    if (messages.containsKey(item)) {
+		rc.addMessage(messages.get(item));
+	    }
+	}
 	return items;
     }
 
@@ -119,32 +126,28 @@ public class PartitionAdapter implements IAdapter {
 	}
 
 	partitions = new HashMap<String, PartitionItem>();
-
+	messages = new HashMap<PartitionItem, MessageType>();
 	try {
-	Map<String, Device> devices = getBlockDevices();
+	    Map<String, Device> devices = getBlockDevices();
 	    for (Mount mount : getMounts()) {
-		if (devices.containsKey(mount.deviceName)) {
-		    Device dev = devices.get(mount.deviceName);
+		if (!mount.mountPoint.startsWith("/")) {
+		    continue; // skip
+		}
+
+		PartitionItem item = Factories.sc.linux.createPartitionItem();
+
+		for (String mountOption : mount.options) {
+		    EntityItemStringType option = Factories.sc.core.createEntityItemStringType();
+		    option.setValue(mountOption);
+		    item.getMountOptions().add(option);
+		}
+
+		EntityItemStringType mountPoint = Factories.sc.core.createEntityItemStringType();
+		mountPoint.setValue(mount.mountPoint);
+		item.setMountPoint(mountPoint);
+
+		try {
 		    Space space = new Space(mount.mountPoint);
-		    PartitionItem item = Factories.sc.linux.createPartitionItem();
-
-		    EntityItemStringType device = Factories.sc.core.createEntityItemStringType();
-		    device.setValue(dev.name);
-		    item.setDevice(device);
-
-		    EntityItemStringType fsType = Factories.sc.core.createEntityItemStringType();
-		    fsType.setValue(dev.type);
-		    item.setFsType(fsType);
-
-		    for (String mountOption : mount.options) {
-			EntityItemStringType option = Factories.sc.core.createEntityItemStringType();
-			option.setValue(mountOption);
-			item.getMountOptions().add(option);
-		    }
-
-		    EntityItemStringType mountPoint = Factories.sc.core.createEntityItemStringType();
-		    mountPoint.setValue(mount.mountPoint);
-		    item.setMountPoint(mountPoint);
 
 		    EntityItemIntType spaceLeft = Factories.sc.core.createEntityItemIntType();
 		    spaceLeft.setDatatype(SimpleDatatypeEnumeration.INT.value());
@@ -160,13 +163,56 @@ public class PartitionAdapter implements IAdapter {
 		    totalSpace.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		    totalSpace.setValue(Integer.toString(space.capacity));
 		    item.setTotalSpace(totalSpace);
+		} catch (SpaceException e) {
+		    MessageType msg = Factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.WARNING);
+		    msg.setValue(e.getMessage());
+		    messages.put(item, msg);
+
+		    EntityItemIntType spaceLeft = Factories.sc.core.createEntityItemIntType();
+		    spaceLeft.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    spaceLeft.setStatus(StatusEnumeration.ERROR);
+		    item.setSpaceLeft(spaceLeft);
+
+		    EntityItemIntType spaceUsed = Factories.sc.core.createEntityItemIntType();
+		    spaceUsed.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    spaceUsed.setStatus(StatusEnumeration.ERROR);
+		    item.setSpaceUsed(spaceUsed);
+
+		    EntityItemIntType totalSpace = Factories.sc.core.createEntityItemIntType();
+		    totalSpace.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    totalSpace.setStatus(StatusEnumeration.ERROR);
+		    item.setTotalSpace(totalSpace);
+		}
+
+		if (devices.containsKey(mount.deviceName)) {
+		    Device dev = devices.get(mount.deviceName);
+
+		    EntityItemStringType device = Factories.sc.core.createEntityItemStringType();
+		    device.setValue(dev.name);
+		    item.setDevice(device);
+
+		    EntityItemStringType fsType = Factories.sc.core.createEntityItemStringType();
+		    fsType.setValue(dev.type);
+		    item.setFsType(fsType);
 
 		    EntityItemStringType uuid = Factories.sc.core.createEntityItemStringType();
 		    uuid.setValue(dev.uuid);
 		    item.setUuid(uuid);
-	    
-		    partitions.put(mount.mountPoint, item);
+		} else {
+		    EntityItemStringType device = Factories.sc.core.createEntityItemStringType();
+		    device.setValue(mount.deviceName);
+		    item.setDevice(device);
+
+		    EntityItemStringType fsType = Factories.sc.core.createEntityItemStringType();
+		    fsType.setValue(mount.type);
+		    item.setFsType(fsType);
+
+		    EntityItemStringType uuid = Factories.sc.core.createEntityItemStringType();
+		    uuid.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		    item.setUuid(uuid);
 		}
+		partitions.put(mount.mountPoint, item);
 	    }
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -285,19 +331,31 @@ public class PartitionAdapter implements IAdapter {
 
 	Space(String mountPoint) throws Exception {
 	    int lineNum = 0;
-	    for (String line : SafeCLI.multiLine("/bin/df --direct -P " + mountPoint, session, IUnixSession.Timeout.S)) {
-		line = line.trim();
-		if (line.length() > 0 && lineNum++ > 0) {
-		    StringTokenizer tok = new StringTokenizer(line);
-		    if (tok.countTokens() >= 4) {
-			tok.nextToken(); // mount point
-			capacity = Integer.parseInt(tok.nextToken());
-			used = Integer.parseInt(tok.nextToken());
-			available = Integer.parseInt(tok.nextToken());
+	    String cmd = new StringBuffer("/bin/df --direct -P ").append(mountPoint).toString();
+	    SafeCLI.ExecData data = SafeCLI.execData(cmd, null, session, session.getTimeout(IUnixSession.Timeout.S));
+	    if (data.getExitCode() == 0) {
+		for (String line : data.getLines()) {
+		    line = line.trim();
+		    if (line.length() > 0 && lineNum++ > 0) {
+			StringTokenizer tok = new StringTokenizer(line);
+			if (tok.countTokens() >= 4) {
+			    tok.nextToken(); // mount point
+			    capacity = Integer.parseInt(tok.nextToken());
+			    used = Integer.parseInt(tok.nextToken());
+			    available = Integer.parseInt(tok.nextToken());
+			}
+			break;
 		    }
-		    break;
 		}
+	    } else {
+		throw new SpaceException(new String(data.getData(), StringTools.UTF8).trim());
 	    }
+	}
+    }
+
+    class SpaceException extends Exception {
+	SpaceException(String message) {
+	    super(message);
 	}
     }
 }
