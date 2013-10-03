@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import javax.xml.transform.Transformer;
 import org.w3c.dom.Element;
 
 import org.oasis.catalog.Catalog;
@@ -118,4 +119,10 @@ public interface IReport extends ITransformable {
      * Serialize the report to a file.
      */
     void writeXML(File f) throws IOException;
+
+
+    /**
+     * Transform using the specified template, and serialize to the specified file.
+     */
+    void writeTransform(Transformer transform, File output);
 }

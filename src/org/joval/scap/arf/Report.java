@@ -27,6 +27,9 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import org.w3c.dom.Element;
 
@@ -505,6 +508,16 @@ public class Report implements IReport, ILoggable {
 		}
 	    }
 	}
+    }
+
+    public void writeTransform(Transformer transform, File output) {
+        try {
+            transform.transform(getSource(), new StreamResult(output));
+        } catch (JAXBException e) {
+            logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+        } catch (TransformerException e) {
+            logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+        }
     }
 
     // Implement ITransformable
