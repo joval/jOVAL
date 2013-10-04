@@ -38,7 +38,7 @@ import scap.oval.systemcharacteristics.unix.RoutingtableItem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
-import org.joval.scap.oval.sysinfo.UnixNetworkInterface;
+import org.joval.scap.oval.sysinfo.NetworkInterface;
 import org.joval.util.JOVALMsg;
 
 /**
@@ -179,7 +179,7 @@ public class RoutingtableAdapter implements IAdapter {
 		    address = "0.0.0.0";
 	    }
 	    try {
-		addr.setValue(UnixNetworkInterface.toIp4AddressString(address));
+		addr.setValue(NetworkInterface.toIp4AddressString(address));
 	    } catch (IllegalArgumentException e) {
 		addr.setValue(address); // this will not be valid...
 	    }
