@@ -8,6 +8,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.JAXBIntrospector;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.dom.DOMResult;
@@ -33,8 +34,33 @@ public class DOMTools {
 	TransformerFactory xf = XSLTools.XSLVersion.V1.getFactory();
 	Transformer transformer = xf.newTransformer();
 	DOMResult result = new DOMResult();
-	transformer.transform(source.getSource(), result);
-	return ((Document)result.getNode()).getDocumentElement();
+
+	//
+	// There's some bug in the Java transformer that makes it unsafe when thrashed statically by multiple
+	// threads (even though that should work just fine) -- a ConcurrentModificationException is generated
+	// internally, leading to a TransformerException.
+	//
+	// So, if this happens, we just retry after waiting a millisecond. But if it keeps happening after a
+	// thousand attempts, we give up.
+	//
+	TransformerException te = null;
+	for(int i=0; i < 1000; i++) {
+	    try {
+		transformer.transform(source.getSource(), result);
+		return ((Document)result.getNode()).getDocumentElement();
+	    } catch (TransformerException e) {
+		te = e;
+		if (e.getCause() instanceof java.util.ConcurrentModificationException) {
+		    try {
+			Thread.sleep(1);
+		    } catch (InterruptedException ie) {
+		    }
+		} else {
+		    throw te;
+		}
+	    }
+	}
+	throw te;
     }
 
     /**
