@@ -188,7 +188,7 @@ public class IflistenersAdapter implements IAdapter {
 		    item.setHwAddress(hwAddress);
 
 		    EntityItemProtocolType protocol = Factories.sc.linux.createEntityItemProtocolType();
-		    protocol.setValue(Protocol.get(listener.proto_num).toString());
+		    protocol.setValue(Protocol.fromValue(listener.proto_num).toString());
 		    item.setProtocol(protocol);
 
 		    pid = inodePidMap.get(listener.inode);
@@ -320,7 +320,7 @@ public class IflistenersAdapter implements IAdapter {
 	    this.value = value;
 	}
 
-	static Protocol get(int i) throws IllegalArgumentException {
+	static Protocol fromValue(int i) throws IllegalArgumentException {
 	    for (Protocol p : values()) {
 		if (i == p.value) return p;
 	    }
