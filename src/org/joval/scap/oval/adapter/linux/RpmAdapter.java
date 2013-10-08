@@ -26,13 +26,16 @@ import scap.oval.common.MessageLevelEnumeration;
 import scap.oval.common.OperationEnumeration;
 import scap.oval.common.SimpleDatatypeEnumeration;
 import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.core.EntityObjectAnySimpleType;
 import scap.oval.definitions.core.EntityObjectStringType;
 import scap.oval.definitions.linux.RpmInfoBehaviors;
 import scap.oval.definitions.linux.RpminfoObject;
 import scap.oval.definitions.linux.RpmVerifyBehaviors;
 import scap.oval.definitions.linux.RpmVerifyFileBehaviors;
+import scap.oval.definitions.linux.RpmVerifyPackageBehaviors;
 import scap.oval.definitions.linux.RpmverifyObject;
 import scap.oval.definitions.linux.RpmverifyfileObject;
+import scap.oval.definitions.linux.RpmverifypackageObject;
 import scap.oval.systemcharacteristics.core.EntityItemBoolType;
 import scap.oval.systemcharacteristics.core.EntityItemStringType;
 import scap.oval.systemcharacteristics.core.FlagEnumeration;
@@ -43,6 +46,7 @@ import scap.oval.systemcharacteristics.linux.EntityItemRpmVerifyResultType;
 import scap.oval.systemcharacteristics.linux.RpminfoItem;
 import scap.oval.systemcharacteristics.linux.RpmverifyItem;
 import scap.oval.systemcharacteristics.linux.RpmverifyfileItem;
+import scap.oval.systemcharacteristics.linux.RpmverifypackageItem;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.scap.oval.IBatch;
@@ -93,6 +97,7 @@ public class RpmAdapter implements IAdapter, IBatch {
 		classes.add(RpminfoObject.class);
 		classes.add(RpmverifyObject.class);
 		classes.add(RpmverifyfileObject.class);
+		classes.add(RpmverifypackageObject.class);
 		break;
 	    }
 	}
@@ -100,6 +105,7 @@ public class RpmAdapter implements IAdapter, IBatch {
 	    notapplicable.add(RpminfoObject.class);
 	    notapplicable.add(RpmverifyObject.class);
 	    notapplicable.add(RpmverifyfileObject.class);
+	    notapplicable.add(RpmverifypackageObject.class);
 	}
 	return classes;
     }
@@ -107,11 +113,13 @@ public class RpmAdapter implements IAdapter, IBatch {
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	try {
 	    if (obj instanceof RpminfoObject) {
-		return getRpminfoItems(obj, rc);
+		return getRpminfoItems((RpminfoObject)obj, rc);
 	    } else if (obj instanceof RpmverifyObject) {
-		return getRpmverifyItems(obj, rc);
+		return getRpmverifyItems((RpmverifyObject)obj, rc);
 	    } else if (obj instanceof RpmverifyfileObject) {
-		return getRpmverifyfileItems(obj, rc);
+		return getRpmverifyfileItems((RpmverifyfileObject)obj, rc);
+	    } else if (obj instanceof RpmverifypackageObject) {
+		return getRpmverifypackageItems((RpmverifypackageObject)obj, rc);
 	    } else {
 		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OBJECT, obj.getClass().getName(), obj.getId());
 		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
@@ -242,8 +250,7 @@ public class RpmAdapter implements IAdapter, IBatch {
 
     // Private
 
-    private Collection<RpminfoItem> getRpminfoItems(ObjectType obj, IRequestContext rc) throws Exception {
-	RpminfoObject rObj = (RpminfoObject)obj;
+    private Collection<RpminfoItem> getRpminfoItems(RpminfoObject rObj, IRequestContext rc) throws Exception {
 	Collection<RpminfoItem> items = new ArrayList<RpminfoItem>();
 	for (RpmData datum : getRpmData(rObj.getName())) {
 	    items.add(toRpminfoItem(datum, rObj.getBehaviors()));
@@ -251,8 +258,7 @@ public class RpmAdapter implements IAdapter, IBatch {
 	return items;
     }
 
-    private Collection<RpmverifyItem> getRpmverifyItems(ObjectType obj, IRequestContext rc) throws Exception {
-	RpmverifyObject rObj = (RpmverifyObject)obj;
+    private Collection<RpmverifyItem> getRpmverifyItems(RpmverifyObject rObj, IRequestContext rc) throws Exception {
 	Collection<RpmverifyItem> items = new ArrayList<RpmverifyItem>();
 	for (Map.Entry<RpmData, Collection<String>> entry :
 	     filterFiles(getRpmData(rObj.getName()), rObj.getFilepath()).entrySet()) {
@@ -270,113 +276,11 @@ public class RpmAdapter implements IAdapter, IBatch {
 	return items;
     }
 
-    private Collection<RpmverifyfileItem> getRpmverifyfileItems(ObjectType obj, IRequestContext rc) throws Exception {
-	RpmverifyfileObject rObj = (RpmverifyfileObject)obj;
-	Collection<RpmData> data = getRpmData(rObj.getName());
+    private Collection<RpmverifyfileItem> getRpmverifyfileItems(RpmverifyfileObject rObj, IRequestContext rc)
+		throws Exception {
 
-	//
-	// Filter down the data according to the specified epoch, version, release and arch
-	//
-	Iterator<RpmData> iter = data.iterator();
-	while(iter.hasNext()) {
-	    RpmData datum = iter.next();
-	    switch(rObj.getEpoch().getOperation()) {
-	      case EQUALS:
-		if (!((String)rObj.getEpoch().getValue()).equals(datum.epoch)) {
-		    iter.remove();
-		}
-		break;
-	      case NOT_EQUAL:
-		if (((String)rObj.getEpoch().getValue()).equals(datum.epoch)) {
-		    iter.remove();
-		}
-		break;
-	      case PATTERN_MATCH:
-		Pattern p = Pattern.compile((String)rObj.getEpoch().getValue());
-		if (!p.matcher(datum.epoch).find()) {
-		    iter.remove();
-		}
-		break;
-	      default:
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, rObj.getEpoch().getOperation());
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-	    }
-	}
-	iter = data.iterator();
-	while(iter.hasNext()) {
-	    RpmData datum = iter.next();
-	    switch(rObj.getRpmVersion().getOperation()) {
-	      case EQUALS:
-		if (!((String)rObj.getRpmVersion().getValue()).equals(datum.version)) {
-		    iter.remove();
-		}
-		break;
-	      case NOT_EQUAL:
-		if (((String)rObj.getRpmVersion().getValue()).equals(datum.version)) {
-		    iter.remove();
-		}
-		break;
-	      case PATTERN_MATCH:
-		Pattern p = Pattern.compile((String)rObj.getRpmVersion().getValue());
-		if (!p.matcher(datum.version).find()) {
-		    iter.remove();
-		}
-		break;
-	      default:
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, rObj.getRpmVersion().getOperation());
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-	    }
-	}
-	iter = data.iterator();
-	while(iter.hasNext()) {
-	    RpmData datum = iter.next();
-	    switch(rObj.getRelease().getOperation()) {
-	      case EQUALS:
-		if (!((String)rObj.getRelease().getValue()).equals(datum.release)) {
-		    iter.remove();
-		}
-		break;
-	      case NOT_EQUAL:
-		if (((String)rObj.getRelease().getValue()).equals(datum.release)) {
-		    iter.remove();
-		}
-		break;
-	      case PATTERN_MATCH:
-		Pattern p = Pattern.compile((String)rObj.getRelease().getValue());
-		if (!p.matcher(datum.release).find()) {
-		    iter.remove();
-		}
-		break;
-	      default:
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, rObj.getRelease().getOperation());
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-	    }
-	}
-	iter = data.iterator();
-	while(iter.hasNext()) {
-	    RpmData datum = iter.next();
-	    switch(rObj.getArch().getOperation()) {
-	      case EQUALS:
-		if (!((String)rObj.getArch().getValue()).equals(datum.arch)) {
-		    iter.remove();
-		}
-		break;
-	      case NOT_EQUAL:
-		if (((String)rObj.getArch().getValue()).equals(datum.arch)) {
-		    iter.remove();
-		}
-		break;
-	      case PATTERN_MATCH:
-		Pattern p = Pattern.compile((String)rObj.getArch().getValue());
-		if (!p.matcher(datum.arch).find()) {
-		    iter.remove();
-		}
-		break;
-	      default:
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, rObj.getArch().getOperation());
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-	    }
-	}
+	Collection<RpmData> data = getRpmData(rObj.getName());
+	filterRpms(data, rObj.getArch(), rObj.getEpoch(), rObj.getRpmVersion(), rObj.getRelease());
 	Collection<RpmverifyfileItem> items = new ArrayList<RpmverifyfileItem>();
 	RpmVerifyBehaviors behaviors = toRpmVerifyBehaviors(rObj.getBehaviors());
 	for (Map.Entry<RpmData, Collection<String>> entry : filterFiles(data, rObj.getFilepath()).entrySet()) {
@@ -436,6 +340,26 @@ public class RpmAdapter implements IAdapter, IBatch {
 	return items;
     }
 
+    private Collection<RpmverifypackageItem> getRpmverifypackageItems(RpmverifypackageObject rObj, IRequestContext rc)
+		throws Exception {
+
+	Collection<RpmData> data = getRpmData(rObj.getName());
+	filterRpms(data, rObj.getArch(), rObj.getEpoch(), rObj.getRpmVersion(), rObj.getRelease());
+	Collection<RpmverifypackageItem> items = new ArrayList<RpmverifypackageItem>();
+	for (RpmData datum : data) {
+	    try {
+		items.add(getRpmverifypackageItem(datum, rObj.getBehaviors()));
+	    } catch (Exception e) {
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		rc.addMessage(msg);
+	    }
+	}
+	return items;
+    }
+
     /**
      * Get a list of RpmData matching the specified "name" entity.
      */
@@ -471,6 +395,114 @@ public class RpmAdapter implements IAdapter, IBatch {
 	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
 	return data;
+    }
+
+    /**
+     * Filter down the data according to the specified arch, epoch, version, and release.
+     */
+    private void filterRpms(Collection<RpmData> data, EntityObjectStringType arch, EntityObjectAnySimpleType epoch,
+		EntityObjectAnySimpleType version, EntityObjectAnySimpleType release) throws CollectException {
+
+	Iterator<RpmData> iter = data.iterator();
+	while(iter.hasNext()) {
+	    RpmData datum = iter.next();
+	    switch(arch.getOperation()) {
+	      case EQUALS:
+		if (!((String)arch.getValue()).equals(datum.arch)) {
+		    iter.remove();
+		}
+		break;
+	      case NOT_EQUAL:
+		if (((String)arch.getValue()).equals(datum.arch)) {
+		    iter.remove();
+		}
+		break;
+	      case PATTERN_MATCH:
+		Pattern p = Pattern.compile((String)arch.getValue());
+		if (!p.matcher(datum.arch).find()) {
+		    iter.remove();
+		}
+		break;
+	      default:
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, arch.getOperation());
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	    }
+	}
+	iter = data.iterator();
+	while(iter.hasNext()) {
+	    RpmData datum = iter.next();
+	    switch(epoch.getOperation()) {
+	      case EQUALS:
+		if (!((String)epoch.getValue()).equals(datum.epoch)) {
+		    iter.remove();
+		}
+		break;
+	      case NOT_EQUAL:
+		if (((String)epoch.getValue()).equals(datum.epoch)) {
+		    iter.remove();
+		}
+		break;
+	      case PATTERN_MATCH:
+		Pattern p = Pattern.compile((String)epoch.getValue());
+		if (!p.matcher(datum.epoch).find()) {
+		    iter.remove();
+		}
+		break;
+	      default:
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, epoch.getOperation());
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	    }
+	}
+	iter = data.iterator();
+	while(iter.hasNext()) {
+	    RpmData datum = iter.next();
+	    switch(version.getOperation()) {
+	      case EQUALS:
+		if (!((String)version.getValue()).equals(datum.version)) {
+		    iter.remove();
+		}
+		break;
+	      case NOT_EQUAL:
+		if (((String)version.getValue()).equals(datum.version)) {
+		    iter.remove();
+		}
+		break;
+	      case PATTERN_MATCH:
+		Pattern p = Pattern.compile((String)version.getValue());
+		if (!p.matcher(datum.version).find()) {
+		    iter.remove();
+		}
+		break;
+	      default:
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, version.getOperation());
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	    }
+	}
+	iter = data.iterator();
+	while(iter.hasNext()) {
+	    RpmData datum = iter.next();
+	    switch(release.getOperation()) {
+	      case EQUALS:
+		if (!((String)release.getValue()).equals(datum.release)) {
+		    iter.remove();
+		}
+		break;
+	      case NOT_EQUAL:
+		if (((String)release.getValue()).equals(datum.release)) {
+		    iter.remove();
+		}
+		break;
+	      case PATTERN_MATCH:
+		Pattern p = Pattern.compile((String)release.getValue());
+		if (!p.matcher(datum.release).find()) {
+		    iter.remove();
+		}
+		break;
+	      default:
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, release.getOperation());
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	    }
+	}
     }
 
     /**
@@ -871,10 +903,12 @@ public class RpmAdapter implements IAdapter, IBatch {
 	for (String line : SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.M)) {
 	    int ptr = line.indexOf("/");
 	    if (ptr == -1) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.WARNING);
-		msg.setValue(JOVALMsg.getMessage(JOVALMsg.WARNING_RPMVERIFY_LINE, line));
-		rc.addMessage(msg);
+		if (line.trim().length() > 0) {
+		    MessageType msg = Factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.WARNING);
+		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.WARNING_RPMVERIFY_LINE, line));
+		    rc.addMessage(msg);
+		}
 		continue;
 	    }
 	    String filepath = line.substring(ptr);
@@ -1034,5 +1068,65 @@ public class RpmAdapter implements IAdapter, IBatch {
 	    }
 	}
 	return items;
+    }
+
+    private RpmverifypackageItem getRpmverifypackageItem(RpmData datum, RpmVerifyPackageBehaviors behaviors) throws Exception {
+	RpmverifypackageItem item = Factories.sc.linux.createRpmverifypackageItem();
+
+	StringBuffer cmd = new StringBuffer("rpm -V ");
+	cmd.append("'").append(datum.name).append("'");
+	if (behaviors == null) {
+	    behaviors = Factories.definitions.linux.createRpmVerifyPackageBehaviors();
+	}
+	if (behaviors.getNodeps()) {
+	    cmd.append(" --nodeps");
+	}
+	if (behaviors.getNoscripts()) {
+	    cmd.append(" --noscripts");
+	}
+	boolean deps=true, scripts=true;
+	for (String line : SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.M)) {
+	    if (line.startsWith("Unsatisfied dependencies")) {
+		deps = false;
+	    } else if (line.trim().length() > 0) {
+		// Any output means a failure
+		scripts = false;
+	    }
+	}
+
+	if (!behaviors.getNodeps()) {
+	    EntityItemBoolType dependencyCheckPassed = Factories.sc.core.createEntityItemBoolType();
+	    dependencyCheckPassed.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	    dependencyCheckPassed.setValue(deps ? "1" : "0");
+	    item.setDependencyCheckPassed(dependencyCheckPassed);
+	}
+	if (!behaviors.getNoscripts()) {
+	    EntityItemBoolType verificationScriptSuccessful = Factories.sc.core.createEntityItemBoolType();
+	    verificationScriptSuccessful.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	    verificationScriptSuccessful.setValue(scripts ? "1" : "0");
+	    item.setVerificationScriptSuccessful(verificationScriptSuccessful);
+	}
+
+	EntityItemStringType extendedName = Factories.sc.core.createEntityItemStringType();
+	extendedName.setValue(datum.extendedName);
+	item.setExtendedName(extendedName);
+
+	EntityItemStringType arch = Factories.sc.core.createEntityItemStringType();
+	arch.setValue(datum.arch);
+	item.setArch(arch);
+
+	RpmverifypackageItem.Epoch epoch = Factories.sc.linux.createRpmverifypackageItemEpoch();
+	epoch.setValue(datum.epoch);
+	item.setEpoch(epoch);
+
+	RpmverifypackageItem.Version version = Factories.sc.linux.createRpmverifypackageItemVersion();
+	version.setValue(datum.version);
+	item.setRpmVersion(version);
+
+	RpmverifypackageItem.Release release = Factories.sc.linux.createRpmverifypackageItemRelease();
+	release.setValue(datum.release);
+	item.setRelease(release);
+
+	return item;
     }
 }
