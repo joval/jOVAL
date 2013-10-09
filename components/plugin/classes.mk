@@ -26,6 +26,7 @@ CLASSES=\
 	org.joval.scap.oval.adapter.linux.SelinuxbooleanAdapter				\
 	org.joval.scap.oval.adapter.linux.SelinuxsecuritycontextAdapter			\
 	org.joval.scap.oval.adapter.macos.AccountinfoAdapter				\
+	org.joval.scap.oval.adapter.macos.NvramAdapter					\
 	org.joval.scap.oval.adapter.macos.PlistAdapter					\
 	org.joval.scap.oval.adapter.macos.Pwpolicy59Adapter				\
 	org.joval.scap.oval.adapter.solaris.IsainfoAdapter				\
