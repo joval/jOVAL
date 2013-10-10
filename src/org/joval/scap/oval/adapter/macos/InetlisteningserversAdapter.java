@@ -311,9 +311,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 	    boolean first = true;
 	    while(lines.hasNext()) {
 		String line = lines.next();
-		if (line.trim().length() == 0) {
-		    continue;
-		} else if (first) {
+		if (first) {
 		    first = false;
 		    continue;
 		}
@@ -334,9 +332,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 	    switch(ed.getExitCode()) {
 	      case 0:
 		for (String line : ed.getLines()) {
-		    if (line.trim().length() == 0) {
-			continue;
-		    } else if (first) {
+		    if (first) {
 			first = false;
 		    } else {
 			data.add(line);
@@ -351,9 +347,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 	    switch(ed.getExitCode()) {
 	      case 0:
 		for (String line : ed.getLines()) {
-		    if (line.trim().length() == 0) {
-			continue;
-		    } else if (first) {
+		    if (first) {
 			first = false;
 		    } else {
 			data.add(line);

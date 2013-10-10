@@ -127,9 +127,7 @@ public class NvramAdapter implements IAdapter {
 		boolean first = true;
 		while(lines.hasNext()) {
 		    String line = lines.next();
-		    if (line.trim().length() == 0) {
-			continue;
-		    } else if (first) {
+		    if (first) {
 			if (line.equals("nvram: nvram is not supported on this system")) {
 			    throw error = new CollectException(line, FlagEnumeration.NOT_APPLICABLE);
 			} else {
