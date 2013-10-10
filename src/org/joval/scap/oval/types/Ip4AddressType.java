@@ -120,8 +120,13 @@ public class Ip4AddressType extends AbstractType {
 
 	try {
 	    int i=0;
-	    for (byte b : InetAddress.getByName(ipStr).getAddress()) {
-		addr[i++] = (short)b;
+	    byte[] bytes = InetAddress.getByName(ipStr).getAddress();
+	    if (bytes.length == 4) {
+		for (byte b : bytes) {
+		    addr[i++] = (short)b;
+		}
+	    } else {
+		throw new IllegalArgumentException(str);
 	    }
 	} catch (UnknownHostException e) {
 	    throw new IllegalArgumentException(str);
