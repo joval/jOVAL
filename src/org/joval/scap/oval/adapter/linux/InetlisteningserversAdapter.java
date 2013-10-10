@@ -231,10 +231,13 @@ public class InetlisteningserversAdapter implements IAdapter {
 	    }
 
 	    //
-	    // List the listeners
+	    // List the listeners and established TCP connections
 	    //
-	    lines = SafeCLI.multiLine("netstat -lnptu", session, IUnixSession.Timeout.S).iterator();
 	    portItems = new ArrayList<InetlisteningserverItem>();
+	    Collection<String> data = new ArrayList<String>();
+	    data.addAll(SafeCLI.multiLine("netstat -lnptu", session, IUnixSession.Timeout.S));
+	    data.addAll(SafeCLI.multiLine("netstat -npt | grep ESTABLISHED", session, IUnixSession.Timeout.S));
+	    lines = data.iterator();
 	    while(lines.hasNext()) {
 		String line = lines.next().trim();
 		StringTokenizer tok = new StringTokenizer(line);
@@ -243,7 +246,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 
 		    String protocol = tok.nextToken();
 		    if (!"tcp".equals(protocol) && !"udp".equals(protocol)) {
-			continue; // probably a header row
+			continue; // a header or message row
 		    }
 
 		    EntityItemStringType protocolType = Factories.sc.core.createEntityItemStringType();
@@ -259,13 +262,12 @@ public class InetlisteningserversAdapter implements IAdapter {
 		    item.setLocalFullAddress(localFullAddress);
 
 		    int ptr = local.lastIndexOf(":");
+		    boolean ip6 = local.indexOf(":") < ptr;
+
 		    EntityItemIPAddressStringType localAddress = Factories.sc.core.createEntityItemIPAddressStringType();
+		    localAddress.setDatatype(ip6 ? SimpleDatatypeEnumeration.IPV_6_ADDRESS.value() :
+						   SimpleDatatypeEnumeration.IPV_4_ADDRESS.value());
 		    localAddress.setValue(local.substring(0,ptr));
-		    if (local.indexOf(":") < ptr) {
-			localAddress.setDatatype(SimpleDatatypeEnumeration.IPV_6_ADDRESS.value());
-		    } else {
-			localAddress.setDatatype(SimpleDatatypeEnumeration.IPV_4_ADDRESS.value());
-		    }
 		    item.setLocalAddress(localAddress);
 
 		    EntityItemIntType localPort = Factories.sc.core.createEntityItemIntType();
@@ -280,12 +282,9 @@ public class InetlisteningserversAdapter implements IAdapter {
 
 		    ptr = foreign.lastIndexOf(":");
 		    EntityItemIPAddressStringType foreignAddress = Factories.sc.core.createEntityItemIPAddressStringType();
+		    foreignAddress.setDatatype(ip6 ? SimpleDatatypeEnumeration.IPV_6_ADDRESS.value() :
+						     SimpleDatatypeEnumeration.IPV_4_ADDRESS.value());
 		    foreignAddress.setValue(foreign.substring(0,ptr));
-		    if (foreign.indexOf(":") < ptr) {
-			foreignAddress.setDatatype(SimpleDatatypeEnumeration.IPV_6_ADDRESS.value());
-		    } else {
-			foreignAddress.setDatatype(SimpleDatatypeEnumeration.IPV_4_ADDRESS.value());
-		    }
 		    item.setForeignAddress(foreignAddress);
 
 		    if ("tcp".equals(protocol)) {

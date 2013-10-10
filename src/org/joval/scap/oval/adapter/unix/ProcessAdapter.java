@@ -266,7 +266,7 @@ public class ProcessAdapter implements IAdapter {
 	String args = null;
 	switch(session.getFlavor()) {
 	  case MACOSX:
-	    args = "ps -A -o pid,ppid,pri,uid,ruid,tty,time,stime,command";
+	    args = "ps -wwAo pid,ppid,pri,uid,ruid,tty,time,stime,command";
 	    break;
 
 	  case AIX:

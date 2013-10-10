@@ -285,11 +285,15 @@ public class InetlisteningserversAdapter implements IAdapter {
 	    newItem.setProtocol(item.getProtocol());
 	    newItem.setLocalFullAddress(item.getLocalFullAddress());
 	    newItem.setLocalAddress(item.getLocalAddress());
+	    newItem.setLocalPort(item.getLocalPort());
+	    newItem.setForeignFullAddress(item.getForeignFullAddress());
+	    newItem.setForeignAddress(item.getForeignAddress());
 
-	    EntityItemIntType localPort = Factories.sc.core.createEntityItemIntType();
-	    localPort.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	    localPort.setValue((String)item.getLocalPort().getValue());
-	    newItem.setLocalPort(localPort);
+	    EntityItemIntType foreignPort = Factories.sc.core.createEntityItemIntType();
+	    foreignPort.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	    foreignPort.setStatus(item.getForeignPort().getStatus());
+	    foreignPort.setValue((String)item.getForeignPort().getValue());
+	    newItem.setForeignPort(foreignPort);
 
 	    result.add(newItem);
 	}
@@ -307,7 +311,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 	    // Find process owners and names
 	    //
 	    Map<Integer, String> processNames = new HashMap<Integer, String>();
-	    Iterator<String> lines = SafeCLI.multiLine("ps -eo pid,args", session, IUnixSession.Timeout.S).iterator();
+	    Iterator<String> lines = SafeCLI.multiLine("ps -wwAo pid,args", session, IUnixSession.Timeout.S).iterator();
 	    boolean first = true;
 	    while(lines.hasNext()) {
 		String line = lines.next();
@@ -323,18 +327,18 @@ public class InetlisteningserversAdapter implements IAdapter {
 	    }
 
 	    //
-	    // List the listeners
+	    // List TCP connections
 	    //
 	    Collection<String> data = new ArrayList<String>();
 	    long timeout = session.getTimeout(ISession.Timeout.S);
-	    SafeCLI.ExecData ed = SafeCLI.execData("lsof -i TCP -n -l -P|grep LISTEN", null, session, timeout);
+	    SafeCLI.ExecData ed = SafeCLI.execData("lsof -i TCP -n -l -P", null, session, timeout);
 	    first = true;
 	    switch(ed.getExitCode()) {
 	      case 0:
 		for (String line : ed.getLines()) {
 		    if (first) {
 			first = false;
-		    } else {
+		    } else if (line.endsWith("(ESTABLISHED)") || line.endsWith("(LISTEN)")) {
 			data.add(line);
 		    }
 	    	}
@@ -391,7 +395,25 @@ public class InetlisteningserversAdapter implements IAdapter {
 		    protocolType.setValue(protocol);
 		    item.setProtocol(protocolType);
 
-		    String local = tok.nextToken();
+		    String local=null, foreign=null;
+		    if ("udp".equals(protocol)) {
+			// There is no such thing as a foreign UDP port
+			local = tok.nextToken();
+		    } else {
+			// TCP
+			String addresses = tok.nextToken();
+			String tcp_state = tok.nextToken();
+
+			if ("(ESTABLISHED)".equals(tcp_state)) {
+			    int ptr = addresses.indexOf("->");
+			    local = addresses.substring(0,ptr);
+			    foreign = addresses.substring(0,ptr+2);
+			} else {
+			    local = addresses;
+			    foreign = ip6 ? "[::]:0" : "0.0.0.0:0"; // listening is defined as having these foreign addrs
+			}
+		    }
+
 		    EntityItemStringType localFullAddress = Factories.sc.core.createEntityItemStringType();
 		    localFullAddress.setValue(local);
 		    item.setLocalFullAddress(localFullAddress);
@@ -424,6 +446,29 @@ public class InetlisteningserversAdapter implements IAdapter {
 		    }
 		    localPort.setValue(portNum);
 		    item.setLocalPort(localPort);
+
+		    EntityItemStringType foreignFullAddress = Factories.sc.core.createEntityItemStringType();
+		    item.setForeignFullAddress(foreignFullAddress);
+		    EntityItemIPAddressStringType foreignAddress = Factories.sc.core.createEntityItemIPAddressStringType();
+		    foreignAddress.setDatatype(ip6 ? SimpleDatatypeEnumeration.IPV_6_ADDRESS.value() :
+						     SimpleDatatypeEnumeration.IPV_4_ADDRESS.value());
+		    item.setForeignAddress(foreignAddress);
+		    EntityItemStringType foreignPort = Factories.sc.core.createEntityItemStringType();
+		    item.setForeignPort(foreignPort);
+		    if (foreign == null) {
+			foreignFullAddress.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+			foreignAddress.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+			foreignPort.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		    } else {
+			foreignFullAddress.setValue(foreign);
+			ptr = foreign.lastIndexOf(":");
+			if (ip6) {
+			    foreignAddress.setValue(foreign.substring(1,ptr-1)); // trim [ and ]
+			} else {
+			    foreignAddress.setValue(foreign.substring(0,ptr));
+			}
+			foreignPort.setValue(foreign.substring(ptr+1));
+		    }
 
 		    portItems.add(item);
 		}

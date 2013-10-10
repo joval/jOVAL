@@ -4,6 +4,8 @@
 package org.joval.scap.oval.types;
 
 import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.StringTokenizer;
 
 import org.joval.intf.scap.oval.IType;
@@ -116,16 +118,13 @@ public class Ip4AddressType extends AbstractType {
 			      maskBits[8*i + 7]);
 	}
 
-	StringTokenizer tok = new StringTokenizer(ipStr, ".");
-	int numTokens = tok.countTokens();
-	if (numTokens > 4) {
+	try {
+	    int i=0;
+	    for (byte b : InetAddress.getByName(ipStr).getAddress()) {
+		addr[i++] = (short)b;
+	    }
+	} catch (UnknownHostException e) {
 	    throw new IllegalArgumentException(str);
-	}
-	for (int i=0; i < 4 - numTokens; i++) {
-	    addr[i] = 0;
-	}
-	for (int i = 4 - tok.countTokens(); tok.hasMoreTokens(); i++) {
-	    addr[i] = (short)(Short.parseShort(tok.nextToken()) & mask[i]);
 	}
     }
 

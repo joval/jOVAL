@@ -4,6 +4,8 @@
 package org.joval.scap.oval.types;
 
 import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.StringTokenizer;
 
 import org.joval.intf.scap.oval.IType;
@@ -57,42 +59,16 @@ public class Ip6AddressType extends AbstractType {
 			      maskBits[8*i + 7]);
 	}
 
-	ptr = ipStr.indexOf("::");
-	String prefix = null;
-	String suffix = null;
-	if (ptr != -1) {
-	    if (!ipStr.startsWith("::")) {
-		prefix = ipStr.substring(0,ptr);
+	//
+	// Parse the address
+	//
+	try {
+	    int i=0;
+	    for (byte b : InetAddress.getByName(ipStr).getAddress()) {
+		addr[i++] = (short)b;
 	    }
-	    if (!ipStr.endsWith("::")) {
-		suffix = ipStr.substring(ptr+1);
-	    }
-	} else {
-	    prefix = ipStr;
-	}
-	String[] octets = new String[8];
-	for (int i=0; i < 8; i++) {
-	    octets[i] = "0";
-	}
-	if (prefix != null) {
-	    StringTokenizer tok = new StringTokenizer(prefix, ":");
-	    for (int i=0; tok.hasMoreTokens(); i++) {
-		octets[i] = tok.nextToken();
-	    }
-	}
-	if (suffix != null) {
-	    StringTokenizer tok = new StringTokenizer(suffix, ":");
-	    for (int i = 8 - tok.countTokens(); tok.hasMoreTokens(); i++) {
-		octets[i] = tok.nextToken();
-	    }
-	}
-	// convert octets to bytes
-	for (int i=0; i < 8; i++) {
-	    int addrIndex = i*2;
-	    int val = Integer.parseInt(octets[i], 16);
-	    addr[addrIndex] = (short)(((val >> 8) & 0xFF) & mask[addrIndex]);
-	    addrIndex++;
-	    addr[addrIndex] = (short)((val & 0xFF) & mask[addrIndex]);
+	} catch (UnknownHostException e) {
+	    throw new IllegalArgumentException(str);
 	}
     }
 
@@ -115,10 +91,10 @@ public class Ip6AddressType extends AbstractType {
 	    if (i > 0) {
 		sb.append(":");
 	    }
-	    StringBuffer octet = new StringBuffer();
-	    octet.append(Integer.toHexString(addr[i++] & 0xFF));
-	    octet.append(Integer.toHexString(addr[i++] & 0xFF));
-	    sb.append(Integer.toHexString(Integer.parseInt(octet.toString(), 16)));
+	    StringBuffer word = new StringBuffer();
+	    word.append(Integer.toHexString(addr[i++] & 0xFF));
+	    word.append(Integer.toHexString(addr[i++] & 0xFF));
+	    sb.append(Integer.toHexString(Integer.parseInt(word.toString(), 16)));
 	}
 	return sb.toString();
     }
@@ -129,10 +105,10 @@ public class Ip6AddressType extends AbstractType {
 	    if (i > 0) {
 		sb.append(":");
 	    }
-	    StringBuffer octet = new StringBuffer();
-	    octet.append(Integer.toHexString(mask[i++] & 0xFF));
-	    octet.append(Integer.toHexString(mask[i++] & 0xFF));
-	    sb.append(Integer.toHexString(Integer.parseInt(octet.toString(), 16)));
+	    StringBuffer word = new StringBuffer();
+	    word.append(Integer.toHexString(mask[i++] & 0xFF));
+	    word.append(Integer.toHexString(mask[i++] & 0xFF));
+	    sb.append(Integer.toHexString(Integer.parseInt(word.toString(), 16)));
 	}
 	return sb.toString();
     }
