@@ -7,7 +7,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
@@ -121,15 +121,21 @@ public class NvramAdapter implements IAdapter {
 	if (error != null) {
 	    throw error;
 	} else if (values == null) {
+	    values = new HashMap<String, NvramItem>();
 	    try {
-		List<String> lines = SafeCLI.multiLine("nvram -p", session, IUnixSession.Timeout.S);
-		if (lines.size() == 1 &&
-		    lines.get(0).equals("nvram: nvram is not supported on this system")) {
-
-		    throw error = new CollectException(lines.get(0), FlagEnumeration.NOT_APPLICABLE);
-		} else {
-		    values = new HashMap<String, NvramItem>();
-		    for (String line : lines) {
+		Iterator<String> lines = SafeCLI.multiLine("nvram -p", session, IUnixSession.Timeout.S).iterator();
+		boolean first = true;
+		while(lines.hasNext()) {
+		    String line = lines.next();
+		    if (line.trim().length() == 0) {
+			continue;
+		    } else if (first) {
+			if (line.equals("nvram: nvram is not supported on this system")) {
+			    throw error = new CollectException(line, FlagEnumeration.NOT_APPLICABLE);
+			} else {
+			    first = false;
+			}
+		    } else {
 			StringTokenizer tok = new StringTokenizer(line);
 			String var = tok.nextToken();
 			NvramItem item = Factories.sc.macos.createNvramItem();
@@ -147,6 +153,7 @@ public class NvramAdapter implements IAdapter {
 	    } catch (CollectException e) {
 		throw e;
 	    } catch (Exception e) {
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		error = new CollectException(e, FlagEnumeration.ERROR);
 		throw error;
 	    }
