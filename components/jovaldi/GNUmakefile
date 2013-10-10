@@ -5,8 +5,6 @@ TOP=../..
 
 include $(TOP)/common.mk
 
-PRODUCTNAME=jovaldi
-
 API=$(JSAF_CORE_LIB)$(CLN)$(JSAF_CORE_DEPS)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(SCAP_LIB)$(CLN)$(SVRL)
 CLASSPATH="$(CLASSLIB)$(CLN)$LIBS)$(CLN)$(API)$(CLN)$(SRC)"
 
@@ -16,14 +14,14 @@ CLASS_FILES:=$(foreach class, $(CLASSES), $(BUILD)/$(subst .,/,$(class)).class)
 PACKAGES=$(sort $(basename $(CLASSES)))
 PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
-all: $(PRODUCTNAME).jar
+all: $(JOVALDI_LIB)
 
-$(PRODUCTNAME).jar: classes resources
+$(JOVALDI_LIB): classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 clean:
 	rm -rf $(BUILD)
-	rm -f $(PRODUCTNAME).jar
+	rm -f $(JOVALDI_LIB)
 
 resources:
 	rm -f $(BUILD)/*.properties
@@ -44,8 +42,7 @@ dist: $(DIST)/$(ARCH)
 dist-all: $(DIST)/32 $(DIST)/64
 
 dist-clean: clean
-	rm -rf $(DIST)/32
-	rm -rf $(DIST)/64
+	rm -rf $(DIST)
 
 $(DIST)/32: all $(DIST)/32/jre
 	cp $(RSRC)/bin/$(PLATFORM)-32/* $@
@@ -57,7 +54,7 @@ $(DIST)/32: all $(DIST)/32/jre
 	cp -R $(SCAP)/schemas/* $(DIST)/32/xml
 	rm $(DIST)/32/xml/bindings.xjb
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST)/32/xml
-	cp $(PRODUCTNAME).jar $(DIST)/32/lib
+	cp $(JOVALDI_LIB) $(DIST)/32/lib
 	cp $(SCAP_LIB) $(DIST)/32/lib
 	cp $(SVRL) $(DIST)/32/lib
 	cp $(JOVAL_CORE_LIB) $(DIST)/32/lib
@@ -82,7 +79,7 @@ $(DIST)/64: all $(DIST)/64/jre
 	cp -R $(SCAP)/schemas/* $(DIST)/64/xml
 	rm $(DIST)/64/xml/bindings.xjb
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST)/64/xml
-	cp $(PRODUCTNAME).jar $(DIST)/64/lib
+	cp $(JOVALDI_LIB) $(DIST)/64/lib
 	cp $(SCAP_LIB) $(DIST)/64/lib
 	cp $(SVRL) $(DIST)/64/lib
 	cp $(JOVAL_CORE_LIB) $(DIST)/64/lib
