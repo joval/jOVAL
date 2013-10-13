@@ -78,6 +78,7 @@ resources:
 	cp $(RSRC)/assembly/Process.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 	cp $(RSRC)/assembly/Registry.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 	cp $(RSRC)/assembly/Service.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
+	cp $(RSRC)/assembly/Sharedresource.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 	cp $(RSRC)/assembly/Systemmetric.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 
 classes: classdirs $(CLASS_FILES)

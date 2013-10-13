@@ -54,4 +54,5 @@ Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Metabase.cs" -Out
 Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Process.cs" -Output "rsrc\assembly\Process.dll"
 Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Registry.cs" -Output "rsrc\assembly\Registry.dll"
 Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Service.cs" -Output "rsrc\assembly\Service.dll"
+Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Sharedresource.cs" -Output "rsrc\assembly\Sharedresource.dll"
 Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Systemmetric.cs" -Output "rsrc\assembly\Systemmetric.dll"

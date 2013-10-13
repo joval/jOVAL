@@ -80,16 +80,24 @@ namespace jOVAL {
 	    [DllImport("advapi32.dll")]
 	    public static extern uint GetEffectiveRightsFromAcl(IntPtr pacl, ref TRUSTEE pTrustee, ref uint pAccessRights);
 
-	    public static uint GetRegKeyEffectiveRights(String name, String sidString) {
-		return GetEffectiveRights(SE_OBJECT_TYPE.SE_REGISTRY_KEY, name, sidString);
-	    }
-
 	    public static uint GetFileEffectiveRights(String name, String sidString) { 
 		return GetEffectiveRights(SE_OBJECT_TYPE.SE_FILE_OBJECT, name, sidString);
 	    }
 
+	    public static uint GetRegKeyEffectiveRights(String name, String sidString) {
+		return GetEffectiveRights(SE_OBJECT_TYPE.SE_REGISTRY_KEY, name, sidString);
+	    }
+
+	    public static uint GetPrinterEffectiveRights(String name, String sidString) { 
+		return GetEffectiveRights(SE_OBJECT_TYPE.SE_PRINTER, name, sidString);
+	    }
+
 	    public static uint GetServiceEffectiveRights(String name, String sidString) { 
 		return GetEffectiveRights(SE_OBJECT_TYPE.SE_SERVICE, name, sidString);
+	    }
+
+	    public static uint GetShareEffectiveRights(String name, String sidString) { 
+		return GetEffectiveRights(SE_OBJECT_TYPE.SE_LMSHARE, name, sidString);
 	    }
 
 	    static uint GetEffectiveRights(SE_OBJECT_TYPE type, String name, String sidString) {

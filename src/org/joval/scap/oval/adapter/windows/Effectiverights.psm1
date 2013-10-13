@@ -14,11 +14,17 @@ function Get-EffectiveRights {
       "File" {
         "{0}: {1:D}" -f $SID, [jOVAL.EffectiveRights.Probe]::GetFileEffectiveRights($Name, $SID)
       } 
+      "Printer" {
+        "{0}: {1:D}" -f $SID, [jOVAL.EffectiveRights.Probe]::GetPrinterEffectiveRights($Name, $SID)
+      }
       "RegKey" {
         "{0}: {1:D}" -f $SID, [jOVAL.EffectiveRights.Probe]::GetRegKeyEffectiveRights($Name, $SID)
       }
       "Service" {
         "{0}: {1:D}" -f $SID, [jOVAL.EffectiveRights.Probe]::GetServiceEffectiveRights($Name, $SID)
+      }
+      "Share" {
+        "{0}: {1:D}" -f $SID, [jOVAL.EffectiveRights.Probe]::GetShareEffectiveRights($Name, $SID)
       }
     }
   }
