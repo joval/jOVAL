@@ -199,7 +199,6 @@ public class InterfaceAdapter implements IAdapter {
 
 		      case V6:
 			inetAddr.setDatatype(SimpleDatatypeEnumeration.IPV_6_ADDRESS.value());
-System.out.println("DAS IP6: " + addr.getAddress() + "/" + addr.getMask());
 			if (addr.getMask() == null) {
 			    inetAddr.setValue(addr.getAddress());
 			} else {
