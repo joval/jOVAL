@@ -211,7 +211,7 @@ public class PackageAdapter implements IAdapter {
 		break;
 
 	      case PATTERN_MATCH:
-		Pattern p = Pattern.compile((String)filepath.getValue());
+		Pattern p = StringTools.pattern((String)filepath.getValue());
 		for (String path : files) {
 		    if (p.matcher(path).find()) {
 			items.add(makeItem(path));

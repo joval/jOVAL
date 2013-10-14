@@ -76,7 +76,7 @@ public class NddAdapter implements IAdapter {
 		break;
 
 	      case PATTERN_MATCH:
-		Pattern p = Pattern.compile((String)nObj.getDevice().getValue());
+		Pattern p = StringTools.pattern((String)nObj.getDevice().getValue());
 		for (String device : getDevices()) {
 		    if (p.matcher(device).find()) {
 			devices.add(device);
@@ -116,7 +116,7 @@ public class NddAdapter implements IAdapter {
 			break;
 
 		      case PATTERN_MATCH:
-			Pattern p = Pattern.compile((String)nObj.getParameter().getValue());
+			Pattern p = StringTools.pattern((String)nObj.getParameter().getValue());
 			for (String parameter : getParameters(device)) {
 			    if (p.matcher(parameter).find()) {
 				if (!deviceParams.containsKey(device)) {

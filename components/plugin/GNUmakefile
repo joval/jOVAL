@@ -35,8 +35,10 @@ native-clean:
 	rm -f $(RSRC)/assembly/Lockoutpolicy.dll
 	rm -f $(RSRC)/assembly/Metabase.dll
 	rm -f $(RSRC)/assembly/Process.dll
+	rm -f $(RSRC)/assembly/Printer.dll
 	rm -f $(RSRC)/assembly/Registry.dll
 	rm -f $(RSRC)/assembly/Service.dll
+	rm -f $(RSRC)/assembly/Sharedresource.dll
 	rm -f $(RSRC)/assembly/Systemmetric.dll
 
 dist: all
@@ -76,6 +78,7 @@ resources:
 	cp $(RSRC)/assembly/Lockoutpolicy.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 	cp $(RSRC)/assembly/Metabase.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 	cp $(RSRC)/assembly/Process.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
+	cp $(RSRC)/assembly/Printer.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 	cp $(RSRC)/assembly/Registry.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 	cp $(RSRC)/assembly/Service.dll $(BUILD)/org/joval/scap/oval/adapter/windows/
 	cp $(RSRC)/assembly/Sharedresource.dll $(BUILD)/org/joval/scap/oval/adapter/windows/

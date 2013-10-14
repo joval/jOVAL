@@ -419,7 +419,7 @@ public class RpmAdapter implements IAdapter, IBatch {
 		}
 		break;
 	      case PATTERN_MATCH:
-		Pattern p = Pattern.compile((String)arch.getValue());
+		Pattern p = StringTools.pattern((String)arch.getValue());
 		if (!p.matcher(datum.arch).find()) {
 		    iter.remove();
 		}
@@ -486,7 +486,7 @@ public class RpmAdapter implements IAdapter, IBatch {
 		    }
 		    break;
 		  case PATTERN_MATCH:
-		    Pattern p = Pattern.compile((String)epoch.getValue());
+		    Pattern p = StringTools.pattern((String)epoch.getValue());
 		    if (!p.matcher(datum.epoch).find()) {
 			iter.remove();
 		    }
@@ -555,7 +555,7 @@ public class RpmAdapter implements IAdapter, IBatch {
 		    }
 		    break;
 		  case PATTERN_MATCH:
-		    Pattern p = Pattern.compile((String)version.getValue());
+		    Pattern p = StringTools.pattern((String)version.getValue());
 		    if (!p.matcher(datum.version).find()) {
 			iter.remove();
 		    }
@@ -581,7 +581,7 @@ public class RpmAdapter implements IAdapter, IBatch {
 		}
 		break;
 	      case PATTERN_MATCH:
-		Pattern p = Pattern.compile((String)release.getValue());
+		Pattern p = StringTools.pattern((String)release.getValue());
 		if (!p.matcher(datum.release).find()) {
 		    iter.remove();
 		}

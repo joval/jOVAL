@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -83,7 +84,7 @@ public class InterfaceAdapter implements IAdapter {
 		}
 		break;
 	      case PATTERN_MATCH:
-		Pattern p = Pattern.compile(name);
+		Pattern p = StringTools.pattern(name);
 		for (Map.Entry<String, Collection<InterfaceItem>> entry : interfaces.entrySet()) {
 		    if (p.matcher(entry.getKey()).find()) {
 			items.addAll(entry.getValue());

@@ -66,6 +66,7 @@ CLASSES=\
 	org.joval.scap.oval.adapter.windows.MetabaseAdapter				\
 	org.joval.scap.oval.adapter.windows.PasswordpolicyAdapter			\
 	org.joval.scap.oval.adapter.windows.PortAdapter					\
+	org.joval.scap.oval.adapter.windows.PrintereffectiverightsAdapter		\
 	org.joval.scap.oval.adapter.windows.ProcessAdapter				\
 	org.joval.scap.oval.adapter.windows.RegistryAdapter				\
 	org.joval.scap.oval.adapter.windows.RegkeyauditedpermissionsAdapter		\

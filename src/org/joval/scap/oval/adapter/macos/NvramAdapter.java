@@ -16,6 +16,7 @@ import java.util.regex.PatternSyntaxException;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -93,7 +94,7 @@ public class NvramAdapter implements IAdapter {
 
 	  case PATTERN_MATCH:
 	    try {
-		Pattern p = Pattern.compile((String)nObj.getNvramVar().getValue());
+		Pattern p = StringTools.pattern((String)nObj.getNvramVar().getValue());
 		for (Map.Entry<String, NvramItem> entry : values.entrySet()) {
 		    if (p.matcher(entry.getKey()).find()) {
 			items.add(entry.getValue());

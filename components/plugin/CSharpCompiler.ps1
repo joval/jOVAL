@@ -51,6 +51,7 @@ Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Auditeventpolicy.
 Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Effectiverights.cs" -Output "rsrc\assembly\Effectiverights.dll"
 Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Lockoutpolicy.cs" -Output "rsrc\assembly\Lockoutpolicy.dll"
 Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Metabase.cs" -Output "rsrc\assembly\Metabase.dll"
+Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Printer.cs" -Output "rsrc\assembly\Printer.dll"
 Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Process.cs" -Output "rsrc\assembly\Process.dll"
 Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Registry.cs" -Output "rsrc\assembly\Registry.dll"
 Compile -Source "..\..\src\org\joval\scap\oval\adapter\windows\Service.cs" -Output "rsrc\assembly\Service.dll"

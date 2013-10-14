@@ -118,7 +118,7 @@ public class FileextendedattributeAdapter extends BaseFileAdapter<Fileextendedat
 
 	      case PATTERN_MATCH:
 		try {
-		    Pattern p = Pattern.compile(attributeName);
+		    Pattern p = StringTools.pattern(attributeName);
 		    for (Map.Entry<String, String> entry : attributes.entrySet()) {
 			if (p.matcher(entry.getKey()).find()) {
 			    items.add(makeItem(fObj, f, entry.getKey(), attributes.get(entry.getKey())));

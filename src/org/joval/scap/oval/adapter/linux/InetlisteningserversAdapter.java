@@ -15,6 +15,7 @@ import java.util.regex.PatternSyntaxException;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -93,7 +94,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 
 	  case PATTERN_MATCH:
 	    try {
-		Pattern p = Pattern.compile((String)localAddress.getValue());
+		Pattern p = StringTools.pattern((String)localAddress.getValue());
 		for (InetlisteningserverItem item : portItems) {
 		    if (p.matcher((String)item.getLocalAddress().getValue()).find()) {
 			items.add(item);
@@ -134,7 +135,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 
 	      case PATTERN_MATCH:
 		try {
-		    Pattern p = Pattern.compile(protocol);
+		    Pattern p = StringTools.pattern(protocol);
 		    if (!p.matcher(itemProtocol).find()) {
 			iter.remove();
 		    }

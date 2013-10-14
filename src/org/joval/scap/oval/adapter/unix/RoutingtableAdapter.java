@@ -20,6 +20,7 @@ import jsaf.intf.io.IFile;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -92,7 +93,7 @@ public class RoutingtableAdapter implements IAdapter {
 		}
 		break;
 	      case PATTERN_MATCH:
-		Pattern p = Pattern.compile(destination);
+		Pattern p = StringTools.pattern(destination);
 		for (Map.Entry<String, Collection<RoutingtableItem>> entry : routes.entrySet()) {
 		    if (p.matcher(entry.getKey()).find()) {
 			items.addAll(entry.getValue());

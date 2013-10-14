@@ -15,6 +15,7 @@ import jsaf.intf.system.ISession;
 import jsaf.intf.util.IProperty;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -89,7 +90,7 @@ public class PortAdapter implements IAdapter {
 
 	  case PATTERN_MATCH:
 	    try {
-		Pattern p = Pattern.compile((String)localAddress.getValue());
+		Pattern p = StringTools.pattern((String)localAddress.getValue());
 		for (PortItem item : portItems) {
 		    if (p.matcher((String)item.getLocalAddress().getValue()).find()) {
 			items.add(item);
@@ -130,7 +131,7 @@ public class PortAdapter implements IAdapter {
 
 	      case PATTERN_MATCH:
 		try {
-		    Pattern p = Pattern.compile(protocol);
+		    Pattern p = StringTools.pattern(protocol);
 		    if (!p.matcher(itemProtocol).find()) {
 			iter.remove();
 		    }

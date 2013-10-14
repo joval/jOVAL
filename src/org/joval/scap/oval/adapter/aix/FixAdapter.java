@@ -69,7 +69,7 @@ public class FixAdapter implements IAdapter {
 		break;
 
 	      case PATTERN_MATCH:
-		Pattern p = Pattern.compile((String)fObj.getAparNumber().getValue());
+		Pattern p = StringTools.pattern((String)fObj.getAparNumber().getValue());
 		for (String apar : getFixList()) {
 		    if (p.matcher(apar).find()) {
 			try {

@@ -128,11 +128,11 @@ public class MetabaseAdapter implements IAdapter {
 
 	      case PATTERN_MATCH: {
 		StringBuffer sb = new StringBuffer("Find-MetabaseKeys");
-		Pattern p = Pattern.compile(s);
-		String path = getSearchRoot(p);
+		String safe = SafeCLI.checkArgument(s, session);
+		String path = getSearchRoot(safe);
 		if (path != null) {
 		    sb.append(" -Path \"").append(path).append("\"");
-		    sb.append(" -Pattern \"").append(StringTools.regexPosix2Powershell(p.pattern())).append("\"");
+		    sb.append(" -Pattern \"").append(StringTools.regexPosix2Powershell(safe)).append("\"");
 		    sb.append(" | Transfer-Encode");
 		    String data = new String(Base64.decode(runspace.invoke(sb.toString())), StringTools.UTF8);
 		    for (String subkey : data.split("\r\n")) {
@@ -343,8 +343,7 @@ public class MetabaseAdapter implements IAdapter {
     /**
      * Returns null if the pattern cannot possibly be found in a Metabase.
      */
-    private String getSearchRoot(Pattern p) {
-	String s = p.pattern();
+    private String getSearchRoot(String s) {
 	if (s.startsWith("^")) {
 	    s = s.substring(1);
 	    if (s.startsWith("/")) {

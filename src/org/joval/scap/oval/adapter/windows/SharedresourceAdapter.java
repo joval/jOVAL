@@ -102,7 +102,7 @@ public class SharedresourceAdapter implements IAdapter {
 
 	  case PATTERN_MATCH:
 	    try {
-		Pattern p = Pattern.compile((String)sObj.getNetname().getValue());
+		Pattern p = StringTools.pattern((String)sObj.getNetname().getValue());
 		for (Map.Entry<String, SharedresourceItem> entry : shares.entrySet()) {
 		    if (p.matcher(entry.getKey()).find()) {
 			items.add(entry.getValue());

@@ -17,6 +17,7 @@ import jsaf.intf.system.ISession;
 import jsaf.intf.util.IProperty;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -83,7 +84,7 @@ public class DnscacheAdapter implements IAdapter {
 
 	  case PATTERN_MATCH:
 	    try {
-		Pattern p = Pattern.compile(domainName);
+		Pattern p = StringTools.pattern(domainName);
 		for (Map.Entry<String, DnscacheItem> entry : dnsCache.entrySet()) {
 		    if (p.matcher(entry.getKey()).find()) {
 			items.add(entry.getValue());

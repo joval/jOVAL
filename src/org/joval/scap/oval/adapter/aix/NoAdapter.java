@@ -72,7 +72,7 @@ public class NoAdapter implements IAdapter {
 		break;
 
 	      case PATTERN_MATCH:
-		Pattern p = Pattern.compile((String)nObj.getTunable().getValue());
+		Pattern p = StringTools.pattern((String)nObj.getTunable().getValue());
 		for (String tunable : getTunables().keySet()) {
 		    if (p.matcher(tunable).find()) {
 			try {
