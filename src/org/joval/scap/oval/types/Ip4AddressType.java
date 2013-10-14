@@ -123,7 +123,7 @@ public class Ip4AddressType extends AbstractType {
 	    byte[] bytes = InetAddress.getByName(ipStr).getAddress();
 	    if (bytes.length == 4) {
 		for (byte b : bytes) {
-		    addr[i++] = (short)b;
+		    addr[i++] = (short)(0xFF & b);
 		}
 	    } else {
 		throw new IllegalArgumentException(str);
@@ -136,7 +136,7 @@ public class Ip4AddressType extends AbstractType {
     public BigInteger toBigInteger() {
 	StringBuffer sb = new StringBuffer();
 	for (int i=0; i < addr.length; i++) {
-	    sb.append(Integer.toHexString(addr[i]));
+	    sb.append(Integer.toHexString(addr[i] & 0xFF));
 	}
 	return new BigInteger(sb.toString(), 16);
     }
@@ -168,11 +168,10 @@ public class Ip4AddressType extends AbstractType {
     }
 
     public String toString() {
-	StringBuffer sb = new StringBuffer(getIpAddressString());
 	if (maskVal == 32) {
-	    return sb.toString();
+	    return getIpAddressString();
 	} else {
-	    return sb.append("/").append(Integer.toString(maskVal)).toString();
+	    return new StringBuffer(getIpAddressString()).append("/").append(Integer.toString(maskVal)).toString();
 	}
     }
 

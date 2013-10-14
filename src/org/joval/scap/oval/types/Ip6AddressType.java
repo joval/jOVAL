@@ -67,7 +67,7 @@ public class Ip6AddressType extends AbstractType {
 	    byte[] bytes = InetAddress.getByName(ipStr).getAddress();
 	    if (bytes.length == 16) {
 		for (byte b : bytes) {
-		    addr[i++] = (short)b;
+		    addr[i++] = (short)(0xFF & b);
 		}
 	    } else {
 		throw new IllegalArgumentException(str);
