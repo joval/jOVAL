@@ -90,7 +90,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	}
     }
 
-    private boolean readonly = false;
+    private boolean readonly = false, mapped = true;
     private LocLogger logger = JOVALMsg.getLogger();
     private GeneratorType generator;
     private SystemInfoType systemInfo;
@@ -100,7 +100,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     private Map<String, Collection<BigInteger>> objectItemTable;
     private Map<String, Collection<String>> objectVariableTable;
     private Map<String, Collection<BigInteger>> itemChecksums;
-    private int itemCounter = 0;
+    private int nextItemId = 0;
     private Marshaller marshaller = null;
 
     /**
@@ -148,25 +148,31 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	systemInfo = osc.getSystemInfo();
 
 	for (JAXBElement<? extends ItemType> item : osc.getSystemData().getItem()) {
-	    itemTable.put(item.getValue().getId(), item);
-	    itemCounter++;
+	    BigInteger id = item.getValue().getId();
+	    itemTable.put(id, item);
+	    nextItemId = Math.max(id.intValue(), nextItemId);
 	}
+	nextItemId++; // the next ID will be one greater than the greatest ID in the file
 
-	for (ObjectType obj : osc.getCollectedObjects().getObject()) {
-	    String id = obj.getId();
-	    for (MessageType message : obj.getMessage()) {
-		setObject(id, null, null, null, message);
-	    }
-	    setObject(id, obj.getComment(), obj.getVersion(), obj.getFlag(), null);
+	if (osc.isSetCollectedObjects()) {
+	    for (ObjectType obj : osc.getCollectedObjects().getObject()) {
+		String id = obj.getId();
+		for (MessageType message : obj.getMessage()) {
+		    setObject(id, null, null, null, message);
+		}
+		setObject(id, obj.getComment(), obj.getVersion(), obj.getFlag(), null);
 
-	    for (ReferenceType ref : obj.getReference()) {
-		relateItem(id, ref.getItemRef());
-	    }
+		for (ReferenceType ref : obj.getReference()) {
+		    relateItem(id, ref.getItemRef());
+		}
 
-	    for (VariableValueType var : obj.getVariableValue()) {
-		storeVariable(var);
-		relateVariable(id, var.getVariableId());
+		for (VariableValueType var : obj.getVariableValue()) {
+		    storeVariable(var);
+		    relateVariable(id, var.getVariableId());
+		}
 	    }
+	} else if (nextItemId > 0) {
+	    mapped = false;
 	}
     }
 
@@ -195,6 +201,10 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     }
 
     // Implement ISystemCharacteristics
+
+    public boolean unmapped() {
+	return !mapped;
+    }
 
     public SystemInfoType getSystemInfo() {
 	return systemInfo;
@@ -272,13 +282,13 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    // Having determined that the item is indeed new, we store it.
 	    //
 	    if (!match) {
-		itemId = new BigInteger(Integer.toString(itemCounter++));
+		itemId = new BigInteger(Integer.toString(nextItemId++));
 		item.getValue().setId(itemId);
 		itemTable.put(itemId, item);
 		itemChecksums.get(cs).add(itemId);
 	    }
 	} else {
-	    itemId = new BigInteger(Integer.toString(itemCounter++));
+	    itemId = new BigInteger(Integer.toString(nextItemId++));
 	    item.getValue().setId(itemId);
 	    itemTable.put(itemId, item);
 	    Collection<BigInteger> set = new HashSet<BigInteger>();
@@ -450,6 +460,17 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    return items;
 	}
 	throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
+    }
+
+    public <T extends ItemType> Collection<T> getItemsByType(Class<T> type) {
+	Collection<T> items = new ArrayList<T>();
+        for (JAXBElement<? extends ItemType> elt : itemTable.values()) {
+	    ItemType item = elt.getValue();
+            if (type.isInstance(item)) {
+                items.add(type.cast(item));
+            }
+        }
+	return items;
     }
 
     public void writeXML(File f) {

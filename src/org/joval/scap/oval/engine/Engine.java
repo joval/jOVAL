@@ -26,10 +26,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.Queue;
 import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
@@ -149,6 +151,7 @@ import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
 import org.joval.util.Version;
+import org.joval.xml.XSITools;
 
 /**
  * Engine that evaluates OVAL tests using an IPlugin.
@@ -157,6 +160,39 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public class Engine implements IOvalEngine, IProvider {
+    //
+    // Initialize the static class mapping between OVAL object types and item types in the data model, as defined by
+    // the class resource "/ObjectItem.properties".
+    //
+    private static Map<Class<? extends ObjectType>, Class<? extends ItemType>> OBJECT_ITEM_MAP;
+    static {
+	OBJECT_ITEM_MAP = new HashMap<Class<? extends ObjectType>, Class<? extends ItemType>>();
+	BufferedReader reader = null;
+	try {
+	    reader = new BufferedReader(new InputStreamReader(Engine.class.getResourceAsStream("/ObjectItem.properties")));
+	    String line = null;
+	    while((line = reader.readLine()) != null) {
+		if (!line.startsWith("#")) {
+		    int ptr = line.indexOf("=");
+		    @SuppressWarnings("unchecked")
+		    Class<? extends ObjectType> objClass = (Class<? extends ObjectType>)Class.forName(line.substring(0,ptr));
+		    @SuppressWarnings("unchecked")
+		    Class<? extends ItemType> itemClass = (Class<? extends ItemType>)Class.forName(line.substring(ptr+1));
+		    OBJECT_ITEM_MAP.put(objClass, itemClass);
+		}
+	    }
+	} catch (Exception e) {
+	    JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} finally {
+	    if (reader != null) {
+		try {
+		    reader.close();
+		} catch (IOException e) {
+		}
+	    }
+	}
+    }
+
     private enum State {
 	CONFIGURE,
 	RUNNING,
@@ -330,9 +366,8 @@ public class Engine implements IOvalEngine, IProvider {
 	    }
 	    state = State.RUNNING;
 	    if (sc == null) {
-		SystemCharacteristics sc = new SystemCharacteristics(plugin.getSystemInfo());
-		sc.setLogger(logger);
-		this.sc = sc;
+		sc = new SystemCharacteristics(plugin.getSystemInfo());
+		((ILoggable)sc).setLogger(logger);
 	    }
 	    if (results == null) {
 		results = new Results(definitions, sc);
@@ -482,6 +517,8 @@ public class Engine implements IOvalEngine, IProvider {
 		    results = new Results(definitions, sc);
 		    break;
 		}
+	    } else if (sc.unmapped()) {
+		results = new Results(definitions, mapSystemCharacteristics());
 	    } else {
 		results = new Results(definitions, sc);
 	    }
@@ -522,6 +559,101 @@ public class Engine implements IOvalEngine, IProvider {
 	state = State.CONFIGURE;
 	variableMap = new Hashtable<String, Collection<IType>>();
 	error = null;
+    }
+
+    /**
+     * Generate object item references in the system-characteristics.
+     */
+    private ISystemCharacteristics mapSystemCharacteristics() throws Exception {
+	//
+	// First, create a Queue of objects related to variables.  These must be mapped first.
+	//
+	Queue<String> varObjQueue = new LinkedList<String>();
+	for (VariableType var : definitions.getVariables()) {
+	    varObjQueue.addAll(getObjectReferences(var, true));
+	}
+
+	//
+	// Map objects in the queue if all their dependencies (if any) are already mapped, or if not, push to the
+	// end of the queue.
+	//
+	int counter = 0;
+	String objectId = null;
+	while((objectId = varObjQueue.poll()) != null) {
+	    if (sc.containsObject(objectId)) {
+		// already mapped
+	    } else if (hasUnmappedReferences(objectId)) {
+		// try again later
+		varObjQueue.add(objectId);
+	    } else {
+		mapObject(objectId);
+	    }
+	    if (counter++ == 1000000) {
+		throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_SC_MAP_OVERFLOW));
+	    }
+	}
+
+	//
+	// Map objects that are not already mapped.
+	//
+	for (ObjectType obj : definitions.getObjects()) {
+	    objectId = obj.getId();
+	    try {
+		sc.getObject(objectId);
+	    } catch (NoSuchElementException e) {
+		mapObject(objectId);
+	    }
+	}
+	return sc;
+    }
+
+    /**
+     * Returns true if the object with the specified ID has any object references not already in the S-C.
+     *
+     * TBD: Add a reference cache for improved performance?
+     */
+    private boolean hasUnmappedReferences(String objectId) throws NoSuchElementException, OvalException {
+	for (String dependencyId : getObjectReferences(definitions.getObject(objectId).getValue(), true)) {
+	    if (objectId.equals(dependencyId)) {
+		// ignore self
+	    } else if (!sc.containsObject(dependencyId)) {
+		return true;
+	    }
+	}
+	return false;
+    }
+
+    /**
+     * Compare all the items corresponding to the object's type to the object specification, and map them together
+     * in the System-Characteristics.
+     */
+    private void mapObject(String objectId) throws Exception {
+	ObjectType obj = definitions.getObject(objectId).getValue();
+	Collection<? extends ItemType> items = sc.getItemsByType(OBJECT_ITEM_MAP.get(obj.getClass()));
+	ObjectGroup group = new ObjectGroup(new RequestContext(definitions.getObject(objectId).getValue()));
+	Collection<IBatch.IResult> results = new ArrayList<IBatch.IResult>();
+	for (IBatch.IRequest request : group.getRequests()) {
+	    Collection<ItemType> requestItems = new ArrayList<ItemType>();
+	    for (ItemType item : items) {
+		switch(compare(request.getObject(), item, (RequestContext)request.getContext())) {
+		  case TRUE:
+		    requestItems.add(item);
+		    break;
+		}
+	    }
+	    results.add(new Batch.Result(requestItems, request.getContext()));
+	}
+	items = group.combineItems(results, new FlagData());
+	if (items.size() == 0) {
+	    logger.debug(JOVALMsg.STATUS_OBJECT_NOITEM_MAP, objectId);
+	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, null);
+	} else {
+	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
+	    for (ItemType item : items) {
+		logger.debug(JOVALMsg.STATUS_OBJECT_ITEM_MAP, objectId, item.getId().toString());
+		sc.relateItem(objectId, item.getId());
+	    }
+	}
     }
 
     /**
@@ -1658,33 +1790,6 @@ public class Engine implements IOvalEngine, IProvider {
     }
 
     /**
-     * Compare an object record and item record.  All fields must match for a TRUE result.
-     */
-    private ResultEnumeration compare(EntityObjectRecordType objectRecord, EntityItemRecordType itemRecord, RequestContext rc)
-	    throws TestException, OvalException {
-
-	Hashtable<String, EntityObjectFieldType> objectFields = new Hashtable<String, EntityObjectFieldType>();
-	for (EntityObjectFieldType objectField : objectRecord.getField()) {
-	    objectFields.put(objectField.getName(), objectField);
-	}
-	Hashtable<String, EntityItemFieldType> itemFields = new Hashtable<String, EntityItemFieldType>();
-	for (EntityItemFieldType itemField : itemRecord.getField()) {
-	    itemFields.put(itemField.getName(), itemField);
-	}
-	CheckData cd = new CheckData();
-	for (String fieldName : objectFields.keySet()) {
-	    if (itemFields.containsKey(fieldName)) {
-		EntitySimpleBaseType object = new ObjectFieldBridge(objectFields.get(fieldName));
-		EntityItemSimpleBaseType item = new ItemFieldBridge(itemFields.get(fieldName));
-		cd.addResult(compare(object, item, rc));
-	    } else {
-		cd.addResult(ResultEnumeration.FALSE);
-	    }
-	}
-	return cd.getResult(CheckEnumeration.ALL);
-    }
-
-    /**
      * Evaluate a DefinitionType.
      */
     private scap.oval.results.DefinitionType evaluateDefinition(DefinitionType definition) throws OvalException {
@@ -2009,9 +2114,82 @@ public class Engine implements IOvalEngine, IProvider {
     }
 
     /**
+     * Determine whether or not the specified item matches the specified object.
+     */
+    private ResultEnumeration compare(ObjectType object, ItemType item, RequestContext rc) throws OvalException, TestException {
+	if (!OBJECT_ITEM_MAP.get(object.getClass()).equals(item.getClass())) {
+	    return ResultEnumeration.FALSE;
+	}
+	try {
+	    OperatorData result = new OperatorData(false);
+	    int facets = 0;
+	    for (Method method : getMethods(object.getClass()).values()) {
+		String methodName = method.getName();
+		if (methodName.startsWith("get") && !OBJECT_METHOD_NAMES.contains(methodName)) {
+		    facets++;
+		    Object objectEntityObj = method.invoke(object);
+		    if (objectEntityObj instanceof JAXBElement) {
+			if (XSITools.isNil((JAXBElement)objectEntityObj)) {
+			    objectEntityObj = null;
+			} else {
+			    objectEntityObj = ((JAXBElement)objectEntityObj).getValue();
+			}
+		    }
+		    if (objectEntityObj == null) {
+			// continue
+		    } else if (objectEntityObj instanceof EntitySimpleBaseType) {
+			EntitySimpleBaseType objectEntity = (EntitySimpleBaseType)objectEntityObj;
+			Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
+			if (itemEntityObj instanceof JAXBElement) {
+			    itemEntityObj = ((JAXBElement)itemEntityObj).getValue();
+			}
+			if (itemEntityObj instanceof EntityItemSimpleBaseType || itemEntityObj == null) {
+			    result.addResult(compare(objectEntity, (EntityItemSimpleBaseType)itemEntityObj, rc));
+			} else {
+			    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
+								 itemEntityObj.getClass().getName(), item.getId());
+	    		    throw new OvalException(message);
+			}
+		    } else if (objectEntityObj instanceof EntityObjectRecordType) {
+			EntityObjectRecordType objectEntity = (EntityObjectRecordType)objectEntityObj;
+			Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
+			if (itemEntityObj instanceof JAXBElement) {
+			    itemEntityObj = ((JAXBElement)itemEntityObj).getValue();
+			}
+			if (itemEntityObj instanceof EntityItemRecordType) {
+			    result.addResult(compare(objectEntity, (EntityItemRecordType)itemEntityObj, rc));
+			} else {
+			    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
+								 itemEntityObj.getClass().getName(), item.getId());
+	    		    throw new OvalException(message);
+			}
+		    } else {
+			String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
+							     objectEntityObj.getClass().getName(), object.getId());
+	    		throw new OvalException(message);
+		    }
+		}
+	    }
+	    if (facets > 0) {
+		return result.getResult(OperatorEnumeration.AND);
+	    } else {
+		// Singleton object type
+		return ResultEnumeration.TRUE;
+	    }
+	} catch (NoSuchMethodException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), object.getId()));
+	} catch (IllegalAccessException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), object.getId()));
+	} catch (InvocationTargetException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), object.getId()));
+	}
+    }
+
+    /**
      * Determine whether or not the specified item matches the specified state.
-     *
-     * DAS: simplify this method by using the resolveUnknownEntity method?
      */
     private ResultEnumeration compare(StateType state, ItemType item, RequestContext rc) throws OvalException, TestException {
 	try {
@@ -2098,7 +2276,45 @@ public class Engine implements IOvalEngine, IProvider {
     }
 
     /**
-     * Compare a state and item record.
+     * Compare an object record and item record.  All the object record's fields must match for a TRUE result (i.e.,
+     * the item may have additional fields).
+     */
+    private ResultEnumeration compare(EntityObjectRecordType objectRecord, EntityItemRecordType itemRecord, RequestContext rc)
+	    throws TestException, OvalException {
+
+	Map<String, EntityObjectFieldType> objectFields = new HashMap<String, EntityObjectFieldType>();
+	for (EntityObjectFieldType objectField : objectRecord.getField()) {
+	    objectFields.put(objectField.getName(), objectField);
+	}
+	Map<String, Collection<EntityItemFieldType>> itemFields = new HashMap<String, Collection<EntityItemFieldType>>();
+	for (EntityItemFieldType itemField : itemRecord.getField()) {
+	    String name = itemField.getName();
+	    if (!itemFields.containsKey(name)) {
+		itemFields.put(name, new ArrayList<EntityItemFieldType>());
+	    }
+	    itemFields.get(name).add(itemField);
+	}
+	OperatorData od = new OperatorData(false);
+	for (Map.Entry<String, EntityObjectFieldType> entry : objectFields.entrySet()) {
+	    String name = entry.getKey();
+	    EntityObjectFieldType objectField = entry.getValue();
+	    if (itemFields.containsKey(name)) {
+		EntitySimpleBaseType object = new ObjectFieldBridge(objectField);
+		CheckData cd = new CheckData();
+		for (EntityItemFieldType itemField : itemFields.get(name)) {
+		    cd.addResult(compare(object, new ItemFieldBridge(itemField), rc));
+		}
+		od.addResult(cd.getResult(objectField.getEntityCheck()));
+	    } else {
+		od.addResult(ResultEnumeration.FALSE);
+	    }
+	}
+	return od.getResult(OperatorEnumeration.AND);
+    }
+
+    /**
+     * Compare a state record and item record.  All the state record's fields must match for a TRUE result (i.e.,
+     * the item may have additional fields).
      */
     private ResultEnumeration compare(EntityStateRecordType stateRecord, EntityItemRecordType itemRecord, RequestContext rc)
 	    throws TestException, OvalException {
