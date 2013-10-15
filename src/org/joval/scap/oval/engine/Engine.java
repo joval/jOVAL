@@ -264,6 +264,8 @@ public class Engine implements IOvalEngine, IProvider {
 		throw new CollectException(e.getMessage(), FlagEnumeration.ERROR);
 	    }
 	    return items;
+	} else if (plugin == null) {
+	    throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_MODE_SC), FlagEnumeration.NOT_COLLECTED);
 	} else {
 	    return plugin.getOvalProvider().getItems(obj, rc);
 	}
@@ -633,9 +635,10 @@ public class Engine implements IOvalEngine, IProvider {
 	ObjectGroup group = new ObjectGroup(new RequestContext(definitions.getObject(objectId).getValue()));
 	Collection<IBatch.IResult> results = new ArrayList<IBatch.IResult>();
 	for (IBatch.IRequest request : group.getRequests()) {
+	    RequestContext rc = (RequestContext)request.getContext();
 	    Collection<ItemType> requestItems = new ArrayList<ItemType>();
 	    for (ItemType item : items) {
-		switch(compare(request.getObject(), item, (RequestContext)request.getContext())) {
+		switch(compare(request.getObject(), item, rc)) {
 		  case TRUE:
 		    requestItems.add(item);
 		    break;
@@ -652,6 +655,12 @@ public class Engine implements IOvalEngine, IProvider {
 	    for (ItemType item : items) {
 		logger.debug(JOVALMsg.STATUS_OBJECT_ITEM_MAP, objectId, item.getId().toString());
 		sc.relateItem(objectId, item.getId());
+	    }
+	}
+	for (IBatch.IResult result : results) {
+	    for (VariableValueType var : ((RequestContext)result.getContext()).getVars()) {
+		sc.storeVariable(var);
+		sc.relateVariable(objectId, var.getVariableId());
 	    }
 	}
     }
@@ -675,8 +684,10 @@ public class Engine implements IOvalEngine, IProvider {
 	    }
 	    return result;
 	}
-	logger.debug(JOVALMsg.STATUS_OBJECT, objectId);
-	producer.sendNotify(Message.OBJECT, objectId);
+	if (plugin != null) {
+	    logger.debug(JOVALMsg.STATUS_OBJECT, objectId);
+	    producer.sendNotify(Message.OBJECT, objectId);
+	}
 	Collection<ItemType> items = new ArrayList<ItemType>();
 	try {
 	    Set s = getObjectSet(obj);
@@ -2130,9 +2141,21 @@ public class Engine implements IOvalEngine, IProvider {
 		    Object objectEntityObj = method.invoke(object);
 		    if (objectEntityObj instanceof JAXBElement) {
 			if (XSITools.isNil((JAXBElement)objectEntityObj)) {
-			    objectEntityObj = null;
+			    Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
+			    if (itemEntityObj == null) {
+				result.addResult(ResultEnumeration.TRUE);
+			    } else if (itemEntityObj instanceof JAXBElement) {
+				if (XSITools.isNil((JAXBElement)itemEntityObj)) {
+				    result.addResult(ResultEnumeration.TRUE);
+				} else {
+				    result.addResult(ResultEnumeration.FALSE);
+				}
+			    } else {
+				result.addResult(ResultEnumeration.FALSE);
+			    }
+			    continue; // move on
 			} else {
-			    objectEntityObj = ((JAXBElement)objectEntityObj).getValue();
+			    objectEntityObj = ((JAXBElement)objectEntityObj).getValue(); // keep processing
 			}
 		    }
 		    if (objectEntityObj == null) {
