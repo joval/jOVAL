@@ -407,15 +407,14 @@ public class Engine implements IOvalEngine, IProvider {
 	    //
 	    boolean scanRequired = sc == null;
 	    if (scanRequired) {
+	    	if (plugin == null) {
+		    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_NONE));
+		}
 		if (!plugin.isConnected()) {
-	    	    if (plugin == null) {
-			throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_NONE));
+		    if (plugin.connect()) {
+			doDisconnect = true;
 		    } else {
-			if (plugin.connect()) {
-			    doDisconnect = true;
-			} else {
-			    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
-			}
+			throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
 		    }
 		}
 		sc = new SystemCharacteristics(plugin.getSystemInfo());
@@ -684,10 +683,8 @@ public class Engine implements IOvalEngine, IProvider {
 	    }
 	    return result;
 	}
-	if (plugin != null) {
-	    logger.debug(JOVALMsg.STATUS_OBJECT, objectId);
-	    producer.sendNotify(Message.OBJECT, objectId);
-	}
+	logger.debug(JOVALMsg.STATUS_OBJECT, objectId);
+	producer.sendNotify(Message.OBJECT, objectId);
 	Collection<ItemType> items = new ArrayList<ItemType>();
 	try {
 	    Set s = getObjectSet(obj);
@@ -3193,9 +3190,9 @@ public class Engine implements IOvalEngine, IProvider {
 		}
 	    } else if (obj instanceof ExtendDefinitionType) {
 		Object next = definitions.getDefinition(((ExtendDefinitionType)obj).getDefinitionRef());
-		return getObjectReferences(next, indirect);
+		results = getObjectReferences(next, indirect);
 	    } else if (obj instanceof CriterionType) {
-		return getObjectReferences(definitions.getTest(((CriterionType)obj).getTestRef()).getValue(), indirect);
+		results = getObjectReferences(definitions.getTest(((CriterionType)obj).getTestRef()).getValue(), indirect);
 	    } else if (obj instanceof scap.oval.definitions.core.TestType) {
 		ObjectRefType oRef = (ObjectRefType)safeInvokeMethod(obj, "getObject");
 		if (oRef != null) {
@@ -3240,7 +3237,7 @@ public class Engine implements IOvalEngine, IProvider {
 		}
 	    } else if (obj instanceof Filter) {
 		if (indirect) {
-		    return getObjectReferences(definitions.getState(((Filter)obj).getValue()), indirect);
+		    results = getObjectReferences(definitions.getState(((Filter)obj).getValue()), indirect);
 		}
 	    } else if (obj instanceof Set) {
 		if (indirect) {
@@ -3251,18 +3248,20 @@ public class Engine implements IOvalEngine, IProvider {
 			}
 			results.addAll(getObjectReferences(set.getFilter(), indirect));
 		    } else {
-			return getObjectReferences(set.getSet(), indirect);
+			results = getObjectReferences(set.getSet(), indirect);
 		    }
 		}
+	    } else if (obj instanceof JAXBElement) {
+		results = getObjectReferences(((JAXBElement)obj).getValue(), indirect);
 	    } else if (obj instanceof EntitySimpleBaseType) {
 		EntitySimpleBaseType simple = (EntitySimpleBaseType)obj;
 		if (indirect && simple.isSetVarRef()) {
-		    return getObjectReferences(definitions.getVariable(simple.getVarRef()), indirect);
+		    results = getObjectReferences(definitions.getVariable(simple.getVarRef()), indirect);
 		}
 	    } else if (obj instanceof EntityComplexBaseType) {
 		EntityComplexBaseType complex = (EntityComplexBaseType)obj;
 		if (indirect && complex.isSetVarRef()) {
-		    return getObjectReferences(definitions.getVariable(complex.getVarRef()), indirect);
+		    results = getObjectReferences(definitions.getVariable(complex.getVarRef()), indirect);
 		}
 	    } else if (obj instanceof List) {
 		for (Object elt : (List)obj) {
@@ -3270,15 +3269,15 @@ public class Engine implements IOvalEngine, IProvider {
 		}
 	    } else if (obj instanceof ObjectComponentType) {
 		Object next = definitions.getObject(((ObjectComponentType)obj).getObjectRef()).getValue();
-		return getObjectReferences(next, indirect);
+		results = getObjectReferences(next, indirect);
 	    } else if (obj instanceof VariableComponentType) {
 		VariableType var = definitions.getVariable(((VariableComponentType)obj).getVarRef());
 		if (var instanceof LocalVariable) {
-		    return getObjectReferences(var, indirect);
+		    results = getObjectReferences(var, indirect);
 		}
 	    } else if (obj != null) {
 		try {
-		    return getObjectReferences(getComponent(obj), indirect);
+		    results = getObjectReferences(getComponent(obj), indirect);
 		} catch (OvalException e) {
 		    // not a component
 		}
