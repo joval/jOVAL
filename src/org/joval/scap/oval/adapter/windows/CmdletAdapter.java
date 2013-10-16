@@ -362,7 +362,12 @@ public class CmdletAdapter implements IAdapter {
 	StringBuffer sb = new StringBuffer();
 	for (EntityObjectFieldType field : record.getField()) {
 	    if (field.getName().indexOf(" ") == -1) {
-		sb.append(" ").append(checkParameter(field.getName()));
+		sb.append(" ");
+		String paramName = checkParameter(field.getName());
+		if (!paramName.startsWith("-")) {
+		    sb.append("-");
+		}
+		sb.append(paramName);
 	    } else {
 		throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_CMDLET_FIELD, field.getName()));
 	    }
