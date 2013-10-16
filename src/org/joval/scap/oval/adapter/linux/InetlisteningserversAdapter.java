@@ -237,7 +237,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 	    portItems = new ArrayList<InetlisteningserverItem>();
 	    Collection<String> data = new ArrayList<String>();
 	    data.addAll(SafeCLI.multiLine("netstat -lnptu", session, IUnixSession.Timeout.S));
-	    data.addAll(SafeCLI.multiLine("netstat -npt | grep ESTABLISHED", session, IUnixSession.Timeout.S));
+	    data.addAll(SafeCLI.multiLine("netstat -nptu | grep ESTABLISHED", session, IUnixSession.Timeout.S));
 	    lines = data.iterator();
 	    while(lines.hasNext()) {
 		String line = lines.next().trim();
@@ -288,10 +288,6 @@ public class InetlisteningserversAdapter implements IAdapter {
 		    foreignAddress.setValue(foreign.substring(0,ptr));
 		    item.setForeignAddress(foreignAddress);
 
-		    if ("tcp".equals(protocol)) {
-			String tcp_state = tok.nextToken();
-		    }
-
 		    EntityItemIntType foreignPort = Factories.sc.core.createEntityItemIntType();
 		    foreignPort.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		    String foreignPortNumber = foreign.substring(ptr+1);
@@ -301,18 +297,30 @@ public class InetlisteningserversAdapter implements IAdapter {
 		    foreignPort.setValue(foreignPortNumber);
 		    item.setForeignPort(foreignPort);
 
-		    String processInfo = tok.nextToken();
-		    ptr = processInfo.indexOf("/");
-		    Integer pid = new Integer(processInfo.substring(0,ptr));
+		    String state = tok.nextToken();
+		    String processInfo = null;
+		    if (tok.hasMoreTokens()) {
+			processInfo = tok.nextToken();
+		    } else {
+			processInfo = state; // there was no state, i.e., UDP listener
+		    }
+
 		    EntityItemIntType pidType = Factories.sc.core.createEntityItemIntType();
 		    pidType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		    pidType.setValue(pid.toString());
-		    item.setPid(pidType);
-
 		    EntityItemIntType userId = Factories.sc.core.createEntityItemIntType();
 		    userId.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		    userId.setValue(processOwners.get(pid).toString());
+		    ptr = processInfo.indexOf("/");
+		    if (ptr == -1) {
+			pidType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+			userId.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		    } else {
+			Integer pid = new Integer(processInfo.substring(0,ptr));
+			pidType.setValue(pid.toString());
+			userId.setValue(processOwners.get(pid).toString());
+		    }
+		    item.setPid(pidType);
 		    item.setUserId(userId);
+
 		    portItems.add(item);
 		}
 	    }

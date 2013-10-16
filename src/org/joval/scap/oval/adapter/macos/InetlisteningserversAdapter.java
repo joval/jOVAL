@@ -398,14 +398,20 @@ public class InetlisteningserversAdapter implements IAdapter {
 
 		    String local=null, foreign=null;
 		    if ("udp".equals(protocol)) {
-			// There is no such thing as a foreign UDP port
-			local = tok.nextToken();
+			String addresses = tok.nextToken();
+			int ptr = addresses.indexOf("->");
+			if (ptr == -1) {
+			    local = addresses;
+			    foreign = ip6 ? "[::]:0" : "0.0.0.0:0"; // defined as having these foreign addrs
+			} else {
+			    local = addresses.substring(0,ptr);
+			    foreign = addresses.substring(0,ptr+2);
+			}
 		    } else {
 			// TCP
 			String addresses = tok.nextToken();
 			String tcp_state = tok.nextToken();
-
-			if ("(ESTABLISHED)".equals(tcp_state)) {
+			if ("(ESTABLISHED)".equals(tcp_state)) { // ignore TIME_WAIT, etc.
 			    int ptr = addresses.indexOf("->");
 			    local = addresses.substring(0,ptr);
 			    foreign = addresses.substring(0,ptr+2);
