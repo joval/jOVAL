@@ -630,6 +630,9 @@ public class Engine implements IOvalEngine, IProvider {
      */
     private void mapObject(String objectId) throws Exception {
 	ObjectType obj = definitions.getObject(objectId).getValue();
+	if (!OBJECT_ITEM_MAP.containsKey(obj.getClass())) {
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNMAPPABLE_OBJECT, objectId, obj.getClass().getName()));
+	}
 	Collection<? extends ItemType> items = sc.getItemsByType(OBJECT_ITEM_MAP.get(obj.getClass()));
 	ObjectGroup group = new ObjectGroup(new RequestContext(definitions.getObject(objectId).getValue()));
 	Collection<IBatch.IResult> results = new ArrayList<IBatch.IResult>();
@@ -1281,7 +1284,12 @@ public class Engine implements IOvalEngine, IProvider {
 	    return levels.peek().object;
 	}
 
-	void pushObject(ObjectType obj) {
+	void pushObject(ObjectType obj) throws OvalException {
+	    for (Level level : levels) {
+		if (level.object.equals(obj)) {
+		    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_OVAL_LOOP, obj.getId()));
+		}
+	    }
 	    levels.push(new Level(obj));
 	}
 
