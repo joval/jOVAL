@@ -97,9 +97,16 @@ public enum SchemaRegistry {
     DIAGNOSTIC("diagnostic.packages"),
 
     /**
-     * Property indicating the package names for classes in the jOVAL Cyberscope schema.
+     * Property indicating the package names for classes in the jOVAL Cyberscope schema, which is bundled with commercial
+     * distributions of jOVAL.
      */
-    CYBERSCOPE("cyberscope.packages");
+    CYBERSCOPE("cyberscope.packages"),
+
+    /**
+     * Property indicating the package names for classes in the jOVAL DoD-ARF schema, which is bundled with commercial
+     * distributions of jOVAL.
+     */
+    DODARF("dodarf.packages");
 
     /**
      * Obtain the JAXBContext for the schema.
@@ -133,7 +140,8 @@ public enum SchemaRegistry {
 	SCE("sce.properties", true),
 	SVRL("svrl.properties", false),
 	DIAG("diagnostic.properties", true),
-	CYBERSCOPE("cyberscope.properties", false);
+	CYBERSCOPE("cyberscope.properties", false),
+	DODARF("dodarf.properties", false);
 
 	private String resource;
 	private boolean mandatory;
