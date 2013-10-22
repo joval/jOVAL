@@ -543,8 +543,7 @@ public class Checklist implements IChecklist {
 
     public void writeXML(OutputStream out) throws IOException {
 	try {
-	    Marshaller marshaller = SchemaRegistry.OCIL.getJAXBContext().createMarshaller();
-	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+	    Marshaller marshaller = SchemaRegistry.OCIL.createMarshaller();
 	    marshaller.marshal(Factories.core.createOcil(getOCILType()), out);
 	} catch (JAXBException e) {
 	    throw new IOException(e);

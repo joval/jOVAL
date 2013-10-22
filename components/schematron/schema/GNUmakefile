@@ -31,8 +31,8 @@ clean:
 	rm -rf $(DOCS)
 
 resources:
-	rm -f $(BUILD)/*.properties
-	cp $(RSRC)/*.properties $(BUILD)
+	rm -f $(BUILD)/*.ini
+	cp $(RSRC)/*.ini $(BUILD)
 
 classes: $(GEN) classdirs $(CLASS_FILES)
 

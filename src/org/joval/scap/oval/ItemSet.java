@@ -167,7 +167,7 @@ public class ItemSet<T extends ItemType> implements Iterable<T> {
     private Marshaller getMarshaller() {
 	if (marshaller == null) {
 	    try {
-		marshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext().createMarshaller();
+		marshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.createMarshaller();
 	    } catch (JAXBException e) {
 		throw new RuntimeException(e);
 	    }

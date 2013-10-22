@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import javax.xml.transform.Transformer;
-import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import org.oasis.catalog.Catalog;
 import scap.ai.AssetType;
@@ -94,7 +94,7 @@ public interface IReport extends ITransformable {
      *
      * @return the ID generated for the request
      */
-    String addRequest(Element request);
+    String addRequest(Document doc);
 
     /**
      * Add an asset based on a SystemInfoType
@@ -109,11 +109,11 @@ public interface IReport extends ITransformable {
      * @param requestId the request to which the report is related
      * @param assetId the asset that is the subject of the report
      * @param ref an optional URI to add to an OASIS catalog, to find the report
-     * @param report the report DOM
+     * @param doc the report DOM
      *
      * @return the ID generated for the report
      */
-    String addReport(String requestId, String assetId, String ref, Element report) throws NoSuchElementException, ArfException;
+    String addReport(String requestId, String assetId, String ref, Document doc) throws NoSuchElementException, ArfException;
 
     /**
      * Serialize the report to a file.

@@ -21,8 +21,6 @@ $(JOVAL_CORE_LIB): classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 resources:
-	rm -f $(BUILD)/*.ini
-	cp $(RSRC)/*.ini $(BUILD)
 	rm -f $(BUILD)/*.properties
 	cp $(RSRC)/*.properties $(BUILD)
 	rm -f $(BUILD)/org/joval/scap/xccdf/*.xsl

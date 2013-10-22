@@ -186,7 +186,7 @@ public class Engine implements IXccdfEngine {
 	  default:
 	    this.ctx = ctx;	
 	    try {
-		requestId = report.addRequest(DOMTools.toElement(ctx.getBenchmark()));
+		requestId = report.addRequest(DOMTools.toDocument(ctx.getBenchmark()));
 	    } catch (Exception e) {
 		throw new XccdfException(e);
 	    }
@@ -285,11 +285,11 @@ public class Engine implements IXccdfEngine {
 			//
 			// Always include the XCCDF report
 			//
-			report.addReport(requestId, assetId, entry.getKey(), DOMTools.toElement(subreport));
+			report.addReport(requestId, assetId, entry.getKey(), DOMTools.toDocument(subreport));
 		    } else {
 			for (SystemEnumeration system : systems) {
 			    if (system == SystemEnumeration.ANY || system.namespace().equals(ns)) {
-				report.addReport(requestId, assetId, entry.getKey(), DOMTools.toElement(subreport));
+				report.addReport(requestId, assetId, entry.getKey(), DOMTools.toDocument(subreport));
 				break;
 			    }
 			}

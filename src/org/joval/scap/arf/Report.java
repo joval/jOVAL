@@ -31,6 +31,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import jsaf.intf.util.ILoggable;
@@ -338,7 +339,8 @@ public class Report implements IReport, ILoggable {
 	return arc;
     }
 
-    public synchronized String addRequest(Element request) {
+    public synchronized String addRequest(Document doc) {
+	Element request = doc.getDocumentElement();
 	String requestId = new StringBuffer("request_").append(Integer.toString(requests.size())).toString();
 	requests.put(requestId, request);
 
@@ -427,7 +429,7 @@ public class Report implements IReport, ILoggable {
 	return assetId;
     }
 
-    public synchronized String addReport(String requestId, String assetId, String ref, Element report)
+    public synchronized String addReport(String requestId, String assetId, String ref, Document doc)
 		throws NoSuchElementException, ArfException {
 
 	if (!requests.containsKey(requestId)) {
@@ -437,6 +439,7 @@ public class Report implements IReport, ILoggable {
 	    throw new NoSuchElementException(assetId);
 	}
 
+	Element report = doc.getDocumentElement();
 	String reportId = new StringBuffer("report_").append(Integer.toString(reports.size())).toString();
 	reports.put(reportId, report);
 	if (ref != null && ref.length() > 0) {
@@ -486,8 +489,7 @@ public class Report implements IReport, ILoggable {
     public void writeXML(File f) throws IOException {
 	OutputStream out = null;
 	try {
-	    Marshaller marshaller = SchemaRegistry.ARF.getJAXBContext().createMarshaller();
-	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+	    Marshaller marshaller = SchemaRegistry.ARF.createMarshaller();
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(arc, out);
 	} catch (JAXBException e) {

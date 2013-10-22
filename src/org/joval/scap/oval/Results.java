@@ -62,7 +62,6 @@ import scap.oval.systemcharacteristics.core.VariableValueType;
 import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.intf.scap.oval.ISystemCharacteristics;
 import org.joval.intf.scap.oval.IResults;
-import org.joval.scap.oval.xml.OvalNamespacePrefixMapper;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 
@@ -207,8 +206,7 @@ public class Results implements IResults, ILoggable {
     public void writeXML(File f) {
 	OutputStream out = null;
 	try {
-	    Marshaller marshaller = SchemaRegistry.OVAL_RESULTS.getJAXBContext().createMarshaller();
-	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.RES);
+	    Marshaller marshaller = SchemaRegistry.OVAL_RESULTS.createMarshaller();
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(getOvalResults(), out);
 	} catch (JAXBException e) {

@@ -115,8 +115,7 @@ public class DefinitionFilter implements IDefinitionFilter, ILoggable {
     public void writeXML(File f) {
         OutputStream out = null;
         try {
-            Marshaller marshaller = SchemaRegistry.OVAL_EVALUATION_ID.getJAXBContext().createMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            Marshaller marshaller = SchemaRegistry.OVAL_EVALUATION_ID.createMarshaller();
             out = new FileOutputStream(f);
             marshaller.marshal(getEvaluationDefinitionIds(), out);
         } catch (JAXBException e) {

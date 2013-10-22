@@ -76,7 +76,6 @@ CLASSES=\
 	org.joval.scap.oval.types.TypeConversionException	\
 	org.joval.scap.oval.types.TypeFactory			\
 	org.joval.scap.oval.types.VersionType			\
-	org.joval.scap.oval.xml.OvalNamespacePrefixMapper	\
 	org.joval.scap.sce.SceException				\
 	org.joval.scap.sce.Script				\
 	org.joval.scap.sce.Result				\

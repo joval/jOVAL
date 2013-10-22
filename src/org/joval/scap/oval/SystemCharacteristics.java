@@ -50,7 +50,6 @@ import scap.oval.systemcharacteristics.core.SystemInfoType;
 import scap.oval.systemcharacteristics.core.VariableValueType;
 
 import org.joval.intf.scap.oval.ISystemCharacteristics;
-import org.joval.scap.oval.xml.OvalNamespacePrefixMapper;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 
@@ -114,8 +113,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	objectItemTable = new HashMap<String, Collection<BigInteger>>();
 	objectVariableTable = new HashMap<String, Collection<String>>();
 	try {
-	    marshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext().createMarshaller();
-	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.SC);
+	    marshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.createMarshaller();
 	} catch (JAXBException e) {
 	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FactoryConfigurationError e) {

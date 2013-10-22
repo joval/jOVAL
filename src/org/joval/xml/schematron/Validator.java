@@ -5,6 +5,7 @@ package org.joval.xml.schematron;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -32,6 +33,21 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class Validator {
+    //
+    // Register and instantiate the SVRL schema extension.
+    //
+    public static final SchemaRegistry.ISchema SVRL;
+    static {
+	ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	InputStream in = cl.getResourceAsStream("svrl-schema-registry.ini");
+	if (in == null) {
+	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, "svrl-schema-registry.ini"));
+	} else {
+	    SchemaRegistry.register(in);
+	    SVRL = SchemaRegistry.getGroup("SVRL");
+	}
+    }
+
     /**
      * For command-line testing.
      */
@@ -85,7 +101,7 @@ public class Validator {
 	    transformer.transform(source, result);
 	    Node root = result.getNode();
 	    if (root.getNodeType() == Node.DOCUMENT_NODE) {
-		Object rootObj = SchemaRegistry.SVRL.getJAXBContext().createUnmarshaller().unmarshal(root);
+		Object rootObj = SVRL.getJAXBContext().createUnmarshaller().unmarshal(root);
 		if (rootObj instanceof SchematronOutput) {
 		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCHEMATRON_VALIDATION);
 		    ValidationException error = new ValidationException(msg);

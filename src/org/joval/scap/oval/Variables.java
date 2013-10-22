@@ -136,8 +136,7 @@ public class Variables implements IVariables {
     public void writeXML(File f) {
 	OutputStream out = null;
 	try {
-	    Marshaller marshaller = SchemaRegistry.OVAL_VARIABLES.getJAXBContext().createMarshaller();
-	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+	    Marshaller marshaller = SchemaRegistry.OVAL_VARIABLES.createMarshaller();
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(getOvalVariables(), out);
 	} catch (JAXBException e) {

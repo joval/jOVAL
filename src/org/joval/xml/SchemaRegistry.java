@@ -5,10 +5,24 @@ package org.joval.xml;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Properties;
+import java.util.StringTokenizer;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import com.sun.xml.internal.bind.marshaller.NamespacePrefixMapper;
+
+import jsaf.intf.util.IProperty;
+import jsaf.util.IniFile;
 
 import org.joval.util.JOVALMsg;
 
@@ -23,156 +37,255 @@ public enum SchemaRegistry {
      * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
      * definitions schema.
      */
-    OVAL_DEFINITIONS("oval.definitions.packages"),
+    OVAL_DEFINITIONS("OVAL_DEFINITIONS"),
 
     /**
      * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
      * results schema.
      */
-    OVAL_RESULTS("oval.results.packages"),
+    OVAL_RESULTS("OVAL_RESULTS"),
 
     /**
      * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
      * system characteristics schema.
      */
-    OVAL_SYSTEMCHARACTERISTICS("oval.systemcharacteristics.packages"),
+    OVAL_SYSTEMCHARACTERISTICS("OVAL_SC"),
 
     /**
      * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
      * variables schema.
      */
-    OVAL_VARIABLES("oval.variables.packages"),
+    OVAL_VARIABLES("OVAL_VARIABLES"),
 
     /**
      * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
      * evaluation-id schema.
      */
-    OVAL_EVALUATION_ID("oval.evaluation-id.packages"),
+    OVAL_EVALUATION_ID("OVAL_EVALUATION"),
 
     /**
      * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
      * directives schema.
      */
-    OVAL_DIRECTIVES("oval.directives.packages"),
+    OVAL_DIRECTIVES("OVAL_DIRECTIVES"),
 
     /**
      * Property indicating the package names for classes in the XCCDF (eXtensible Configuration Checklist Description Format)
      * schema.
      */
-    XCCDF("xccdf.packages"),
+    XCCDF("XCCDF"),
 
     /**
      * Property indicating the package names for classes in the OCIL (Open Checklist Interactive Language) schema.
      */
-    OCIL("ocil.packages"),
+    OCIL("OCIL"),
 
     /**
      * Property indicating the package names for classes in the CPE (Common Platform Enumeration) schema.
      */
-    CPE("cpe.packages"),
+    CPE("CPE"),
 
     /**
      * Property indicating the package names for classes in the DS (SCAP Data Stream) schema.
      */
-    DS("ds.packages"),
+    DS("DATASTREAM"),
 
     /**
      * Property indicating the package names for classes in the ARF (Asset Reporting Format) schema.
      */
-    ARF("arf.packages"),
+    ARF("ARF"),
 
     /**
      * Property indicating the package names for classes in the SCE (Script Check Engine) schema.
      */
-    SCE("sce.packages"),
-
-    /**
-     * Property indicating the package names for classes in the SVRL (Schematron Validation Report Language) schema.
-     */
-    SVRL("svrl.packages"),
+    SCE("SCE"),
 
     /**
      * Property indicating the package names for classes in the jOVAL diagnostic schema.
      */
-    DIAGNOSTIC("diagnostic.packages"),
+    DIAGNOSTIC("DIAGNOSTIC");
 
     /**
-     * Property indicating the package names for classes in the jOVAL Cyberscope schema, which is bundled with commercial
-     * distributions of jOVAL.
+     * Interface for members of the enum.
      */
-    CYBERSCOPE("cyberscope.packages"),
+    public interface ISchema {
+	JAXBContext getJAXBContext() throws JAXBException;
+	Marshaller createMarshaller() throws JAXBException;
+    }
 
     /**
-     * Property indicating the package names for classes in the jOVAL DoD-ARF schema, which is bundled with commercial
-     * distributions of jOVAL.
+     * Obtain a SchemaRegistry instance based on its group name.  If there is no built-in member of the enumeration
+     * with the specified name, a new instance will be returned with that corresponding name.  This makes it possible
+     * for the registry to support custom extended JAXB groups.
+     *
+     * @throws NoSuchElementException if no schema has been registered that is a member of the specified group
      */
-    DODARF("dodarf.packages");
+    public static ISchema getGroup(String groupName) throws NoSuchElementException {
+	for (SchemaRegistry sr : values()) {
+	    if (groupName.equals(sr.impl.groupName)) {
+		return sr.impl;
+	    }
+	}
+	if (groupPackages.containsKey(groupName)) {
+	    return new SchemaImpl(groupName);
+	} else {
+	    throw new NoSuchElementException(groupName);
+	}
+    }
+
+    /**
+     * Register additional schemas.
+     *
+     * @param in an InputStream to an INI-format file.
+     * @see schema-registry.ini
+     */
+    public static final void register(InputStream in) {
+	try {
+	    Collection<String> changedGroups = new HashSet<String>();
+
+	    IniFile ini = new IniFile(in);
+	    for (String prefix : ini.listSections()) {
+		IProperty props = ini.getSection(prefix);
+
+		//
+		// Set the preferred prefix for the namespace, if possible
+		//
+		String ns = props.getProperty("namespace");
+		if (ns2Prefix.containsKey(ns)) {
+		    if (!ns2Prefix.get(ns).equals(prefix)) {
+			JOVALMsg.getLogger().warn(JOVALMsg.WARNING_NS_PREFIX, ns, prefix, ns2Prefix.get(ns));
+			prefix = ns2Prefix.get(ns);
+		    }
+		} else {
+		    ns2Prefix.put(ns, prefix);
+		}
+
+		String packageName = props.getProperty("package");
+		StringTokenizer tok = new StringTokenizer(props.getProperty("groups"), ",");
+		while (tok.hasMoreTokens()) {
+		    String group = tok.nextToken().trim();
+		    if (!groupPackages.containsKey(group)) {
+			groupPackages.put(group, new HashSet<String>());
+		    }
+		    if (!groupPackages.get(group).contains(packageName)) {
+			groupPackages.get(group).add(packageName);
+			changedGroups.add(group);
+		    }
+		    if (!groupLocations.containsKey(group)) {
+			groupLocations.put(group, new HashSet<String>());
+		    }
+		    groupLocations.get(group).add(props.getProperty("location"));
+		}
+	    }
+
+	    //
+	    // Re-set the JAXBContext for any groups whose member packages have been altered by the registration
+	    //
+	    for (String group : changedGroups) {
+		for (SchemaRegistry sr : values()) {
+		    if (group.equals(sr.impl.groupName)) {
+			sr.impl.ctx = null;
+			break;
+		    }
+		}
+	    }
+	} catch (IOException e) {
+	    throw new RuntimeException(e);
+	} finally {
+	    try {
+		in.close();
+	    } catch (IOException e) {
+	    }
+	}
+    }
+
+    // Implement ISchema (although it's undeclared, as an enum can't implement its own inner class)
 
     /**
      * Obtain the JAXBContext for the schema.
      */
     public JAXBContext getJAXBContext() throws JAXBException {
-	if (ctx == null) {
-	    ctx = JAXBContext.newInstance(schemaProps.getProperty(resource));
-	}
-	return ctx;
+	return impl.getJAXBContext();
+    }
+
+    public Marshaller createMarshaller() throws JAXBException {
+	return impl.createMarshaller();
     }
 
     // Private
 
-    private JAXBContext ctx;
-    private String resource;
+    private static final String PREFIXMAPPER_PROP = "com.sun.xml.internal.bind.namespacePrefixMapper";
 
-    private SchemaRegistry(String resource) {
-	this.resource = resource;
+    private static Map<String, Collection<String>> groupPackages;
+    private static Map<String, Collection<String>> groupLocations;
+    private static Map<String, String> ns2Prefix;
+    static {
+	groupPackages = new HashMap<String, Collection<String>>();
+	groupLocations = new HashMap<String, Collection<String>>();
+	ns2Prefix = new HashMap<String, String>();
+
+	ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	InputStream in = cl.getResourceAsStream("schema-registry.ini");
+	if (in == null) {
+	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, "schema-registry.ini"));
+	} else {
+	    register(in);
+	}
     }
 
-    /**
-     * Enumeration of resource files that should be available to the classloader.
-     */
-    private enum Resource {
-	ARF("arf.properties", true),
-	DS("ds.properties", true),
-	OVAL("oval.properties", true),
-	CPE("cpe.properties", true),
-	XCCDF("xccdf.properties", true),
-	OCIL("ocil.properties", true),
-	SCE("sce.properties", true),
-	SVRL("svrl.properties", false),
-	DIAG("diagnostic.properties", true),
-	CYBERSCOPE("cyberscope.properties", false),
-	DODARF("dodarf.properties", false);
+    private SchemaImpl impl;
 
-	private String resource;
-	private boolean mandatory;
+    private SchemaRegistry(String groupName) {
+	impl = new SchemaImpl(groupName);
+    }
 
-	private Resource(String resource, boolean mandatory) {
-	    this.resource = resource;
-	    this.mandatory = mandatory;
+    private static class SchemaImpl extends NamespacePrefixMapper implements ISchema {
+	String groupName;
+	JAXBContext ctx;
+
+	SchemaImpl(String groupName) {
+	    super();
+	    this.groupName = groupName;
 	}
 
-	InputStream getStream(ClassLoader cl) {
-	    InputStream in = cl.getResourceAsStream(resource);
-	    if (mandatory && in == null) {
-		throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, resource));
+	@Override
+	public String getPreferredPrefix(String namespaceUri, String suggestion, boolean requirePrefix) {
+	    if (ns2Prefix.containsKey(namespaceUri)) {
+		return ns2Prefix.get(namespaceUri);
+	    } else {
+		return suggestion;
 	    }
-	    return in;
 	}
-    };
 
-    private static Properties schemaProps;
-    static {
-	schemaProps = new Properties();
-	ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	for (Resource res : Resource.values()) {
-	    InputStream rsc = res.getStream(cl);
-	    if (rsc != null) {
-		try {
-		    schemaProps.load(rsc);
-		} catch (IOException e) {
-		    JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	// Implement ISchema
+
+	public JAXBContext getJAXBContext() throws JAXBException {
+	    if (ctx == null) {
+		StringBuffer sb = new StringBuffer();
+		for (String packageName : groupPackages.get(groupName)) {
+		    if (sb.length() > 0) {
+			sb.append(":");
+		    }
+		    sb.append(packageName);
 		}
+		ctx = JAXBContext.newInstance(sb.toString());
 	    }
+	    return ctx;
+	}
+
+	public Marshaller createMarshaller() throws JAXBException {
+	    Marshaller marshaller = getJAXBContext().createMarshaller();
+	    StringBuffer sb = new StringBuffer();
+	    for (String location : groupLocations.get(groupName)) {
+		if (sb.length() > 0) {
+		    sb.append(" ");
+		}
+		sb.append(location);
+	    }
+	    marshaller.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, sb.toString());
+	    marshaller.setProperty(PREFIXMAPPER_PROP, this);
+	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+	    return marshaller;
 	}
     }
 }

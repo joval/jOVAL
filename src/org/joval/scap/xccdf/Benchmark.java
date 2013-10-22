@@ -190,8 +190,7 @@ public class Benchmark implements IBenchmark, ILoggable {
     public void writeXML(File f) throws IOException {
 	OutputStream out = null;
 	try {
-	    Marshaller marshaller = SchemaRegistry.XCCDF.getJAXBContext().createMarshaller();
-	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+	    Marshaller marshaller = SchemaRegistry.XCCDF.createMarshaller();
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(bt, out);
 	} catch (JAXBException e) {

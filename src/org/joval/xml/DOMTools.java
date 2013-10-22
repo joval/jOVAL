@@ -30,7 +30,7 @@ public class DOMTools {
     /**
      * Transform a JAXB object into a W3C Node.
      */
-    public static Element toElement(ITransformable source) throws Exception {
+    public static Document toDocument(ITransformable source) throws Exception {
 	TransformerFactory xf = XSLTools.XSLVersion.V1.getFactory();
 	Transformer transformer = xf.newTransformer();
 	DOMResult result = new DOMResult();
@@ -47,7 +47,7 @@ public class DOMTools {
 	for(int i=0; i < 1000; i++) {
 	    try {
 		transformer.transform(source.getSource(), result);
-		return ((Document)result.getNode()).getDocumentElement();
+		return (Document)result.getNode();
 	    } catch (TransformerException e) {
 		te = e;
 		if (e.getCause() instanceof java.util.ConcurrentModificationException) {
