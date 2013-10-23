@@ -21,6 +21,7 @@ logic-clean:
 
 clean: logic-clean
 	@$(MAKE) --keep-going --directory=$(JSAF_COMPONENTS) clean
+	@$(MAKE) --keep-going --directory=jovaldi dist-clean
 	@$(MAKE) --keep-going --directory=scap clean
 	@$(MAKE) --keep-going --directory=schematron clean
 	@$(MAKE) --keep-going --directory=$(JPE_HOME) clean
