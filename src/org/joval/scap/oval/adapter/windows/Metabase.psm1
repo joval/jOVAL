@@ -29,19 +29,19 @@ function Get-MetabaseData {
       "Key: {0}" -f $KeyPath
       if ($ID -eq $null -or $ID -eq "") {
         foreach ($Datum in [jOVAL.Metabase.Probe]::ListData($KeyPath)) {
-	  "{"
+          "{"
           foreach ($Entry in $Datum.GetEnumerator()) {
-	    "{0}: {1}" -f $Entry.Key.ToString(), $Entry.Value
+            "{0}: {1}" -f $Entry.Key.ToString(), $Entry.Value
           }
-	  "}"
+          "}"
         }
       } else {
-	$Datum = [jOVAL.Metabase.Probe]::GetData($KeyPath, $ID);
-	if ($Datum -ne $null) {
-	  foreach ($Entry in $Datum.GetEnumerator()) {
-	    "{0}: {1}" -f $Entry.Key.ToString(), $Entry.Value
-	  }
-	}
+        $Datum = [jOVAL.Metabase.Probe]::GetData($KeyPath, $ID);
+        if ($Datum -ne $null) {
+          foreach ($Entry in $Datum.GetEnumerator()) {
+            "{0}: {1}" -f $Entry.Key.ToString(), $Entry.Value
+          }
+        }
       }
     }
   }

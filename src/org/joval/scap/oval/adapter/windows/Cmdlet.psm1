@@ -49,7 +49,7 @@ function ConvertTo-OVAL {
           $object = $inputObject.$name
           $field = "<field name=`"" + $name.ToLower() + "`""
           if ($object -eq $null) {
-	    $field = "<field name=`"{0}`"/>" -f $name
+            $field = "<field name=`"{0}`"/>" -f $name
           } else {
             if ($member.Definition.StartsWith("System.Int32 ")) {
               $datatype = "integer"
@@ -60,7 +60,7 @@ function ConvertTo-OVAL {
             } else {
               $datatype = "string"
             }
-	    $field = "<field name=`"{0}`" datatype=`"{1}`">{2}</field>" -f $name.ToLower(), $datatype, $object.ToString()
+            $field = "<field name=`"{0}`" datatype=`"{1}`">{2}</field>" -f $name.ToLower(), $datatype, $object.ToString()
           }
           $value += $field
         }
