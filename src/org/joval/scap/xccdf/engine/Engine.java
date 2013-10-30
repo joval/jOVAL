@@ -53,6 +53,7 @@ import scap.xccdf.CheckContentRefType;
 import scap.xccdf.CheckType;
 import scap.xccdf.ComplexCheckType;
 import scap.xccdf.CPE2IdrefType;
+import scap.xccdf.FixType;
 import scap.xccdf.GroupType;
 import scap.xccdf.IdrefType;
 import scap.xccdf.IdentityType;
@@ -589,6 +590,27 @@ public class Engine implements IXccdfEngine {
      * Evaluate the check(s) in the rule, and return the results.
      */
     private List<RuleResultType> evaluate(RuleType rule, Map<String, ISystem> handlers) throws ScapException {
+	//
+	// If the rule specifies fixes, determine which (if any) can apply to the target platform(s).
+	//
+	List<FixType> fixes = null;
+	if (rule.isSetFix()) {
+	    for (FixType fix : rule.getFix()) {
+		boolean addFix = false;
+		if (fix.isSetPlatform()) {
+		    addFix = platforms.containsKey(fix.getPlatform()) && platforms.get(fix.getPlatform()).booleanValue();
+		} else {
+		    addFix = true;
+		}
+		if (addFix) {
+		    if (fixes == null) {
+			fixes = new ArrayList<FixType>();
+		    }
+		    fixes.add(fix);
+		}
+	    }
+	}
+
 	List<RuleResultType> results = new ArrayList<RuleResultType>();
 	if (rule.isSetComplexCheck()) {
 	    ComplexCheckType check = rule.getComplexCheck();
@@ -601,7 +623,11 @@ public class Engine implements IXccdfEngine {
 	    rrt.setWeight(rule.getWeight());
 	    rrt.setRole(rule.getRole());
 	    rrt.setComplexCheck(checkResult);
-	    rrt.setResult(getRuleResult(rule, evaluate(check, checkResult, handlers)));
+	    ResultEnumType ret = getRuleResult(rule, evaluate(check, checkResult, handlers));
+	    rrt.setResult(ret);
+	    if (fixes != null && ret == ResultEnumType.FAIL) {
+		rrt.getFix().addAll(fixes);
+	    }
 	    results.add(rrt);
 	} else {
 	    for (CheckType check : rule.getCheck()) {
@@ -617,7 +643,11 @@ public class Engine implements IXccdfEngine {
 			for (MessageType message : result.getMessages()) {
 			    rrt.getMessage().add(message);
 			}
-			rrt.setResult(getRuleResult(rule, result.getResult()));
+			ResultEnumType ret = getRuleResult(rule, result.getResult());
+			rrt.setResult(ret);
+			if (fixes != null && ret == ResultEnumType.FAIL) {
+			    rrt.getFix().addAll(fixes);
+			}
 			results.add(rrt);
 			break;
 		      }
@@ -633,7 +663,11 @@ public class Engine implements IXccdfEngine {
 			    for (MessageType message : subresult.getMessages()) {
 				rrt.getMessage().add(message);
 			    }
-			    rrt.setResult(getRuleResult(rule, subresult.getResult()));
+			    ResultEnumType ret = getRuleResult(rule, subresult.getResult());
+			    rrt.setResult(ret);
+			    if (fixes != null && ret == ResultEnumType.FAIL) {
+				rrt.getFix().addAll(fixes);
+			    }
 			    results.add(rrt);
 			}
 			break;
