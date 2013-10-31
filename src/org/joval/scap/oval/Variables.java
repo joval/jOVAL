@@ -184,7 +184,7 @@ public class Variables implements IVariables {
     public List<IType> getValue(String id) throws NoSuchElementException {
 	List<IType> values = variables.get(id);
 	if (values == null) {
-	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE, id));
+	    throw new NoSuchElementException(id);
 	} else {
 	    return values;
 	}

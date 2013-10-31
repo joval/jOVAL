@@ -122,7 +122,7 @@ public class OvalHandler implements ISystem {
 	}
     }
 
-    public Map<String, ? extends ITransformable> exec(IPlugin plugin) {
+    public Map<String, ? extends ITransformable> exec(IPlugin plugin) throws Exception {
 	Iterator<Map.Entry<String, EngineData>> iter = engines.entrySet().iterator();
 	while(iter.hasNext()) {
 	    Map.Entry<String, EngineData> entry = iter.next();
@@ -137,8 +137,7 @@ public class OvalHandler implements ISystem {
 		    results.put(href, engine.getResults());
 		    break;
 		  case ERR:
-		    engine.getError().printStackTrace();
-		    break;
+		    throw engine.getError();
 		}
 	    } else {
 		plugin.getLogger().info("No engine created for href " + href);

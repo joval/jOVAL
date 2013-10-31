@@ -163,89 +163,88 @@ public class RpmAdapter implements IAdapter, IBatch {
 
     public Collection<IResult> exec() {
 	Collection<IResult> results = new ArrayList<IResult>();
-	if (queue != null) {
-	    try {
+	try {
+	    //
+	    // If the package map is not loaded, then retrieve the required subset of its contents in batch.
+	    //
+	    if (!packageMapLoaded) {
 		//
-		// If the package map is not loaded, then retrieve the required subset of its contents in batch.
+		// Build a newline-delimited list of all the packages about which we'll need information.
 		//
-		if (!packageMapLoaded) {
-		    //
-		    // Build a newline-delimited list of all the packages about which we'll need information.
-		    //
-		    initPackageList();
-		    StringBuffer sb = new StringBuffer();
-		    for (IRequest request : queue) {
-			RpminfoObject rObj = (RpminfoObject)request.getObject();
-			String name = SafeCLI.checkArgument((String)rObj.getName().getValue(), session);
-			boolean check = false;
-			if (packageList.contains(name)) {
-			    check = true;
-			} else {
-			    //
-			    // Check for a "short name" match
-			    //
-			    String prefix = new StringBuffer(name).append("-").toString();
-			    for (String packageName : packageList) {
-				if (!packageMap.containsKey(packageName) && packageName.startsWith(prefix)) {
-				    check = true;
-				    break;
-				}
-			    }
-			}
-			if (check) {
-			    if (sb.length() > 0) {
-				sb.append("\\n");
-			    }
-			    sb.append(name);
-			}
-		    }
-
-		    //
-		    // Gather information about packages in a single pass, and add it all to the package map.
-		    //
-		    if (sb.length() > 0) {
-			//
-			// Execute a single command to retrieve information about all the packges.
-			//
-			StringBuffer cmd = new StringBuffer("echo -e \"").append(sb.toString()).append("\"");
-			cmd.append(" | xargs -I{} rpm -ql ").append(getBaseCommand()).append(" '{}'");
-			RpmData data = null;
-			Iterator<String> iter = SafeCLI.manyLines(cmd.toString(), null, session);
-			while ((data = nextRpmData(iter)) != null) {
-			    packageMap.put(data.name, data);
-			}
-		    }
-		}
-
-		//
-		// Use the package map to create result for all the requests.
-		//
+		initPackageList();
+		StringBuffer sb = new StringBuffer();
 		for (IRequest request : queue) {
 		    RpminfoObject rObj = (RpminfoObject)request.getObject();
-		    String name = (String)rObj.getName().getValue();
-		    Collection<RpminfoItem> result = new ArrayList<RpminfoItem>();
-		    if (packageMap.containsKey(name)) {
-			result.add(toRpminfoItem(packageMap.get(name), rObj.getBehaviors()));
+		    String name = SafeCLI.checkArgument((String)rObj.getName().getValue(), session);
+		    boolean check = false;
+		    if (packageList.contains(name)) {
+			check = true;
 		    } else {
 			//
-			// Look for a "short name" match
+			// Check for a "short name" match
 			//
-			for (Map.Entry<String, RpmData> entry : packageMap.entrySet()) {
-			    if (matches(name, entry.getValue())) {
-				result.add(toRpminfoItem(entry.getValue(), rObj.getBehaviors()));
+			String prefix = new StringBuffer(name).append("-").toString();
+			for (String packageName : packageList) {
+			    if (!packageMap.containsKey(packageName) && packageName.startsWith(prefix)) {
+				check = true;
 				break;
 			    }
 			}
 		    }
-		    results.add(new Batch.Result(result, request.getContext()));
+		    if (check) {
+			if (sb.length() > 0) {
+			    sb.append("\\n");
+			}
+			sb.append(name);
+		    }
 		}
-	    } catch (Exception e) {
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		for (IRequest request : queue) {
-		    results.add(new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), request.getContext()));
+
+		//
+		// Gather information about packages in a single pass, and add it all to the package map.
+		//
+		if (sb.length() > 0) {
+		    //
+		    // Execute a single command to retrieve information about all the packges.
+		    //
+		    StringBuffer cmd = new StringBuffer("echo -e \"").append(sb.toString()).append("\"");
+		    cmd.append(" | xargs -I{} rpm -ql ").append(getBaseCommand()).append(" '{}'");
+		    RpmData data = null;
+		    Iterator<String> iter = SafeCLI.manyLines(cmd.toString(), null, session);
+		    while ((data = nextRpmData(iter)) != null) {
+			packageMap.put(data.name, data);
+		    }
 		}
 	    }
+
+	    //
+	    // Use the package map to create result for all the requests.
+	    //
+	    for (IRequest request : queue) {
+		RpminfoObject rObj = (RpminfoObject)request.getObject();
+		String name = (String)rObj.getName().getValue();
+		Collection<RpminfoItem> result = new ArrayList<RpminfoItem>();
+		if (packageMap.containsKey(name)) {
+		    result.add(toRpminfoItem(packageMap.get(name), rObj.getBehaviors()));
+		} else {
+		    //
+		    // Look for a "short name" match
+		    //
+		    for (Map.Entry<String, RpmData> entry : packageMap.entrySet()) {
+			if (matches(name, entry.getValue())) {
+			    result.add(toRpminfoItem(entry.getValue(), rObj.getBehaviors()));
+			    break;
+			}
+		    }
+		}
+		results.add(new Batch.Result(result, request.getContext()));
+	    }
+	} catch (Exception e) {
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    for (IRequest request : queue) {
+		results.add(new Batch.Result(new CollectException(e, FlagEnumeration.ERROR), request.getContext()));
+	    }
 	}
+	queue = null;
 	return results;
     }
 

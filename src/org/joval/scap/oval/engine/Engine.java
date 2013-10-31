@@ -559,6 +559,7 @@ public class Engine implements IOvalEngine, IProvider {
 	sc = null;
 	state = State.CONFIGURE;
 	variableMap = new Hashtable<String, Collection<IType>>();
+	scanQueue = null;
 	error = null;
     }
 
@@ -2727,15 +2728,22 @@ public class Engine implements IOvalEngine, IProvider {
 		throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE_SOURCE, id));
 	    } else {
 		Collection<IType> values = new ArrayList<IType>();
-		for (IType value : externalVariables.getValue(id)) {
-		    try {
-			values.add(value.cast(externalVariable.getDatatype()));
-		    } catch (TypeConversionException e) {
-			MessageType message = Factories.common.createMessageType();
-			message.setLevel(MessageLevelEnumeration.ERROR);
-			message.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CONVERSION, e.getMessage()));
-			rc.addMessage(message);
+		try {
+		    for (IType value : externalVariables.getValue(id)) {
+		        try {
+			    values.add(value.cast(externalVariable.getDatatype()));
+		        } catch (TypeConversionException e) {
+			    MessageType message = Factories.common.createMessageType();
+			    message.setLevel(MessageLevelEnumeration.ERROR);
+			    message.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CONVERSION, e.getMessage()));
+			    rc.addMessage(message);
+		        }
 		    }
+		} catch (NoSuchElementException e) {
+		    MessageType message = Factories.common.createMessageType();
+		    message.setLevel(MessageLevelEnumeration.ERROR);
+		    message.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE, e.getMessage()));
+		    rc.addMessage(message);
 		}
 		if (values.size() == 0) {
 		    VariableValueType variableValueType = Factories.sc.core.createVariableValueType();

@@ -89,7 +89,11 @@ public abstract class ScapContext implements IScapContext {
 	platforms = new HashMap<String, LogicalTestType>();
 	// Add Benchmark-wide platforms
 	for (CPE2IdrefType cpe : bt.getPlatform()) {
-	    addPlatform(cpe.getIdref());
+	    try {
+		addPlatform(cpe.getIdref());
+	    } catch (NoSuchElementException e) {
+		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_CPE_PLATFORM, e.getMessage()));
+	    }
 	}
 
 	values = new HashMap<String, Collection<String>>();

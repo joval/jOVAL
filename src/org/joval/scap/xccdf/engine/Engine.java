@@ -516,7 +516,11 @@ public class Engine implements IXccdfEngine {
 	    if (abort) {
 		throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
 	    }
-	    subreports.putAll(handler.exec(plugin));
+	    try {
+		subreports.putAll(handler.exec(plugin));
+	    } catch (Exception e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
 	}
 
 	//
