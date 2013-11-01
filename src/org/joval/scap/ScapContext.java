@@ -459,6 +459,13 @@ public abstract class ScapContext implements IScapContext {
 	rule.setAbstract(base.getAbstract());
 
 	//
+	// Model: Append
+	//
+	if (base.isSetFix()) {
+	    rule.getFix().addAll(base.getFix());
+	}
+
+	//
 	// Model: Replace
 	//
 	if (base.isSetCheck()) {

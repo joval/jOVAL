@@ -600,11 +600,9 @@ public class Engine implements IXccdfEngine {
 	List<FixType> fixes = null;
 	if (rule.isSetFix()) {
 	    for (FixType fix : rule.getFix()) {
-		boolean addFix = false;
+		boolean addFix = true;
 		if (fix.isSetPlatform()) {
 		    addFix = platforms.containsKey(fix.getPlatform()) && platforms.get(fix.getPlatform()).booleanValue();
-		} else {
-		    addFix = true;
 		}
 		if (addFix) {
 		    if (fixes == null) {

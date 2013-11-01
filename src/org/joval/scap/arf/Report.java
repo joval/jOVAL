@@ -733,6 +733,13 @@ public class Report implements IReport, ILoggable {
 	}
 
 	for (CheckType check : checks) {
+	    if (!check.isSetCheckContentRef()) {
+		//
+		// Skip checks with no content
+		//
+		continue;
+	    }
+
 	    CheckDiagnostics cd = new CheckDiagnostics();
 	    cd.setCheck(check);
 
