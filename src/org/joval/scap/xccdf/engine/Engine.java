@@ -394,7 +394,7 @@ public class Engine implements IXccdfEngine {
 			break;
 		    }
 		}
-		producer.sendNotify(Message.PLATFORM_PHASE_END, Boolean.TRUE);
+		producer.sendNotify(Message.PLATFORM_PHASE_END, applicable ? Boolean.TRUE : Boolean.FALSE);
 
 		//
 		// Run the selected checks (if no platforms are applicable, this will do the right thing).
