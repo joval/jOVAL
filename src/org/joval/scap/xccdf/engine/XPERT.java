@@ -593,27 +593,27 @@ public class XPERT {
 	public void notify(IProducer<IXccdfEngine.Message> sender, IXccdfEngine.Message msg, Object arg) {
 	    switch(msg) {
 	      case PLATFORM_PHASE_START:
-		logger.info("Beginning platform applicability scan");
+		logger.info(JOVALMsg.getMessage(JOVALMsg.STATUS_XCCDF_APPLICABILITY));
 		break;
 
 	      case PLATFORM_CPE:
-		logger.info("Testing platform " + (String)arg);
+		logger.info(JOVALMsg.getMessage(JOVALMsg.STATUS_XCCDF_PLATFORM_CHECK, (String)arg));
 		break;
 
 	      case PLATFORM_PHASE_END:
 		if (((Boolean)arg).booleanValue()) {
-		    logger.info("Host is applicable");
+		    logger.info(JOVALMsg.getMessage(JOVALMsg.STATUS_XCCDF_APPLICABLE));
 		} else {
-		    logger.info("Host is not applicable");
+		    logger.info(JOVALMsg.getMessage(JOVALMsg.STATUS_XCCDF_NOTAPPLICABLE));
 		}
 		break;
 
 	      case RULES_PHASE_START:
-		logger.info("Starting rule processing");
+		logger.info(JOVALMsg.getMessage(JOVALMsg.STATUS_XCCDF_RULES));
 		break;
 
 	      case RULES_PHASE_END:
-		logger.info("Rule processing complete");
+		logger.info(JOVALMsg.getMessage(JOVALMsg.STATUS_XCCDF_RULES_DONE));
 		break;
 
 	      case OVAL_ENGINE:
@@ -623,7 +623,7 @@ public class XPERT {
 		break;
 
 	      case SCE_SCRIPT:
-		logger.info("Running SCE script " + (String)arg);
+		logger.info(JOVALMsg.getMessage(JOVALMsg.STATUS_SCE_RUN, (String)arg));
 		break;
 	    }
 	}

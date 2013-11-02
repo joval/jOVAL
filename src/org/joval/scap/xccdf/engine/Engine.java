@@ -367,10 +367,10 @@ public class Engine implements IXccdfEngine {
 	    }
 	    TestResultType testResult = initializeResult();
 	    if (selectedIds.size() == 0) {
-		logger.warn(JOVALMsg.WARNING_XCCDF_RULES);
+		logger.warn(JOVALMsg.WARNING_XCCDF_SELECTED);
 		testResult.setEndTime(getTimestamp());
 	    } else {
-		logger.info(JOVALMsg.STATUS_XCCDF_RULES, selectedIds.size(), profileId);
+		logger.info(JOVALMsg.STATUS_XCCDF_SELECTED, selectedIds.size(), profileId);
 
 		//
 		// Perform the profile's platform applicability tests
