@@ -2740,10 +2740,7 @@ public class Engine implements IOvalEngine, IProvider {
 		        }
 		    }
 		} catch (NoSuchElementException e) {
-		    MessageType message = Factories.common.createMessageType();
-		    message.setLevel(MessageLevelEnumeration.ERROR);
-		    message.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE, e.getMessage()));
-		    rc.addMessage(message);
+		    throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE, e.getMessage()));
 		}
 		if (values.size() == 0) {
 		    VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
