@@ -617,7 +617,7 @@ public class XPERT {
 		break;
 
 	      case OVAL_ENGINE:
-		logger.info("Executing OVAL tests");
+		logger.info(JOVALMsg.getMessage(JOVALMsg.STATUS_XCCDF_OVAL));
 		IOvalEngine oe = (IOvalEngine)arg;
 		oe.getNotificationProducer().addObserver(new OvalObserver(oe.getNotificationProducer()));
 		break;
@@ -639,33 +639,33 @@ public class XPERT {
 	public void notify(IProducer<IOvalEngine.Message> sender, IOvalEngine.Message msg, Object arg) {
 	    switch(msg) {
 	      case OBJECT_PHASE_START:
-		logger.info("Beginning scan");
+		logger.info(JOVALMsg.getMessage(JOVALMsg.STATUS_OVAL_SCANNING));
 		break;
 
 	      case OBJECT:
-		logger.info("Scanning " + (String)arg);
+		logger.info(JOVALMsg.getMessage(JOVALMsg.STATUS_OVAL_OBJECT, (String)arg));
 		break;
 
 	      case OBJECTS:
 		for (String id : (String[])arg) {
-		    logger.info("Scanning " + id);
+		    logger.info(JOVALMsg.getMessage(JOVALMsg.STATUS_OVAL_OBJECT, id));
 		}
 		break;
 
 	      case OBJECT_PHASE_END:
-		logger.info("Scan complete");
+		logger.info(JOVALMsg.getMessage(JOVALMsg.STATUS_OVAL_SCAN_COMPLETE));
 		break;
 
 	      case DEFINITION_PHASE_START:
-		logger.info("Evaluating OVAL definitions");
+		logger.info(JOVALMsg.getMessage(JOVALMsg.STATUS_OVAL_EVAL));
 		break;
 
 	      case DEFINITION:
-		logger.info("Evaluating " + (String)arg);
+		logger.info(JOVALMsg.getMessage(JOVALMsg.STATUS_OVAL_DEFINITION, (String)arg));
 		break;
 
 	      case DEFINITION_PHASE_END:
-		logger.info("Finished evaluating OVAL definitions");
+		logger.info(JOVALMsg.getMessage(JOVALMsg.STATUS_OVAL_EVAL_COMPLETE));
 		producer.removeObserver(this);
 		break;
 
