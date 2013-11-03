@@ -687,7 +687,6 @@ public class Engine implements IOvalEngine, IProvider {
 	    }
 	    return result;
 	}
-	logger.debug(JOVALMsg.STATUS_OBJECT, objectId);
 	producer.sendNotify(Message.OBJECT, objectId);
 	Collection<ItemType> items = new ArrayList<ItemType>();
 	try {
@@ -1816,7 +1815,6 @@ public class Engine implements IOvalEngine, IProvider {
 	} catch (NoSuchElementException e) {
 	}
 	scap.oval.results.DefinitionType definitionResult = Factories.results.createDefinitionType();
-	logger.debug(JOVALMsg.STATUS_DEFINITION, id);
 	producer.sendNotify(Message.DEFINITION, id);
 	definitionResult.setDefinitionId(id);
 	definitionResult.setVersion(definition.getVersion());
