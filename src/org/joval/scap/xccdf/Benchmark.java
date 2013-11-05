@@ -85,7 +85,11 @@ public class Benchmark implements IBenchmark, ILoggable {
 	    DocumentBuilder builder = factory.newDocumentBuilder();
 	    Document doc = builder.parse(in);
 
-	    String ns = doc.getDocumentElement().getAttribute("xmlns");
+	    StringBuffer prefix = new StringBuffer("xmlns");
+	    if (doc.getDocumentElement().getPrefix() != null) {
+		prefix.append(":").append(doc.getDocumentElement().getPrefix());
+	    }
+	    String ns = doc.getDocumentElement().getAttribute(prefix.toString());
 	    if (LEGACY_NS.equals(ns)) {
 		JOVALMsg.getLogger().info(JOVALMsg.STATUS_XCCDF_CONVERT);
 		TransformerFactory xf = XSLTools.XSLVersion.V2.getFactory();
