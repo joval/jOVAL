@@ -102,6 +102,8 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 		    String content = readASCIIString(f.getInputStream());
 		    for (IRequest request : entry.getValue()) {
 			TextfilecontentItem baseItem = (TextfilecontentItem)getBaseItem(request.getObject(), f);
+			if (baseItem == null) continue;
+
 			List<TFCData> data = Arrays.asList(new TFCData(baseItem, content));
 			IRequestContext rc = request.getContext();
 			try {

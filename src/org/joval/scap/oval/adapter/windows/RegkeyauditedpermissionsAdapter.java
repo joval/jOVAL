@@ -45,7 +45,6 @@ import scap.oval.systemcharacteristics.windows.RegkeyauditedpermissionsItem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
-import org.joval.scap.oval.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
 
 /**

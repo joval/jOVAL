@@ -128,6 +128,8 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 	    Map<String, Map<String, List<AuditRule>>> auditRuleMap = getAuditRules(files, view);
 	    for (IFile f : files) {
 		FileauditedpermissionsItem baseItem = (FileauditedpermissionsItem)getBaseItem(obj, f);
+		if (baseItem == null) continue;
+
 		Map<String, List<AuditRule>> rules = auditRuleMap.get(f.getPath());
 		switch(op) {
 		  case PATTERN_MATCH:
