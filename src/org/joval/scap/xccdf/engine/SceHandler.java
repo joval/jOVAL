@@ -4,8 +4,10 @@
 package org.joval.scap.xccdf.engine;
 
 import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import javax.xml.transform.TransformerException;
@@ -114,17 +116,6 @@ public class SceHandler implements ISystem {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
-	boolean importStdout = false;
-	String xpath = null;
-	for (CheckImportType cit : check.getCheckImport()) {
-	    if ("stdout".equals(cit.getImportName())) {
-		importStdout = true;
-		if (cit.isSetImportXpath()) {
-		    xpath = cit.getImportXpath();
-		}
-		break;
-	    }
-	}
 	CheckType checkResult = Engine.FACTORY.createCheckType();
 	checkResult.setId(check.getId());
 	checkResult.setMultiCheck(false);
@@ -138,24 +129,29 @@ public class SceHandler implements ISystem {
 		    checkResult.getCheckContentRef().add(ref);
 		    IScriptResult sr = results.get(ref.getHref());
 		    SceResultsType srt = sr.getResult();
-		    Exception err = null;
-		    if (importStdout && srt.isSetStdout()) {
-			CheckImportType cit = Engine.FACTORY.createCheckImportType();
-			cit.setImportName("stdout");
-			if (xpath == null) {
-			    cit.getContent().add(srt.getStdout());
-			} else {
-			    try {
-				byte[] data = srt.getStdout().getBytes(StringTools.UTF8);
-				Document doc = XPathTools.parse(new ByteArrayInputStream(data));
-				XPathExpression expr = XPathTools.compile(xpath);
-				cit.getContent().addAll(XPathTools.typesafeEval(expr, doc));
-			    } catch (Exception e) {
-				err = e;
+
+		    List<Exception> errors = new ArrayList<Exception>();
+		    for (CheckImportType cit : check.getCheckImport()) {
+			if ("stdout".equals(cit.getImportName()) && srt.isSetStdout()) {
+			    CheckImportType copy = Engine.FACTORY.createCheckImportType();
+			    copy.setImportName("stdout");
+			    if (cit.isSetImportXpath()) {
+				try {
+				    String xpath = cit.getImportXpath();
+				    byte[] data = srt.getStdout().getBytes(StringTools.UTF8);
+				    Document doc = XPathTools.parse(new ByteArrayInputStream(data));
+				    XPathExpression expr = XPathTools.compile(xpath);
+				    copy.getContent().addAll(XPathTools.typesafeEval(expr, doc));
+				} catch (Exception e) {
+				    errors.add(e);
+				}
+			    } else {
+				copy.getContent().add(srt.getStdout());
 			    }
+			    checkResult.getCheckImport().add(copy);
 			}
-			checkResult.getCheckImport().add(cit);
 		    }
+
 		    CheckData data = new CheckData(check.getNegate());
 		    data.add(srt.getResult());
 		    CheckResult cr = new CheckResult(data.getResult(CcOperatorEnumType.AND), checkResult);
@@ -165,7 +161,7 @@ public class SceHandler implements ISystem {
 			message.setValue(sr.getError().getMessage());
 			cr.addMessage(message);
 		    }
-		    if (err != null) {
+		    for (Exception err : errors) {
 			MessageType message = ScapFactory.XCCDF.createMessageType();
 			message.setSeverity(MsgSevEnumType.ERROR);
 			message.setValue(err.getMessage());

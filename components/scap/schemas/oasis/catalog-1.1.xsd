@@ -1,9 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE xs:schema SYSTEM "http://www.w3.org/2001/XMLSchema.dtd" [
-<!ENTITY % schemaAttrs "
-    xmlns:er    CDATA   #IMPLIED
-">
-]>
 <xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'
            xmlns:er='urn:oasis:names:tc:entity:xmlns:xml:catalog'
            targetNamespace='urn:oasis:names:tc:entity:xmlns:xml:catalog'
