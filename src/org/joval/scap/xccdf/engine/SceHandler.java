@@ -3,12 +3,17 @@
 
 package org.joval.scap.xccdf.engine;
 
+import java.io.ByteArrayInputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import javax.xml.transform.TransformerException;
+import javax.xml.xpath.XPathExpression;
+import org.w3c.dom.Document;
 
 import jsaf.intf.system.ISession;
+import jsaf.util.StringTools;
 
 import org.openscap.sce.xccdf.ScriptDataType;
 import org.openscap.sce.results.SceResultsType;
@@ -35,6 +40,7 @@ import org.joval.scap.sce.SceException;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.Producer;
+import org.joval.xml.XPathTools;
 
 /**
  * XCCDF helper class for SCE processing.
@@ -109,9 +115,13 @@ public class SceHandler implements ISystem {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
 	boolean importStdout = false;
+	String xpath = null;
 	for (CheckImportType cit : check.getCheckImport()) {
 	    if ("stdout".equals(cit.getImportName())) {
 		importStdout = true;
+		if (cit.isSetImportXpath()) {
+		    xpath = cit.getImportXpath();
+		}
 		break;
 	    }
 	}
@@ -128,10 +138,22 @@ public class SceHandler implements ISystem {
 		    checkResult.getCheckContentRef().add(ref);
 		    IScriptResult sr = results.get(ref.getHref());
 		    SceResultsType srt = sr.getResult();
+		    Exception err = null;
 		    if (importStdout && srt.isSetStdout()) {
 			CheckImportType cit = Engine.FACTORY.createCheckImportType();
 			cit.setImportName("stdout");
-			cit.getContent().add(srt.getStdout());
+			if (xpath == null) {
+			    cit.getContent().add(srt.getStdout());
+			} else {
+			    try {
+				byte[] data = srt.getStdout().getBytes(StringTools.UTF8);
+				Document doc = XPathTools.parse(new ByteArrayInputStream(data));
+				XPathExpression expr = XPathTools.compile(xpath);
+				cit.getContent().addAll(XPathTools.typesafeEval(expr, doc));
+			    } catch (Exception e) {
+				err = e;
+			    }
+			}
 			checkResult.getCheckImport().add(cit);
 		    }
 		    CheckData data = new CheckData(check.getNegate());
@@ -141,6 +163,12 @@ public class SceHandler implements ISystem {
 			MessageType message = ScapFactory.XCCDF.createMessageType();
 			message.setSeverity(MsgSevEnumType.ERROR);
 			message.setValue(sr.getError().getMessage());
+			cr.addMessage(message);
+		    }
+		    if (err != null) {
+			MessageType message = ScapFactory.XCCDF.createMessageType();
+			message.setSeverity(MsgSevEnumType.ERROR);
+			message.setValue(err.getMessage());
 			cr.addMessage(message);
 		    }
 		    return cr;
