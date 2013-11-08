@@ -3,22 +3,35 @@
 
 package org.joval.scap.xccdf.engine;
 
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
 import scap.oval.common.ClassEnumeration;
 import scap.oval.common.GeneratorType;
+import scap.oval.definitions.core.CriteriaType;
+import scap.oval.definitions.core.CriterionType;
+import scap.oval.definitions.core.ExtendDefinitionType;
+import scap.oval.definitions.core.ObjectRefType;
 import scap.oval.definitions.core.OvalDefinitions;
+import scap.oval.definitions.core.TestType;
 import scap.oval.results.ResultEnumeration;
 import scap.oval.results.DefinitionType;
+import scap.oval.systemcharacteristics.core.ObjectType;
+import scap.oval.systemcharacteristics.core.VariableValueType;
 import scap.oval.variables.VariableType;
 import scap.xccdf.CcOperatorEnumType;
 import scap.xccdf.CheckContentRefType;
-import scap.xccdf.CheckType;
 import scap.xccdf.CheckExportType;
+import scap.xccdf.CheckImportType;
+import scap.xccdf.CheckType;
 import scap.xccdf.InstanceResultType;
 import scap.xccdf.MsgSevEnumType;
 import scap.xccdf.MessageType;
@@ -178,6 +191,39 @@ public class OvalHandler implements ISystem {
     private IResult getResult(CheckType check, boolean multi, CheckContentRefType ref, IResults ovalResult)
 		throws OvalException {
 
+	CheckType checkResult = Engine.FACTORY.createCheckType();
+	checkResult.setId(check.getId());
+	checkResult.setMultiCheck(false);
+	checkResult.setNegate(check.getNegate());
+	checkResult.setSelector(check.getSelector());
+	checkResult.setSystem(NAMESPACE);
+	checkResult.getCheckExport().addAll(check.getCheckExport());
+	checkResult.getCheckContentRef().add(ref);
+	if (check.isSetCheckImport()) {
+	    Collection<String> objectIds = new HashSet<String>();
+	    getObjectReferences(ref.getName(), ovalResult.getDefinitions(), new HashSet<String>(), objectIds);
+	    for (String objectId : objectIds) {
+		ObjectType object = ovalResult.getSystemCharacteristics().getObject(objectId);
+		if (object.isSetVariableValue()) {
+		    for (CheckImportType cit : check.getCheckImport()) {
+			String variableId = cit.getImportName();
+			List<Object> values = new ArrayList<Object>();
+			for (VariableValueType var : object.getVariableValue()) {
+			    if (variableId.equals(var.getVariableId()) && var.isSetValue()) {
+				values.add(var.getValue());
+			    }
+			}
+			CheckImportType copy = Engine.FACTORY.createCheckImportType();
+			copy.setImportName(variableId);
+			if (values.size() > 0) {
+			    copy.getContent().addAll(values);
+			}
+			checkResult.getCheckImport().add(copy);
+		    }
+		}
+	    }
+	}
+
 	CheckData data = new CheckData(check.getNegate());
 	if (ref.isSetName()) {
 	    try {
@@ -198,7 +244,7 @@ public class OvalHandler implements ISystem {
 		data.add(convertResult(definitionClass, definitionResult));
 		InstanceResultType inst = Engine.FACTORY.createInstanceResultType();
 		inst.setValue(def.getDefinitionId());
-		cr.getResults().add(new CheckResult(data.getResult(CcOperatorEnumType.AND), check, inst));
+		cr.getResults().add(new CheckResult(data.getResult(CcOperatorEnumType.AND), checkResult, inst));
 	    }
 	    return cr;
 	} else {
@@ -209,7 +255,35 @@ public class OvalHandler implements ISystem {
 		data.add(convertResult(definitionClass, definitionResult));
 	    }
 	}
-	return new CheckResult(data.getResult(CcOperatorEnumType.AND), check);
+	return new CheckResult(data.getResult(CcOperatorEnumType.AND), checkResult);
+    }
+
+    private void getObjectReferences(Object obj, IDefinitions defs, Collection<String> visited, Collection<String> result) {
+	if (obj instanceof String) {
+	    String defId = (String)obj;
+	    try {
+		getObjectReferences(defs.getDefinition(defId).getCriteria(), defs, visited, result);
+	    } catch (NoSuchElementException e) {
+	        // definition was not found; skip it
+	    }
+	} else if (obj instanceof CriteriaType) {
+	    for (Object child : ((CriteriaType)obj).getCriteriaOrCriterionOrExtendDefinition()) {
+		getObjectReferences(child, defs, visited, result);
+	    }
+	} else if (obj instanceof CriterionType) {
+	    try {
+		TestType tt = defs.getTest(((CriterionType)obj).getTestRef()).getValue();
+		Method m = tt.getClass().getMethod("getObject");
+		String objectId = ((ObjectRefType)m.invoke(tt)).getObjectRef();
+		result.add(objectId);
+	    } catch (Exception e) {
+	    }
+	} else if (obj instanceof ExtendDefinitionType) {
+	    ExtendDefinitionType edt = (ExtendDefinitionType)obj;
+	    if (!visited.contains(edt.getDefinitionRef())) {
+		getObjectReferences(edt.getDefinitionRef(), defs, visited, result);
+	    }
+	}
     }
 
     /**

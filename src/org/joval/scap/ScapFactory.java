@@ -21,6 +21,7 @@ import scap.xccdf.CheckExportType;
 import scap.xccdf.CheckContentRefType;
 import scap.xccdf.ComplexCheckType;
 import scap.xccdf.RuleType;
+import scap.xccdf.TailoringType;
 
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.IScapContext;
@@ -48,7 +49,7 @@ import org.joval.scap.xccdf.XccdfException;
 import org.joval.scap.xccdf.engine.Engine;
 
 /**
- * A convenience class for obtaining jOVAL's SCAP management objects.
+ * A convenience class for obtaining instances jOVAL's SCAP management interface types.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -102,6 +103,20 @@ public class ScapFactory {
     }
 
     /**
+     * Create an XCCDF tailoring from a stream.
+     */
+    public static ITailoring createTailoring(InputStream in) throws XccdfException {
+	return new Tailoring(Tailoring.getTailoringType(in));
+    }
+
+    /**
+     * Create an XCCDF tailoring from a data model object.
+     */
+    public static ITailoring createTailoring(TailoringType tt) throws XccdfException {
+	return new Tailoring(tt);
+    }
+
+    /**
      * Create an OCIL checklist (which can also include the results) from a file.
      */
     public static IChecklist createChecklist(File f) throws OcilException {
@@ -116,7 +131,7 @@ public class ScapFactory {
     }
 
     /**
-     * Create an OCIL checklist (which can also include the results) from a stream.
+     * Create an OCIL checklist (which can also include the results) from a data model object.
      */
     public static IChecklist createChecklist(OCILType ocil) throws OcilException {
 	return new Checklist(ocil);
@@ -125,7 +140,7 @@ public class ScapFactory {
     /**
      * Create an SCE script result from a data model object.
      */
-    public static IScriptResult createResult(SceResultsType srt) {
+    public static IScriptResult createScriptResult(SceResultsType srt) {
 	return new Result(srt);
     }
 
