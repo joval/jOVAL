@@ -74,7 +74,7 @@ public class RpmAdapter implements IAdapter, IBatch {
 	aix.append("EPOCH: %{EPOCH}\\n");
 
 	StringBuffer linux = new StringBuffer(aix.toString());
-	linux.append("SIGNATURE: %{RSAHEADER:pgpsig}\\n");
+	linux.append("SIGNATURE: %|DSAHEADER?{%{DSAHEADER:pgpsig}}:{%|RSAHEADER?{%{RSAHEADER:pgpsig}}:{%|SIGGPG?{%{SIGGPG:pgpsig}}:{%|SIGPGP?{%{SIGPGP:pgpsig}}:{(none)}|}|}|}|\\n");
 
 	CMD_AIX = aix.append("'").toString();
 	CMD_LINUX = linux.append("'").toString();
@@ -654,7 +654,7 @@ public class RpmAdapter implements IAdapter, IBatch {
 	if (!packageMapLoaded) {
 	    session.getLogger().info(JOVALMsg.STATUS_RPMINFO_LIST);
 	    packageList = new HashSet<String>();
-	    for (String name : SafeCLI.multiLine("rpm -qa", session, IUnixSession.Timeout.M)) {
+	    for (String name : SafeCLI.multiLine("rpm -qa", session, IUnixSession.Timeout.S)) {
 		packageList.add(name);
 	    }
 	}
@@ -796,7 +796,7 @@ public class RpmAdapter implements IAdapter, IBatch {
 		data.extendedName = value.toString();
 	    } else if (line.startsWith("SIGNATURE: ")) {
 		String s = line.substring(11);
-		if (s.toUpperCase().indexOf("(NONE)") == -1) {
+		if (!"(none)".equals(s)) {
 		    if (s.indexOf("Key ID") == -1) {
 			data.sigError = true;
 			MessageType msg = Factories.common.createMessageType();
