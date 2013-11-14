@@ -35,7 +35,7 @@ public class SelinuxAdapter implements IAdapter {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.LINUX) {
 	    try {
-		String sestatus = SafeCLI.exec("/usr/sbin/getenforce", session, IUnixSession.Timeout.S);
+		String sestatus = SafeCLI.exec("/usr/sbin/getenforce", (IUnixSession)session, IUnixSession.Timeout.S);
 		if ("Enforcing".equalsIgnoreCase(sestatus) || "Permissive".equalsIgnoreCase(sestatus)) {
 		    booleanAdapter = new SelinuxbooleanAdapter();
 		    classes.addAll(booleanAdapter.init(session, notapplicable));

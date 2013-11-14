@@ -66,7 +66,7 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
-	    baseInit(session);
+	    baseInit((IWindowsSession)session);
 	    classes.add(Fileeffectiverights53Object.class);
 	    classes.add(FileeffectiverightsObject.class);
 	} else {

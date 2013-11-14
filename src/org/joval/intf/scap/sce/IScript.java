@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.util.Map;
 
-import jsaf.intf.system.ISession;
+import jsaf.intf.system.IComputerSystem;
 
 import org.openscap.sce.xccdf.LangEnumeration;
 
@@ -53,5 +53,5 @@ public interface IScript {
      * @param exports a map of variable-value pairs for the script runtime environment.
      * @param session the jSAF session on which to execute the script.
      */
-    IScriptResult exec(Map<String, String> exports, ISession session) throws Exception;
+    IScriptResult exec(Map<String, String> exports, IComputerSystem session) throws Exception;
 }

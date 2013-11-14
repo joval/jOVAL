@@ -14,6 +14,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPathExpression;
 import org.w3c.dom.Document;
 
+import jsaf.intf.system.IComputerSystem;
 import jsaf.intf.system.ISession;
 import jsaf.util.StringTools;
 
@@ -96,18 +97,27 @@ public class SceHandler implements ISystem {
     }
 
     public Map<String, ? extends ITransformable> exec(IPlugin plugin) {
-	ISession session = plugin.getSession();
-	for (Map.Entry<String, Wrapper> entry : scripts.entrySet()) {
-	    String href = entry.getKey();
-	    Wrapper wrapper = entry.getValue();
-	    producer.sendNotify(IXccdfEngine.Message.SCE_SCRIPT, href);
-	    IScriptResult result = null;
-	    try {
-		result = wrapper.getScript().exec(wrapper.getExports(), session);
-	    } catch (Exception e) {
-		result = new Result(href, e);
+	if (plugin.getSession() instanceof IComputerSystem) {
+	    IComputerSystem session = (IComputerSystem)plugin.getSession();
+	    for (Map.Entry<String, Wrapper> entry : scripts.entrySet()) {
+		String href = entry.getKey();
+		Wrapper wrapper = entry.getValue();
+		producer.sendNotify(IXccdfEngine.Message.SCE_SCRIPT, href);
+		IScriptResult result = null;
+		try {
+		    result = wrapper.getScript().exec(wrapper.getExports(), session);
+		} catch (Exception e) {
+		    result = new Result(href, e);
+		}
+		results.put(href, result);
 	    }
-	    results.put(href, result);
+	} else {
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_PLATFORM, plugin.getSession().getType());
+	    Exception error = new Exception(msg);
+	    for (Map.Entry<String, Wrapper> entry : scripts.entrySet()) {
+		String href = entry.getKey();
+		results.put(href, new Result(href, error));
+	    }
 	}
 	return results;
     }

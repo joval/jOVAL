@@ -20,6 +20,7 @@ import org.xml.sax.SAXException;
 
 import jsaf.Message;
 import jsaf.intf.io.IFile;
+import jsaf.intf.system.IComputerSystem;
 import jsaf.intf.system.ISession;
 import jsaf.util.StringTools;
 
@@ -54,11 +55,15 @@ public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
 
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
-	try {
-	    baseInit(session);
-	    classes.add(XmlfilecontentObject.class);
-	} catch (UnsupportedOperationException e) {
-	    // doesn't support ISession.getFilesystem()
+	if (session instanceof IComputerSystem) {
+	    try {
+		baseInit((IComputerSystem)session);
+		classes.add(XmlfilecontentObject.class);
+	    } catch (UnsupportedOperationException e) {
+		// doesn't support ISession.getFilesystem()
+		notapplicable.add(XmlfilecontentObject.class);
+	    }
+	} else {
 	    notapplicable.add(XmlfilecontentObject.class);
 	}
 	return classes;

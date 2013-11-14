@@ -59,8 +59,8 @@ public class FileextendedattributeAdapter extends BaseFileAdapter<Fileextendedat
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession) {
-	    baseInit(session);
 	    us = (IUnixSession)session;
+	    baseInit(us);
 	    classes.add(FileextendedattributeObject.class);
 	} else {
 	    notapplicable.add(FileextendedattributeObject.class);

@@ -18,6 +18,7 @@ import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFileEx;
 import jsaf.intf.io.IRandomAccess;
+import jsaf.intf.system.IComputerSystem;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.io.IUnixFileInfo;
 import jsaf.intf.windows.io.IWindowsFileInfo;
@@ -62,10 +63,14 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
-	try {
-	    baseInit(session);
-	    classes.add(FileObject.class);
-	} catch (UnsupportedOperationException e) {
+	if (session instanceof IComputerSystem) {
+	    try {
+		baseInit((IComputerSystem)session);
+		classes.add(FileObject.class);
+	    } catch (UnsupportedOperationException e) {
+		notapplicable.add(FileObject.class);
+	    }
+	} else {
 	    notapplicable.add(FileObject.class);
 	}
 	return classes;

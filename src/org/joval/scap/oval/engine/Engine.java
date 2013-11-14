@@ -40,6 +40,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
+import jsaf.intf.system.IComputerSystem;
 import jsaf.intf.util.ILoggable;
 import jsaf.util.StringTools;
 import org.slf4j.cal10n.LocLogger;
@@ -2973,9 +2974,16 @@ public class Engine implements IOvalEngine, IProvider {
 		tt.setFormat1(DateTimeFormatEnumeration.SECONDS_SINCE_EPOCH);
 		ts1 = new ArrayList<IType>();
 		try {
-		    String val = Long.toString(plugin.getSession().getTime() / 1000L);
-		    ts1.add(TypeFactory.createType(IType.Type.INT, val));
+		    long tm = System.currentTimeMillis() / 1000L;
+		    if (plugin.getSession() instanceof IComputerSystem) {
+			//
+			// If the target is a computer, get the time from its clock, not ours.
+			//
+			tm = ((IComputerSystem)plugin.getSession()).getTime() / 1000L;
+		    }
+		    ts1.add(TypeFactory.createType(IType.Type.INT, Long.toString(tm)));
 		} catch (Exception e) {
+		    // NB: if the ISession is not an IComputerSystem, we get a ClassCastException, which is fine
 		    throw new ResolveException(e);
 		}
 		ts2 = resolveComponent(children.get(0), rc);

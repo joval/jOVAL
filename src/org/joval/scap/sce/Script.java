@@ -17,7 +17,7 @@ import java.util.Properties;
 
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
-import jsaf.intf.system.ISession;
+import jsaf.intf.system.IComputerSystem;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.util.SafeCLI;
@@ -87,7 +87,7 @@ public class Script implements IScript {
 	return lang;
     }
 
-    public synchronized IScriptResult exec(Map<String, String> exports, ISession session) throws Exception {
+    public synchronized IScriptResult exec(Map<String, String> exports, IComputerSystem session) throws Exception {
 	String commandPrefix = getCommandPrefix(session, lang);
 	String extension = getExtension(lang);
 	Properties environment = getEnvironment(exports);
@@ -136,7 +136,7 @@ public class Script implements IScript {
 	    //
 	    // Run the script and populate the result
 	    //
-	    long to = session.getTimeout(ISession.Timeout.M);
+	    long to = session.getTimeout(IComputerSystem.Timeout.M);
 	    SafeCLI.ExecData data = SafeCLI.execData(commandPrefix + script.getPath(), env, session, to);
 	    int exitCode = data.getExitCode();
 	    switch(exitCode) {
@@ -283,7 +283,7 @@ public class Script implements IScript {
     /**
      * Get the command prefix (i.e., the script engine) corresponding to the session and script type.
      */
-    private String getCommandPrefix(ISession session, LangEnumeration lang) {
+    private String getCommandPrefix(IComputerSystem session, LangEnumeration lang) {
 	switch(session.getType()) {
 	  case UNIX:
 	    IUnixSession us = (IUnixSession)session;

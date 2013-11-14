@@ -16,7 +16,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Properties;
 import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
@@ -24,6 +23,7 @@ import java.util.regex.PatternSyntaxException;
 
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IReader;
+import jsaf.intf.system.IComputerSystem;
 import jsaf.intf.system.IEnvironment;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
@@ -61,7 +61,7 @@ import org.joval.xml.XSITools;
  * @version %I% %G%
  */
 public class Environmentvariable58Adapter implements IAdapter {
-    private ISession session;
+    private IComputerSystem session;
     private IEnvironmentBuilder builder;
 
     // Implement IAdapter
@@ -71,7 +71,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 	switch(session.getType()) {
 	  case UNIX:
 	  case WINDOWS:
-	    this.session = session;
+	    this.session = (IComputerSystem)session;
 	    classes.add(Environmentvariable58Object.class);
 	    break;
 
@@ -360,14 +360,14 @@ public class Environmentvariable58Adapter implements IAdapter {
 		    while (tok.hasMoreTokens()) {
 			stack.push(tok.nextToken());
 		    }
-		    Properties processEnv = new Properties();
+		    Map<String, String> processEnv = new HashMap<String, String>();
 		    while (!stack.empty()) {
 			String token = stack.pop();
 			int ptr = token.indexOf("=");
 			if (ptr > 0) {
 			    String key = token.substring(0,ptr);
 			    String val = token.substring(ptr+1);
-			    processEnv.setProperty(key, val);
+			    processEnv.put(key, val);
 			} else {
 			    break; // no more environment variables
 			}
@@ -389,7 +389,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 	    IReader reader = null;
 	    IFile proc = session.getFilesystem().getFile(path);
 	    if (proc.exists()) {
-		Properties processEnv = new Properties();
+		Map<String, String> processEnv = new HashMap<String, String>();
 		long timeout = session.getTimeout(IUnixSession.Timeout.M);
 		byte[] bytes = SafeCLI.execData("cat " + path, null, session, timeout).getData();
 		String data = new String(bytes, StringTools.ASCII);
@@ -399,7 +399,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 		    if (ptr > 0) {
 			String key = pair.substring(0,ptr);
 			String val = pair.substring(ptr+1);
-			processEnv.setProperty(key, val);
+			processEnv.put(key, val);
 		    }
 		}
 		return new Environment(processEnv);
@@ -426,7 +426,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 	public IEnvironment getProcessEnvironment(int pid) throws Exception {
 	    IFile proc = session.getFilesystem().getFile("/proc/" + pid);
 	    if (proc.exists() && proc.isDirectory()) {
-		Properties processEnv = new Properties();
+		Map<String, String> processEnv = new HashMap<String, String>();
 		for (String line : SafeCLI.multiLine("pargs -e " + pid, session, IUnixSession.Timeout.S)) {
 		    if (line.startsWith("envp")) {
 			String pair = line.substring(line.indexOf(" ")).trim();
@@ -434,7 +434,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 			if (ptr > 0) {
 			    String key = pair.substring(0,ptr);
 			    String val = pair.substring(ptr+1);
-			    processEnv.setProperty(key, val);
+			    processEnv.put(key, val);
 			}
 		    }
 		}
@@ -519,20 +519,20 @@ public class Environmentvariable58Adapter implements IAdapter {
 	// Private
 
 	private Environment toEnvironment(String data) {
-	    Properties processEnv = new Properties();
+	    Map<String, String> processEnv = new HashMap<String, String>();
 	    if (data != null) {
 		String var = null;
 		for (String line : data.split("\r\n")) {
 		    int ptr = line.indexOf("=");
 		    if (ptr == -1) {
 			if (var != null) { // line continuation case
-			    StringBuffer sb = new StringBuffer(processEnv.getProperty(var));
+			    StringBuffer sb = new StringBuffer(processEnv.get(var));
 			    sb.append(line);
-			    processEnv.setProperty(var, sb.toString());
+			    processEnv.put(var, sb.toString());
 			}
 		    } else {
 			var = line.substring(0,ptr);
-			processEnv.setProperty(var, line.substring(ptr+1));
+			processEnv.put(var, line.substring(ptr+1));
 		    }
 		}
 	    }

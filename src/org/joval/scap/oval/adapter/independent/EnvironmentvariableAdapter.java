@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import jsaf.intf.system.IComputerSystem;
 import jsaf.intf.system.IEnvironment;
 import jsaf.intf.system.ISession;
 import jsaf.util.StringTools;
@@ -36,7 +37,7 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class EnvironmentvariableAdapter implements IAdapter {
-    private ISession session;
+    private IComputerSystem session;
 
     // Implement IAdapter
 
@@ -45,11 +46,10 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	switch(session.getType()) {
 	  case UNIX:
 	  case WINDOWS:
-	    this.session = session;
+	    this.session = (IComputerSystem)session;
 	    classes.add(EnvironmentvariableObject.class);
 	    break;
 	  default:
-	    // ISession.getEnvironment not supported
 	    notapplicable.add(EnvironmentvariableObject.class);
 	    break;
 	}

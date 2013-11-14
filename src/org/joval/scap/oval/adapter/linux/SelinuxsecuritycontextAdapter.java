@@ -19,9 +19,9 @@ import javax.xml.bind.JAXBElement;
 import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
+import jsaf.intf.system.IComputerSystem;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.io.IUnixFileInfo;
-import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
 
 import scap.oval.common.MessageLevelEnumeration;
@@ -52,14 +52,12 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 class SelinuxsecuritycontextAdapter extends BaseFileAdapter<SelinuxsecuritycontextItem> {
-    private IUnixSession us;
     private Map<Integer, SelinuxsecuritycontextItem> processMap;
 
     // Implement IAdapter
 
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
-	baseInit(session);
-	us = (IUnixSession)session;
+	baseInit((IComputerSystem)session);
 	processMap = new HashMap<Integer, SelinuxsecuritycontextItem>();
 	Collection<Class> classes = new ArrayList<Class>();
 	classes.add(SelinuxsecuritycontextObject.class);
@@ -255,7 +253,7 @@ class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecurityconte
 	    // According to the spec, xsi:nil means get the context of the "current process" -- which for us is the login.
 	    //
 	    SelinuxsecuritycontextItem item = Factories.sc.linux.createSelinuxsecuritycontextItem();
-	    parseSecurityContextData(item, SafeCLI.exec("id -Z", us, IUnixSession.Timeout.S));
+	    parseSecurityContextData(item, SafeCLI.exec("id -Z", session, ISession.Timeout.S));
 	    return item;
 	} else {
 	    Integer iPid = new Integer((String)elt.getValue().getValue());
@@ -263,7 +261,7 @@ class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecurityconte
 		return processMap.get(iPid);
 	    } else {
 		String cmd = new StringBuffer("ps -Z --no-headers ").append(iPid.toString()).toString();
-		SelinuxsecuritycontextItem item = parseProcess(SafeCLI.exec(cmd, us, IUnixSession.Timeout.S));
+		SelinuxsecuritycontextItem item = parseProcess(SafeCLI.exec(cmd, session, ISession.Timeout.S));
 		if (item == null) {
 		    throw new NoSuchElementException(iPid.toString());
 		} else {
@@ -298,7 +296,7 @@ class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecurityconte
     private void loadProcesses() {
 	if (!loaded) {
 	    try {
-		for (String line : SafeCLI.multiLine("ps -eZ --no-headers", us, IUnixSession.Timeout.S)) {
+		for (String line : SafeCLI.multiLine("ps -eZ --no-headers", session, ISession.Timeout.S)) {
 		    if (line.length() > 0) {
 			try {
 			    SelinuxsecuritycontextItem item = parseProcess(line);

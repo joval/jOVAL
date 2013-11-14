@@ -56,7 +56,7 @@ public class DpkginfoAdapter implements IAdapter {
 	    this.session = (IUnixSession)session;
 	    boolean hasDpkg = false;
 	    try {
-		hasDpkg = session.getFilesystem().getFile(DPKG_QUERY).exists();
+		hasDpkg = this.session.getFilesystem().getFile(DPKG_QUERY).exists();
 	    } catch (IOException e) {
 		session.getLogger().warn(Message.ERROR_IO, DPKG_QUERY, e.getMessage());
 	    }

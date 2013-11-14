@@ -23,7 +23,7 @@ import javax.xml.bind.JAXBElement;
 import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
-import jsaf.intf.system.ISession;
+import jsaf.intf.system.IComputerSystem;
 import jsaf.intf.util.ISearchable;
 import jsaf.intf.util.ISearchable.ICondition;
 import jsaf.intf.unix.io.IUnixFilesystem;
@@ -76,14 +76,14 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
     private IRunspace rs, rs32;
     private String localFsType;
 
-    protected ISession session;
+    protected IComputerSystem session;
 
     /**
      * All subclasses should invoke this method inside their IAdapter.init implementations.
      *
-     * @throws UnsupportedOperationException if the ISession doesn't support getFilesystem().
+     * @throws UnsupportedOperationException if the IComputerSystem isn't the Windows or Unix type.
      */
-    protected void baseInit(ISession session) throws UnsupportedOperationException {
+    protected void baseInit(IComputerSystem session) throws UnsupportedOperationException {
 	this.session = session;
 	switch(session.getType()) {
 	  case WINDOWS:

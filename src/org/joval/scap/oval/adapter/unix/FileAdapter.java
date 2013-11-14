@@ -60,8 +60,8 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession) {
-	    baseInit(session);
 	    us = (IUnixSession)session;
+	    baseInit(us);
 	    classes.add(FileObject.class);
 	} else {
 	    notapplicable.add(FileObject.class);

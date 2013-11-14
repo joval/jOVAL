@@ -22,6 +22,7 @@ import javax.xml.bind.JAXBElement;
 import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
+import jsaf.intf.system.IComputerSystem;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.StringTools;
@@ -72,11 +73,16 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
-	try {
-	    baseInit(session);
-	    classes.add(PlistObject.class);
-	    classes.add(Plist510Object.class);
-	} catch (UnsupportedOperationException e) {
+	if (session instanceof IComputerSystem) {
+	    try {
+		baseInit((IComputerSystem)session);
+		classes.add(PlistObject.class);
+		classes.add(Plist510Object.class);
+	    } catch (UnsupportedOperationException e) {
+		notapplicable.add(PlistObject.class);
+		notapplicable.add(Plist510Object.class);
+	    }
+	} else {
 	    notapplicable.add(PlistObject.class);
 	    notapplicable.add(Plist510Object.class);
 	}

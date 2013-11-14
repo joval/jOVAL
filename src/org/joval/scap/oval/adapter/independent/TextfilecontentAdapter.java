@@ -16,6 +16,7 @@ import java.util.regex.PatternSyntaxException;
 
 import jsaf.Message;
 import jsaf.intf.io.IFile;
+import jsaf.intf.system.IComputerSystem;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.StringTools;
@@ -52,11 +53,15 @@ public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem>
 
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
-	try {
-	    baseInit(session);
-	    classes.add(TextfilecontentObject.class);
-	} catch (UnsupportedOperationException e) {
-	    // doesn't support ISession.getFilesystem
+	if (session instanceof IComputerSystem) {
+	    try {
+		baseInit((IComputerSystem)session);
+		classes.add(TextfilecontentObject.class);
+	    } catch (UnsupportedOperationException e) {
+		// doesn't support ISession.getFilesystem
+		notapplicable.add(TextfilecontentObject.class);
+	    }
+	} else {
 	    notapplicable.add(TextfilecontentObject.class);
 	}
 	return classes;

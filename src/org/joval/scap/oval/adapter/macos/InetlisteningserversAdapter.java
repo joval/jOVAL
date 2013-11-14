@@ -56,9 +56,8 @@ public class InetlisteningserversAdapter implements IAdapter {
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession) {
-	    IUnixSession us = (IUnixSession)session;
-	    if (us.getFlavor() == IUnixSession.Flavor.MACOSX) {
-		this.session = us;
+	    this.session = (IUnixSession)session;
+	    if (this.session.getFlavor() == IUnixSession.Flavor.MACOSX) {
 		classes.add(InetlisteningserversObject.class);
 		classes.add(Inetlisteningserver510Object.class);
 	    } else {
