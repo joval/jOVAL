@@ -10,8 +10,7 @@ import jsaf.intf.windows.system.IWindowsSession;
 import scap.oval.common.FamilyEnumeration;
 import scap.oval.systemcharacteristics.core.SystemInfoType;
 
-import org.joval.scap.oval.OvalException;
-import org.joval.util.JOVALMsg;
+import org.joval.scap.oval.Factories;
 
 /**
  * Something that requires a credential for access.
@@ -44,7 +43,7 @@ public class SysinfoFactory {
     /**
      * Create OVAL system information from the supplied session.
      */
-    public static SystemInfoType createSystemInfo(ISession session) throws OvalException {
+    public static SystemInfoType createSystemInfo(ISession session) {
 	switch(session.getType()) {
 	  case WINDOWS:
 	    return WindowsSystemInfo.getSystemInfo((IWindowsSession)session);
@@ -53,7 +52,13 @@ public class SysinfoFactory {
 	    return UnixSystemInfo.getSystemInfo((IUnixSession)session);
 
 	  default:
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_SYSINFO_TYPE, session.getClass().getName()));
+	    SystemInfoType info = Factories.sc.core.createSystemInfoType();
+	    info.setPrimaryHostName(session.getHostname());
+	    info.setArchitecture("unknown");
+	    info.setOsName("unknown");
+	    info.setOsVersion("unknown");
+	    info.getInterfaces(); // empty
+	    return info;
 	}
     }
 }
