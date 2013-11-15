@@ -68,6 +68,7 @@ public class AccesstokenAdapter implements IAdapter {
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(AccesstokenObject.class);
+	    itemCache = new HashMap<String, AccesstokenItem>();
 	} else {
 	    notapplicable.add(AccesstokenObject.class);
 	}
@@ -76,12 +77,6 @@ public class AccesstokenAdapter implements IAdapter {
 
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	directory = session.getDirectory();
-	if (itemCache == null) {
-	    init();
-	}
-	if (runspace == null) {
-	    throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_POWERSHELL), FlagEnumeration.NOT_COLLECTED);
-	}
 	Map<String, AccesstokenItem> items = new HashMap<String, AccesstokenItem>();
 
 	AccesstokenObject aObj = (AccesstokenObject)obj;
@@ -154,7 +149,7 @@ public class AccesstokenAdapter implements IAdapter {
 		    cmd.append("\"").append(p.getSid()).append("\"");
 		}
 		cmd.append(" | Get-AccessTokens | Transfer-Encode");
-		InputStream in = new ByteArrayInputStream(Base64.decode(runspace.invoke(cmd.toString())));
+		InputStream in = new ByteArrayInputStream(Base64.decode(getRunspace().invoke(cmd.toString())));
 		IniFile data = new IniFile(in, StringTools.UTF8);
 		for (IPrincipal p : queryPrincipals.values()) {
 		    String sid = p.getSid();
@@ -165,6 +160,8 @@ public class AccesstokenAdapter implements IAdapter {
 		    }
 		}
 	    }
+	} catch (CollectException e) {
+	    throw e;
 	} catch (PowershellException e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -375,8 +372,8 @@ public class AccesstokenAdapter implements IAdapter {
     /**
      * Initialize the adapter and install the probe on the target host.
      */
-    private void init() {
-	itemCache = new HashMap<String, AccesstokenItem>();
+    private IRunspace getRunspace() throws CollectException {
+	if (runspace != null && runspace.isAlive()) return runspace;
 
 	//
 	// Get a runspace if there are any in the pool, or create a new one, and load the Get-AccessTokens
@@ -397,8 +394,10 @@ public class AccesstokenAdapter implements IAdapter {
 		runspace.loadAssembly(getClass().getResourceAsStream("Accesstoken.dll"));
 		runspace.loadModule(getClass().getResourceAsStream("Accesstoken.psm1"));
 	    }
+	    return runspace;
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_POWERSHELL), FlagEnumeration.NOT_COLLECTED);
 	}
     }
 

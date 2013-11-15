@@ -318,16 +318,18 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
     protected IRunspace getRunspace(IWindowsSession.View view) throws Exception {
 	switch(view) {
 	  case _32BIT:
-	    if (rs32 == null) {
-		rs32 = createRunspace(view);
+	    if (rs32 != null && rs32.isAlive()) {
+		return rs32;
+	    } else {
+		return rs32 = createRunspace(view);
 	    }
-	    return rs32;
 
 	  default:
-	    if (rs == null) {
-		rs = createRunspace(view);
+	    if (rs != null && rs.isAlive()) {
+		return rs;
+	    } else {
+		return rs = createRunspace(view);
 	    }
-	    return rs;
 	}
     }
 

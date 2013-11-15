@@ -55,6 +55,8 @@ public class WuaupdatesearcherAdapter implements IAdapter {
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(WuaupdatesearcherObject.class);
+	    itemCache = new Hashtable<String, WuaupdatesearcherItem>();
+	    errors = new Hashtable<String, MessageType>();
 	} else {
 	    notapplicable.add(WuaupdatesearcherObject.class);
 	}
@@ -62,12 +64,6 @@ public class WuaupdatesearcherAdapter implements IAdapter {
     }
 
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
-	if (itemCache == null) {
-	    init();
-	}
-	if (runspace == null) {
-	    throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_POWERSHELL), FlagEnumeration.NOT_COLLECTED);
-	}
 	WuaupdatesearcherObject wObj = (WuaupdatesearcherObject)obj;
 	boolean includeSuperseded = false;
 	if (wObj.isSetBehaviors()) {
@@ -107,7 +103,7 @@ public class WuaupdatesearcherAdapter implements IAdapter {
 	try {
 	    String supersededArg = includeSuperseded ? "1" : "0";
 	    long timeout = session.getTimeout(IWindowsSession.Timeout.L);
-	    data = runspace.invoke("Get-WuaUpdates \"" + searchString + "\" " + supersededArg, timeout);
+	    data = getRunspace().invoke("Get-WuaUpdates \"" + searchString + "\" " + supersededArg, timeout);
 	} catch (Exception e) {
 	    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_WUA_SEARCH, searchString, e.getMessage());
 	    session.getLogger().warn(s);
@@ -132,11 +128,12 @@ public class WuaupdatesearcherAdapter implements IAdapter {
     }
 
     /**
-     * Initialize the adapter and install the probe on the target host.
+     * Get or create a runspace with the searcher interface module
      */
-    private void init() {
-	itemCache = new Hashtable<String, WuaupdatesearcherItem>();
-	errors = new Hashtable<String, MessageType>();
+    private IRunspace getRunspace() throws Exception {
+	if (runspace != null && runspace.isAlive()) {
+	    return runspace;
+	}
 
 	//
 	// Get a runspace if there are any in the pool, or create a new one, and load the Get-AccessTokens
@@ -149,15 +146,10 @@ public class WuaupdatesearcherAdapter implements IAdapter {
 		break;
 	    }
 	}
-	try {
-	    if (runspace == null) {
-		runspace = session.getRunspacePool().spawn(view);
-	    }
-	    if (runspace != null) {
-		runspace.loadModule(getClass().getResourceAsStream("Wuaupdatesearcher.psm1"));
-	    }
-	} catch (Exception e) {
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	if (runspace == null) {
+	    runspace = session.getRunspacePool().spawn(view);
 	}
+	runspace.loadModule(getClass().getResourceAsStream("Wuaupdatesearcher.psm1"));
+	return runspace;
     }
 }

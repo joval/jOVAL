@@ -381,59 +381,57 @@ public class MetabaseAdapter implements IAdapter {
 	    try {
 		idNames = new Properties();
 		idNames.load(getClass().getResourceAsStream("Metabase.properties"));
+		runspace = getRunspace();
 
 		//
-		// Get a runspace if there are any in the pool, or create a new one, and load the Metabase
-		// Powershell module code.
+		// Deep applicability check
 		//
-		IWindowsSession.View view = session.getNativeView();
-		for (IRunspace rs : session.getRunspacePool().enumerate()) {
-		    if (rs.getView() == view) {
-			runspace = rs;
-			break;
+		try {
+		    IWmiProvider wmi = this.session.getWmiProvider();
+		    boolean privileged = "true".equalsIgnoreCase(runspace.invoke("Check-Privileged"));
+		    if (privileged) {
+			wmi.execQuery("root\\MicrosoftIISv2", "Select Name from IISComputer");
+		    } else {
+			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_METABASE_PRIVILEGE);
+			error = new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+			throw error;
 		    }
+		} catch (PowershellException e) {
+		    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    throw error = new CollectException(e.getMessage(), FlagEnumeration.NOT_APPLICABLE);
+		} catch (WmiException e) {
+		    //
+		    // Assume that the namespace was not found.
+		    //
+		    session.getLogger().warn(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage());
+		    throw error = new CollectException(e.getMessage(), FlagEnumeration.NOT_APPLICABLE);
 		}
-		if (runspace == null) {
-		    runspace = session.getRunspacePool().spawn(view);
-		}
-		runspace.loadAssembly(getClass().getResourceAsStream("Metabase.dll"));
-		runspace.loadModule(getClass().getResourceAsStream("Metabase.psm1"));
+	    } catch (CollectException e) {
+		throw e;
 	    } catch (Exception e) {
 		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		error = new CollectException(e.getMessage(), FlagEnumeration.ERROR);
-		throw error;
-	    }
-
-	    //
-	    // Deep applicability check
-	    //
-	    try {
-		IWmiProvider wmi = this.session.getWmiProvider();
-		boolean privileged = "true".equalsIgnoreCase(runspace.invoke("Check-Privileged"));
-		if (privileged) {
-		    wmi.execQuery("root\\MicrosoftIISv2", "Select Name from IISComputer");
-		} else {
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_METABASE_PRIVILEGE);
-		    error = new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-		    throw error;
-		}
-	    } catch (IOException e) {
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		error = new CollectException(e.getMessage(), FlagEnumeration.NOT_APPLICABLE);
-		throw error;
-	    } catch (PowershellException e) {
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		error = new CollectException(e.getMessage(), FlagEnumeration.NOT_APPLICABLE);
-		throw error;
-	    } catch (WmiException e) {
-		//
-		// Assume that the namespace was not found.
-		//
-		session.getLogger().warn(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage());
-		error = new CollectException(e.getMessage(), FlagEnumeration.NOT_APPLICABLE);
-		throw error;
+		throw error = new CollectException(e.getMessage(), FlagEnumeration.ERROR);
 	    }
 	}
 	// If we're here, then the host is applicable.
+    }
+
+    private IRunspace getRunspace() throws Exception {
+	if (runspace != null && runspace.isAlive()) {
+	    return runspace;
+	}
+	IWindowsSession.View view = session.getNativeView();
+	for (IRunspace rs : session.getRunspacePool().enumerate()) {
+	    if (rs.getView() == view) {
+		runspace = rs;
+		break;
+	    }
+	}
+	if (runspace == null) {
+	    runspace = session.getRunspacePool().spawn(view);
+	}
+	runspace.loadAssembly(getClass().getResourceAsStream("Metabase.dll"));
+	runspace.loadModule(getClass().getResourceAsStream("Metabase.psm1"));
+	return runspace;
     }
 }

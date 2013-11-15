@@ -450,29 +450,11 @@ public class Environmentvariable58Adapter implements IAdapter {
 	private IRunspace rs, rs32;
 
 	WindowsEnvironmentBuilder(IWindowsSession session) throws Exception {
-	    //
-	    // Get the default runspace and (if that's 64) a 32-bit runspace as well, and load the PSM as needed.
-	    //
-	    IWindowsSession.View view = session.getNativeView();
-	    for (IRunspace runspace : session.getRunspacePool().enumerate()) {
-		if (runspace.getView() == view) {
-		    rs = runspace;
-		    break;
-		}
-	    }
-	    if (rs == null) {
-		rs = session.getRunspacePool().spawn(view);
-	    }
-	    rs.loadAssembly(getClass().getResourceAsStream("Environmentvariable58.dll"));
-	    rs.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
-	    if (view == IWindowsSession.View._32BIT) {
-		rs32 = rs;
-	    }
-
 	    process32 = new HashSet<Integer>();
 	    process64 = new HashSet<Integer>();
 	    inaccessible = new HashSet<Integer>();
-	    String data = new String(Base64.decode(rs.invoke("List-Processes | Transfer-Encode")), StringTools.UTF8);
+	    String cmd = "List-Processes | Transfer-Encode";
+	    String data = new String(Base64.decode(getRunspace(session.getNativeView()).invoke(cmd)), StringTools.UTF8);
 	    for (String line : data.split("\r\n")) {
 		int ptr = line.indexOf(":");
 		if (ptr > 0) {
@@ -502,12 +484,12 @@ public class Environmentvariable58Adapter implements IAdapter {
 
 	public IEnvironment getProcessEnvironment(int pid) throws Exception {
 	    Integer id = new Integer(pid);
+	    String cmd = "Get-ProcessEnvironment -ProcessId " + pid + " | Transfer-Encode";
 	    if (process32.contains(id)) {
-		init32();
-		byte[] buff = Base64.decode(rs32.invoke("Get-ProcessEnvironment -ProcessId " + pid + " | Transfer-Encode"));
+		byte[] buff = Base64.decode(getRunspace(IWindowsSession.View._32BIT).invoke(cmd));
 		return toEnvironment(new String(buff, StringTools.UTF8));
 	    } else if (process64.contains(id)) {
-		byte[] buff = Base64.decode(rs.invoke("Get-ProcessEnvironment -ProcessId " + pid + " | Transfer-Encode"));
+		byte[] buff = Base64.decode(getRunspace(IWindowsSession.View._64BIT).invoke(cmd));
 		return toEnvironment(new String(buff, StringTools.UTF8));
 	    } else if (inaccessible.contains(id)) {
 		throw new AccessControlException(id.toString());
@@ -539,20 +521,37 @@ public class Environmentvariable58Adapter implements IAdapter {
 	    return new Environment(processEnv, true);
 	}
 
-	private void init32() throws Exception {
-	    if (rs32 == null) {
-		for (IRunspace runspace : ((IWindowsSession)session).getRunspacePool().enumerate()) {
-		    if (runspace.getView() == IWindowsSession.View._32BIT) {
-			rs32 = runspace;
-			break;
-		    }
+	private IRunspace getRunspace(IWindowsSession.View view) throws Exception {
+	    switch(view) {
+	      case _32BIT:
+		if (rs32 != null && rs32.isAlive()) {
+		    return rs32;
+		} else {
+		    return rs32 = createRunspace(view);
 		}
-		if (rs32 == null) {
-		    rs32 = ((IWindowsSession)session).getRunspacePool().spawn(IWindowsSession.View._32BIT);
+	      default:
+		if (rs != null && rs.isAlive()) {
+		    return rs;
+		} else {
+		    return rs = createRunspace(view);
 		}
-		rs32.loadAssembly(getClass().getResourceAsStream("Environmentvariable58.dll"));
-		rs32.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
 	    }
+	}
+
+	private IRunspace createRunspace(IWindowsSession.View view) throws Exception {
+	    IRunspace runspace = null;
+	    for (IRunspace rs : ((IWindowsSession)session).getRunspacePool().enumerate()) {
+		if (rs.getView() == view) {
+		    runspace = rs;
+		    break;
+		}
+	    }
+	    if (runspace == null) {
+		runspace = ((IWindowsSession)session).getRunspacePool().spawn(view);
+	    }
+	    runspace.loadAssembly(getClass().getResourceAsStream("Environmentvariable58.dll"));
+	    runspace.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
+	    return runspace;
 	}
     }
 }

@@ -23,10 +23,10 @@ function Get-ProcessInfo {
       } elseif ($dep -eq 1) {
         "DepEnabled=true"
       }
+      $title = [jOVAL.Process.Probe]::GetWindowText($Process.ProcessId);
+      if ($title -ne $null) {
+        "PrimaryWindowText={0}" -f $title
+      }
     } catch {}
-    $title = [jOVAL.Process.Probe]::GetWindowText($Process.ProcessId);
-    if ($title -ne $null) {
-      "PrimaryWindowText={0}" -f $title
-    }
   }
 }

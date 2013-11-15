@@ -273,25 +273,6 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter,
     }
 
     /**
-     * Get a runspace with the specified view, or create it if there isn't one yet.
-     */
-    protected IRunspace getRunspace(IWindowsSession.View view) throws Exception {
-	switch(view) {
-	  case _32BIT:
-	    if (rs32 == null) {
-		rs32 = createRunspace(view);
-	    }
-	    return rs32;
-
-	  default:
-	    if (rs == null) {
-		rs = createRunspace(view);
-	    }
-	    return rs;
-	}
-    }
-
-    /**
      * Returns the view suggested by the RegistryBehaviors.
      */
     protected IWindowsSession.View getView(RegistryBehaviors behaviors) {
@@ -304,6 +285,26 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter,
 	    }
 	}
 	return session.getNativeView();
+    }
+
+    /**
+     * Get a runspace with the specified view, or create it if there isn't one yet (or if the previous instance died).
+     */
+    protected IRunspace getRunspace(IWindowsSession.View view) throws Exception {
+	switch(view) {
+	  case _32BIT:
+	    if (rs32 != null && rs32.isAlive()) {
+		return rs32;
+	    } else {
+		return rs32 = createRunspace(view);
+	    }
+	  default:
+	    if (rs != null && rs.isAlive()) {
+		return rs;
+	    } else {
+		return rs = createRunspace(view);
+	    }
+	}
     }
 
     // Private

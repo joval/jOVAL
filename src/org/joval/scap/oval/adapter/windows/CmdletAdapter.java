@@ -76,8 +76,8 @@ public class CmdletAdapter implements IAdapter {
     }
 
     private IWindowsSession session;
-    private IRunspace runspace;
     private HashMap<String, ModuleInfo> modules;
+    private IRunspace runspace;
 
     // Implement IAdapter
 
@@ -93,11 +93,7 @@ public class CmdletAdapter implements IAdapter {
     }
 
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
-	initialize();
-	if (runspace == null) {
-	    throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_POWERSHELL), FlagEnumeration.NOT_COLLECTED);
-	}
-
+	init();
 	CmdletObject cObj = (CmdletObject)obj;
 	validateOperation(cObj);
 
@@ -158,6 +154,16 @@ public class CmdletAdapter implements IAdapter {
 	    }
 	}
 
+	//
+	// Use a locally-scoped runspace, below
+	//
+	IRunspace runspace = null;
+	try {
+	    runspace = getRunspace();
+	} catch (Exception e) {
+	    throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_POWERSHELL), FlagEnumeration.NOT_COLLECTED);
+	}
+
 	Collection<CmdletItem> items = new ArrayList<CmdletItem>();
 	CmdletItem item = Factories.sc.windows.createCmdletItem();
 	try {
@@ -165,7 +171,8 @@ public class CmdletAdapter implements IAdapter {
 	    // Now that we have validated that the module is available and correct, we import it if it's not
 	    // already loaded.
 	    //
-	    if (!info.isLoaded()) {
+	    boolean unload = !info.isLoaded();
+	    if (unload) {
 		runspace.invoke("Import-Module " + moduleName);
 		info.setLoaded(true);
 	    }
@@ -232,11 +239,16 @@ public class CmdletAdapter implements IAdapter {
 
 	    items.add(item);
 
-	    // DAS: should we remove the module from the runspace when the query is complete?
-	    // runspace.invoke("Remove-Module " + moduleName);
+	    if (unload) {
+	        try {
+		    runspace.invoke("Remove-Module " + moduleName);
+		} catch (Exception e) {
+		    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
+	    }
 	} catch (Exception e) {
 	    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_CMDLET, e.getMessage());
-	    session.getLogger().warn(s);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(s);
@@ -249,39 +261,15 @@ public class CmdletAdapter implements IAdapter {
 
     // Private
 
-    /**
-     * Idempotent
-     */
-    private void initialize() {
-	if (modules == null) {
-	    modules = new HashMap<String, ModuleInfo>();
-	} else {
-	    return; // previously initialized
-	}
+    private void init() throws CollectException {
+	if (modules != null) return;
 
-	//
-	// Get a runspace if there are any in the pool, or create a new one, and load the Cmdlet utilities
-	// Powershell module code.
-	//
-	IWindowsSession.View view = session.getNativeView();
-	for (IRunspace rs : session.getRunspacePool().enumerate()) {
-	    if (rs.getView() == view) {
-		runspace = rs;
-		break;
-	    }
-	}
 	try {
-	    if (runspace == null) {
-		runspace = session.getRunspacePool().spawn(view);
-	    }
-	    if (runspace != null) {
-		runspace.loadModule(getClass().getResourceAsStream("Cmdlet.psm1"));
-	    }
-
 	    //
 	    // Enumerate available modules with manifest information.
 	    //
-	    String data = runspace.invoke("Get-ModuleInfo");
+	    modules = new HashMap<String, ModuleInfo>();
+	    String data = getRunspace().invoke("Get-ModuleInfo");
 	    if (data != null) {
 		for (String moduleData : data.split("ModuleName=")) {
 		    ModuleInfo info = new ModuleInfo(moduleData);
@@ -289,8 +277,26 @@ public class CmdletAdapter implements IAdapter {
 		}
 	    }
 	} catch (Exception e) {
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_POWERSHELL), FlagEnumeration.NOT_COLLECTED);
 	}
+    }
+
+    private IRunspace getRunspace() throws Exception {
+	if (runspace != null && runspace.isAlive()) {
+	    return runspace;
+	}
+	IWindowsSession.View view = session.getNativeView();
+	for (IRunspace rs : session.getRunspacePool().enumerate()) {
+	    if (rs.getView() == view) {
+		runspace = rs;
+		break;
+	    }
+	}
+	if (runspace == null) {
+	    runspace = session.getRunspacePool().spawn(view);
+	}
+	runspace.loadModule(getClass().getResourceAsStream("Cmdlet.psm1"));
+	return runspace;
     }
 
     /**

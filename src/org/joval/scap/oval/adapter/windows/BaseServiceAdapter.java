@@ -47,7 +47,7 @@ import org.joval.xml.XSITools;
  * @version %I% %G%
  */
 public abstract class BaseServiceAdapter<T extends ItemType> implements IAdapter {
-    private IRunspace rs;
+    private IRunspace runspace;
     private Collection<String> serviceNames;
 
     protected IWindowsSession session;
@@ -197,40 +197,31 @@ public abstract class BaseServiceAdapter<T extends ItemType> implements IAdapter
     }
 
     /**
-     * Get a runspace.
+     * Get (or create) a runspace that includes the modules and assemblies specified by the subclass.
      */
     protected IRunspace getRunspace() throws Exception {
-	if (rs == null) {
-	    rs = createRunspace();
+	if (runspace != null && runspace.isAlive()) {
+	    return runspace;
 	}
-	return rs;
-    }
-
-    // Private
-
-    /**
-     * Create a runspace with the native view. Modules supplied by getPowershellModules() will be auto-loaded before
-     * the runspace is returned.
-     */
-    private IRunspace createRunspace() throws Exception {
-	IRunspace result = null;
-	for (IRunspace runspace : session.getRunspacePool().enumerate()) {
-	    if (session.getNativeView() == runspace.getView()) {
-		result = runspace;
+	for (IRunspace rs : session.getRunspacePool().enumerate()) {
+	    if (session.getNativeView() == rs.getView()) {
+		runspace = rs;
 		break;
 	    }
 	}
-	if (result == null) {
-	    result = session.getRunspacePool().spawn();
+	if (runspace == null) {
+	    runspace = session.getRunspacePool().spawn();
 	}
 	for (InputStream in : getPowershellAssemblies()) {
-	    result.loadAssembly(in);
+	    runspace.loadAssembly(in);
 	}
 	for (InputStream in : getPowershellModules()) {
-	    result.loadModule(in);
+	    runspace.loadModule(in);
 	}
-	return result;
+	return runspace;
     }
+
+    // Private
 
     /**
      * A reflection proxy for:

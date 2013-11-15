@@ -61,7 +61,7 @@ public class PrintereffectiverightsAdapter implements IAdapter {
     public static final int PRINTER_ACCESS_USE		= 0x00000008;
 
     private IWindowsSession session;
-    private IRunspace rs;
+    private IRunspace runspace;
     private HashSet<String> printers;
     private CollectException error;
 
@@ -197,7 +197,7 @@ public class PrintereffectiverightsAdapter implements IAdapter {
 		}
 		cmd.append(" | Get-EffectiveRights -ObjectType Printer");
 		cmd.append(" -Name '").append(name).append("'");
-		for (String line : rs.invoke(cmd.toString()).split("\r\n")) {
+		for (String line : getRunspace().invoke(cmd.toString()).split("\r\n")) {
 		    int ptr = line.indexOf(":");
 		    if (ptr != -1) {
 			sid = line.substring(0,ptr);
@@ -304,21 +304,9 @@ public class PrintereffectiverightsAdapter implements IAdapter {
 	    throw error;
 	} else if (printers == null) {
 	    try {
-		for (IRunspace runspace : session.getRunspacePool().enumerate()) {
-		    if (session.getNativeView() == runspace.getView()) {
-			rs = runspace;
-			break;
-		    }
-		}
-		if (rs == null) {
-		    rs = session.getRunspacePool().spawn();
-		}
-		rs.loadAssembly(getClass().getResourceAsStream("Printer.dll"));
-		rs.loadAssembly(getClass().getResourceAsStream("Effectiverights.dll"));
-		rs.loadModule(getClass().getResourceAsStream("Effectiverights.psm1"));
-
 		printers = new HashSet<String>();
-		byte[] data = Base64.decode(rs.invoke("[jOVAL.Printer.Probe]::List() | %{$_.pPrinterName} | Transfer-Encode"));
+		String cmd = "[jOVAL.Printer.Probe]::List() | %{$_.pPrinterName} | Transfer-Encode";
+		byte[] data = Base64.decode(getRunspace().invoke(cmd));
 		for (String line : Arrays.asList(new String(data, StringTools.UTF8).split("\r\n"))) {
 		    printers.add(line);
 		}
@@ -327,5 +315,24 @@ public class PrintereffectiverightsAdapter implements IAdapter {
 		throw error = new CollectException(e, FlagEnumeration.ERROR);
 	    }
 	}
+    }
+
+    private IRunspace getRunspace() throws Exception {
+	if (runspace != null && runspace.isAlive()) {
+	    return runspace;
+	}
+	for (IRunspace rs : session.getRunspacePool().enumerate()) {
+	    if (session.getNativeView() == rs.getView()) {
+		runspace = rs;
+		break;
+	    }
+	}
+	if (runspace == null) {
+	    runspace = session.getRunspacePool().spawn();
+	}
+	runspace.loadAssembly(getClass().getResourceAsStream("Printer.dll"));
+	runspace.loadAssembly(getClass().getResourceAsStream("Effectiverights.dll"));
+	runspace.loadModule(getClass().getResourceAsStream("Effectiverights.psm1"));
+	return runspace;
     }
 }

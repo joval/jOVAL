@@ -52,7 +52,6 @@ import org.joval.util.JOVALMsg;
  */
 public class ProcessAdapter implements IAdapter {
     private IWindowsSession session;
-    private IRunspace runspace;
     private IniFile processes;
     private MessageType error;
 
@@ -262,6 +261,7 @@ public class ProcessAdapter implements IAdapter {
 	// Get a runspace if there are any in the pool, or create a new one, and load the Get-ProcessInfo
 	// Powershell module code.
 	//
+	IRunspace runspace = null;
 	IWindowsSession.View view = session.getNativeView();
 	for (IRunspace rs : session.getRunspacePool().enumerate()) {
 	    if (rs.getView() == view) {
@@ -286,13 +286,13 @@ public class ProcessAdapter implements IAdapter {
 	try {
 	    String data = runspace.invoke("Get-ProcessInfo | Transfer-Encode");
 	    if (data != null) {
-		ByteArrayInputStream in = new ByteArrayInputStream(Base64.decode(data, Base64.NO_OPTIONS));
+		ByteArrayInputStream in = new ByteArrayInputStream(Base64.decode(data));
 		processes.load(in, StringTools.UTF8);
 	    }
 	} catch (Exception e) {
 	    error = Factories.common.createMessageType();
 	    error.setLevel(MessageLevelEnumeration.ERROR);
-	    error.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION, e.getMessage()));
+	    error.setValue(e.getMessage());
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
