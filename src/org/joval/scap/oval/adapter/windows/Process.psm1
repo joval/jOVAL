@@ -3,8 +3,7 @@
 #
 function Get-ProcessInfo {
   $ErrorActionPreference = "Continue" 
-  $Processes = Get-WmiObject -query "Select * from Win32_Process"
-  foreach ($Process in $Processes) {
+  foreach ($Process in Safe-WmiQuery -Query "Select * from Win32_Process" -Timeout 5000) {
     "[{0:D}]" -f $Process.ProcessId
     "PPID={0:D}" -f $Process.ParentProcessId
     "Priority={0:D}" -f $Process.Priority
