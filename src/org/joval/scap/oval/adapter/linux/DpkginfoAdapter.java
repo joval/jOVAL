@@ -143,7 +143,7 @@ public class DpkginfoAdapter implements IAdapter {
     }
 
     private DpkginfoItem parsePackage(String line) {
-	StringTokenizer tok = new StringTokenizer(line);
+	StringTokenizer tok = new StringTokenizer(line, "\t");
 	if (tok.countTokens() == 4) {
 	    DpkginfoItem item = Factories.sc.linux.createDpkginfoItem();
 
