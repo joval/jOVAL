@@ -110,6 +110,7 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 
     protected LocLogger logger;
     protected ISession session;
+    protected SystemInfoType sysinfo;
 
     /**
      * Initializes the logger and loads message resources from plugin[_locale].properties
@@ -196,7 +197,10 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
     }
 
     public SystemInfoType getSystemInfo() throws OvalException {
-	return SysinfoFactory.createSystemInfo(session);
+	if (sysinfo == null) {
+	    sysinfo = SysinfoFactory.createSystemInfo(session);
+	}
+	return sysinfo;
     }
 
     public Object getService(String name) {
