@@ -554,6 +554,7 @@ public class XPERT {
 		logger.severe(e.getMessage());
 		exitCode = 1;
 	    } catch (Exception e) {
+		logger.severe(getMessage("error.fatal"));
 		logger.severe(LogFormatter.toString(e));
 		exitCode = 3;
 	    }
