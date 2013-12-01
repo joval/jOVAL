@@ -114,6 +114,18 @@ public enum SchemaRegistry {
     }
 
     /**
+     * Create JAXBContext objects for the registry in a separate thread.
+     */
+    public static void initializeInThread() {
+	if (initializing) {
+	    return;
+	} else {
+	    initThread = new Thread(new Initializer(), "SchemaRegistry JAXB Initializer");
+	    initThread.start();
+	}
+    }
+
+    /**
      * Obtain a SchemaRegistry instance based on its group name.  If there is no built-in member of the enumeration
      * with the specified name, a new instance will be returned with that corresponding name.  This makes it possible
      * for the registry to support custom extended JAXB groups.
@@ -259,7 +271,7 @@ public enum SchemaRegistry {
 
 	// Implement ISchema
 
-	public JAXBContext getJAXBContext() throws JAXBException {
+	public synchronized JAXBContext getJAXBContext() throws JAXBException {
 	    if (ctx == null) {
 		StringBuffer sb = new StringBuffer();
 		for (String packageName : groupPackages.get(groupName)) {
@@ -286,6 +298,26 @@ public enum SchemaRegistry {
 	    marshaller.setProperty(PREFIXMAPPER_PROP, this);
 	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	    return marshaller;
+	}
+    }
+
+    private static boolean initializing = false;
+    private static Thread initThread = null;
+
+    private static class Initializer implements Runnable {
+	public void run() {
+	    SchemaRegistry.initializing = true;
+	    try {
+		for (SchemaRegistry sr : SchemaRegistry.values()) {
+		    JOVALMsg.getLogger().debug(JOVALMsg.STATUS_XML_INIT, sr.toString());
+		    sr.getJAXBContext();
+		}
+	    } catch (Exception e) {
+		JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    } finally {
+		SchemaRegistry.initializing = false;
+		SchemaRegistry.initThread = null;
+	    }
 	}
     }
 }
