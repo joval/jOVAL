@@ -15,6 +15,7 @@ import java.util.StringTokenizer;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.PropertyException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -295,7 +296,11 @@ public enum SchemaRegistry {
 		sb.append(location);
 	    }
 	    marshaller.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, sb.toString());
-	    marshaller.setProperty(PREFIXMAPPER_PROP, this);
+	    try {
+		marshaller.setProperty(PREFIXMAPPER_PROP, this);
+	    } catch (PropertyException e) {
+		// Not the end of the world, really.
+	    }
 	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	    return marshaller;
 	}
