@@ -41,17 +41,18 @@ import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
 import scap.datastream.Component;
-import scap.xccdf.BenchmarkType;
 import scap.xccdf.GroupType;
 import scap.xccdf.ItemType;
 import scap.xccdf.ProfileType;
 import scap.xccdf.RuleType;
 import scap.xccdf.SelectableItemType;
 import scap.xccdf.ValueType;
+import scap.xccdf.XccdfBenchmark;
 
 import org.joval.intf.scap.xccdf.IBenchmark;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.util.JOVALMsg;
+import org.joval.xml.DOMTools;
 import org.joval.xml.SchemaRegistry;
 import org.joval.xml.XSLTools;
 
@@ -67,9 +68,9 @@ public class Benchmark implements IBenchmark, ILoggable {
     /**
      * Read a benchmark file.
      */
-    public static final BenchmarkType getBenchmarkType(File f) throws XccdfException {
+    public static final XccdfBenchmark getXccdfBenchmark(File f) throws XccdfException {
 	try {
-	    return getBenchmarkType(new FileInputStream(f));
+	    return getXccdfBenchmark(new FileInputStream(f));
 	} catch (FileNotFoundException e) {
 	    throw new XccdfException(e);
 	}
@@ -78,7 +79,7 @@ public class Benchmark implements IBenchmark, ILoggable {
     /**
      * Read a benchmark from a stream.
      */
-    public static final BenchmarkType getBenchmarkType(InputStream in) throws XccdfException {
+    public static final XccdfBenchmark getXccdfBenchmark(InputStream in) throws XccdfException {
 	try {
 	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	    factory.setNamespaceAware(true);
@@ -97,9 +98,9 @@ public class Benchmark implements IBenchmark, ILoggable {
 		Transformer transformer = xf.newTransformer(new StreamSource(xsl));
 		DOMResult result = new DOMResult();
 		transformer.transform(new DOMSource(doc), result);
-		return getBenchmarkType(new DOMSource(result.getNode()));
+		return getXccdfBenchmark(new DOMSource(result.getNode()));
 	    } else if (SystemEnumeration.XCCDF.namespace().equals(ns)) {
-		return getBenchmarkType(new DOMSource(doc));
+		return getXccdfBenchmark(new DOMSource(doc));
 	    } else {
 		throw new XccdfException(new IllegalArgumentException(ns));
 	    }
@@ -119,12 +120,12 @@ public class Benchmark implements IBenchmark, ILoggable {
     /**
      * Read a benchmark from a JAXB source.
      */
-    public static final BenchmarkType getBenchmarkType(Source source) throws XccdfException {
+    public static final XccdfBenchmark getXccdfBenchmark(Source source) throws XccdfException {
 	try {
 	    Unmarshaller unmarshaller = SchemaRegistry.XCCDF.getJAXBContext().createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(source);
-	    if (rootObj instanceof BenchmarkType) {
-		return (BenchmarkType)rootObj;
+	    if (rootObj instanceof XccdfBenchmark) {
+		return (XccdfBenchmark)rootObj;
 	    } else {
 		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_BAD_SOURCE, source.getSystemId()));
 	    }
@@ -134,7 +135,7 @@ public class Benchmark implements IBenchmark, ILoggable {
     }
 
     private LocLogger logger;
-    private BenchmarkType bt;
+    private XccdfBenchmark xb;
     private String href;
     private Map<String, ProfileType> profiles;
     private Map<String, ItemType> items;
@@ -142,10 +143,10 @@ public class Benchmark implements IBenchmark, ILoggable {
     /**
      * Create a benchmark document from the JAXB datatype.
      */
-    public Benchmark(String href, BenchmarkType bt) throws XccdfException {
+    public Benchmark(String href, XccdfBenchmark xb) throws XccdfException {
 	this();
 	this.href = href;
-	setBenchmark(bt);
+	setBenchmark(xb);
     }
 
     /**
@@ -163,12 +164,8 @@ public class Benchmark implements IBenchmark, ILoggable {
 
     // Implement IBenchmark
 
-    public BenchmarkType getBenchmark() {
-	return bt;
-    }
-
     public String getId() {
-	return bt.getBenchmarkId();
+	return xb.getBenchmarkId();
     }
 
     public String getHref() {
@@ -196,7 +193,7 @@ public class Benchmark implements IBenchmark, ILoggable {
 	try {
 	    Marshaller marshaller = SchemaRegistry.XCCDF.createMarshaller();
 	    out = new FileOutputStream(f);
-	    marshaller.marshal(bt, out);
+	    marshaller.marshal(xb, out);
 	} catch (JAXBException e) {
 	    throw new IOException(e);
 	} catch (javax.xml.stream.FactoryConfigurationError e) {
@@ -224,11 +221,21 @@ public class Benchmark implements IBenchmark, ILoggable {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-	return new JAXBSource(SchemaRegistry.XCCDF.getJAXBContext(), bt);
+	return new JAXBSource(SchemaRegistry.XCCDF.getJAXBContext(), xb);
     }
 
-    public Object getRootObject() {
-	return bt;
+    public XccdfBenchmark getRootObject() {
+	return xb;
+    }
+
+    public XccdfBenchmark copyRootObject() throws Exception {
+	Unmarshaller unmarshaller = getJAXBContext().createUnmarshaller();
+	Object rootObj = unmarshaller.unmarshal(new DOMSource(DOMTools.toDocument(this).getDocumentElement()));
+	if (rootObj instanceof XccdfBenchmark) {
+	    return (XccdfBenchmark)rootObj;
+	} else {
+	    throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_BAD_SOURCE, toString()));
+	}
     }
 
     public JAXBContext getJAXBContext() throws JAXBException {
@@ -252,20 +259,20 @@ public class Benchmark implements IBenchmark, ILoggable {
     }
 
     /**
-     * Set bt and initialize the items map.
+     * Set xb and initialize the items map.
      */
-    private void setBenchmark(BenchmarkType bt) {
-	this.bt = bt;
+    private void setBenchmark(XccdfBenchmark xb) {
+	this.xb = xb;
 	profiles = new HashMap<String, ProfileType>();
-	for (ProfileType pt : bt.getProfile()) {
+	for (ProfileType pt : xb.getProfile()) {
 	    profiles.put(pt.getProfileId(), pt);
 	}
 
 	items = new HashMap<String, ItemType>();
-	for (ValueType value : bt.getValue()) {
+	for (ValueType value : xb.getValue()) {
 	    items.put(value.getId(), value);
 	}
-	for (SelectableItemType item : bt.getGroupOrRule()) {
+	for (SelectableItemType item : xb.getGroupOrRule()) {
 	    addSelectableItem(item);
 	}
     }

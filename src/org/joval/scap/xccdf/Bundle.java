@@ -60,7 +60,7 @@ public class Bundle implements IDatastream {
 	    for (File f : base.listFiles()) {
 		if (f.isFile() && f.getName().endsWith(".xml")) {
 		    if (f.getName().toLowerCase().indexOf("xccdf") != -1) {
-			IBenchmark benchmark = new Benchmark(f.getName(), Benchmark.getBenchmarkType(f));
+			IBenchmark benchmark = new Benchmark(f.getName(), Benchmark.getXccdfBenchmark(f));
 			benchmarks.put(benchmark.getId(), benchmark);
 		    } else if (f.getName().toLowerCase().indexOf("cpe-dictionary") != -1) {
 			dictionary = new Dictionary(Dictionary.getCpeList(f));
@@ -80,7 +80,7 @@ public class Bundle implements IDatastream {
 				// only scan the top-level directory
 			    } else if (entry.getName().toLowerCase().endsWith("-xccdf.xml")) {
 				in = zip.getInputStream(entry);
-				IBenchmark benchmark = new Benchmark(entry.getName(), Benchmark.getBenchmarkType(in));
+				IBenchmark benchmark = new Benchmark(entry.getName(), Benchmark.getXccdfBenchmark(in));
 				benchmarks.put(benchmark.getId(), benchmark);
 			    } else if (entry.getName().toLowerCase().endsWith("-cpe-dictionary.xml")) {
 				in = zip.getInputStream(entry);
@@ -153,7 +153,7 @@ public class Bundle implements IDatastream {
     public Collection<String> getProfileIds(String benchmarkId) throws NoSuchElementException {
 	if (benchmarks.containsKey(benchmarkId)) {
 	    Collection<String> result = new ArrayList<String>();
-	    for (ProfileType profile : benchmarks.get(benchmarkId).getBenchmark().getProfile()) {
+	    for (ProfileType profile : benchmarks.get(benchmarkId).getRootObject().getProfile()) {
 		result.add(profile.getProfileId());
 	    }
 	    return result;

@@ -3,6 +3,8 @@
 
 package org.joval.intf.scap.sce;
 
+import javax.xml.bind.JAXBElement;
+
 import org.openscap.sce.results.SceResultsType;
 
 import org.joval.intf.xml.ITransformable;
@@ -13,12 +15,7 @@ import org.joval.intf.xml.ITransformable;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IScriptResult extends ITransformable {
-    /**
-     * Get the result of the script execution.
-     */
-    SceResultsType getResult();
-
+public interface IScriptResult extends ITransformable<JAXBElement<SceResultsType>> {
     /**
      * Returns true if there was an error preventing the script from running.
      */

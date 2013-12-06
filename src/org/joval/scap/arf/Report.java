@@ -26,13 +26,12 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
@@ -81,11 +80,11 @@ import scap.oval.results.SystemType;
 import scap.oval.systemcharacteristics.core.InterfaceType;
 import scap.oval.systemcharacteristics.core.ItemType;
 import scap.oval.systemcharacteristics.core.SystemInfoType;
-import scap.xccdf.BenchmarkType;
 import scap.xccdf.CheckType;
 import scap.xccdf.ComplexCheckType;
 import scap.xccdf.RuleResultType;
 import scap.xccdf.TestResultType;
+import scap.xccdf.XccdfBenchmark;
 
 import org.joval.intf.scap.arf.IReport;
 import org.joval.intf.scap.ocil.IChecklist;
@@ -101,7 +100,9 @@ import org.joval.scap.diagnostics.RuleDiagnostics;
 import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.oval.types.Ip4AddressType;
 import org.joval.scap.oval.types.Ip6AddressType;
+import org.joval.scap.xccdf.Benchmark;
 import org.joval.util.JOVALMsg;
+import org.joval.xml.DOMTools;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -155,27 +156,32 @@ public class Report implements IReport, ILoggable {
 
     private LocLogger logger;
     private AssetReportCollection arc;
-    private HashMap<String, Element> requests;
-    private HashMap<String, String> requestXrefs;
+    private HashMap<String, XccdfBenchmark> requests;
     private HashMap<String, AssetType> assets;
-    private HashMap<String, Element> reports;
+    private HashMap<String, Object> reports;
 
     /**
      * Create a report based on an existing AssetReportCollection.
      */
     public Report(AssetReportCollection arc) {
 	this.arc = arc;
-	requests = new HashMap<String, Element>();
+	requests = new HashMap<String, XccdfBenchmark>();
 	for (ReportRequestType req : arc.getReportRequests().getReportRequest()) {
-	    requests.put(req.getId(), (Element)req.getContent().getAny());
+	    Object request = req.getContent().getAny();
+	    if (request instanceof XccdfBenchmark) {
+		requests.put(req.getId(), (XccdfBenchmark)request);
+	    } else {
+		String type = request == null ? "null" : request.getClass().getName();
+		logger.warn(JOVALMsg.WARNING_ARF_REQUEST, req.getId(), type);
+	    }
 	}
 	assets = new HashMap<String, AssetType>();
 	for (AssetReportCollection.Assets.Asset asset : arc.getAssets().getAsset()) {
 	    assets.put(asset.getId(), asset.getAsset().getValue());
 	}
-	reports = new HashMap<String, Element>();
+	reports = new HashMap<String, Object>();
 	for (ReportType report : arc.getReports().getReport()) {
-	    reports.put(report.getId(), (Element)report.getContent().getAny());
+	    reports.put(report.getId(), report.getContent().getAny());
 	}
 	logger = JOVALMsg.getLogger();
     }
@@ -185,9 +191,9 @@ public class Report implements IReport, ILoggable {
      */
     public Report() {
 	arc = Factories.core.createAssetReportCollection();
-	requests = new HashMap<String, Element>();
+	requests = new HashMap<String, XccdfBenchmark>();
 	assets = new HashMap<String, AssetType>();
-	reports = new HashMap<String, Element>();
+	reports = new HashMap<String, Object>();
 	logger = JOVALMsg.getLogger();
     }
 
@@ -206,51 +212,38 @@ public class Report implements IReport, ILoggable {
     }
 
     public Collection<String> getBenchmarkIds() {
-	if (requestXrefs == null) {
-	    initRequestXrefs();
+	Collection<String> result = new ArrayList<String>();
+	for (XccdfBenchmark benchmark : requests.values()) {
+	    result.add(benchmark.getBenchmarkId());
 	}
-	return requestXrefs.values();
+	return result;
     }
 
-    public BenchmarkType getBenchmark(String benchmarkId) throws NoSuchElementException {
-	if (requestXrefs == null) {
-	    initRequestXrefs();
-	}
-	try {
-	    for (Map.Entry<String, String> entry : requestXrefs.entrySet()) {
-		if (benchmarkId.equals(entry.getValue())) {
-		    Unmarshaller unmarshaller = SchemaRegistry.XCCDF.getJAXBContext().createUnmarshaller();
-		    return (BenchmarkType)unmarshaller.unmarshal(requests.get(entry.getKey()));
-		}
+    public XccdfBenchmark getBenchmark(String benchmarkId) throws NoSuchElementException {
+	for (XccdfBenchmark benchmark : requests.values()) {
+	    if (benchmarkId.equals(benchmark.getBenchmarkId())) {
+		return benchmark;
 	    }
-	} catch (JAXBException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	throw new NoSuchElementException(benchmarkId);
     }
 
     public TestResultType getTestResult(String assetId, String benchmarkId, String profileId) throws NoSuchElementException {
-	try {
-	    Unmarshaller unmarshaller = SchemaRegistry.XCCDF.getJAXBContext().createUnmarshaller();
-	    for (RelationshipType rel : arc.getRelationships().getRelationship()) {
-		if (rel.getType().equals(Factories.IS_ABOUT)) {
-		    for (String ref : rel.getRef()) {
-			if (assetId.equals(ref) && reports.containsKey(rel.getSubject())) {
-			    Element elt = reports.get(rel.getSubject());
-			    if ("TestResult".equals(elt.getLocalName()) &&
-				SystemEnumeration.XCCDF.namespace().equals(elt.getNamespaceURI())) {
-				TestResultType tr = (TestResultType)(((JAXBElement)unmarshaller.unmarshal(elt)).getValue());
-				if (benchmarkId.equals(tr.getBenchmark().getId()) &&
-				    profileId == null ? !tr.isSetProfile() : profileId.equals(tr.getProfile().getIdref())) {
-				    return tr;
-				}
+	for (RelationshipType rel : arc.getRelationships().getRelationship()) {
+	    if (rel.getType().equals(Factories.IS_ABOUT)) {
+		for (String ref : rel.getRef()) {
+		    if (assetId.equals(ref) && reports.containsKey(rel.getSubject())) {
+			Object report = reports.get(rel.getSubject());
+			if (report instanceof JAXBElement && ((JAXBElement)report).getValue() instanceof TestResultType) {
+			    TestResultType tr = (TestResultType)((JAXBElement)report).getValue();
+			    if (benchmarkId.equals(tr.getBenchmark().getId()) &&
+				profileId == null ? !tr.isSetProfile() : profileId.equals(tr.getProfile().getIdref())) {
+				return tr;
 			    }
 			}
 		    }
 		}
 	    }
-	} catch (JAXBException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	throw new NoSuchElementException(assetId + ":" + benchmarkId + ":" + profileId);
     }
@@ -335,14 +328,9 @@ public class Report implements IReport, ILoggable {
 	return result;
     }
 
-    public AssetReportCollection getAssetReportCollection() {
-	return arc;
-    }
-
-    public synchronized String addRequest(Document doc) {
-	Element request = doc.getDocumentElement();
+    public synchronized String addRequest(XccdfBenchmark benchmark) {
 	String requestId = new StringBuffer("request_").append(Integer.toString(requests.size())).toString();
-	requests.put(requestId, request);
+	requests.put(requestId, benchmark);
 
 	if (!arc.isSetReportRequests()) {
 	    arc.setReportRequests(Factories.core.createAssetReportCollectionReportRequests());
@@ -350,7 +338,7 @@ public class Report implements IReport, ILoggable {
 	ReportRequestType requestType = Factories.core.createReportRequestType();
 	requestType.setId(requestId);
 	ReportRequestType.Content content = Factories.core.createReportRequestTypeContent();
-	content.setAny(request);
+	content.setAny(benchmark);
 	requestType.setContent(content);
 	arc.getReportRequests().getReportRequest().add(requestType);
 	return requestId;
@@ -429,8 +417,8 @@ public class Report implements IReport, ILoggable {
 	return assetId;
     }
 
-    public synchronized String addReport(String requestId, String assetId, String ref, Document doc)
-		throws NoSuchElementException, ArfException {
+    public synchronized String addReport(String requestId, String assetId, String ref, Object report)
+		throws NoSuchElementException, IllegalArgumentException, ArfException {
 
 	if (!requests.containsKey(requestId)) {
 	    throw new NoSuchElementException(requestId);
@@ -439,7 +427,6 @@ public class Report implements IReport, ILoggable {
 	    throw new NoSuchElementException(assetId);
 	}
 
-	Element report = doc.getDocumentElement();
 	String reportId = new StringBuffer("report_").append(Integer.toString(reports.size())).toString();
 	reports.put(reportId, report);
 	if (ref != null && ref.length() > 0) {
@@ -522,14 +509,24 @@ public class Report implements IReport, ILoggable {
         }
     }
 
-    // Implement ITransformable
+    // Implement ITransformable<AssetReportCollection>
 
     public Source getSource() throws JAXBException {
 	return new JAXBSource(SchemaRegistry.ARF.getJAXBContext(), getRootObject());
     }
 
-    public Object getRootObject() {
+    public AssetReportCollection getRootObject() {
 	return arc;
+    }
+
+    public AssetReportCollection copyRootObject() throws Exception {
+        Unmarshaller unmarshaller = getJAXBContext().createUnmarshaller();
+        Object rootObj = unmarshaller.unmarshal(new DOMSource(DOMTools.toDocument(this).getDocumentElement()));
+        if (rootObj instanceof AssetReportCollection) {
+            return (AssetReportCollection)rootObj;
+        } else {
+            throw new ArfException(JOVALMsg.getMessage(JOVALMsg.ERROR_ARF_BAD_SOURCE, toString()));
+        }
     }
 
     public JAXBContext getJAXBContext() throws JAXBException {
@@ -547,19 +544,6 @@ public class Report implements IReport, ILoggable {
     }
 
     // Private
-
-    private void initRequestXrefs() {
-	requestXrefs = new HashMap<String, String>();
-	try {
-	    Unmarshaller unmarshaller = SchemaRegistry.XCCDF.getJAXBContext().createUnmarshaller();
-	    for (Map.Entry<String, Element> entry : requests.entrySet()) {
-		BenchmarkType bt = (BenchmarkType)unmarshaller.unmarshal(entry.getValue());
-		requestXrefs.put(entry.getKey(), bt.getBenchmarkId());
-	    }
-	} catch (Exception e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-    }
 
     private void setIpAddressInfo(NetworkInterfaceType nit, String ipAddressString) {
 	IpAddressType ip = null;
@@ -626,30 +610,7 @@ public class Report implements IReport, ILoggable {
 		Uri uri = (Uri)obj;
 		String report_id = uri.getName();
 		String href = uri.getUri().substring(1);
-		Element subreport = reports.get(report_id);
-		String namespaceURI = subreport.getNamespaceURI();
-		try {
-		    if (SystemEnumeration.OCIL.namespace().equals(namespaceURI)) {
-			Unmarshaller unmarshaller = SchemaRegistry.OCIL.getJAXBContext().createUnmarshaller();
-			OCILType ocil = (OCILType)((JAXBElement)unmarshaller.unmarshal(subreport)).getValue();
-			resolved.put(href, ocil);
-		    } else if (OVALRES.equals(namespaceURI)) {
-			Unmarshaller unmarshaller = SchemaRegistry.OVAL_RESULTS.getJAXBContext().createUnmarshaller();
-			OvalResults oval = (OvalResults)unmarshaller.unmarshal(subreport);
-			resolved.put(href, oval);
-		    } else if (SCERES.equals(namespaceURI)) {
-			Unmarshaller unmarshaller = SchemaRegistry.SCE.getJAXBContext().createUnmarshaller();
-			SceResultsType sceres = (SceResultsType)((JAXBElement)unmarshaller.unmarshal(subreport)).getValue();
-			resolved.put(href, sceres);
-		    } else if (SystemEnumeration.XCCDF.namespace().equals(namespaceURI)) {
-			Unmarshaller unmarshaller = SchemaRegistry.XCCDF.getJAXBContext().createUnmarshaller();
-			TestResultType xccdf = (TestResultType)((JAXBElement)unmarshaller.unmarshal(subreport)).getValue();
-			resolved.put(href, xccdf);
-		    }
-		} catch (JAXBException e) {
-		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		    throw new ArfException(e);
-		}
+		resolved.put(href, reports.get(report_id));
 	    }
 	}
 	return resolved;
@@ -760,15 +721,13 @@ public class Report implements IReport, ILoggable {
 		}
 	    }
 	    if (report_id != null && reports.containsKey(report_id)) {
-		Element subreport = reports.get(report_id);
+		Object subreport = reports.get(report_id);
 		try {
 		    if (SystemEnumeration.OCIL.namespace().equals(system)) {
-			Unmarshaller unmarshaller = SchemaRegistry.OCIL.getJAXBContext().createUnmarshaller();
-			OCILType ocil = (OCILType)((JAXBElement)unmarshaller.unmarshal(subreport)).getValue();
+			OCILType ocil = (OCILType)(((JAXBElement)subreport).getValue());
 			setDiagnosticInfo(cd, ScapFactory.createChecklist(ocil), name);
 		    } else if (SystemEnumeration.OVAL.namespace().equals(system)) {
-			Unmarshaller unmarshaller = SchemaRegistry.OVAL_RESULTS.getJAXBContext().createUnmarshaller();
-			OvalResults oval = (OvalResults)unmarshaller.unmarshal(subreport);
+			OvalResults oval = (OvalResults)subreport;
 			if (name == null) {
 			    cd.setDefinitions(oval.getOvalDefinitions().getDefinitions());
 			    cd.setTests(oval.getOvalDefinitions().getTests());
@@ -791,13 +750,12 @@ public class Report implements IReport, ILoggable {
 			    setDiagnosticInfo(cd, OvalFactory.createResults(oval), name);
 			}
 		    } else if (SystemEnumeration.SCE.namespace().equals(system)) {
-			Unmarshaller unmarshaller = SchemaRegistry.SCE.getJAXBContext().createUnmarshaller();
-			JAXBElement elt = (JAXBElement)unmarshaller.unmarshal(subreport);
+			JAXBElement elt = (JAXBElement)subreport;
 			cd.setSceResults((SceResultsType)elt.getValue());
 		    }
 		} catch (NoSuchElementException e) {
 		    logger.warn(e.getMessage());
-		} catch (JAXBException e) {
+		} catch (ClassCastException e) {
 		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    throw new ArfException(e);
 		}
@@ -811,7 +769,7 @@ public class Report implements IReport, ILoggable {
      * Find diagnostic information for the specified OCIL questionnaire in the checklist.
      */
     private void setDiagnosticInfo(CheckDiagnostics cd, IChecklist checklist, String questionnaireId) {
-	OCILType ocil = checklist.getOCILType();
+	OCILType ocil = checklist.getRootObject().getValue();
 	if (!ocil.isSetResults()) {
 	    return;
 	}
@@ -834,7 +792,7 @@ public class Report implements IReport, ILoggable {
 	//
 	Map<String, String> questionnaireResults = new HashMap<String, String>();
 	for (QuestionnaireResultType qr :
-		checklist.getOCILType().getResults().getQuestionnaireResults().getQuestionnaireResult()) {
+		checklist.getRootObject().getValue().getResults().getQuestionnaireResults().getQuestionnaireResult()) {
 
 	    questionnaireResults.put(qr.getQuestionnaireRef(), qr.getResult());
 	}

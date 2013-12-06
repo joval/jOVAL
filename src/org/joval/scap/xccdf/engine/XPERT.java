@@ -507,7 +507,7 @@ public class XPERT {
 				    rd.setRuleResult(null);
 				    diagnostics.put(ruleId, rd);
 				}
-				TestResultType trt = ctx.getBenchmark().getBenchmark().getTestResult().get(0);
+				TestResultType trt = ctx.getBenchmark().getRootObject().getTestResult().get(0);
 				for (RuleResultType rrt : trt.getRuleResult()) {
 				    MetadataType md = ScapFactory.XCCDF.createMetadataType();
 				    md.getAny().add(diagnostics.get(rrt.getIdref()));
@@ -518,7 +518,7 @@ public class XPERT {
 			    }
 			    if (report == null) {
 				logger.info(getMessage("message.report.none"));
-			    } else if (report.getAssetReportCollection().isSetReports()) {
+			    } else if (report.getRootObject().isSetReports()) {
 				logger.info(getMessage("message.report.save", reportFile));
 				report.writeXML(reportFile);
 				logger.info(getMessage("message.transform", reportHTML));

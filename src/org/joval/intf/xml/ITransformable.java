@@ -15,7 +15,7 @@ import org.joval.scap.ScapException;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface ITransformable {
+public interface ITransformable<T> {
     /**
      * Get a source that can be used for performing transforms.
      */
@@ -24,7 +24,12 @@ public interface ITransformable {
     /**
      * Get the JAXB root element.
      */
-    public Object getRootObject();
+    public T getRootObject();
+
+    /**
+     * Get a copy of the JAXB root element.
+     */
+    public T copyRootObject() throws Exception;
 
     /**
      * Get a JAXBContext for the document.

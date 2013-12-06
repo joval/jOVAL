@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import javax.xml.bind.JAXBElement;
 
 import scap.ocil.core.ArtifactType;
 import scap.ocil.core.ChoiceType;
@@ -30,13 +31,8 @@ import org.joval.util.Version;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IChecklist extends ITransformable {
+public interface IChecklist extends ITransformable<JAXBElement<OCILType>> {
     Version SCHEMA_VERSION = new Version("2.0");
-
-    /**
-     * Get the underlying JAXB data model checklist.
-     */
-    OCILType getOCILType();
 
     /**
      * List questionnaire IDs in document order.

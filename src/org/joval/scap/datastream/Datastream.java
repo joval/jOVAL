@@ -32,7 +32,6 @@ import scap.datastream.DataStreamCollection;
 import scap.datastream.ExtendedComponent;
 import scap.datastream.RefListType;
 import scap.datastream.UseCaseType;
-import scap.xccdf.BenchmarkType;
 import scap.xccdf.ProfileType;
 
 import org.joval.intf.scap.IScapContext;
@@ -168,7 +167,7 @@ public class Datastream implements IDatastream, ILoggable {
 
     public Collection<String> getProfileIds(String benchmarkId) throws NoSuchElementException {
 	Collection<String> result = new ArrayList<String>();
-	for (ProfileType profile : getBenchmark(benchmarkId).getBenchmark().getProfile()) {
+	for (ProfileType profile : getBenchmark(benchmarkId).getRootObject().getProfile()) {
 	    result.add(profile.getProfileId());
 	}
 	return result;

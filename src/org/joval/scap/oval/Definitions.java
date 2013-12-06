@@ -20,6 +20,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.transform.Source;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
 
 import jsaf.intf.util.ILoggable;
@@ -40,6 +41,7 @@ import scap.oval.definitions.core.VariablesType;
 import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.util.JOVALMsg;
+import org.joval.xml.DOMTools;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -144,11 +146,21 @@ public class Definitions implements IDefinitions, ILoggable {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-	return new JAXBSource(SchemaRegistry.OVAL_DEFINITIONS.getJAXBContext(), getOvalDefinitions());
+	return new JAXBSource(SchemaRegistry.OVAL_DEFINITIONS.getJAXBContext(), getRootObject());
     }
 
-    public Object getRootObject() {
-	return getOvalDefinitions(); 
+    public OvalDefinitions getRootObject() {
+	return defs; 
+    }
+
+    public OvalDefinitions copyRootObject() throws Exception {
+	Unmarshaller unmarshaller = getJAXBContext().createUnmarshaller();
+	Object rootObj = unmarshaller.unmarshal(new DOMSource(DOMTools.toDocument(this).getDocumentElement()));
+	if (rootObj instanceof OvalDefinitions) {
+	    return (OvalDefinitions)rootObj;
+	} else {
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DEFINITIONS_BAD_SOURCE, toString()));
+	}
     }
 
     public JAXBContext getJAXBContext() throws JAXBException {
@@ -156,10 +168,6 @@ public class Definitions implements IDefinitions, ILoggable {
     }
 
     // Implement IDefinitions
-
-    public OvalDefinitions getOvalDefinitions() {
-	return defs;
-    }
 
     public <T extends ObjectType> T getObject(String id, Class<T> type) throws NoSuchElementException {
 	if (objects.containsKey(id)) {

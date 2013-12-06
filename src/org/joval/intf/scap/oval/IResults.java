@@ -23,19 +23,14 @@ import org.joval.scap.oval.OvalException;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IResults extends ITransformable {
+public interface IResults extends ITransformable<OvalResults> {
     /**
      * Set a file containing OVAL directives, to govern the behavior of this IResults.
      */
     void setDirectives(File f) throws OvalException;
 
     /**
-     * Get the OVAL results, with the system definitions in full or thin format according to the directives.
-     */
-    OvalResults getOvalResults() throws OvalException;
-
-    /**
-     * Shortcut to getOvalResults().getResults().getSystem().get(0).getDefinitions().getDefinition()
+     * Shortcut to getRootObject().getResults().getSystem().get(0).getDefinitions().getDefinition()
      */
     Collection<DefinitionType> getDefinitionResults() throws OvalException;
 

@@ -115,7 +115,7 @@ public class OvalHandler implements ISystem {
 		    //
 		    IDefinitions definitions = ctx.getOval(href);
 		    for (scap.oval.definitions.core.DefinitionType definition :
-			 definitions.getOvalDefinitions().getDefinitions().getDefinition()) {
+			 definitions.getRootObject().getDefinitions().getDefinition()) {
 			ed.getFilter().addDefinition(definition.getId());
 		    }
 		}
@@ -135,7 +135,7 @@ public class OvalHandler implements ISystem {
 	}
     }
 
-    public Map<String, ? extends ITransformable> exec(IPlugin plugin) throws Exception {
+    public Map<String, ? extends ITransformable<?>> exec(IPlugin plugin) throws Exception {
 	Iterator<Map.Entry<String, EngineData>> iter = engines.entrySet().iterator();
 	while(iter.hasNext()) {
 	    Map.Entry<String, EngineData> entry = iter.next();

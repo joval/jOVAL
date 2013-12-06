@@ -96,7 +96,7 @@ public class SceHandler implements ISystem {
 	}
     }
 
-    public Map<String, ? extends ITransformable> exec(IPlugin plugin) {
+    public Map<String, ? extends ITransformable<?>> exec(IPlugin plugin) {
 	if (plugin.getSession() instanceof IComputerSystem) {
 	    IComputerSystem session = (IComputerSystem)plugin.getSession();
 	    for (Map.Entry<String, Wrapper> entry : scripts.entrySet()) {
@@ -138,7 +138,7 @@ public class SceHandler implements ISystem {
 		if (results.containsKey(ref.getHref())) {
 		    checkResult.getCheckContentRef().add(ref);
 		    IScriptResult sr = results.get(ref.getHref());
-		    SceResultsType srt = sr.getResult();
+		    SceResultsType srt = sr.getRootObject().getValue();
 
 		    List<Exception> errors = new ArrayList<Exception>();
 		    for (CheckImportType cit : check.getCheckImport()) {

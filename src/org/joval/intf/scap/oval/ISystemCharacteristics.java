@@ -26,7 +26,7 @@ import org.joval.scap.oval.OvalException;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface ISystemCharacteristics extends ITransformable {
+public interface ISystemCharacteristics extends ITransformable<OvalSystemCharacteristics> {
     /**
      * OVAL System Characteristics optionally contain relationships between scanned objects and items. If an instance is
      * created from an XML source containing only items (and no object relationships), then it is unmapped.
@@ -37,13 +37,6 @@ public interface ISystemCharacteristics extends ITransformable {
      * Get basic information about the target.
      */
     SystemInfoType getSystemInfo();
-
-    /**
-     * Return a raw OVAL system characteristics object containing the underlying data.
-     *
-     * @param mask Set to true to apply mask attributes from the EntityAttributeGroup to the result.
-     */
-    OvalSystemCharacteristics getOvalSystemCharacteristics(boolean mask);
 
     /**
      * Store the ItemType in the itemTable and return the ID used to store it.

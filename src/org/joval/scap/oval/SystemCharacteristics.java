@@ -31,6 +31,7 @@ import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
 import javax.xml.transform.Source;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
 
 import jsaf.intf.util.ILoggable;
@@ -51,6 +52,7 @@ import scap.oval.systemcharacteristics.core.VariableValueType;
 
 import org.joval.intf.scap.oval.ISystemCharacteristics;
 import org.joval.util.JOVALMsg;
+import org.joval.xml.DOMTools;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -63,6 +65,12 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class SystemCharacteristics implements ISystemCharacteristics, ILoggable {
+    public static final void mask(OvalSystemCharacteristics osc) {
+	//
+	// DAS: Mask implementation is TBD
+	//
+    }
+
     public static final OvalSystemCharacteristics getOvalSystemCharacteristics(File f) throws OvalException {
 	return getOvalSystemCharacteristics(new StreamSource(f));
     }
@@ -187,31 +195,10 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     // Implement ITransformable
 
     public Source getSource() throws JAXBException, OvalException {
-	return new JAXBSource(SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext(), getOvalSystemCharacteristics(false));
+	return new JAXBSource(SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext(), getRootObject());
     }
 
-    public Object getRootObject() {
-	return getOvalSystemCharacteristics(false);
-    }
-
-    public JAXBContext getJAXBContext() throws JAXBException {
-	return SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext();
-    }
-
-    // Implement ISystemCharacteristics
-
-    public boolean unmapped() {
-	return !mapped;
-    }
-
-    public SystemInfoType getSystemInfo() {
-	return systemInfo;
-    }
-
-    //
-    // DAS mask support is TBD
-    //
-    public OvalSystemCharacteristics getOvalSystemCharacteristics(boolean mask) {
+    public OvalSystemCharacteristics getRootObject() {
 	OvalSystemCharacteristics sc = Factories.sc.core.createOvalSystemCharacteristics();
 	sc.setGenerator(generator);
 	sc.setSystemInfo(systemInfo);
@@ -229,6 +216,30 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	sc.setSystemData(items);
 
 	return sc;
+    }
+
+    public OvalSystemCharacteristics copyRootObject() throws Exception {
+	Unmarshaller unmarshaller = getJAXBContext().createUnmarshaller();
+	Object rootObj = unmarshaller.unmarshal(new DOMSource(DOMTools.toDocument(this).getDocumentElement()));
+	if (rootObj instanceof OvalSystemCharacteristics) {
+	    return (OvalSystemCharacteristics)rootObj;
+	} else {
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_SC_BAD_SOURCE, toString()));
+	}
+    }
+
+    public JAXBContext getJAXBContext() throws JAXBException {
+	return SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext();
+    }
+
+    // Implement ISystemCharacteristics
+
+    public boolean unmapped() {
+	return !mapped;
+    }
+
+    public SystemInfoType getSystemInfo() {
+	return systemInfo;
     }
 
     public synchronized BigInteger storeItem(ItemType it) throws OvalException {
@@ -462,12 +473,12 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 
     public <T extends ItemType> Collection<T> getItemsByType(Class<T> type) {
 	Collection<T> items = new ArrayList<T>();
-        for (JAXBElement<? extends ItemType> elt : itemTable.values()) {
+	for (JAXBElement<? extends ItemType> elt : itemTable.values()) {
 	    ItemType item = elt.getValue();
-            if (type.isInstance(item)) {
-                items.add(type.cast(item));
-            }
-        }
+	    if (type.isInstance(item)) {
+		items.add(type.cast(item));
+	    }
+	}
 	return items;
     }
 
@@ -475,7 +486,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	OutputStream out = null;
 	try {
 	    out = new FileOutputStream(f);
-	    marshaller.marshal(getOvalSystemCharacteristics(false), out);
+	    marshaller.marshal(getRootObject(), out);
 	} catch (JAXBException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

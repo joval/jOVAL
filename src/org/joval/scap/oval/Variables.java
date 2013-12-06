@@ -21,6 +21,7 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
 import org.w3c.dom.Node;
 
@@ -36,6 +37,7 @@ import org.joval.intf.scap.oval.IType;
 import org.joval.intf.scap.oval.IVariables;
 import org.joval.scap.oval.types.TypeFactory;
 import org.joval.util.JOVALMsg;
+import org.joval.xml.DOMTools;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -138,7 +140,7 @@ public class Variables implements IVariables {
 	try {
 	    Marshaller marshaller = SchemaRegistry.OVAL_VARIABLES.createMarshaller();
 	    out = new FileOutputStream(f);
-	    marshaller.marshal(getOvalVariables(), out);
+	    marshaller.marshal(getRootObject(), out);
 	} catch (JAXBException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -159,7 +161,22 @@ public class Variables implements IVariables {
 	}
     }
 
-    public OvalVariables getOvalVariables() {
+    public List<IType> getValue(String id) throws NoSuchElementException {
+	List<IType> values = variables.get(id);
+	if (values == null) {
+	    throw new NoSuchElementException(id);
+	} else {
+	    return values;
+	}
+    }
+
+    // Implement ITransformable
+
+    public Source getSource() throws JAXBException {
+	return new JAXBSource(SchemaRegistry.OVAL_VARIABLES.getJAXBContext(), getRootObject());
+    }
+
+    public OvalVariables getRootObject() {
 	OvalVariables vars = Factories.variables.createOvalVariables();
 	vars.setGenerator(OvalFactory.getGenerator());
 
@@ -181,23 +198,14 @@ public class Variables implements IVariables {
 	return vars;
     }
 
-    public List<IType> getValue(String id) throws NoSuchElementException {
-	List<IType> values = variables.get(id);
-	if (values == null) {
-	    throw new NoSuchElementException(id);
+    public OvalVariables copyRootObject() throws Exception {
+	Unmarshaller unmarshaller = getJAXBContext().createUnmarshaller();
+	Object rootObj = unmarshaller.unmarshal(new DOMSource(DOMTools.toDocument(this).getDocumentElement()));
+	if (rootObj instanceof OvalVariables) {
+	    return (OvalVariables)rootObj;
 	} else {
-	    return values;
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_VARIABLES_BAD_SOURCE, toString()));
 	}
-    }
-
-    // Implement ITransformable
-
-    public Source getSource() throws JAXBException {
-	return new JAXBSource(SchemaRegistry.OVAL_VARIABLES.getJAXBContext(), getOvalVariables());
-    }
-
-    public Object getRootObject() {
-	return getOvalVariables();
     }
 
     public JAXBContext getJAXBContext() throws JAXBException {

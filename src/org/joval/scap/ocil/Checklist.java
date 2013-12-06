@@ -24,6 +24,7 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
 import org.xml.sax.SAXParseException;
 
@@ -56,6 +57,7 @@ import scap.ocil.core.TestActionRefType;
 import scap.ocil.core.VariableType;
 
 import org.joval.intf.scap.ocil.IChecklist;
+import org.joval.xml.DOMTools;
 import org.joval.xml.SchemaRegistry;
 import org.joval.xml.XSITools;
 
@@ -203,10 +205,6 @@ public class Checklist implements IChecklist {
     }
 
     // Implement IChecklist
-
-    public OCILType getOCILType() {
-	return ocil;
-    }
 
     public void setResults(ResultsType results) {
 	ocil.setResults(results);
@@ -544,7 +542,7 @@ public class Checklist implements IChecklist {
     public void writeXML(OutputStream out) throws IOException {
 	try {
 	    Marshaller marshaller = SchemaRegistry.OCIL.createMarshaller();
-	    marshaller.marshal(Factories.core.createOcil(getOCILType()), out);
+	    marshaller.marshal(getRootObject(), out);
 	} catch (JAXBException e) {
 	    throw new IOException(e);
 	} catch (FactoryConfigurationError e) {
@@ -552,14 +550,26 @@ public class Checklist implements IChecklist {
 	}
     }
 
-    // Implement ITransformable
+    // Implement ITransformable<OCILType>
 
     public Source getSource() throws JAXBException {
 	return new JAXBSource(SchemaRegistry.OCIL.getJAXBContext(), getRootObject());
     }
 
-    public Object getRootObject() {
-	return Factories.core.createOcil(getOCILType());
+    public JAXBElement<OCILType> getRootObject() {
+	return Factories.core.createOcil(ocil);
+    }
+
+    public JAXBElement<OCILType> copyRootObject() throws Exception {
+	Unmarshaller unmarshaller = getJAXBContext().createUnmarshaller();
+	Object rootObj = unmarshaller.unmarshal(new DOMSource(DOMTools.toDocument(this).getDocumentElement()));
+	if (rootObj instanceof JAXBElement && ((JAXBElement)rootObj).getValue() instanceof OCILType) {
+	    @SuppressWarnings("unchecked")
+	    JAXBElement<OCILType> result = (JAXBElement<OCILType>)rootObj;
+	    return result;
+	} else {
+	    throw new OcilException(new IllegalArgumentException(toString()));
+	}
     }
 
     public JAXBContext getJAXBContext() throws JAXBException {

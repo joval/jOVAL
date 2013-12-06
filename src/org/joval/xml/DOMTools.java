@@ -30,7 +30,7 @@ public class DOMTools {
     /**
      * Transform a JAXB object into a W3C Node.
      */
-    public static Document toDocument(ITransformable source) throws Exception {
+    public static Document toDocument(ITransformable<?> source) throws Exception {
 	TransformerFactory xf = XSLTools.XSLVersion.V1.getFactory();
 	Transformer transformer = xf.newTransformer();
 	DOMResult result = new DOMResult();
@@ -66,7 +66,7 @@ public class DOMTools {
     /**
      * Get the XML namespace of the specified ITransformable's root node.
      */
-    public static String getNamespace(ITransformable source) {
+    public static String getNamespace(ITransformable<?> source) {
 	try {
 	    JAXBIntrospector ji = source.getJAXBContext().createJAXBIntrospector();
 	    return ji.getElementName(source.getRootObject()).getNamespaceURI();

@@ -47,7 +47,6 @@ import scap.oval.results.ResultEnumeration;
 import scap.oval.systemcharacteristics.core.InterfaceType;
 import scap.oval.systemcharacteristics.core.SystemInfoType;
 import scap.oval.variables.VariableType;
-import scap.xccdf.BenchmarkType;
 import scap.xccdf.CcOperatorEnumType;
 import scap.xccdf.CheckContentRefType;
 import scap.xccdf.CheckType;
@@ -71,6 +70,7 @@ import scap.xccdf.ResultEnumType;
 import scap.xccdf.ScoreType;
 import scap.xccdf.SelectableItemType;
 import scap.xccdf.TestResultType;
+import scap.xccdf.XccdfBenchmark;
 
 import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.arf.IReport;
@@ -187,7 +187,7 @@ public class Engine implements IXccdfEngine {
 	  default:
 	    this.ctx = ctx;	
 	    try {
-		requestId = report.addRequest(DOMTools.toDocument(ctx.getBenchmark()));
+		requestId = report.addRequest(ctx.getBenchmark().copyRootObject());
 	    } catch (Exception e) {
 		throw new XccdfException(e);
 	    }
@@ -286,11 +286,11 @@ public class Engine implements IXccdfEngine {
 			//
 			// Always include the XCCDF report
 			//
-			report.addReport(requestId, assetId, entry.getKey(), DOMTools.toDocument(subreport));
+			report.addReport(requestId, assetId, entry.getKey(), subreport.getRootObject());
 		    } else {
 			for (SystemEnumeration system : systems) {
 			    if (system == SystemEnumeration.ANY || system.namespace().equals(ns)) {
-				report.addReport(requestId, assetId, entry.getKey(), DOMTools.toDocument(subreport));
+				report.addReport(requestId, assetId, entry.getKey(), subreport.getRootObject());
 				break;
 			    }
 			}
@@ -379,11 +379,11 @@ public class Engine implements IXccdfEngine {
 		checkPlatforms(testResult);
 		List<CPE2IdrefType> cpes = new ArrayList<CPE2IdrefType>();
 		if (ctx.getProfile() == null) {
-		    cpes.addAll(ctx.getBenchmark().getBenchmark().getPlatform());
+		    cpes.addAll(ctx.getBenchmark().getRootObject().getPlatform());
 		} else if (ctx.getProfile().getPlatform().size() > 0 && ctx.getProfile().getPlatform().get(0).getOverride()) {
 		    cpes.addAll(ctx.getProfile().getPlatform());
 		} else {
-		    cpes.addAll(ctx.getBenchmark().getBenchmark().getPlatform());
+		    cpes.addAll(ctx.getBenchmark().getRootObject().getPlatform());
 		    cpes.addAll(ctx.getProfile().getPlatform());
 		}
 		boolean applicable = cpes.size() == 0;
@@ -442,7 +442,7 @@ public class Engine implements IXccdfEngine {
 	    //
 	    // XPERT requires the result to be added to the benchmark to create the HTML transform
 	    //
-	    ctx.getBenchmark().getBenchmark().getTestResult().add(testResult);
+	    ctx.getBenchmark().getRootObject().getTestResult().add(testResult);
 
 	    state = State.COMPLETE_OK;
 	} catch (Exception e) {
@@ -552,9 +552,9 @@ public class Engine implements IXccdfEngine {
 	// Compute scores for all the supported models.
 	// Note - only selected rules will be in the resultMap at this point
 	scores = new HashMap<ScoringModel, ScoreKeeper>();
-	BenchmarkType bt = ctx.getBenchmark().getBenchmark();
+	XccdfBenchmark xb = ctx.getBenchmark().getRootObject();
 	for (ScoringModel model : ScoringModel.values()) {
-	    ScoreKeeper sk = computeScore(resultMap, bt, model);
+	    ScoreKeeper sk = computeScore(resultMap, xb, model);
 	    scores.put(model, sk);
 
 	    String score = Double.toString(sk.getScore());
@@ -759,11 +759,11 @@ public class Engine implements IXccdfEngine {
 	    }
 	}
 	testResult.setTestResultId("xccdf_" + namespace + "_testresult_" + name);
-	testResult.setVersion(ctx.getBenchmark().getBenchmark().getVersion().getValue());
+	testResult.setVersion(ctx.getBenchmark().getRootObject().getVersion().getValue());
 	testResult.setTestSystem(PRODUCT_NAME);
 
 	TestResultType.Benchmark trb = FACTORY.createTestResultTypeBenchmark();
-	trb.setId(ctx.getBenchmark().getBenchmark().getBenchmarkId());
+	trb.setId(ctx.getBenchmark().getRootObject().getBenchmarkId());
 	trb.setHref(ctx.getBenchmark().getHref());
 	testResult.setBenchmark(trb);
 	if (ctx.getProfile() != null) {
@@ -946,7 +946,7 @@ public class Engine implements IXccdfEngine {
      */
     private List<RuleType> listAllRules() {
 	List<RuleType> rules = new ArrayList<RuleType>();
-	for (SelectableItemType item : ctx.getBenchmark().getBenchmark().getGroupOrRule()) {
+	for (SelectableItemType item : ctx.getBenchmark().getRootObject().getGroupOrRule()) {
 	    rules.addAll(getRules(item));
 	}
 	return rules;
@@ -1035,8 +1035,8 @@ public class Engine implements IXccdfEngine {
      *
      * @param results a HashMap containing the results of all (i.e., exclusively) the /selected/ rules
      */
-    ScoreKeeper computeScore(HashMap<String, RuleResultType> results, BenchmarkType bt, ScoringModel model) {
-	List<SelectableItemType> items = bt.getGroupOrRule();
+    ScoreKeeper computeScore(HashMap<String, RuleResultType> results, XccdfBenchmark xb, ScoringModel model) {
+	List<SelectableItemType> items = xb.getGroupOrRule();
 	switch(model) {
 	  case FLAT:
 	    return new FlatScoreKeeper(new FlatScoreKeeper(true, results), items);

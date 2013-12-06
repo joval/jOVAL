@@ -9,6 +9,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.transform.Source;
+import javax.xml.transform.dom.DOMSource;
 
 import org.openscap.sce.results.SceResultsType;
 import scap.xccdf.ResultEnumType;
@@ -18,6 +19,7 @@ import org.joval.intf.xml.ITransformable;
 import org.joval.scap.ScapException;
 import org.joval.scap.ScapFactory;
 import org.joval.util.JOVALMsg;
+import org.joval.xml.DOMTools;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -73,10 +75,6 @@ public class Result implements IScriptResult {
 
     // Implement IScriptResult
 
-    public SceResultsType getResult() {
-	return result;
-    }
-
     public boolean hasError() {
 	return error != null;
     }
@@ -91,8 +89,20 @@ public class Result implements IScriptResult {
 	return new JAXBSource(getJAXBContext(), getRootObject());
     }
 
-    public Object getRootObject() {
+    public JAXBElement<SceResultsType> getRootObject() {
 	return Script.FACTORY.createSceResults(result);
+    }
+
+    public JAXBElement<SceResultsType> copyRootObject() throws Exception {
+        Unmarshaller unmarshaller = getJAXBContext().createUnmarshaller();
+        Object rootObj = unmarshaller.unmarshal(new DOMSource(DOMTools.toDocument(this).getDocumentElement()));
+        if (rootObj instanceof JAXBElement && ((JAXBElement)rootObj).getValue() instanceof SceResultsType) {
+	    @SuppressWarnings("unchecked")
+            JAXBElement<SceResultsType> result = (JAXBElement<SceResultsType>)rootObj;
+            return result;
+        } else {
+	    throw new SceException(JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_RESULT_BAD_SOURCE, toString()));
+        }
     }
 
     public JAXBContext getJAXBContext() throws JAXBException {

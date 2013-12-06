@@ -47,7 +47,7 @@ public class OcilHandler implements ISystem {
     private IScapContext ctx;
     private XMLGregorianCalendar startTime;
     private Map<String, Map<String, String>> results;
-    private Map<String, ? extends ITransformable> reports;
+    private Map<String, IChecklist> reports;
 
     /**
      * Create an OCIL handler utility for the given context and href-indexed Checklists (results).
@@ -60,8 +60,8 @@ public class OcilHandler implements ISystem {
 	for (Map.Entry<String, IChecklist> entry : checklists.entrySet()) {
 	    String href = entry.getKey();
 	    IChecklist checklist = entry.getValue();
-	    if (checklist.getOCILType().isSetResults()) {
-		ResultsType rt = checklist.getOCILType().getResults();
+	    if (checklist.getRootObject().getValue().isSetResults()) {
+		ResultsType rt = checklist.getRootObject().getValue().getResults();
 
 		//
 		// Set the start time to the earliest checklist result start time.
@@ -116,7 +116,7 @@ public class OcilHandler implements ISystem {
 	}
     }
 
-    public Map<String, ? extends ITransformable> exec(IPlugin plugin) {
+    public Map<String, ? extends ITransformable<?>> exec(IPlugin plugin) {
 	return reports;
     }
 

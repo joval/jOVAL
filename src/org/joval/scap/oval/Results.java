@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
@@ -27,6 +28,7 @@ import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
 import javax.xml.transform.Source;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.Transformer;
@@ -63,6 +65,7 @@ import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.intf.scap.oval.ISystemCharacteristics;
 import org.joval.intf.scap.oval.IResults;
 import org.joval.util.JOVALMsg;
+import org.joval.xml.DOMTools;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -157,106 +160,20 @@ public class Results implements IResults, ILoggable {
 	return logger;
     }
 
-    // Implement ITransformable
+    // Implement ITransformable<OvalResults>
 
     public Source getSource() throws JAXBException, OvalException {
-	return new JAXBSource(SchemaRegistry.OVAL_RESULTS.getJAXBContext(), getOvalResults());
+	return new JAXBSource(SchemaRegistry.OVAL_RESULTS.getJAXBContext(), getRootObject());
     }
 
-    public Object getRootObject() {
-	return getOvalResults();
-    }
-
-    public JAXBContext getJAXBContext() throws JAXBException {
-	return SchemaRegistry.OVAL_RESULTS.getJAXBContext();
-    }
-
-    // Implement IResults
-
-    public ResultEnumeration getDefinitionResult(String definitionId) throws NoSuchElementException {
-	DefinitionType definitionType = definitionTable.get(definitionId);
-	if (definitionType == null) {
-	    throw new NoSuchElementException(definitionId);
-	}
-	return definitionType.getResult();
-    }
-
-    public void setDirectives(File f) throws OvalException {
-	directives = new Directives(f);
-    }
-
-    public Collection<DefinitionType> getDefinitionResults() throws OvalException {
-	return getOvalResults().getResults().getSystem().get(0).getDefinitions().getDefinition();
-    }
-
-    public DefinitionType getDefinition(String definitionId) throws NoSuchElementException {
-	if (definitionTable.containsKey(definitionId)) {
-	    return definitionTable.get(definitionId);
-	}
-	throw new NoSuchElementException(definitionId);
-    }
-
-    public TestType getTest(String id) {
-	return testTable.get(id);
-    }
-
-    /**
-     * Serialize to an XML File.
-     */
-    public void writeXML(File f) {
-	OutputStream out = null;
-	try {
-	    Marshaller marshaller = SchemaRegistry.OVAL_RESULTS.createMarshaller();
-	    out = new FileOutputStream(f);
-	    marshaller.marshal(getOvalResults(), out);
-	} catch (JAXBException e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	} catch (FactoryConfigurationError e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	} catch (FileNotFoundException e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	} finally {
-	    if (out != null) {
-		try {
-		    out.close();
-		} catch (IOException e) {
-		    logger.warn(JOVALMsg.ERROR_FILE_CLOSE,  e.toString());
-		}
-	    }
-	}
-    }
-
-    /**
-     * Transform using the specified template, and serialize to the specified file.
-     */
-    public void writeTransform(Transformer transform, File output) {
-	try {
-	    transform.transform(getSource(), new StreamResult(output));
-	} catch (OvalException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (JAXBException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (TransformerException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-    }
-
-    public ISystemCharacteristics getSystemCharacteristics() {
-	return sc;
-    }
-
-    public IDefinitions getDefinitions() {
-	return definitions;
-    }
-
-    public OvalResults getOvalResults() {
+    public OvalResults getRootObject() {
 	OvalResults or = Factories.results.createOvalResults();
 	or.setGenerator(OvalFactory.getGenerator());
 	OvalDirectives od = directives.getOvalDirectives();
 	or.setDirectives(od.getDirectives());
 	or.getClassDirectives().addAll(od.getClassDirectives());
 	if (directives.includeSource()) {
-	    or.setOvalDefinitions(definitions.getOvalDefinitions());
+	    or.setOvalDefinitions(definitions.getRootObject());
 	}
 	SystemType systemType = Factories.results.createSystemType();
 
@@ -301,15 +218,116 @@ public class Results implements IResults, ILoggable {
 	testsType.getTest().addAll(reportableTests.values());
 	systemType.setTests(testsType);
 
-	//
-	// Add OvalSystemCharacteristics (applying the mask attributes)
-	//
-	systemType.setOvalSystemCharacteristics(sc.getOvalSystemCharacteristics(true));
+	try {
+	    //
+	    // Add OvalSystemCharacteristics (applying the mask attributes)
+	    //
+	    OvalSystemCharacteristics osc = sc.copyRootObject();
+	    SystemCharacteristics.mask(osc);
+	    systemType.setOvalSystemCharacteristics(osc);
+	} catch (Exception e) {
+	    //
+	    // This should never happen...
+	    //
+	    systemType.setOvalSystemCharacteristics(sc.getRootObject());
+	}
 
 	ResultsType resultsType = Factories.results.createResultsType();
 	resultsType.getSystem().add(systemType);
 	or.setResults(resultsType);
 	return or;
+    }
+
+    public OvalResults copyRootObject() throws Exception {
+	Unmarshaller unmarshaller = getJAXBContext().createUnmarshaller();
+	Object rootObj = unmarshaller.unmarshal(new DOMSource(DOMTools.toDocument(this).getDocumentElement()));
+	if (rootObj instanceof OvalResults) {
+	    return (OvalResults)rootObj;
+	} else {
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESULTS_BAD_SOURCE, toString()));
+	}
+    }
+
+    public JAXBContext getJAXBContext() throws JAXBException {
+	return SchemaRegistry.OVAL_RESULTS.getJAXBContext();
+    }
+
+    // Implement IResults
+
+    public ResultEnumeration getDefinitionResult(String definitionId) throws NoSuchElementException {
+	DefinitionType definitionType = definitionTable.get(definitionId);
+	if (definitionType == null) {
+	    throw new NoSuchElementException(definitionId);
+	}
+	return definitionType.getResult();
+    }
+
+    public void setDirectives(File f) throws OvalException {
+	directives = new Directives(f);
+    }
+
+    public Collection<DefinitionType> getDefinitionResults() throws OvalException {
+	return getRootObject().getResults().getSystem().get(0).getDefinitions().getDefinition();
+    }
+
+    public DefinitionType getDefinition(String definitionId) throws NoSuchElementException {
+	if (definitionTable.containsKey(definitionId)) {
+	    return definitionTable.get(definitionId);
+	}
+	throw new NoSuchElementException(definitionId);
+    }
+
+    public TestType getTest(String id) {
+	return testTable.get(id);
+    }
+
+    /**
+     * Serialize to an XML File.
+     */
+    public void writeXML(File f) {
+	OutputStream out = null;
+	try {
+	    Marshaller marshaller = SchemaRegistry.OVAL_RESULTS.createMarshaller();
+	    out = new FileOutputStream(f);
+	    marshaller.marshal(getRootObject(), out);
+	} catch (JAXBException e) {
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	} catch (FactoryConfigurationError e) {
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	} catch (FileNotFoundException e) {
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	} finally {
+	    if (out != null) {
+		try {
+		    out.close();
+		} catch (IOException e) {
+		    logger.warn(JOVALMsg.ERROR_FILE_CLOSE,  e.toString());
+		}
+	    }
+	}
+    }
+
+    /**
+     * Transform using the specified template, and serialize to the specified file.
+     */
+    public void writeTransform(Transformer transform, File output) {
+	try {
+	    transform.transform(getSource(), new StreamResult(output));
+	} catch (OvalException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (JAXBException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (TransformerException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+    }
+
+    public ISystemCharacteristics getSystemCharacteristics() {
+	return sc;
+    }
+
+    public IDefinitions getDefinitions() {
+	return definitions;
     }
 
     // Private

@@ -8,9 +8,9 @@ import java.io.IOException;
 import java.util.NoSuchElementException;
 import javax.xml.transform.Transformer;
 
-import scap.xccdf.BenchmarkType;
 import scap.xccdf.ProfileType;
 import scap.xccdf.ItemType;
+import scap.xccdf.XccdfBenchmark;
 
 import org.joval.intf.xml.ITransformable;
 
@@ -20,12 +20,7 @@ import org.joval.intf.xml.ITransformable;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IBenchmark extends ITransformable {
-    /**
-     * Get the underlying JAXB BenchmarkType.
-     */
-    BenchmarkType getBenchmark();
-
+public interface IBenchmark extends ITransformable<XccdfBenchmark> {
     /**
      * Get the href of the datastream component source (if any).
      */

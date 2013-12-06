@@ -24,12 +24,7 @@ import org.joval.intf.xml.ITransformable;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IDefinitions extends ITransformable {
-    /**
-     * Get the raw OVAL definitions object.
-     */
-    OvalDefinitions getOvalDefinitions();
-
+public interface IDefinitions extends ITransformable<OvalDefinitions> {
     /**
      * Retrieve the OVAL state with the specified ID.
      *

@@ -317,7 +317,7 @@ public class Main implements IObserver<IOvalEngine.Message> {
 			System.exit(ERR);
 		    }
 		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.getPath(state.dataFile)));
-		    OvalSystemCharacteristics osc = sc.getOvalSystemCharacteristics(false);
+		    OvalSystemCharacteristics osc = sc.getRootObject();
 		    new Validator(state.getSCSchematron()).validate(sc.getSource());
 		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
 		} catch (ValidationException e) {
@@ -383,7 +383,7 @@ public class Main implements IObserver<IOvalEngine.Message> {
 	    }
 
 	    print(getMessage("MESSAGE_SCHEMA_VERSION_CHECK"));
-	    Version schemaVersion = new Version(defs.getOvalDefinitions().getGenerator().getSchemaVersion());
+	    Version schemaVersion = new Version(defs.getRootObject().getGenerator().getSchemaVersion());
 	    print(getMessage("MESSAGE_SCHEMA_VERSION", schemaVersion.toString()));
 	    if (IOvalEngine.SCHEMA_VERSION.compareTo(schemaVersion) < 0) {
 		print(getMessage("ERROR_SCHEMA_VERSION", schemaVersion.toString()));
@@ -484,7 +484,7 @@ public class Main implements IObserver<IOvalEngine.Message> {
 		    }
 		}
 	    );
-	    ordered.addAll(results.getOvalResults().getResults().getSystem().get(0).getDefinitions().getDefinition());
+	    ordered.addAll(results.getRootObject().getResults().getSystem().get(0).getDefinitions().getDefinition());
 	    for (DefinitionType d : ordered) {
 		String id = d.getDefinitionId();
 		String result = d.getResult().toString().toLowerCase();

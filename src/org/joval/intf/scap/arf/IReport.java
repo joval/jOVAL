@@ -9,14 +9,13 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import javax.xml.transform.Transformer;
-import org.w3c.dom.Document;
 
 import org.oasis.catalog.Catalog;
 import scap.ai.AssetType;
 import scap.arf.core.AssetReportCollection;
 import scap.oval.systemcharacteristics.core.SystemInfoType;
-import scap.xccdf.BenchmarkType;
 import scap.xccdf.TestResultType;
+import scap.xccdf.XccdfBenchmark;
 
 import org.joval.scap.ScapException;
 import org.joval.scap.arf.ArfException;
@@ -29,7 +28,7 @@ import org.joval.scap.diagnostics.RuleDiagnostics;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IReport extends ITransformable {
+public interface IReport extends ITransformable<AssetReportCollection> {
     /**
      * Get the asset IDs in the report.
      */
@@ -48,7 +47,7 @@ public interface IReport extends ITransformable {
     /**
      * Get a copy of a particular report request based on its benchmark ID.
      */
-    BenchmarkType getBenchmark(String benchmarkId) throws ScapException;
+    XccdfBenchmark getBenchmark(String benchmarkId) throws ScapException;
 
     /**
      * Get the XCCDF result associated with the specified asset, benchmark and profile.
@@ -85,16 +84,11 @@ public interface IReport extends ITransformable {
     Catalog getCatalog(String assetId) throws ArfException, NoSuchElementException;
 
     /**
-     * Get the underlying JAXB type.
-     */
-    AssetReportCollection getAssetReportCollection();
-
-    /**
      * Add a report request.
      *
      * @return the ID generated for the request
      */
-    String addRequest(Document doc);
+    String addRequest(XccdfBenchmark benchmark);
 
     /**
      * Add an asset based on a SystemInfoType
@@ -109,11 +103,12 @@ public interface IReport extends ITransformable {
      * @param requestId the request to which the report is related
      * @param assetId the asset that is the subject of the report
      * @param ref an optional URI to add to an OASIS catalog, to find the report
-     * @param doc the report DOM
+     * @param report one of the registered JAXB types, such as an xccdf:TestResult, or an org.w3c.dom.Node.
      *
      * @return the ID generated for the report
      */
-    String addReport(String requestId, String assetId, String ref, Document doc) throws NoSuchElementException, ArfException;
+    String addReport(String requestId, String assetId, String ref, Object report)
+	throws NoSuchElementException, IllegalArgumentException, ArfException;
 
     /**
      * Serialize the report to a file.

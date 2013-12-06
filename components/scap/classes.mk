@@ -1333,7 +1333,6 @@ CLASSES=\
 	scap.oval.variables.package-info	\
 	scap.oval.variables.VariablesType	\
 	scap.oval.variables.VariableType	\
-	scap.xccdf.BenchmarkType	\
 	scap.xccdf.CcOperatorEnumType	\
 	scap.xccdf.CheckContentRefType	\
 	scap.xccdf.CheckContentType	\
@@ -1407,4 +1406,5 @@ CLASSES=\
 	scap.xccdf.ValueTypeType	\
 	scap.xccdf.VersionType	\
 	scap.xccdf.WarningCategoryEnumType	\
-	scap.xccdf.WarningType
+	scap.xccdf.WarningType	\
+	scap.xccdf.XccdfBenchmark

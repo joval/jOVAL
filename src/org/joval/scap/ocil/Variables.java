@@ -17,6 +17,7 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
 
 import scap.ocil.core.VariableDataType;
@@ -25,6 +26,8 @@ import scap.ocil.variables.VariablesType;
 import scap.ocil.variables.VariableType;
 
 import org.joval.intf.scap.ocil.IVariables;
+import org.joval.util.JOVALMsg;
+import org.joval.xml.DOMTools;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -48,7 +51,7 @@ public class Variables implements IVariables {
 	    if (rootObj instanceof OcilVariables) {
 		return (OcilVariables)rootObj;
 	    } else {
-		throw new OcilException(new IllegalArgumentException(source.getSystemId()));
+		throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_OCIL_BAD_SOURCE, source.getSystemId()));
 	    }
 	} catch (JAXBException e) {
 	    throw new OcilException(e);
@@ -90,19 +93,6 @@ public class Variables implements IVariables {
      */
     public Variables() throws OcilException {
 	table = new Hashtable<String, VariableType>();
-    }
-
-    public OcilVariables getOcilVariables() {
-	if (variables == null) {
-	    variables = Factories.variables.createOcilVariables();
-	    variables.setGenerator(Factories.getGenerator());
-	    VariablesType vars = Factories.variables.createVariablesType();
-	    for (String id : table.keySet()) {
-		vars.getVariable().add(table.get(id));
-	    }
-	    variables.setVariables(vars);
-	}
-	return variables;
     }
 
     public void addValue(String id, String value) {
@@ -158,7 +148,7 @@ public class Variables implements IVariables {
     public void writeXML(OutputStream out) throws IOException {
 	try {
 	    Marshaller marshaller = SchemaRegistry.OCIL.createMarshaller();
-	    marshaller.marshal(getOcilVariables(), out);
+	    marshaller.marshal(getRootObject(), out);
 	} catch (JAXBException e) {
 	    throw new IOException(e);
 	} catch (FactoryConfigurationError e) {
@@ -169,11 +159,30 @@ public class Variables implements IVariables {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-	return new JAXBSource(SchemaRegistry.OCIL.getJAXBContext(), getOcilVariables());
+	return new JAXBSource(SchemaRegistry.OCIL.getJAXBContext(), getRootObject());
     }
 
-    public Object getRootObject() {
-	return getOcilVariables();
+    public OcilVariables getRootObject() {
+	if (variables == null) {
+	    variables = Factories.variables.createOcilVariables();
+	    variables.setGenerator(Factories.getGenerator());
+	    VariablesType vars = Factories.variables.createVariablesType();
+	    for (String id : table.keySet()) {
+		vars.getVariable().add(table.get(id));
+	    }
+	    variables.setVariables(vars);
+	}
+	return variables;
+    }
+
+    public OcilVariables copyRootObject() throws Exception {
+        Unmarshaller unmarshaller = getJAXBContext().createUnmarshaller();
+        Object rootObj = unmarshaller.unmarshal(new DOMSource(DOMTools.toDocument(this).getDocumentElement()));
+        if (rootObj instanceof OcilVariables) {
+            return (OcilVariables)rootObj;
+        } else {
+            throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_OCIL_BAD_SOURCE, toString()));
+        }
     }
 
     public JAXBContext getJAXBContext() throws JAXBException {

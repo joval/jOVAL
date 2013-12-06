@@ -18,12 +18,7 @@ import org.joval.intf.xml.ITransformable;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IVariables extends ITransformable {
-    /**
-     * Get the raw OVAL variables object.
-     */
-    OvalVariables getOvalVariables();
-
+public interface IVariables extends ITransformable<OvalVariables> {
     /**
      * Get the values of the variable, specified by its ID.
      */

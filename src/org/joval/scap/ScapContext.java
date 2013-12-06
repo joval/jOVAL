@@ -23,7 +23,6 @@ import scap.cpe.language.CheckFactRefType;
 import scap.cpe.language.LogicalTestType;
 import scap.cpe.language.OperatorEnumeration;
 import scap.cpe.language.PlatformType;
-import scap.xccdf.BenchmarkType;
 import scap.xccdf.CPE2IdrefType;
 import scap.xccdf.GroupType;
 import scap.xccdf.OverrideableCPE2IdrefType;
@@ -38,6 +37,7 @@ import scap.xccdf.SelectableItemType;
 import scap.xccdf.SelComplexValueType;
 import scap.xccdf.SelStringType;
 import scap.xccdf.ValueType;
+import scap.xccdf.XccdfBenchmark;
 
 import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.cpe.IDictionary;
@@ -65,7 +65,7 @@ public abstract class ScapContext implements IScapContext {
     private ProfileType profile;
     private IBenchmark benchmark;
     private IDictionary dictionary;
-    private BenchmarkType bt;
+    private XccdfBenchmark xb;
     private Map<String, RuleType> ruleMap;
     private List<RuleType> rules;
     private Map<String, LogicalTestType> platforms;
@@ -81,14 +81,14 @@ public abstract class ScapContext implements IScapContext {
 	if (benchmark == null) {
 	    throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_BENCHMARK));
 	}
-	bt = benchmark.getBenchmark();
+	xb = benchmark.getRootObject();
 	this.benchmark = benchmark;
 	this.dictionary = dictionary;
 	this.profile = profile == null ? null : resolve(profile);
 
 	platforms = new HashMap<String, LogicalTestType>();
 	// Add Benchmark-wide platforms
-	for (CPE2IdrefType cpe : bt.getPlatform()) {
+	for (CPE2IdrefType cpe : xb.getPlatform()) {
 	    try {
 		addPlatform(cpe.getIdref());
 	    } catch (NoSuchElementException e) {
@@ -243,12 +243,12 @@ public abstract class ScapContext implements IScapContext {
      */
     private void visit(Map<String, Boolean> sel, Map<String, Collection<String>> platforms, HashSet<ValueType> vals) {
 	Collection<String> benchmarkPlatforms = new ArrayList<String>();
-	for (CPE2IdrefType cpe : bt.getPlatform()) {
+	for (CPE2IdrefType cpe : xb.getPlatform()) {
 	    benchmarkPlatforms.add(cpe.getIdref());
 	}
 
-	vals.addAll(bt.getValue());
-	for (SelectableItemType item : getSelected(bt.getGroupOrRule(), sel, benchmarkPlatforms, platforms)) {
+	vals.addAll(xb.getValue());
+	for (SelectableItemType item : getSelected(xb.getGroupOrRule(), sel, benchmarkPlatforms, platforms)) {
 	    String id = null;
 	    if (item instanceof GroupType) {
 		for (ValueType base : ((GroupType)item).getValue()) {
@@ -338,7 +338,7 @@ public abstract class ScapContext implements IScapContext {
 		}
 	    } else if (cpeName.startsWith("#")) {
 		String name = cpeName.substring(1);
-		for (PlatformType pt : bt.getPlatformSpecification().getPlatform()) {
+		for (PlatformType pt : xb.getPlatformSpecification().getPlatform()) {
 		    if (name.equals(pt.getId())) {
 			platforms.put(cpeName, pt.getLogicalTest());
 			break;

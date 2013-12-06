@@ -132,7 +132,7 @@
       <jxb:package name="scap.xccdf"/>
     </jxb:schemaBindings>
     <jxb:bindings node="xs:element[@name='Benchmark']">
-        <jxb:class name="BenchmarkType" />
+        <jxb:class name="XccdfBenchmark" />
     </jxb:bindings>
     <jxb:bindings node="xs:element[@name='Benchmark']//xs:attribute[@name='id']">
         <jxb:property name="benchmarkId" />

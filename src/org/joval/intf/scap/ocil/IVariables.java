@@ -21,9 +21,7 @@ import org.joval.intf.xml.ITransformable;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IVariables extends ITransformable {
-    OcilVariables getOcilVariables();
-
+public interface IVariables extends ITransformable<OcilVariables> {
     void addValue(String id, String value);
 
     void addValue(String id, VariableDataType type, String value);
