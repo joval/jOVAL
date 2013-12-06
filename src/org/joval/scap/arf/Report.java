@@ -165,6 +165,7 @@ public class Report implements IReport, ILoggable {
      */
     public Report(AssetReportCollection arc) {
 	this.arc = arc;
+	logger = JOVALMsg.getLogger();
 	requests = new HashMap<String, XccdfBenchmark>();
 	for (ReportRequestType req : arc.getReportRequests().getReportRequest()) {
 	    Object request = req.getContent().getAny();
@@ -183,7 +184,6 @@ public class Report implements IReport, ILoggable {
 	for (ReportType report : arc.getReports().getReport()) {
 	    reports.put(report.getId(), report.getContent().getAny());
 	}
-	logger = JOVALMsg.getLogger();
     }
 
     /**
