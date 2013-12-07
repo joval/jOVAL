@@ -176,7 +176,7 @@ public class Datastream implements IDatastream, ILoggable {
     public IScapContext getContext(ITailoring tailoring, String profileId) throws NoSuchElementException, ScapException {
 	String benchmarkId = tailoring.getBenchmarkId();
 	IBenchmark benchmark = getBenchmark(benchmarkId);
-	return new Context(benchmark, profileId == null ? null : benchmark.getProfile(profileId));
+	return new Context(benchmark, tailoring.getProfile(profileId));
     }
 
     public IScapContext getContext(String benchmarkId, String profileId) throws NoSuchElementException, ScapException {

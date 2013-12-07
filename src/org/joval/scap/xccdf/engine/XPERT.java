@@ -52,6 +52,7 @@ import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.ocil.IExport;
 import org.joval.intf.scap.oval.IOvalEngine;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
+import org.joval.intf.scap.xccdf.ITailoring;
 import org.joval.intf.scap.xccdf.IXccdfEngine;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
@@ -67,6 +68,7 @@ import org.joval.scap.ocil.OcilException;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.xccdf.Benchmark;
 import org.joval.scap.xccdf.Bundle;
+import org.joval.scap.xccdf.Tailoring;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -152,6 +154,7 @@ public class XPERT {
 	String benchmarkId = null;
 	String profileId = null;
 	Map<String, IChecklist> checklists = new HashMap<String, IChecklist>();
+	File tailoringFile = null;
 	File xmlDir = new File(BASE_DIR, "xml");
 	File reportFile = new File(CWD, "xpert-arf.xml");
 	File transformFile = new File(xmlDir, "xccdf_results_to_html.xsl");
@@ -243,6 +246,8 @@ public class XPERT {
 		    ocilDir = new File(argv[++i]);
 		} else if (argv[i].equals("-t")) {
 		    transformFile = new File(argv[++i]);
+		} else if (argv[i].equals("-a")) {
+		    tailoringFile = new File(argv[++i]);
 		} else if (argv[i].equals("-x")) {
 		    reportHTML = new File(argv[++i]);
 		} else if (argv[i].equals("-k")) {
@@ -430,26 +435,46 @@ public class XPERT {
 			    throw new XPERTException(getMessage("error.benchmark", sourceName));
 			}
 		    }
-		    if (profileId == null) {
-			//
-			// Determine whether there's a singleton profile in the benchmark
-			//
-			Collection<String> profiles = ds.getProfileIds(benchmarkId);
-			if (profiles.size() == 1) {
-			    profileId = profiles.iterator().next();
-			    logger.info(getMessage("message.profile.autoselect", profileId));
-			} else if (profiles.size() > 1 && ds.getContext(benchmarkId, null).getSelectedRules().size() == 0) {
+		    IScapContext ctx;
+		    if (tailoringFile == null) {
+			if (profileId == null) {
+			    Collection<String> profiles = ds.getProfileIds(benchmarkId);
+			    if (profiles.size() > 1 && ds.getContext(benchmarkId, null).getSelectedRules().size() == 0) {
+				//
+				// If no rules are selected by default, then require that the user select a profile
+				//
+				StringBuffer sb = new StringBuffer();
+				for (String id : profiles) {
+				    sb.append(LogFormatter.LF).append("  ").append(id);
+				}
+				throw new XPERTException(getMessage("error.profile", sb.toString()));
+
 			    //
-			    // If no rules are selected by default, then require that the user select a profile
+			    // If there's a singleton profile in the benchmark and no default selections, use the singleton
 			    //
-			    StringBuffer sb = new StringBuffer();
-			    for (String id : profiles) {
-				sb.append(LogFormatter.LF).append("  ").append(id);
+			    } else if (profiles.size() == 1) {
+				profileId = profiles.iterator().next();
+				logger.info(getMessage("message.profile.autoselect", profileId));
 			    }
-			    throw new XPERTException(getMessage("error.profile", sb.toString()));
 			}
+			ctx = ds.getContext(benchmarkId, profileId);
+		    } else {
+			ITailoring tailoring = ScapFactory.createTailoring(tailoringFile);
+			if (profileId == null) {
+			    Collection<String> profiles = tailoring.getProfileIds();
+			    if (profiles.size() == 1) {
+				profileId = profiles.iterator().next();
+				logger.info(getMessage("message.profile.autoselect", profileId));
+			    } else {
+				StringBuffer sb = new StringBuffer();
+				for (String id : profiles) {
+				    sb.append(LogFormatter.LF).append("  ").append(id);
+				}
+				throw new XPERTException(getMessage("error.profile", sb.toString()));
+			    }
+			}
+			ctx = ds.getContext(tailoring, profileId);
 		    }
-		    IScapContext ctx = ds.getContext(benchmarkId, profileId);
 
 		    //
 		    // Export OCIL and quit, if required
