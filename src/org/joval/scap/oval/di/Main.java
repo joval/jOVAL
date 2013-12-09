@@ -614,9 +614,8 @@ public class Main implements IObserver<IOvalEngine.Message> {
     }
 
 
-    static final String SIGNATURE_SCHEMA = "xmldsig-core-schema.xsd";
-    static final String DEFINITION_SCHEMA = "-definitions-schema.xsd";
-    static final String SYSTEMCHARACTERISTICS_SCHEMA = "-system-characteristics-schema.xsd";
+    static final String DEFINITIONS_SCHEMA_SUFFIX = "-definitions-schema.xsd";
+    static final String SYSTEMCHARACTERISTICS_SCHEMA_SUFFIX = "-system-characteristics-schema.xsd";
 
     private static class DefinitionsSchemaFilter implements FilenameFilter {
 	static File[] list() {
@@ -627,7 +626,7 @@ public class Main implements IObserver<IOvalEngine.Message> {
 	DefinitionsSchemaFilter() {}
 
 	public boolean accept(File dir, String fname) {
-	    return fname.equals(SIGNATURE_SCHEMA) || fname.endsWith(DEFINITION_SCHEMA);
+	    return fname.endsWith(DEFINITIONS_SCHEMA_SUFFIX);
 	}
     }
 
@@ -640,7 +639,7 @@ public class Main implements IObserver<IOvalEngine.Message> {
 	SystemCharacteristicsSchemaFilter() {}
 
 	public boolean accept(File dir, String fname) {
-	    return fname.equals(SIGNATURE_SCHEMA) || fname.endsWith(SYSTEMCHARACTERISTICS_SCHEMA);
+	    return fname.endsWith(SYSTEMCHARACTERISTICS_SCHEMA_SUFFIX);
 	}
     }
 }

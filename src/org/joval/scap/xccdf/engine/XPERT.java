@@ -731,8 +731,7 @@ public class XPERT {
 	}
     }
 
-    static final String SIGNATURE_SCHEMA = "xmldsig-core-schema.xsd";
-    static final String DEFINITION_SCHEMA = "-definitions-schema.xsd";
+    static final String DEFINITIONS_SCHEMA_SUFFIX = "-definitions-schema.xsd";
 
     private static class DefinitionsSchemaFilter implements FilenameFilter {
 	private File xmlDir;
@@ -747,7 +746,7 @@ public class XPERT {
 	}
 
 	public boolean accept(File dir, String fname) {
-	    return fname.endsWith(DEFINITION_SCHEMA);
+	    return fname.endsWith(DEFINITIONS_SCHEMA_SUFFIX);
 	}
     }
 }
