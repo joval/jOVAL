@@ -2426,6 +2426,7 @@ public class Engine implements IOvalEngine, IProvider {
 		    }
 		}
 	    } catch (TypeConversionException e) {
+logger.warn("DAS", e);
 		String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CONVERSION, e.getMessage());
 		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, ref, reason));
 	    } catch (NoSuchElementException e) {
@@ -2707,6 +2708,7 @@ public class Engine implements IOvalEngine, IProvider {
 			variableValueType.setValue(value.getString());
 			rc.addVar(variableValueType);
 		    } catch (TypeConversionException e) {
+logger.warn("DAS", e);
 			MessageType message = Factories.common.createMessageType();
 			message.setLevel(MessageLevelEnumeration.ERROR);
 			message.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CONVERSION, e.getMessage()));
@@ -2729,14 +2731,14 @@ public class Engine implements IOvalEngine, IProvider {
 		Collection<IType> values = new ArrayList<IType>();
 		try {
 		    for (IType value : externalVariables.getValue(id)) {
-		        try {
+			try {
 			    values.add(value.cast(externalVariable.getDatatype()));
-		        } catch (TypeConversionException e) {
+			} catch (TypeConversionException e) {
 			    MessageType message = Factories.common.createMessageType();
 			    message.setLevel(MessageLevelEnumeration.ERROR);
 			    message.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CONVERSION, e.getMessage()));
 			    rc.addMessage(message);
-		        }
+			}
 		    }
 		} catch (NoSuchElementException e) {
 		    throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE, e.getMessage()));
@@ -3150,25 +3152,27 @@ public class Engine implements IOvalEngine, IProvider {
 		    throw new ResolveException(e);
 		}
 	    } else if (o instanceof List) {
-		values.addAll(extractItemData(objectId, null, (List)o));
+		values.addAll(extractItemData(objectId, oc, (List)o));
 	    } else if (o instanceof EntityItemRecordType) {
 		EntityItemRecordType record = (EntityItemRecordType)o;
 		if (oc.isSetRecordField()) {
 		    String fieldName = oc.getRecordField();
 		    for (EntityItemFieldType field : record.getField()) {
-			switch(field.getStatus()) {
-			  case EXISTS:
-			    try {
-		    		SimpleDatatypeEnumeration type = TypeFactory.getSimpleDatatype(field.getDatatype());
-				values.add(TypeFactory.createType(type, (String)field.getValue()));
-			    } catch (IllegalArgumentException e) {
-				throw new ResolveException(e);
-			    }
-			    break;
+			if (fieldName.equals(field.getName())) {
+			    switch(field.getStatus()) {
+			      case EXISTS:
+				try {
+		    		    SimpleDatatypeEnumeration type = TypeFactory.getSimpleDatatype(field.getDatatype());
+				    values.add(TypeFactory.createType(type, (String)field.getValue()));
+				} catch (IllegalArgumentException e) {
+				    throw new ResolveException(e);
+				}
+				break;
 
-			  default:
-			    logger.warn(JOVALMsg.WARNING_FIELD_STATUS, field.getName(), field.getStatus(), objectId);
-			    break;
+			      default:
+				logger.warn(JOVALMsg.WARNING_FIELD_STATUS, field.getName(), field.getStatus(), objectId);
+				break;
+			    }
 			}
 		    }
 		} else {
