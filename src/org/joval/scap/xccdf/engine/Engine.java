@@ -82,8 +82,9 @@ import org.joval.intf.scap.oval.IResults;
 import org.joval.intf.scap.oval.ISystemCharacteristics;
 import org.joval.intf.scap.sce.IScriptResult;
 import org.joval.intf.scap.xccdf.IBenchmark;
-import org.joval.intf.scap.xccdf.SystemEnumeration;
+import org.joval.intf.scap.xccdf.ITailoring;
 import org.joval.intf.scap.xccdf.IXccdfEngine;
+import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
@@ -766,7 +767,15 @@ public class Engine implements IXccdfEngine {
 	trb.setId(ctx.getBenchmark().getRootObject().getBenchmarkId());
 	trb.setHref(ctx.getBenchmark().getHref());
 	testResult.setBenchmark(trb);
-	if (ctx.getProfile() != null) {
+	if (ctx.getTailoring() != null) {
+	    ITailoring tailoring = ctx.getTailoring();
+	    TestResultType.TailoringFile tf = FACTORY.createTestResultTypeTailoringFile();
+	    tf.setHref(tailoring.getHref());
+	    tf.setId(tailoring.getId());
+	    tf.setTime(tailoring.getRootObject().getValue().getVersion().getTime());
+	    tf.setVersion(tailoring.getRootObject().getValue().getVersion().getValue());
+	    testResult.setTailoringFile(tf);
+	} else if (ctx.getProfile() != null) {
 	    IdrefType profileRef = FACTORY.createIdrefType();
 	    profileRef.setIdref(ctx.getProfile().getProfileId());
 	    testResult.setProfile(profileRef);

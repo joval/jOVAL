@@ -5,9 +5,12 @@ package org.joval.intf.scap.xccdf;
 
 import java.util.Collection;
 import java.util.NoSuchElementException;
+import javax.xml.bind.JAXBElement;
 
 import scap.xccdf.TailoringType;
 import scap.xccdf.ProfileType;
+
+import org.joval.intf.xml.ITransformable;
 
 /**
  * A representation of an XCCDF 1.2 tailoring.
@@ -15,12 +18,34 @@ import scap.xccdf.ProfileType;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface ITailoring {
+public interface ITailoring extends ITransformable<JAXBElement<TailoringType>> {
+    /**
+     * Set the originating document URI.
+     */
+    void setHref(String href);
+
+    /**
+     * Get the originating document URI.
+     */
+    String getHref();
+
+    /**
+     * Shortcut for getRootObject().getValue().getTailoringId().
+     */
+    String getId();
+
+    /**
+     * Shortcut for getRootObject().getValue().getBenchmark().getId().
+     */
     String getBenchmarkId();
 
-    TailoringType getTailoring();
-
+    /**
+     * Enumerate all the profile IDs in the tailoring.
+     */
     Collection<String> getProfileIds();
 
+    /**
+     * Retrieve a specific profile from the tailoring.
+     */
     ProfileType getProfile(String id) throws NoSuchElementException;
 }

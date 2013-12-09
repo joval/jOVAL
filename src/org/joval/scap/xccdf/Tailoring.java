@@ -14,14 +14,18 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.util.JAXBSource;
 import javax.xml.transform.Source;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
 
 import scap.xccdf.ProfileType;
 import scap.xccdf.TailoringType;
 
 import org.joval.intf.scap.xccdf.ITailoring;
+import org.joval.scap.ScapFactory;
 import org.joval.util.JOVALMsg;
+import org.joval.xml.DOMTools;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -61,26 +65,64 @@ public class Tailoring implements ITailoring {
     }
 
     private TailoringType tt;
-    private String benchmarkId;
     private Map<String, ProfileType> profiles;
+    private String href;
 
     public Tailoring(TailoringType tt) {
 	this.tt = tt;
-	benchmarkId = tt.getBenchmark().getId();
 	profiles = new HashMap<String, ProfileType>();
 	for (ProfileType profile : tt.getProfile()) {
 	    profiles.put(profile.getProfileId(), profile);
 	}
     }
 
-    // Implement ITailoring
-
-    public String getBenchmarkId() {
-	return benchmarkId;
+    public Tailoring(File f) throws XccdfException {
+	this(getTailoringType(f));
+	href = f.toURI().toString();
     }
 
-    public TailoringType getTailoring() {
-	return tt;
+    // Implement ITransformable
+
+    public Source getSource() throws JAXBException {
+        return new JAXBSource(SchemaRegistry.XCCDF.getJAXBContext(), getRootObject());
+    }
+
+    public JAXBElement<TailoringType> getRootObject() {
+        return ScapFactory.XCCDF.createTailoring(tt);
+    }
+
+    public JAXBElement<TailoringType> copyRootObject() throws Exception {
+        Unmarshaller unmarshaller = getJAXBContext().createUnmarshaller();
+        Object rootObj = unmarshaller.unmarshal(new DOMSource(DOMTools.toDocument(this).getDocumentElement()));
+        if (rootObj instanceof JAXBElement && ((JAXBElement)rootObj).getValue() instanceof TailoringType) {
+	    @SuppressWarnings("unchecked")
+	    JAXBElement<TailoringType> result = (JAXBElement<TailoringType>)rootObj;
+	    return result;
+        } else {
+            throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_BAD_SOURCE, toString()));
+        }
+    }
+
+    public JAXBContext getJAXBContext() throws JAXBException {
+        return SchemaRegistry.XCCDF.getJAXBContext();
+    }
+
+    // Implement ITailoring
+
+    public void setHref(String href) {
+	this.href = href;
+    }
+
+    public String getHref() {
+	return href;
+    }
+
+    public String getId() {
+	return tt.getTailoringId();
+    }
+
+    public String getBenchmarkId() {
+	return tt.getBenchmark().getId();
     }
 
     public Collection<String> getProfileIds() {

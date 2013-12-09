@@ -176,12 +176,12 @@ public class Datastream implements IDatastream, ILoggable {
     public IScapContext getContext(ITailoring tailoring, String profileId) throws NoSuchElementException, ScapException {
 	String benchmarkId = tailoring.getBenchmarkId();
 	IBenchmark benchmark = getBenchmark(benchmarkId);
-	return new Context(benchmark, tailoring.getProfile(profileId));
+	return new Context(benchmark, tailoring, profileId);
     }
 
     public IScapContext getContext(String benchmarkId, String profileId) throws NoSuchElementException, ScapException {
 	IBenchmark benchmark = getBenchmark(benchmarkId);
-	return new Context(benchmark, profileId == null ? null : benchmark.getProfile(profileId));
+	return new Context(benchmark, null, profileId);
     }
 
     public IChecklist getOcil(String href) throws NoSuchElementException, OcilException {
@@ -243,8 +243,8 @@ public class Datastream implements IDatastream, ILoggable {
     // Internal
 
     class Context extends ScapContext {
-	Context(IBenchmark benchmark, ProfileType profile) throws XccdfException {
-	    super(benchmark, dictionary, profile);
+	Context(IBenchmark benchmark, ITailoring tailoring, String profileId) throws XccdfException {
+	    super(benchmark, dictionary, tailoring, profileId);
 	}
 
 	// Implement IScapContext

@@ -51,6 +51,11 @@ public interface IScapContext {
     IBenchmark getBenchmark();
 
     /**
+     * Get the tailoring used to resolve the profile, or null if there was none provided.
+     */
+    ITailoring getTailoring();
+
+    /**
      * Get the fully-resolved XCCDF profile for the context.
      */
     ProfileType getProfile();

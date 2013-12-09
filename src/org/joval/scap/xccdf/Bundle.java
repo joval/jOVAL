@@ -165,7 +165,7 @@ public class Bundle implements IDatastream {
     public IScapContext getContext(String benchmarkId, String profileId) throws NoSuchElementException, ScapException {
 	if (benchmarks.containsKey(benchmarkId)) {
 	    IBenchmark benchmark = benchmarks.get(benchmarkId);
-	    return new Context(benchmark, profileId == null ? null : benchmark.getProfile(profileId));
+	    return new Context(benchmark, null, profileId);
 	} else {
 	    throw new NoSuchElementException(benchmarkId);
 	}
@@ -174,7 +174,7 @@ public class Bundle implements IDatastream {
     public IScapContext getContext(ITailoring tailoring, String profileId) throws NoSuchElementException, ScapException {
 	String benchmarkId = tailoring.getBenchmarkId();
 	if (benchmarks.containsKey(benchmarkId)) {
-	    return new Context(benchmarks.get(benchmarkId), tailoring.getProfile(profileId));
+	    return new Context(benchmarks.get(benchmarkId), tailoring, profileId);
 	} else {
 	    throw new NoSuchElementException(benchmarkId);
 	}
@@ -283,8 +283,8 @@ public class Bundle implements IDatastream {
     }
 
     class Context extends ScapContext {
-	Context(IBenchmark benchmark, ProfileType profile) throws XccdfException {
-	    super(benchmark, dictionary, profile);
+	Context(IBenchmark benchmark, ITailoring tailoring, String profileId) throws XccdfException {
+	    super(benchmark, dictionary, tailoring, profileId);
 	}
 
 	// Implement IScapContext

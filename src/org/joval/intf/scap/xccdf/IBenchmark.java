@@ -27,7 +27,7 @@ public interface IBenchmark extends ITransformable<XccdfBenchmark> {
     String getHref();
 
     /**
-     * Shortcut for getBenchmark().getBenchmarkId().
+     * Shortcut for getRootObject().getBenchmarkId().
      */
     String getId();
 

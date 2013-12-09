@@ -96,10 +96,10 @@ public class ScapFactory {
     }
 
     /**
-     * Create an XCCDF tailoring from a file.
+     * Create an XCCDF tailoring from a file. The href will be set to the source file's URI.
      */
     public static ITailoring createTailoring(File f) throws XccdfException {
-	return new Tailoring(Tailoring.getTailoringType(f));
+	return new Tailoring(f);
     }
 
     /**

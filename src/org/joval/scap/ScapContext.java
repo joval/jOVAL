@@ -44,6 +44,7 @@ import org.joval.intf.scap.cpe.IDictionary;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.intf.scap.xccdf.IBenchmark;
+import org.joval.intf.scap.xccdf.ITailoring;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.scap.cpe.CpeException;
 import org.joval.scap.ocil.OcilException;
@@ -65,6 +66,7 @@ public abstract class ScapContext implements IScapContext {
     private ProfileType profile;
     private IBenchmark benchmark;
     private IDictionary dictionary;
+    private ITailoring tailoring;
     private XccdfBenchmark xb;
     private Map<String, RuleType> ruleMap;
     private List<RuleType> rules;
@@ -77,14 +79,23 @@ public abstract class ScapContext implements IScapContext {
      * @param profile The selected profile (which might originate from an external tailoring) if null, then
      *                defaults are selected
      */
-    protected ScapContext(IBenchmark benchmark, IDictionary dictionary, ProfileType profile) throws XccdfException {
+    protected ScapContext(IBenchmark benchmark, IDictionary dictionary, ITailoring tailoring, String profileId)
+		throws XccdfException {
+
 	if (benchmark == null) {
 	    throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_BENCHMARK));
 	}
 	xb = benchmark.getRootObject();
 	this.benchmark = benchmark;
 	this.dictionary = dictionary;
-	this.profile = profile == null ? null : resolve(profile);
+	if (profileId != null) {
+	    if (tailoring == null) {
+		profile = resolve(benchmark.getProfile(profileId));
+	    } else {
+		this.tailoring = tailoring;
+		profile = resolve(tailoring.getProfile(profileId));
+	    }
+	}
 
 	platforms = new HashMap<String, LogicalTestType>();
 	// Add Benchmark-wide platforms
@@ -210,6 +221,10 @@ public abstract class ScapContext implements IScapContext {
 
     public IBenchmark getBenchmark() {
 	return benchmark;
+    }
+
+    public ITailoring getTailoring() {
+	return tailoring;
     }
 
     public ProfileType getProfile() {

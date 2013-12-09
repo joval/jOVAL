@@ -218,7 +218,7 @@ public class Benchmark implements IBenchmark, ILoggable {
 	}
     }
 
-    // Implement ITransformable
+    // Implement ITransformable<XccdfBenchmark>
 
     public Source getSource() throws JAXBException {
 	return new JAXBSource(SchemaRegistry.XCCDF.getJAXBContext(), xb);
