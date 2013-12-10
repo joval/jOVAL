@@ -69,11 +69,8 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
     private static final String ADAPTERS_RESOURCE = "adapters.txt";
     private static final String BASENAME = "plugin";
 
-    /**
-     * Get a list of all the IAdapters that are bundled with the plugin.
-     */
-    private static Collection<IAdapter> getAdapters() {
-	Collection<IAdapter> adapters = new HashSet<IAdapter>();
+    private static HashSet<Class<IAdapter>> ADAPTER_CLASSES = new HashSet<Class<IAdapter>>();
+    static {
 	try {
 	    ClassLoader cl = LocalPlugin.class.getClassLoader();
 	    InputStream rsc = cl.getResourceAsStream(ADAPTERS_RESOURCE);
@@ -85,12 +82,15 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 		while ((line = reader.readLine()) != null) {
 		    if (!line.startsWith("#")) {
 			try {
-			    Object obj = Class.forName(line).newInstance();
-			    if (obj instanceof IAdapter) {
-				adapters.add((IAdapter)obj);
+			    Class<?> clazz = Class.forName(line);
+			    for (Class<?> iface : getInterfaces(clazz)) {
+				if ("org.joval.intf.plugin.IAdapter".equals(iface.getName())) {
+				    @SuppressWarnings("unchecked")
+				    Class<IAdapter> adapterClass = (Class<IAdapter>)clazz;
+				    ADAPTER_CLASSES.add(adapterClass);
+				    break;
+				}
 			    }
-			} catch (InstantiationException e) {
-			} catch (IllegalAccessException e) {
 			} catch (ClassNotFoundException e) {
 			}
 		    }
@@ -99,7 +99,29 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 	} catch (IOException e) {
 	    JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
-	return adapters;
+    }
+
+    private static Collection<Class<?>> getInterfaces(Class<?> clazz) {
+	Collection<Class<?>> accumulator = new HashSet<Class<?>>();
+	getInterfaces(clazz, accumulator);
+	return accumulator;
+    }
+
+    private static void getInterfaces(Class<?> clazz, Collection<Class<?>> accumulator) {
+	if (clazz != null && !accumulator.contains(clazz)) {
+	    for (Class<?> iface : clazz.getInterfaces()) {
+		accumulator.add(iface);
+		getInterfaces(iface.getSuperclass());
+	    }
+	    getInterfaces(clazz.getSuperclass(), accumulator);
+	}
+    }
+
+    /**
+     * Add your own IAdapters subclasses.
+     */
+    puvlic static final void registerAdapter(Class<IAdapter> clazz) {
+	ADAPTER_CLASSES.add(clazz);
     }
 
     private PropertyResourceBundle resources;
@@ -287,18 +309,15 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 	if (adapters == null) {
 	    adapters = new HashMap<Class, IAdapter>();
 	    statistics = new Statistics();
-	    Collection<IAdapter> coll = getAdapters();
-	    if (coll != null) {
-		adapters = new HashMap<Class, IAdapter>();
-		for (IAdapter adapter : coll) {
-		    try {
-			for (Class clazz : adapter.init(session, notapplicable)) {
-			    adapters.put(clazz, adapter);
-			    statistics.add(clazz);
-			}
-		    } catch (Exception e) {
-			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    for (Class<IAdapter> adapterClass : ADAPTER_CLASSES) {
+		try {
+		    IAdapter adapter = adapterClass.newInstance();
+		    for (Class clazz : adapter.init(session, notapplicable)) {
+			adapters.put(clazz, adapter);
+			statistics.add(clazz);
 		    }
+		} catch (Exception e) {
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}
