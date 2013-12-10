@@ -120,7 +120,7 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
     /**
      * Add your own IAdapters subclasses.
      */
-    puvlic static final void registerAdapter(Class<IAdapter> clazz) {
+    public static final void registerAdapter(Class<IAdapter> clazz) {
 	ADAPTER_CLASSES.add(clazz);
     }
 
