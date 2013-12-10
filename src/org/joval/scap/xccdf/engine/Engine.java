@@ -775,7 +775,8 @@ public class Engine implements IXccdfEngine {
 	    tf.setTime(tailoring.getRootObject().getValue().getVersion().getTime());
 	    tf.setVersion(tailoring.getRootObject().getValue().getVersion().getValue());
 	    testResult.setTailoringFile(tf);
-	} else if (ctx.getProfile() != null) {
+	}
+	if (ctx.getProfile() != null) {
 	    IdrefType profileRef = FACTORY.createIdrefType();
 	    profileRef.setIdref(ctx.getProfile().getProfileId());
 	    testResult.setProfile(profileRef);
