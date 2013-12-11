@@ -32,6 +32,7 @@ import java.util.Properties;
 import java.util.PropertyResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.transform.stream.StreamSource;
 import org.xml.sax.SAXException;
 
 import jsaf.util.StringTools;
@@ -718,12 +719,12 @@ public class XPERT {
     }
 
     private static void validateDatastream(File f) throws SAXException, IOException, XPERTException {
-	File xmlDir = new File(BASE_DIR, "xml");
-	ArrayList<File> schemas = new ArrayList<File>();
-	for (String path : SchemaRegistry.DS.getLocations()) {
-	    schemas.add(new File(xmlDir, path));
+	Collection<StreamSource> sources = new ArrayList<StreamSource>();
+	ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	for (String location : SchemaRegistry.DS.getLocations()) {
+	    sources.add(new StreamSource(cl.getResource("scap-schema/" + location).toString()));
 	}
-	SchemaValidator validator = new SchemaValidator(schemas.toArray(new File[schemas.size()]));
+	SchemaValidator validator = new SchemaValidator(sources.toArray(new StreamSource[sources.size()]));
 	try {
 	    validator.validate(f);
 	} catch (Exception e) {

@@ -151,7 +151,7 @@ public enum SchemaRegistry {
      * Register additional schemas.
      *
      * @param in an InputStream to an INI-format file.
-     * @see schema-registry.ini
+     * @see scap-registry.ini
      */
     public static final void register(InputStream in) {
 	try {
@@ -243,9 +243,9 @@ public enum SchemaRegistry {
 	ns2Prefix = new HashMap<String, String>();
 
 	ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	InputStream in = cl.getResourceAsStream("schema-registry.ini");
+	InputStream in = cl.getResourceAsStream("scap-registry.ini");
 	if (in == null) {
-	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, "schema-registry.ini"));
+	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, "scap-registry.ini"));
 	} else {
 	    register(in);
 	}

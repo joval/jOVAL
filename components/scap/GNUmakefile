@@ -34,6 +34,9 @@ clean:
 
 resources:
 	cp $(RSRC)/* $(BUILD)
+	mkdir -p $(BUILD)/scap-schema
+	cp -R $(SCHEMADIR)/* $(BUILD)/scap-schema
+	rm $(BUILD)/scap-schema/bindings.xjb
 
 classes: classdirs $(CLASS_FILES)
 

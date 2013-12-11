@@ -35,6 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
+import javax.xml.transform.stream.StreamSource;
 import org.xml.sax.SAXException;
 
 import jsaf.util.Checksum;
@@ -312,7 +313,7 @@ public class Main implements IObserver<IOvalEngine.Message> {
 	    if (state.schematronSC) {
 		try {
 		    print(getMessage("MESSAGE_RUNNING_XMLVALIDATION", state.getPath(state.dataFile)));
-		    if (!validateSchema(state.dataFile, SystemCharacteristicsSchemaFilter.list())) {
+		    if (!validateSchema(state.dataFile, SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS)) {
 			state.plugin.disconnect();
 			state.plugin.dispose();
 			System.exit(ERR);
@@ -379,7 +380,7 @@ public class Main implements IObserver<IOvalEngine.Message> {
 	    IDefinitions defs = OvalFactory.createDefinitions(state.defsFile);
 
 	    print(getMessage("MESSAGE_VALIDATING_XML"));
-	    if (!validateSchema(state.defsFile, DefinitionsSchemaFilter.list())) {
+	    if (!validateSchema(state.defsFile, SchemaRegistry.OVAL_DEFINITIONS)) {
 		return ERR;
 	    }
 
@@ -427,7 +428,7 @@ public class Main implements IObserver<IOvalEngine.Message> {
 	    } else {
 		print(" ** parsing " + state.getPath(state.inputFile) + " for analysis.");
 		print(getMessage("MESSAGE_VALIDATING_XML"));
-		if (validateSchema(state.inputFile, SystemCharacteristicsSchemaFilter.list())) {
+		if (validateSchema(state.inputFile, SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS)) {
 		    sc = OvalFactory.createSystemCharacteristics(state.inputFile);
 		} else {
 		    return ERR;
@@ -501,7 +502,7 @@ public class Main implements IObserver<IOvalEngine.Message> {
 	    if (state.schematronResults) {
 		try {
 		    print(getMessage("MESSAGE_RUNNING_XMLVALIDATION", state.getPath(state.resultsXML)));
-		    if (!validateSchema(state.dataFile, SystemCharacteristicsSchemaFilter.list())) {
+		    if (!validateSchema(state.dataFile, SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS)) {
 			return ERR;
 		    }
 		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.getPath(state.resultsXML)));
@@ -570,8 +571,13 @@ public class Main implements IObserver<IOvalEngine.Message> {
 	}
     }
 
-    private boolean validateSchema(File f, File[] schemas) throws SAXException, IOException {
-	SchemaValidator validator = new SchemaValidator(schemas);
+    private boolean validateSchema(File f, SchemaRegistry reg) throws SAXException, IOException {
+        ArrayList<StreamSource> sources = new ArrayList<StreamSource>();
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        for (String location : reg.getLocations()) {
+            sources.add(new StreamSource(cl.getResource("scap-schema/" + location).toString()));
+        }
+        SchemaValidator validator = new SchemaValidator(sources.toArray(new StreamSource[sources.size()]));
 	try {
 	    validator.validate(f);
 	    return true;
@@ -611,26 +617,6 @@ public class Main implements IObserver<IOvalEngine.Message> {
 		}
 	    }
 	    return line.toString();
-	}
-    }
-
-    private static class DefinitionsSchemaFilter {
-	static File[] list() {
-	    ArrayList<File> files = new ArrayList<File>();
-	    for (String path : SchemaRegistry.OVAL_DEFINITIONS.getLocations()) {
-		files.add(new File(state.xmlDir, path));
-	    }
-	    return files.toArray(new File[files.size()]);
-	}
-    }
-
-    private static class SystemCharacteristicsSchemaFilter {
-	static File[] list() {
-	    ArrayList<File> files = new ArrayList<File>();
-	    for (String path : SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getLocations()) {
-		files.add(new File(state.xmlDir, path));
-	    }
-	    return files.toArray(new File[files.size()]);
 	}
     }
 }
