@@ -9,6 +9,7 @@ import java.util.NoSuchElementException;
 import scap.datastream.DataStreamCollection;
 
 import org.joval.scap.ScapException;
+import org.joval.intf.xml.ITransformable;
 
 /**
  * Interface defining an SCAP datastream, supporting access to OVAL, OCIL and SCE documents contained within.
@@ -16,12 +17,7 @@ import org.joval.scap.ScapException;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IDatastreamCollection {
-    /**
-     * Get the raw SCAP datastream collection object from the data model.
-     */
-    DataStreamCollection getDSCollection();
-
+public interface IDatastreamCollection extends ITransformable<DataStreamCollection> {
     /**
      * Get the IDs of the streams defined in the collection.
      */

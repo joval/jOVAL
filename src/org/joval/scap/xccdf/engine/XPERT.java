@@ -74,6 +74,7 @@ import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
 import org.joval.xml.XSLTools;
+import org.joval.xml.SchemaRegistry;
 import org.joval.xml.SchemaValidator;
 import org.joval.xml.SignatureValidator;
 
@@ -719,34 +720,14 @@ public class XPERT {
     private static void validateDatastream(File f) throws SAXException, IOException, XPERTException {
 	File xmlDir = new File(BASE_DIR, "xml");
 	ArrayList<File> schemas = new ArrayList<File>();
-	schemas.addAll(Arrays.asList(new File(xmlDir, "ds-" + IDatastream.SCHEMA_VERSION.toString()).listFiles()));
-	schemas.addAll(Arrays.asList(new File(xmlDir, "xccdf-" + IXccdfEngine.SCHEMA_VERSION.toString()).listFiles()));
-	schemas.addAll(Arrays.asList(new File(xmlDir, "ocil-" + IChecklist.SCHEMA_VERSION.toString()).listFiles()));
-	schemas.addAll(Arrays.asList(new DefinitionsSchemaFilter(xmlDir).list()));
+	for (String path : SchemaRegistry.DS.getLocations()) {
+	    schemas.add(new File(xmlDir, path));
+	}
 	SchemaValidator validator = new SchemaValidator(schemas.toArray(new File[schemas.size()]));
 	try {
 	    validator.validate(f);
 	} catch (Exception e) {
 	    throw new XPERTException(getMessage("error.validation", e.getMessage()));
-	}
-    }
-
-    static final String DEFINITIONS_SCHEMA_SUFFIX = "-definitions-schema.xsd";
-
-    private static class DefinitionsSchemaFilter implements FilenameFilter {
-	private File xmlDir;
-
-	DefinitionsSchemaFilter(File xmlDir) {
-	    this.xmlDir = xmlDir;
-	}
-
-	File[] list() {
-	    File ovalDir = new File(xmlDir, "oval-" + IOvalEngine.SCHEMA_VERSION.toString());
-	    return ovalDir.listFiles(this);
-	}
-
-	public boolean accept(File dir, String fname) {
-	    return fname.endsWith(DEFINITIONS_SCHEMA_SUFFIX);
 	}
     }
 }

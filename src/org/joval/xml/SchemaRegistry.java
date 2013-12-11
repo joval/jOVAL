@@ -110,6 +110,7 @@ public enum SchemaRegistry {
      * Interface for members of the enum.
      */
     public interface ISchema {
+	Collection<String> getLocations();
 	JAXBContext getJAXBContext() throws JAXBException;
 	Marshaller createMarshaller() throws JAXBException;
     }
@@ -214,6 +215,10 @@ public enum SchemaRegistry {
 
     // Implement ISchema (although it's undeclared, as an enum can't implement its own inner class)
 
+    public Collection<String> getLocations() {
+	return impl.getLocations();
+    }
+
     /**
      * Obtain the JAXBContext for the schema.
      */
@@ -272,6 +277,10 @@ public enum SchemaRegistry {
 
 	// Implement ISchema
 
+	public Collection<String> getLocations() {
+	    return groupLocations.get(groupName);
+	}
+
 	public synchronized JAXBContext getJAXBContext() throws JAXBException {
 	    if (ctx == null) {
 		StringBuffer sb = new StringBuffer();
@@ -289,7 +298,7 @@ public enum SchemaRegistry {
 	public Marshaller createMarshaller() throws JAXBException {
 	    Marshaller marshaller = getJAXBContext().createMarshaller();
 	    StringBuffer sb = new StringBuffer();
-	    for (String location : groupLocations.get(groupName)) {
+	    for (String location : getLocations()) {
 		if (sb.length() > 0) {
 		    sb.append(" ");
 		}

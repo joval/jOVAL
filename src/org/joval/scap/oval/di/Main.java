@@ -58,6 +58,7 @@ import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
 import org.joval.util.Version;
+import org.joval.xml.SchemaRegistry;
 import org.joval.xml.SchemaValidator;
 import org.joval.xml.XSLTools;
 import org.joval.xml.schematron.ValidationException;
@@ -613,33 +614,23 @@ public class Main implements IObserver<IOvalEngine.Message> {
 	}
     }
 
-
-    static final String DEFINITIONS_SCHEMA_SUFFIX = "-definitions-schema.xsd";
-    static final String SYSTEMCHARACTERISTICS_SCHEMA_SUFFIX = "-system-characteristics-schema.xsd";
-
-    private static class DefinitionsSchemaFilter implements FilenameFilter {
+    private static class DefinitionsSchemaFilter {
 	static File[] list() {
-	    File ovalDir = new File(state.xmlDir, "oval-" + IOvalEngine.SCHEMA_VERSION.toString());
-	    return ovalDir.listFiles(new DefinitionsSchemaFilter());
-	}
-
-	DefinitionsSchemaFilter() {}
-
-	public boolean accept(File dir, String fname) {
-	    return fname.endsWith(DEFINITIONS_SCHEMA_SUFFIX);
+	    ArrayList<File> files = new ArrayList<File>();
+	    for (String path : SchemaRegistry.OVAL_DEFINITIONS.getLocations()) {
+		files.add(new File(state.xmlDir, path));
+	    }
+	    return files.toArray(new File[files.size()]);
 	}
     }
 
-    private static class SystemCharacteristicsSchemaFilter implements FilenameFilter {
+    private static class SystemCharacteristicsSchemaFilter {
 	static File[] list() {
-	    File ovalDir = new File(state.xmlDir, "oval-" + IOvalEngine.SCHEMA_VERSION.toString());
-	    return ovalDir.listFiles(new SystemCharacteristicsSchemaFilter());
-	}
-
-	SystemCharacteristicsSchemaFilter() {}
-
-	public boolean accept(File dir, String fname) {
-	    return fname.endsWith(SYSTEMCHARACTERISTICS_SCHEMA_SUFFIX);
+	    ArrayList<File> files = new ArrayList<File>();
+	    for (String path : SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getLocations()) {
+		files.add(new File(state.xmlDir, path));
+	    }
+	    return files.toArray(new File[files.size()]);
 	}
     }
 }

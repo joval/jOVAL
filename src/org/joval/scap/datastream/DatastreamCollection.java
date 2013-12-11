@@ -24,6 +24,7 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
 
 import scap.datastream.DataStream;
@@ -33,6 +34,7 @@ import org.joval.intf.scap.datastream.IDatastream;
 import org.joval.intf.scap.datastream.IDatastreamCollection;
 import org.joval.scap.ScapException;
 import org.joval.util.JOVALMsg;
+import org.joval.xml.DOMTools;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -103,18 +105,28 @@ public class DatastreamCollection implements IDatastreamCollection {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-        return new JAXBSource(SchemaRegistry.DS.getJAXBContext(), getDSCollection());
+	return new JAXBSource(SchemaRegistry.DS.getJAXBContext(), getRootObject());
     }
 
-    public Object getRootObject() {
-	return getDSCollection();
+    public DataStreamCollection getRootObject() {
+	return dsc;
+    }
+
+    public DataStreamCollection copyRootObject() throws Exception {
+	Unmarshaller unmarshaller = getJAXBContext().createUnmarshaller();
+	Object rootObj = unmarshaller.unmarshal(new DOMSource(DOMTools.toDocument(this).getDocumentElement()));
+	if (rootObj instanceof DataStreamCollection) {
+	    return (DataStreamCollection)rootObj;
+	} else {
+	    throw new ScapException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESULTS_BAD_SOURCE, toString()));
+	}
+    }
+
+    public JAXBContext getJAXBContext() throws JAXBException {
+	return SchemaRegistry.DS.getJAXBContext();
     }
 
     // Implement IDatastreamCollection
-
-    public DataStreamCollection getDSCollection() {
-	return dsc;
-    }
 
     /**
      * Return a collection of the DataStream IDs in the source document.
