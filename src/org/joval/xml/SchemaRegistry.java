@@ -3,23 +3,37 @@
 
 package org.joval.xml;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URL;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
+import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.PropertyException;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.ls.LSInput;
+import org.w3c.dom.ls.LSResourceResolver;
+import org.xml.sax.SAXException;
 import com.sun.xml.internal.bind.marshaller.NamespacePrefixMapper;
 
 import jsaf.intf.util.IProperty;
@@ -110,7 +124,7 @@ public enum SchemaRegistry {
      * Interface for members of the enum.
      */
     public interface ISchema {
-	Collection<String> getLocations();
+	Validator getValidator() throws SAXException, IOException;
 	JAXBContext getJAXBContext() throws JAXBException;
 	Marshaller createMarshaller() throws JAXBException;
     }
@@ -150,21 +164,35 @@ public enum SchemaRegistry {
     /**
      * Register additional schemas.
      *
-     * @param in an InputStream to an INI-format file.
-     * @see scap-registry.ini
+     * @param basename The package basename under which, visible to the static initializer's context ClassLoader, the
+     *                 resources [basename]/registry.ini and [basename]/schemas.cat will be found.
+     *
+     * @see registry.ini
+     * @see schemas.cat
      */
-    public static final void register(InputStream in) {
+    public static final void register(String basename) throws IOException {
+	String registry = new StringBuffer(basename).append("/registry.ini").toString();
+	String catalog = new StringBuffer(basename).append("/schemas.cat").toString();
+
+	InputStream in = null;
 	try {
 	    Collection<String> changedGroups = new HashSet<String>();
 
+	    //
+	    // Process the registry
+	    //
+	    in = CL.getResourceAsStream(registry);
+	    if (in == null) {
+		throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, registry));
+	    }
 	    IniFile ini = new IniFile(in);
 	    for (String prefix : ini.listSections()) {
 		IProperty props = ini.getSection(prefix);
+		String ns = props.getProperty("namespace");
 
 		//
 		// Set the preferred prefix for the namespace, if possible
 		//
-		String ns = props.getProperty("namespace");
 		if (ns2Prefix.containsKey(ns)) {
 		    if (!ns2Prefix.get(ns).equals(prefix)) {
 			JOVALMsg.getLogger().warn(JOVALMsg.WARNING_NS_PREFIX, ns, prefix, ns2Prefix.get(ns));
@@ -185,26 +213,63 @@ public enum SchemaRegistry {
 			groupPackages.get(group).add(packageName);
 			changedGroups.add(group);
 		    }
-		    if (!groupLocations.containsKey(group)) {
-			groupLocations.put(group, new HashSet<String>());
+		    if (!groupNamespaces.containsKey(group)) {
+			groupNamespaces.put(group, new HashSet<String>());
 		    }
-		    groupLocations.get(group).add(props.getProperty("location"));
+		    groupNamespaces.get(group).add(ns);
 		}
 	    }
 
 	    //
-	    // Re-set the JAXBContext for any groups whose member packages have been altered by the registration
+	    // If any groups had member packages altered by the registration, reset their Validator and JAXBContext,
+	    // so they can be re-generated the next time they're retrieved.
 	    //
 	    for (String group : changedGroups) {
 		for (SchemaRegistry sr : values()) {
 		    if (group.equals(sr.impl.groupName)) {
+			sr.impl.validator = null;
 			sr.impl.ctx = null;
 			break;
 		    }
 		}
 	    }
-	} catch (IOException e) {
-	    throw new RuntimeException(e);
+
+	    //
+	    // Process the TR9401 catalog
+	    //
+	    in = CL.getResourceAsStream(catalog);
+	    if (in == null) {
+		throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, catalog));
+	    }
+	    String line = null;
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+	    while ((line = reader.readLine()) != null) {
+		if (line.startsWith("PUBLIC")) {
+		    StringTokenizer tok = new StringTokenizer(line.substring(6).trim());
+		    String publicId = tok.nextToken();
+		    publicId = publicId.substring(1, publicId.length() - 1); // Strip "'s
+		    String location = tok.nextToken();
+		    location = location.substring(1, location.length() - 1); // Strip "'s
+		    if (!publicId2URL.containsKey(publicId)) {
+			URL url = CL.getResource(basename + "/" + location);
+			if (url != null) {
+			    publicId2URL.put(publicId, url);
+			}
+		    }
+		} else if (line.startsWith("SYSTEM")) {
+		    StringTokenizer tok = new StringTokenizer(line.substring(6).trim());
+		    String systemId = tok.nextToken();
+		    systemId = systemId.substring(1, systemId.length() - 1); // Strip "'s
+		    String location = tok.nextToken();
+		    location = location.substring(1, location.length() - 1); // Strip "'s
+		    if (!systemId2URL.containsKey(systemId)) {
+			URL url = CL.getResource(basename + "/" + location);
+			if (url != null) {
+			    systemId2URL.put(systemId, url);
+			}
+		    }
+		}
+	    }
 	} finally {
 	    try {
 		in.close();
@@ -213,15 +278,16 @@ public enum SchemaRegistry {
 	}
     }
 
-    // Implement ISchema (although it's undeclared, as an enum can't implement its own inner class)
-
-    public Collection<String> getLocations() {
-	return impl.getLocations();
+    public ISchema getSchema() {
+	return impl;
     }
 
-    /**
-     * Obtain the JAXBContext for the schema.
-     */
+    // Implement ISchema (although it's undeclared, as an enum can't implement its own inner class)
+
+    public Validator getValidator() throws SAXException, IOException {
+	return impl.getValidator();
+    }
+
     public JAXBContext getJAXBContext() throws JAXBException {
 	return impl.getJAXBContext();
     }
@@ -230,24 +296,146 @@ public enum SchemaRegistry {
 	return impl.createMarshaller();
     }
 
+    // Internal
+
+    static LSResourceResolver getLSResolver() {
+	return new SchemaResolver();
+    }
+
+    static class SchemaResolver implements LSResourceResolver {
+	SchemaResolver() {
+	}
+
+	// Implement LSResourceResolver
+
+	public LSInput resolveResource(String type, String namespaceURI, String publicId, String systemId, String baseURI) {
+	    if ("http://www.w3.org/2001/XMLSchema".equals(type) && publicId2URL.containsKey(namespaceURI)) {
+		//
+		// XSD
+		//
+		return new SchemaInput(publicId2URL.get(namespaceURI), publicId, systemId, baseURI);
+
+	    } else if ("http://www.w3.org/TR/REC-xml".equals(type) && systemId2URL.containsKey(systemId)) {
+		//
+		// DTD
+		//
+		return new SchemaInput(systemId2URL.get(systemId), publicId, systemId, baseURI);
+	    }
+	    return null;
+	}
+    }
+
+    static class SchemaInput implements LSInput {
+	private URL url;
+	private boolean certifiedText;
+	private String encoding, systemId, publicId, baseURI;
+
+	SchemaInput(URL url, String publicId, String systemId, String baseURI) {
+	    this.url = url;
+	    certifiedText = false;
+	    encoding = "UTF-8";
+	    this.publicId = publicId;
+	    this.systemId = systemId;
+	    this.baseURI = baseURI;
+	}
+
+	// Implement LSInput
+
+	public void setCharacterStream(Reader characterStream) {
+	    //no-op
+	}
+
+	public Reader getCharacterStream() {
+	    Reader characterStream = null;
+	    try {
+		characterStream = new InputStreamReader(getByteStream(), encoding);
+	    } catch (IOException e) {
+	    }
+	    return characterStream;
+	}
+
+	public void setByteStream(InputStream byteStream) {
+	    //no-op
+	}
+
+	public InputStream getByteStream() {
+	    InputStream byteStream = null;
+	    try {
+		byteStream = url.openStream();
+	    } catch (IOException e) {
+	    }
+	    return byteStream;
+	}
+
+	public void setStringData(String stringData) {
+	    //no-op
+	}
+
+	public String getStringData() {
+	    return null;
+	}
+
+	public void setSystemId(String systemId) {
+	    this.systemId = systemId;
+	}
+
+	public String getSystemId() {
+	    return systemId;
+	}
+
+	public void setPublicId(String publicId) {
+	    this.publicId = publicId;
+	}
+
+	public String getPublicId() {
+	    return publicId;
+	}
+
+	public void setBaseURI(String baseURI) {
+	    this.baseURI = baseURI;
+	}
+
+	public String getBaseURI() {
+	    return baseURI;
+	}
+
+	public void setEncoding(String encoding) {
+	    this.encoding = encoding;
+	}
+
+	public String getEncoding() {
+	    return encoding;
+	}
+
+	public void setCertifiedText(boolean certifiedText) {
+	    this.certifiedText = certifiedText;
+	}
+
+	public boolean getCertifiedText() {
+	    return certifiedText;
+	}
+    }
+
     // Private
 
     private static final String PREFIXMAPPER_PROP = "com.sun.xml.internal.bind.namespacePrefixMapper";
+    private static final ClassLoader CL = Thread.currentThread().getContextClassLoader();
 
     private static Map<String, Collection<String>> groupPackages;
-    private static Map<String, Collection<String>> groupLocations;
+    private static Map<String, Collection<String>> groupNamespaces;
     private static Map<String, String> ns2Prefix;
+    private static Map<String, URL> publicId2URL;
+    private static Map<String, URL> systemId2URL;
     static {
 	groupPackages = new HashMap<String, Collection<String>>();
-	groupLocations = new HashMap<String, Collection<String>>();
+	groupNamespaces = new HashMap<String, Collection<String>>();
 	ns2Prefix = new HashMap<String, String>();
-
-	ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	InputStream in = cl.getResourceAsStream("scap-registry.ini");
-	if (in == null) {
-	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, "scap-registry.ini"));
-	} else {
-	    register(in);
+	systemId2URL = new HashMap<String, URL>();
+	publicId2URL = new HashMap<String, URL>();
+	try {
+	    register("scap");
+	} catch (IOException e) {
+	    throw new RuntimeException(e);
 	}
     }
 
@@ -258,6 +446,7 @@ public enum SchemaRegistry {
     }
 
     private static class SchemaImpl extends NamespacePrefixMapper implements ISchema {
+	Validator validator;
 	String groupName;
 	JAXBContext ctx;
 
@@ -277,8 +466,17 @@ public enum SchemaRegistry {
 
 	// Implement ISchema
 
-	public Collection<String> getLocations() {
-	    return groupLocations.get(groupName);
+	public Validator getValidator() throws SAXException, IOException {
+	    if (validator == null) {
+		SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+		sf.setResourceResolver(getLSResolver());
+		ArrayList<StreamSource> sources = new ArrayList<StreamSource>();
+		for (String ns : groupNamespaces.get(groupName)) {
+		    sources.add(new StreamSource(publicId2URL.get(ns).openStream()));
+		}
+		validator = sf.newSchema(sources.toArray(new StreamSource[sources.size()])).newValidator();
+	    }
+	    return validator;
 	}
 
 	public synchronized JAXBContext getJAXBContext() throws JAXBException {
@@ -298,11 +496,14 @@ public enum SchemaRegistry {
 	public Marshaller createMarshaller() throws JAXBException {
 	    Marshaller marshaller = getJAXBContext().createMarshaller();
 	    StringBuffer sb = new StringBuffer();
-	    for (String location : getLocations()) {
-		if (sb.length() > 0) {
-		    sb.append(" ");
+
+	    for (String ns : groupNamespaces.get(groupName)) {
+		if (publicId2URL.containsKey(ns)) {
+		    if (sb.length() > 0) {
+			sb.append(" ");
+		    }
+		    sb.append(publicId2URL.get(ns).toString());
 		}
-		sb.append(location);
 	    }
 	    marshaller.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, sb.toString());
 	    try {

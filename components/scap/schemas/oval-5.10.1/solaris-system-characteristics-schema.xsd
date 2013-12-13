@@ -6,8 +6,7 @@
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#solaris"
             elementFormDefault="qualified"
             version="5.10.1">
-   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
-               schemaLocation="oval-system-characteristics-schema.xsd"/>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
    <xsd:element name="isainfo_item" substitutionGroup="oval-sc:item">
       <xsd:complexType>
          <xsd:complexContent>

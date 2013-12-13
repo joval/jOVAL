@@ -103,11 +103,9 @@
         </xs:appinfo>
     </xs:annotation>
 
-    <xs:import namespace="http://scap.nist.gov/schema/asset-identification/1.1"
-        schemaLocation="../ai-1.1/asset-identification_1.1.0.xsd"/>
-    <xs:import namespace="http://www.w3.org/1999/xlink" schemaLocation="../xml/xlink.xsd"/>
-    <xs:import namespace="http://scap.nist.gov/schema/reporting-core/1.1"
-        schemaLocation="reporting-core_1.1.0.xsd"/>
+    <xs:import namespace="http://scap.nist.gov/schema/asset-identification/1.1"/>
+    <xs:import namespace="http://www.w3.org/1999/xlink"/>
+    <xs:import namespace="http://scap.nist.gov/schema/reporting-core/1.1"/>
     <xs:element name="asset-report-collection">
         <xs:annotation>
             <xs:documentation>The top-level report element.</xs:documentation>

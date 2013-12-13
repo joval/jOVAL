@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" xmlns:junos-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#junos" xmlns:sch="http://purl.oclc.org/dsdl/schematron" targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#junos" elementFormDefault="qualified" version="5.11">
-    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" schemaLocation="oval-system-characteristics-schema.xsd"/>
+    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
     <xsd:element name="xml_config_item" substitutionGroup="oval-sc:item">
         <xsd:complexType>
             <xsd:complexContent>

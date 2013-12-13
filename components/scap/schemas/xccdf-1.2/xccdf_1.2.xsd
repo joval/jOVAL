@@ -29,7 +29,7 @@
     </xsd:annotation>
 
     <!-- Import base XML namespace -->
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="../xml/xml.xsd">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace">
         <xsd:annotation>
             <xsd:documentation xml:lang="en"> Import the XML namespace because this schema uses the
                 xml:lang and xml:base attributes. </xsd:documentation>
@@ -37,7 +37,7 @@
     </xsd:import>
 
     <!-- Import Dublin Core metadata namespace -->
-    <xsd:import namespace="http://purl.org/dc/elements/1.1/" schemaLocation="../dublin/simpledc20021212.xsd">
+    <xsd:import namespace="http://purl.org/dc/elements/1.1/">
         <xsd:annotation>
             <xsd:documentation xml:lang="en"> Import the simple Dublin Core namespace because this
                 schema uses it for benchmark metadata and for references. </xsd:documentation>
@@ -45,7 +45,7 @@
     </xsd:import>
 
     <!-- Import CPE 2.3 Language namespace -->
-    <xsd:import namespace="http://cpe.mitre.org/language/2.0" schemaLocation="../cpe-2.3/cpe-language_2.3.xsd">
+    <xsd:import namespace="http://cpe.mitre.org/language/2.0">
         <xsd:annotation>
             <xsd:documentation xml:lang="en"> Import the Common Platform Enumeration language
                 schema, which can be used for defining compound CPE tests for complex IT platforms

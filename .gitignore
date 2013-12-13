@@ -7,8 +7,10 @@ dist/
 components/engine/jOVAL.jar
 components/jovaldi/jovaldi.jar
 components/scap/docs/api/
+components/scap/schemas.episode
 components/scap/scap-schema-*.jar
 components/schematron/*.xsl
+components/schematron/schema/schemas.episode
 components/schematron/schema/docs/
 components/schematron/schema/svrl.jar
 components/plugin/jOVAL-Plugin.jar

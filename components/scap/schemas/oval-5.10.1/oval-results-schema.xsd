@@ -9,14 +9,10 @@
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-results-5"
             elementFormDefault="qualified"
             version="5.10.1">
-   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
-               schemaLocation="oval-common-schema.xsd"/>
-   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"
-               schemaLocation="oval-definitions-schema.xsd"/>
-   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
-               schemaLocation="oval-system-characteristics-schema.xsd"/>
-   <xsd:import namespace="http://www.w3.org/2000/09/xmldsig#"
-               schemaLocation="../xml/xmldsig-core-schema.xsd"/>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
+   <xsd:import namespace="http://www.w3.org/2000/09/xmldsig#"/>
    <xsd:element name="oval_results">
       <xsd:complexType>
          <xsd:sequence>

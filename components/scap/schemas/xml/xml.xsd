@@ -55,8 +55,7 @@
         for the XML namespace, e.g. as follows:
         &lt;schema . . .>
          . . .
-         &lt;import namespace="http://www.w3.org/XML/1998/namespace"
-                    schemaLocation="http://www.w3.org/2001/03/xml.xsd"/>
+         &lt;import namespace="http://www.w3.org/XML/1998/namespace"/>
 
         Subsequently, qualified reference to any of the attributes
         or the group defined below will have the desired effect, e.g.

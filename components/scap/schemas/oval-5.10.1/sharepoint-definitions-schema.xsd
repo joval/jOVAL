@@ -7,8 +7,7 @@
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#sharepoint"
             elementFormDefault="qualified"
             version="5.10">
-   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"
-               schemaLocation="oval-definitions-schema.xsd"/>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
    <xsd:element name="spwebapplication_test" substitutionGroup="oval-def:test">
       <xsd:complexType>
          <xsd:complexContent>

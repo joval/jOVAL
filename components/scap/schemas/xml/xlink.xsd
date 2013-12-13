@@ -9,8 +9,7 @@ constructs, e.g.
 <![CDATA[
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
            xmlns:xl="http://www.w3.org/1999/xlink">
- <xs:import namespace="http://www.w3.org/1999/xlink"
-            location="http://www.w3.org/1999/xlink.xsd">
+ <xs:import namespace="http://www.w3.org/1999/xlink"/>
 
  <xs:element name="mySimple">
   <xs:complexType>
@@ -23,7 +22,7 @@ constructs, e.g.
 </xs:schema>]]></xs:documentation>
  </xs:annotation>
 
- <xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="xml.xsd"/>
+ <xs:import namespace="http://www.w3.org/XML/1998/namespace"/>
 
  <xs:attribute name="type" type="xlink:typeType"/>
 

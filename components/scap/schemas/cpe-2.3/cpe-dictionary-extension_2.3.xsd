@@ -2,7 +2,7 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://scap.nist.gov/schema/cpe-extension/2.3"
     xmlns:cpe-name="http://cpe.mitre.org/naming/2.0" targetNamespace="http://scap.nist.gov/schema/cpe-extension/2.3"
     elementFormDefault="qualified" attributeFormDefault="unqualified" version="2.3">
-    <xsd:import namespace="http://cpe.mitre.org/naming/2.0" schemaLocation="cpe-naming_2.3.xsd"/>
+    <xsd:import namespace="http://cpe.mitre.org/naming/2.0"/>
     <xsd:annotation>
         <xsd:documentation xml:lang="en"> This extension implements the majority of the CPE Dictionary 2.3 data model.
             All instance documents created using the 2.3 extension schema can validate against the CPE 2.2 dictionary

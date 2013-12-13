@@ -12,8 +12,7 @@
     </documentation>
   </annotation>
 
-  <import namespace="http://checklists.nist.gov/xccdf/1.2"
-    schemaLocation="../xccdf-1.2/xccdf_1.2.xsd"/>
+  <import namespace="http://checklists.nist.gov/xccdf/1.2"/>
       
   <element name="sce_results" type="sceres:sce_results_type"></element>
   

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:win-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" xmlns:sch="http://purl.oclc.org/dsdl/schematron" targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" elementFormDefault="qualified" version="5.10.1">
-    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5" schemaLocation="oval-common-schema.xsd"/>
-    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5" schemaLocation="oval-definitions-schema.xsd"/>
+    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
+    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
     <xsd:element name="accesstoken_test" substitutionGroup="oval-def:test">
         <xsd:complexType>
             <xsd:complexContent>

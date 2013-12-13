@@ -60,7 +60,6 @@ import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
 import org.joval.util.Version;
 import org.joval.xml.SchemaRegistry;
-import org.joval.xml.SchemaValidator;
 import org.joval.xml.XSLTools;
 import org.joval.xml.schematron.ValidationException;
 import org.joval.xml.schematron.Validator;
@@ -572,14 +571,8 @@ public class Main implements IObserver<IOvalEngine.Message> {
     }
 
     private boolean validateSchema(File f, SchemaRegistry reg) throws SAXException, IOException {
-        ArrayList<StreamSource> sources = new ArrayList<StreamSource>();
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        for (String location : reg.getLocations()) {
-            sources.add(new StreamSource(cl.getResource("scap-schema/" + location).toString()));
-        }
-        SchemaValidator validator = new SchemaValidator(sources.toArray(new StreamSource[sources.size()]));
 	try {
-	    validator.validate(f);
+            reg.getValidator().validate(new StreamSource(f));
 	    return true;
 	} catch (Exception e) {
 	    print(getMessage("ERROR_VALIDATION", e.getMessage()));

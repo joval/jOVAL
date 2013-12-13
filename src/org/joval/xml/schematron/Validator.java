@@ -38,13 +38,11 @@ public class Validator {
     //
     public static final SchemaRegistry.ISchema SVRL;
     static {
-	ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	InputStream in = cl.getResourceAsStream("svrl-schema-registry.ini");
-	if (in == null) {
-	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, "svrl-schema-registry.ini"));
-	} else {
-	    SchemaRegistry.register(in);
+	try {
+	    SchemaRegistry.register("svrl");
 	    SVRL = SchemaRegistry.getGroup("SVRL");
+	} catch (IOException e) {
+	    throw new RuntimeException(e);
 	}
     }
 
