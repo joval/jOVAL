@@ -46,6 +46,7 @@ _jpe:
 
 _scap:
 	@$(MAKE) --keep-going --directory=scap all
+	@$(MAKE) --keep-going --directory=scap-extensions all
 
 _schematron:
 	@$(MAKE) --keep-going --directory=schematron all

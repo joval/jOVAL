@@ -410,12 +410,16 @@
          <xsd:complexContent>
             <xsd:extension base="oval-def:StateType">
                <xsd:sequence>
+                  <!-- jOVAL: Changed the types for the chg_lst, chg_allow, chg_req, exp_warn, exp_inact, and exp_date
+                              to EntityStateAnySimpleType, to fix backwards-compatibility with OVAL pre-5.8, when these
+                              were all changed from EntityStateStringType to EntityStateInt Type. This prevented older
+                              content from validating. -->
                   <xsd:element name="username" type="oval-def:EntityStateStringType" minOccurs="0"
                                maxOccurs="1"/>
                   <xsd:element name="password" type="oval-def:EntityStateStringType" minOccurs="0"
                                maxOccurs="1"/>
-                  <xsd:element name="user_id" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1"/>
-                  <xsd:element name="group_id" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="user_id" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="group_id" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1"/>
                   <xsd:element name="gcos" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
                   <xsd:element name="home_dir" type="oval-def:EntityStateStringType" minOccurs="0"
                                maxOccurs="1"/>
@@ -730,6 +734,10 @@
          <xsd:complexContent>
             <xsd:extension base="oval-def:StateType">
                <xsd:sequence>
+                  <!-- jOVAL: Changed the types for the chg_lst, chg_allow, chg_req, exp_warn, exp_inact, and exp_date
+                              to EntityStateAnySimpleType, to fix backwards-compatibility with OVAL pre-5.8, when these
+                              were all changed from EntityStateStringType to EntityStateInt Type. This prevented older
+                              content from validating. -->
                   <xsd:element name="username" type="oval-def:EntityStateStringType" minOccurs="0"
                                maxOccurs="1"/>
                   <xsd:element name="password" type="oval-def:EntityStateStringType" minOccurs="0"

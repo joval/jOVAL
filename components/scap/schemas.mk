@@ -52,12 +52,6 @@ SCHEMAS=\
 	oval-5.10.1/unix-system-characteristics-schema.xsd	\
 	oval-5.10.1/windows-definitions-schema.xsd	\
 	oval-5.10.1/windows-system-characteristics-schema.xsd	\
-	oval-5.10.1/x-android-definitions-schema.xsd	\
-	oval-5.10.1/x-android-system-characteristics-schema.xsd	\
-	oval-5.10.1/x-junos-definitions-schema.xsd	\
-	oval-5.10.1/x-junos-system-characteristics-schema.xsd	\
-	oval-5.10.1/x-netconf-definitions-schema.xsd	\
-	oval-5.10.1/x-netconf-system-characteristics-schema.xsd	\
 	sce-1.0/sce-1.0-xccdf-extended-component.xsd	\
 	sce-1.0/sce-result-schema.xsd	\
 	xccdf-1.2/xccdf_1.2.xsd	\

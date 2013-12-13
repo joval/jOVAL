@@ -584,39 +584,6 @@
     </jxb:bindings>
   </jxb:bindings>
 
-  <!-- ++++++++++++++++++++++++++++++++++     Experimental Platform Schemas      +++++++++++++++++++++++++++++++++ -->
-
-  <jxb:bindings schemaLocation="oval-5.10.1/x-android-definitions-schema.xsd" node="/xs:schema">
-    <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.android"/>
-    </jxb:schemaBindings>
-  </jxb:bindings>
-  <jxb:bindings schemaLocation="oval-5.10.1/x-android-system-characteristics-schema.xsd" node="/xs:schema">
-    <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.android"/>
-    </jxb:schemaBindings>
-  </jxb:bindings>
-  <jxb:bindings schemaLocation="oval-5.10.1/x-junos-definitions-schema.xsd" node="/xs:schema">
-    <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.junos"/>
-    </jxb:schemaBindings>
-  </jxb:bindings>
-  <jxb:bindings schemaLocation="oval-5.10.1/x-junos-system-characteristics-schema.xsd" node="/xs:schema">
-    <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.junos"/>
-    </jxb:schemaBindings>
-  </jxb:bindings>
-  <jxb:bindings schemaLocation="oval-5.10.1/x-netconf-definitions-schema.xsd" node="/xs:schema">
-    <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.netconf"/>
-    </jxb:schemaBindings>
-  </jxb:bindings>
-  <jxb:bindings schemaLocation="oval-5.10.1/x-netconf-system-characteristics-schema.xsd" node="/xs:schema">
-    <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.netconf"/>
-    </jxb:schemaBindings>
-  </jxb:bindings>
-
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
   <!-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>          Diagnostic Schema Bindings           <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< -->
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->

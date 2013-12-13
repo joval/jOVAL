@@ -434,6 +434,7 @@ public enum SchemaRegistry {
 	publicId2URL = new HashMap<String, URL>();
 	try {
 	    register("scap");
+	    register("scapx");
 	} catch (IOException e) {
 	    throw new RuntimeException(e);
 	}

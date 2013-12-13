@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+  Copyright (C) 2013 jOVAL.org.  All rights reserved.
+  This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
+
+-->
+<jxb:bindings version="1.0" xmlns:jxb="http://java.sun.com/xml/ns/jaxb" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <jxb:bindings>
+    <jxb:globalBindings generateIsSetMethod="true"/>
+  </jxb:bindings>
+
+  <!-- ++++++++++++++++++++++++++++++++++     Experimental Platform Schemas      +++++++++++++++++++++++++++++++++ -->
+
+  <jxb:bindings schemaLocation="x-android-definitions-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.definitions.android"/>
+    </jxb:schemaBindings>
+    <!-- avoid overloading the version property -->
+    <jxb:bindings node="xs:element[@name='app_manager_state']//xs:element[@name='version']">
+        <jxb:property name="app_manager_version" />
+    </jxb:bindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="x-android-system-characteristics-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.systemcharacteristics.android"/>
+    </jxb:schemaBindings>
+    <!-- avoid overloading the version property -->
+    <jxb:bindings node="xs:element[@name='app_manager_item']//xs:element[@name='version']">
+        <jxb:property name="app_manager_version" />
+    </jxb:bindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="x-junos-definitions-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.definitions.junos"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="x-junos-system-characteristics-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.systemcharacteristics.junos"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="x-netconf-definitions-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.definitions.netconf"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="x-netconf-system-characteristics-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.systemcharacteristics.netconf"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+
+</jxb:bindings>
