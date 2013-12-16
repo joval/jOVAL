@@ -161,37 +161,14 @@ import org.joval.xml.XSITools;
  * @version %I% %G%
  */
 public class Engine implements IOvalEngine, IProvider {
-    //
-    // Initialize the static class mapping between OVAL object types and item types in the data model, as defined by
-    // the class resource "/ObjectItem.properties".
-    //
-    private static Map<Class<? extends ObjectType>, Class<? extends ItemType>> OBJECT_ITEM_MAP;
-    static {
-	OBJECT_ITEM_MAP = new HashMap<Class<? extends ObjectType>, Class<? extends ItemType>>();
-	BufferedReader reader = null;
-	try {
-	    reader = new BufferedReader(new InputStreamReader(Engine.class.getResourceAsStream("/ObjectItem.properties")));
-	    String line = null;
-	    while((line = reader.readLine()) != null) {
-		if (!line.startsWith("#")) {
-		    int ptr = line.indexOf("=");
-		    @SuppressWarnings("unchecked")
-		    Class<? extends ObjectType> objClass = (Class<? extends ObjectType>)Class.forName(line.substring(0,ptr));
-		    @SuppressWarnings("unchecked")
-		    Class<? extends ItemType> itemClass = (Class<? extends ItemType>)Class.forName(line.substring(ptr+1));
-		    OBJECT_ITEM_MAP.put(objClass, itemClass);
-		}
-	    }
-	} catch (Exception e) {
-	    JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} finally {
-	    if (reader != null) {
-		try {
-		    reader.close();
-		} catch (IOException e) {
-		}
-	    }
-	}
+    private static Map<Class<? extends ObjectType>, Class<? extends ItemType>> OBJECT_ITEM_MAP
+	= new HashMap<Class<? extends ObjectType>, Class<? extends ItemType>>();
+
+    /**
+     * Create a static class mapping between an OVAL object type and an item type in the data model.
+     */
+    protected static void setObjectItem(Class<? extends ObjectType> objectType, Class<? extends ItemType> itemType) {
+	OBJECT_ITEM_MAP.put(objectType, itemType);
     }
 
     private enum State {

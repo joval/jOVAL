@@ -73,6 +73,16 @@ CLASSES=\
 	scap.oval.definitions.netconf.ConfigTest	\
 	scap.oval.definitions.netconf.ObjectFactory	\
 	scap.oval.definitions.netconf.package-info	\
+	scap.oval.definitions.windowsx.EntityObjectSystemMetricIndexType	\
+	scap.oval.definitions.windowsx.EntityStateSystemMetricIndexType	\
+	scap.oval.definitions.windowsx.LicenseObject	\
+	scap.oval.definitions.windowsx.LicenseState	\
+	scap.oval.definitions.windowsx.LicenseTest	\
+	scap.oval.definitions.windowsx.ObjectFactory	\
+	scap.oval.definitions.windowsx.package-info	\
+	scap.oval.definitions.windowsx.SystemmetricObject	\
+	scap.oval.definitions.windowsx.SystemmetricState	\
+	scap.oval.definitions.windowsx.SystemmetricTest	\
 	scap.oval.systemcharacteristics.android.AppManagerItem	\
 	scap.oval.systemcharacteristics.android.BluetoothItem	\
 	scap.oval.systemcharacteristics.android.CameraItem	\
@@ -108,4 +118,9 @@ CLASSES=\
 	scap.oval.systemcharacteristics.junos.XmlShowItem	\
 	scap.oval.systemcharacteristics.netconf.ConfigItem	\
 	scap.oval.systemcharacteristics.netconf.ObjectFactory	\
-	scap.oval.systemcharacteristics.netconf.package-info
+	scap.oval.systemcharacteristics.netconf.package-info	\
+	scap.oval.systemcharacteristics.windowsx.EntityItemSystemMetricIndexType	\
+	scap.oval.systemcharacteristics.windowsx.LicenseItem	\
+	scap.oval.systemcharacteristics.windowsx.ObjectFactory	\
+	scap.oval.systemcharacteristics.windowsx.package-info	\
+	scap.oval.systemcharacteristics.windowsx.SystemmetricItem

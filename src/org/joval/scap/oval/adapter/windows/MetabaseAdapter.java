@@ -39,7 +39,6 @@ import scap.oval.systemcharacteristics.core.EntityItemStringType;
 import scap.oval.systemcharacteristics.core.FlagEnumeration;
 import scap.oval.systemcharacteristics.core.ItemType;
 import scap.oval.systemcharacteristics.core.StatusEnumeration;
-import scap.oval.systemcharacteristics.windows.EntityItemSystemMetricIndexType;
 import scap.oval.systemcharacteristics.windows.MetabaseItem;
 
 import org.joval.intf.plugin.IAdapter;

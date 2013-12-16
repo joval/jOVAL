@@ -22,6 +22,9 @@ Next, create a registry.ini file (see rsrc/registry.ini) that follows the same
 conventions as the scap component's registry.ini file. See the documentation
 inside of components/scap/rsrc/registry.ini.
 
+Finally, you must create an ObjectItem.properties file, to associate between
+your ObjectType and ItemType subclasses. See rsrc/ObjectItem.properties.
+
 You must also choose a unique "basename" for your extensions. This example uses
 a basename of "scapx" (the scap component uses a basename of "scap"). To create
 an extension JAR, you must package up your registry.ini and schemas.cat files

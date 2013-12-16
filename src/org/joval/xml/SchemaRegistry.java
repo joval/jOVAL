@@ -39,7 +39,11 @@ import com.sun.xml.internal.bind.marshaller.NamespacePrefixMapper;
 import jsaf.intf.util.IProperty;
 import jsaf.util.IniFile;
 
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.systemcharacteristics.core.ItemType;
+
 import org.joval.util.JOVALMsg;
+import org.joval.scap.oval.OvalFactory;
 
 /**
  * This class is used to retrieve JAXB package mappings for SCAP schemas.
@@ -170,9 +174,10 @@ public enum SchemaRegistry {
      * @see registry.ini
      * @see schemas.cat
      */
-    public static final void register(String basename) throws IOException {
+    public static final void register(String basename) throws IOException, ClassNotFoundException {
 	String registry = new StringBuffer(basename).append("/registry.ini").toString();
 	String catalog = new StringBuffer(basename).append("/schemas.cat").toString();
+	String associations = new StringBuffer(basename).append("/ObjectItem.properties").toString();
 
 	InputStream in = null;
 	try {
@@ -270,6 +275,18 @@ public enum SchemaRegistry {
 		    }
 		}
 	    }
+
+            reader = new BufferedReader(new InputStreamReader(CL.getResourceAsStream(associations)));
+            while((line = reader.readLine()) != null) {
+                if (!line.startsWith("#")) {
+                    int ptr = line.indexOf("=");
+                    @SuppressWarnings("unchecked")
+                    Class<? extends ObjectType> objectType = (Class<? extends ObjectType>)Class.forName(line.substring(0,ptr));
+                    @SuppressWarnings("unchecked")
+                    Class<? extends ItemType> itemType = (Class<? extends ItemType>)Class.forName(line.substring(ptr+1));
+                    OvalFactory.setObjectItem(objectType, itemType);
+                }
+            }
 	} finally {
 	    try {
 		in.close();
@@ -435,7 +452,7 @@ public enum SchemaRegistry {
 	try {
 	    register("scap");
 	    register("scapx");
-	} catch (IOException e) {
+	} catch (Exception e) {
 	    throw new RuntimeException(e);
 	}
     }

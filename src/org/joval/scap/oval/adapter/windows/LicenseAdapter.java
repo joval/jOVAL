@@ -25,13 +25,14 @@ import scap.oval.common.MessageLevelEnumeration;
 import scap.oval.common.SimpleDatatypeEnumeration;
 import scap.oval.definitions.core.ObjectType;
 import scap.oval.definitions.core.EntityObjectStringType;
-import scap.oval.definitions.windows.LicenseObject;
+import scap.oval.definitions.windowsx.LicenseObject;
 import scap.oval.systemcharacteristics.core.FlagEnumeration;
 import scap.oval.systemcharacteristics.core.ItemType;
 import scap.oval.systemcharacteristics.core.EntityItemAnySimpleType;
 import scap.oval.systemcharacteristics.core.EntityItemStringType;
 import scap.oval.systemcharacteristics.windows.EntityItemRegistryTypeType;
-import scap.oval.systemcharacteristics.windows.LicenseItem;
+import scap.oval.systemcharacteristics.windowsx.LicenseItem;
+import scap.oval.systemcharacteristics.windowsx.ObjectFactory;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.Factories;
@@ -46,6 +47,7 @@ import org.joval.util.JOVALMsg;
  */
 public class LicenseAdapter implements IAdapter {
     private IWindowsSession session;
+    private ObjectFactory factory;
     private License license;
 
     // Implement IAdapter
@@ -54,6 +56,7 @@ public class LicenseAdapter implements IAdapter {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
+	    factory = new ObjectFactory();
 	    classes.add(LicenseObject.class);
 	} else {
 	    notapplicable.add(LicenseObject.class);
@@ -125,7 +128,7 @@ public class LicenseAdapter implements IAdapter {
     // Private
 
     private LicenseItem getItem(License.Entry entry) {
-	LicenseItem item = Factories.sc.windows.createLicenseItem();
+	LicenseItem item = factory.createLicenseItem();
 
 	EntityItemStringType nameType = Factories.sc.core.createEntityItemStringType();
 	nameType.setValue(entry.getName());

@@ -511,7 +511,7 @@ public class XPERT {
 		    }
 
 		    try {
-			Engine engine = new Engine(plugin, systems);
+			IXccdfEngine engine = ScapFactory.createEngine(plugin, systems);
 			engine.setContext(ctx);
 			if (checklists.size() > 0) {
 			    for (Map.Entry<String, IChecklist> entry : checklists.entrySet()) {

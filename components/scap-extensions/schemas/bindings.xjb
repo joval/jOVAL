@@ -50,5 +50,15 @@
       <jxb:package name="scap.oval.systemcharacteristics.netconf"/>
     </jxb:schemaBindings>
   </jxb:bindings>
+  <jxb:bindings schemaLocation="x-windows-definitions-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.definitions.windowsx"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="x-windows-system-characteristics-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.systemcharacteristics.windowsx"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
 
 </jxb:bindings>

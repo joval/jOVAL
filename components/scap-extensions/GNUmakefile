@@ -48,6 +48,7 @@ resources:
 	mkdir -p $(BUILD)/scapx/schemas
 	cp $(CATALOG) $(BUILD)/scapx
 	cp $(RSRC)/registry.ini $(BUILD)/scapx
+	cp $(RSRC)/ObjectItem.properties $(BUILD)/scapx
 	cp -R $(SCHEMADIR)/* $(BUILD)/scapx/schemas
 	rm $(BUILD)/scapx/schemas/bindings.xjb
 
@@ -58,6 +59,7 @@ classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
 $(GEN): $(SCHEMA_FILES)
 	mkdir -p $@
 	$(XJC) $(XJCFLAGS) $(XJCFLAGS_EXT) $(SCHEMA_FILES) $(SCAP_LIB) -b $(BINDINGS) -d $(GEN)
+	find $(GEN) -name ObjectFactory.java | grep core | xargs rm
 
 $(BUILD)/%.class: $(GEN)/%.java
 	$(JAVAC) $(JAVACFLAGS) -d $(BUILD) -classpath $(CLASSPATH) $<

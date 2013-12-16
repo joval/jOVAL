@@ -13,6 +13,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.datatype.DatatypeConfigurationException;
 
 import scap.oval.common.GeneratorType;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.systemcharacteristics.core.ItemType;
 import scap.oval.results.OvalResults;
 
 import org.joval.intf.plugin.IPlugin;
@@ -33,6 +35,17 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class OvalFactory {
+    /**
+     * This method is used to register an association between an ObjectType and an ItemType.
+     *
+     * This is required only in cases where you want to use an IOvalEngine to process an externally-generated OVAL
+     * system-characteristics file that lacks an oval-sc:collected_objects entity (that is, it contains no associations
+     * between oval-def:objects and oval-sc:collected_items), AND you have added custom types to the OVAL data model.
+     */
+    public static void setObjectItem(Class<? extends ObjectType> objectType, Class<? extends ItemType> itemType) {
+	OEMEngine.setObjectItem(objectType, itemType);
+    }
+
     public static IDefinitions createDefinitions(URL url) throws OvalException {
 	try {
 	    return new Definitions(Definitions.getOvalDefinitions(url.openStream()));
@@ -110,6 +123,10 @@ public class OvalFactory {
     // Private
 
     private static class OEMEngine extends Engine {
+	protected static void setObjectItem(Class<? extends ObjectType> objectType, Class<? extends ItemType> itemType) {
+	    Engine.setObjectItem(objectType, itemType);
+	}
+
 	OEMEngine(IOvalEngine.Mode mode, IPlugin plugin) {
 	    super(mode, plugin);
 	}

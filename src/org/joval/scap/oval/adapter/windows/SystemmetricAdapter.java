@@ -18,14 +18,15 @@ import scap.oval.common.MessageLevelEnumeration;
 import scap.oval.common.OperationEnumeration;
 import scap.oval.common.SimpleDatatypeEnumeration;
 import scap.oval.definitions.core.ObjectType;
-import scap.oval.definitions.windows.EntityObjectSystemMetricIndexType;
-import scap.oval.definitions.windows.SystemmetricObject;
+import scap.oval.definitions.windowsx.EntityObjectSystemMetricIndexType;
+import scap.oval.definitions.windowsx.SystemmetricObject;
 import scap.oval.systemcharacteristics.core.EntityItemIntType;
 import scap.oval.systemcharacteristics.core.FlagEnumeration;
 import scap.oval.systemcharacteristics.core.ItemType;
 import scap.oval.systemcharacteristics.core.StatusEnumeration;
-import scap.oval.systemcharacteristics.windows.EntityItemSystemMetricIndexType;
-import scap.oval.systemcharacteristics.windows.SystemmetricItem;
+import scap.oval.systemcharacteristics.windowsx.EntityItemSystemMetricIndexType;
+import scap.oval.systemcharacteristics.windowsx.ObjectFactory;
+import scap.oval.systemcharacteristics.windowsx.SystemmetricItem;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;
@@ -40,6 +41,7 @@ import org.joval.util.JOVALMsg;
  */
 public class SystemmetricAdapter implements IAdapter {
     private IWindowsSession session;
+    private ObjectFactory factory;
     private Map<String, SystemmetricItem> metrics = null;
     private CollectException error = null;
 
@@ -49,6 +51,7 @@ public class SystemmetricAdapter implements IAdapter {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
+	    factory = new ObjectFactory();
 	    classes.add(SystemmetricObject.class);
 	} else {
 	    notapplicable.add(SystemmetricObject.class);
@@ -130,7 +133,7 @@ public class SystemmetricAdapter implements IAdapter {
 		    key = line.substring(0,ptr).trim();
 		    val = line.substring(ptr+1).trim();
 		    try {
-			EntityItemSystemMetricIndexType index = Factories.sc.windows.createEntityItemSystemMetricIndexType();
+			EntityItemSystemMetricIndexType index = factory.createEntityItemSystemMetricIndexType();
 			index.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 			index.setValue(key);
 
@@ -138,7 +141,7 @@ public class SystemmetricAdapter implements IAdapter {
 			value.setDatatype(SimpleDatatypeEnumeration.INT.value());
 			value.setValue(new Integer(val).toString());
 
-			SystemmetricItem item = Factories.sc.windows.createSystemmetricItem();
+			SystemmetricItem item = factory.createSystemmetricItem();
 			item.setIndex(index);
 			item.setValue(value);
 			metrics.put(key, item);

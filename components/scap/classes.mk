@@ -792,7 +792,6 @@ CLASSES=\
 	scap.oval.definitions.windows.EntityObjectNamingContextType	\
 	scap.oval.definitions.windows.EntityObjectProtocolType	\
 	scap.oval.definitions.windows.EntityObjectRegistryHiveType	\
-	scap.oval.definitions.windows.EntityObjectSystemMetricIndexType	\
 	scap.oval.definitions.windows.EntityStateAddrTypeType	\
 	scap.oval.definitions.windows.EntityStateAdstypeType	\
 	scap.oval.definitions.windows.EntityStateAuditType	\
@@ -812,7 +811,6 @@ CLASSES=\
 	scap.oval.definitions.windows.EntityStateServiceStartTypeType	\
 	scap.oval.definitions.windows.EntityStateServiceTypeType	\
 	scap.oval.definitions.windows.EntityStateSharedResourceTypeType	\
-	scap.oval.definitions.windows.EntityStateSystemMetricIndexType	\
 	scap.oval.definitions.windows.EntityStateWindowsViewType	\
 	scap.oval.definitions.windows.Fileauditedpermissions53Object	\
 	scap.oval.definitions.windows.Fileauditedpermissions53State	\
@@ -843,9 +841,6 @@ CLASSES=\
 	scap.oval.definitions.windows.InterfaceObject	\
 	scap.oval.definitions.windows.InterfaceState	\
 	scap.oval.definitions.windows.InterfaceTest	\
-	scap.oval.definitions.windows.LicenseObject	\
-	scap.oval.definitions.windows.LicenseState	\
-	scap.oval.definitions.windows.LicenseTest	\
 	scap.oval.definitions.windows.LockoutpolicyObject	\
 	scap.oval.definitions.windows.LockoutpolicyState	\
 	scap.oval.definitions.windows.LockoutpolicyTest	\
@@ -918,9 +913,6 @@ CLASSES=\
 	scap.oval.definitions.windows.SidSidTest	\
 	scap.oval.definitions.windows.SidState	\
 	scap.oval.definitions.windows.SidTest	\
-	scap.oval.definitions.windows.SystemmetricObject	\
-	scap.oval.definitions.windows.SystemmetricState	\
-	scap.oval.definitions.windows.SystemmetricTest	\
 	scap.oval.definitions.windows.UacObject	\
 	scap.oval.definitions.windows.UacState	\
 	scap.oval.definitions.windows.UacTest	\
@@ -1182,7 +1174,6 @@ CLASSES=\
 	scap.oval.systemcharacteristics.windows.EntityItemServiceStartTypeType	\
 	scap.oval.systemcharacteristics.windows.EntityItemServiceTypeType	\
 	scap.oval.systemcharacteristics.windows.EntityItemSharedResourceTypeType	\
-	scap.oval.systemcharacteristics.windows.EntityItemSystemMetricIndexType	\
 	scap.oval.systemcharacteristics.windows.EntityItemWindowsViewType	\
 	scap.oval.systemcharacteristics.windows.FileauditedpermissionsItem	\
 	scap.oval.systemcharacteristics.windows.FileeffectiverightsItem	\
@@ -1190,7 +1181,6 @@ CLASSES=\
 	scap.oval.systemcharacteristics.windows.GroupItem	\
 	scap.oval.systemcharacteristics.windows.GroupSidItem	\
 	scap.oval.systemcharacteristics.windows.InterfaceItem	\
-	scap.oval.systemcharacteristics.windows.LicenseItem	\
 	scap.oval.systemcharacteristics.windows.LockoutpolicyItem	\
 	scap.oval.systemcharacteristics.windows.MetabaseItem	\
 	scap.oval.systemcharacteristics.windows.ObjectFactory	\
@@ -1210,7 +1200,6 @@ CLASSES=\
 	scap.oval.systemcharacteristics.windows.SharedresourceItem	\
 	scap.oval.systemcharacteristics.windows.SidItem	\
 	scap.oval.systemcharacteristics.windows.SidSidItem	\
-	scap.oval.systemcharacteristics.windows.SystemmetricItem	\
 	scap.oval.systemcharacteristics.windows.UacItem	\
 	scap.oval.systemcharacteristics.windows.UserItem	\
 	scap.oval.systemcharacteristics.windows.UserSidItem	\
