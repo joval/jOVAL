@@ -41,7 +41,7 @@ public class Validator {
 	try {
 	    SchemaRegistry.register("svrl");
 	    SVRL = SchemaRegistry.getGroup("SVRL");
-	} catch (IOException e) {
+	} catch (Exception e) {
 	    throw new RuntimeException(e);
 	}
     }
