@@ -91,6 +91,7 @@ CLASSES=\
 	org.joval.scap.xccdf.engine.OcilHandler			\
 	org.joval.scap.xccdf.engine.OvalHandler			\
 	org.joval.scap.xccdf.engine.SceHandler			\
+	org.joval.util.Index					\
 	org.joval.util.JOVALMsg					\
 	org.joval.util.JOVALSystem				\
 	org.joval.util.Producer					\

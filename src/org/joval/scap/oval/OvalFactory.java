@@ -14,6 +14,7 @@ import javax.xml.datatype.DatatypeConfigurationException;
 
 import scap.oval.common.GeneratorType;
 import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.core.OvalDefinitions;
 import scap.oval.systemcharacteristics.core.ItemType;
 import scap.oval.results.OvalResults;
 
@@ -56,6 +57,10 @@ public class OvalFactory {
 
     public static IDefinitions createDefinitions(File f) throws OvalException {
 	return new Definitions(f);
+    }
+
+    public static IDefinitions createDefinitions(OvalDefinitions ovalDefs) {
+	return new Definitions(ovalDefs);
     }
 
     public static IDefinitionFilter createDefinitionFilter(File f) throws OvalException {

@@ -92,7 +92,7 @@ public class Definitions implements IDefinitions, ILoggable {
 	this(getOvalDefinitions(in));
     }
 
-    public Definitions(OvalDefinitions defs) throws OvalException {
+    public Definitions(OvalDefinitions defs) {
 	this.defs = defs;
 	this.logger = JOVALMsg.getLogger();
 

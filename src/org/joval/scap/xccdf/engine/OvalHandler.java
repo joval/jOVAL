@@ -49,6 +49,7 @@ import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.xml.ITransformable;
 import org.joval.scap.ScapException;
 import org.joval.scap.ScapFactory;
+import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.xccdf.XccdfException;
@@ -62,6 +63,7 @@ import org.joval.util.Producer;
  * @version %I% %G%
  */
 public class OvalHandler implements ISystem {
+    private static final String EMPTY_URI = "http://www.gocil.org/checklists/empty.xml";
     private static final String NAMESPACE = SystemEnumeration.OVAL.namespace();
 
     private Map<String, EngineData> engines;
@@ -100,7 +102,7 @@ public class OvalHandler implements ISystem {
 		if (engines.containsKey(href)) {
 		    ed = engines.get(href);
 		} else {
-		    ed = new EngineData(ctx.getOval(href));
+		    ed = new EngineData(href, ctx.getOval(href));
 		    engines.put(href, ed);
 		}
 
@@ -136,6 +138,10 @@ public class OvalHandler implements ISystem {
     }
 
     public Map<String, ? extends ITransformable<?>> exec(IPlugin plugin) throws Exception {
+	if (engines.size() == 0) {
+	    engines.put(EMPTY_URI,
+		new EngineData(EMPTY_URI, OvalFactory.createDefinitions(Factories.definitions.core.createOvalDefinitions())));
+	}
 	Iterator<Map.Entry<String, EngineData>> iter = engines.entrySet().iterator();
 	while(iter.hasNext()) {
 	    Map.Entry<String, EngineData> entry = iter.next();
@@ -158,6 +164,13 @@ public class OvalHandler implements ISystem {
 	    }
 	}
 	return results;
+    }
+
+    public void destroy() {
+	Iterator<EngineData> iter = engines.values().iterator();
+	while(iter.hasNext()) {
+	    iter.next().getEngine().destroy();
+	}
     }
 
     public IResult getResult(CheckType check, boolean multi) throws OvalException, IllegalArgumentException {
@@ -264,7 +277,7 @@ public class OvalHandler implements ISystem {
 	    try {
 		getObjectReferences(defs.getDefinition(defId).getCriteria(), defs, visited, result);
 	    } catch (NoSuchElementException e) {
-	        // definition was not found; skip it
+		// definition was not found; skip it
 	    }
 	} else if (obj instanceof CriteriaType) {
 	    for (Object child : ((CriteriaType)obj).getCriteriaOrCriterionOrExtendDefinition()) {
@@ -340,8 +353,10 @@ public class OvalHandler implements ISystem {
 	private IDefinitionFilter filter;
 	private IVariables variables;
 	private IOvalEngine engine;
+	private String uri;
 
-	EngineData(IDefinitions definitions) {
+	EngineData(String uri, IDefinitions definitions) {
+	    this.uri = uri;
 	    this.definitions = definitions;
 	    filter = OvalFactory.createDefinitionFilter();
 	    variables = OvalFactory.createVariables();
@@ -356,7 +371,7 @@ public class OvalHandler implements ISystem {
 	}
 
 	boolean createEngine(IPlugin plugin) {
-	    if (filter.size() > 0) {
+	    if (filter.size() > 0 || EMPTY_URI.equals(uri)) {
 		engine = OvalFactory.createEngine(IOvalEngine.Mode.DIRECTED, plugin);
 		engine.setDefinitions(definitions);
 		engine.setExternalVariables(variables);

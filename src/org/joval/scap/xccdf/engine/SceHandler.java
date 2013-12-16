@@ -58,6 +58,7 @@ public class SceHandler implements ISystem {
     private Producer<IXccdfEngine.Message> producer;
     private Map<String, Wrapper> scripts;
     private Map<String, IScriptResult> results;
+    private boolean cancelled = false;
 
     /**
      * Create an OVAL handler utility for the given XCCDF and Profile.
@@ -100,6 +101,9 @@ public class SceHandler implements ISystem {
 	if (plugin.getSession() instanceof IComputerSystem) {
 	    IComputerSystem session = (IComputerSystem)plugin.getSession();
 	    for (Map.Entry<String, Wrapper> entry : scripts.entrySet()) {
+		if (cancelled) {
+		    break;
+		}
 		String href = entry.getKey();
 		Wrapper wrapper = entry.getValue();
 		producer.sendNotify(IXccdfEngine.Message.SCE_SCRIPT, href);
@@ -120,6 +124,10 @@ public class SceHandler implements ISystem {
 	    }
 	}
 	return results;
+    }
+
+    public void destroy() {
+	cancelled = true;
     }
 
     public IResult getResult(CheckType check, boolean multi) throws IllegalArgumentException {

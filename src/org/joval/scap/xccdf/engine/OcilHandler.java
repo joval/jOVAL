@@ -120,6 +120,10 @@ public class OcilHandler implements ISystem {
 	return reports;
     }
 
+    public void destroy() {
+	// no-op
+    }
+
     public IResult getResult(CheckType check, boolean multi) throws IllegalArgumentException {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());

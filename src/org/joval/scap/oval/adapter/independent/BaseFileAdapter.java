@@ -460,7 +460,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 	}
 	if (session instanceof IWindowsSession) {
 	    if (((IWindowsSession)session).getNativeView() != getView(behaviors)) {
-	        return false;
+		return false;
 	    }
 	}
 	if (!behaviors.getRecurseDirection().equals("none") || behaviors.getDepth() != 0) {
@@ -564,21 +564,23 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		// Convert behaviors into flags and search conditions.
 		//
 		int depth = ISearchable.DEPTH_UNLIMITED;
-		if (fb != null && !"none".equals(fb.getRecurseDirection())) {
-		    if (fb.getRecurse().indexOf("directories") == -1) {
-			depth = 0;
-		    } else {
-			depth = fb.getDepth();
-		    }
-		    //
-		    // In OVAL, depth applies only to directories. So when looking for regular files, it is necessary to
-		    // add one to any non-zero depth, in order to reach the files, using the maxdepth concept of GNU find.
-		    //
-		    if (filename == null) {
-			conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(depth)));
-		    } else {
-			Integer effectiveDepth = new Integer(depth > 0 ? depth+1 : depth);
-			conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, effectiveDepth));
+		if (fb != null) {
+		    if (!"none".equals(fb.getRecurseDirection())) {
+			if (fb.getRecurse().indexOf("directories") == -1) {
+			    depth = 0;
+			} else {
+			    depth = fb.getDepth();
+			}
+			//
+			// In OVAL, depth applies only to directories. So when looking for regular files, it is necessary to
+			// add one to any non-zero depth, in order to reach the files, using the maxdepth concept of GNU find.
+			//
+			if (filename == null) {
+			    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(depth)));
+			} else {
+			    Integer effectiveDepth = new Integer(depth > 0 ? depth+1 : depth);
+			    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, effectiveDepth));
+			}
 		    }
 		    if (fb.getRecurse().indexOf("symlinks") == -1) {
 			followLinks = false;
@@ -632,6 +634,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		  }
 
 		  case PATTERN_MATCH: {
+		    followLinks = false; // Per the spec, the recurse attribute only applies for path equality operations.
 		    Pattern p = StringTools.pattern(path);
 		    from = searcher.guessParent(p);
 		    conditions.add(searcher.condition(FIELD_DIRNAME, TYPE_PATTERN, p));

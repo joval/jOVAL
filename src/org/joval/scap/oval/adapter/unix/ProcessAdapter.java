@@ -13,7 +13,9 @@ import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Pattern;
@@ -374,8 +376,9 @@ public class ProcessAdapter implements IAdapter {
 	    // On Linux, we can gather security information about the processes as well.
 	    //
 	    Hashtable<String, String> labels = new Hashtable<String, String>();
+	    Map<String, Integer> uids = new HashMap<String, Integer>();
 	    if (session.getFlavor() == IUnixSession.Flavor.LINUX) {
-	        lines = SafeCLI.multiLine("ps axZ", session, IUnixSession.Timeout.S);
+		lines = SafeCLI.multiLine("ps axZ", session, IUnixSession.Timeout.S);
 		int index = 0;
 		for (; index < lines.size() && lines.get(index).length() == 0; index++) {
 		    // find the first non-empty line
@@ -413,51 +416,43 @@ public class ProcessAdapter implements IAdapter {
 			}
 		    }
 		}
+
+		//
+		// On Linux, we can collect the loginuid for each process from the /proc filesystem.
+		//
+		StringBuffer cmd = new StringBuffer("for fname in `find /proc -maxdepth 2 -name loginuid`;");
+		cmd.append("do echo $fname | awk -F/ '{print \"pid:\", $3}'; cat $fname; echo \"\";done");
+		Iterator<String> iter = SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.S).iterator();
+		while (iter.hasNext()) {
+		    String line = iter.next();
+		    if (line.startsWith("pid:")) {
+			try {
+			    Integer pid = new Integer(line.substring(4).trim());
+			    if (iter.hasNext()) {
+				uids.put(pid.toString(), new Integer(iter.next()));
+			    }
+			} catch (NumberFormatException e) {
+			}
+		    }
+		}
 	    }
 
 	    //
-	    // On Linux, we can collect the loginuid for each process from the /proc filesystem.  So check for that,
-	    // and add the security information that was just collected at the same time.
+	    // Add the data we collected if on Linux, or mark as not collected as applicable.
 	    //
 	    for (ProcessData process : processes) {
-		if (session.getFlavor() == IUnixSession.Flavor.LINUX) {
-		    String pid = (String)process.pid.getValue();
-
-		    if (labels.containsKey(pid)) {
-			StringTokenizer tok = new StringTokenizer(labels.get(pid), ":");
-			while (tok.hasMoreTokens()) {
-			    EntityItemStringType labelType = Factories.sc.core.createEntityItemStringType();
-			    labelType.setValue(tok.nextToken());
-			    process.selinuxDomainLabel.add(labelType);
-			}
+		String pid = (String)process.pid.getValue();
+		if (labels.containsKey(pid)) {
+		    StringTokenizer tok = new StringTokenizer(labels.get(pid), ":");
+		    while (tok.hasMoreTokens()) {
+			EntityItemStringType labelType = Factories.sc.core.createEntityItemStringType();
+			labelType.setValue(tok.nextToken());
+			process.selinuxDomainLabel.add(labelType);
 		    }
-
-		    String luidPath = "/proc/" + pid + "/loginuid";
-		    try {
-			IFile f = session.getFilesystem().getFile(luidPath);
-			if (f.exists() && f.isFile()) {
-			    BufferedReader reader = null;
-			    try {
-				reader = new BufferedReader(new InputStreamReader(f.getInputStream()));
-				String loginuid = reader.readLine();
-				if (loginuid != null) {
-				    process.loginuid.setValue(loginuid);
-				    process.loginuid.setDatatype(SimpleDatatypeEnumeration.INT.value());
-				}
-			    } finally {
-				if (reader != null) {
-				    try {
-					reader.close();
-				    } catch (IOException e) {
-				    }
-				}
-			    }
-			}
-		    } catch (FileNotFoundException e) {
-			String reason = JOVALMsg.getMessage(Message.ERROR_IO_NOT_FILE);
-			session.getLogger().warn(JOVALMsg.getMessage(Message.ERROR_IO, luidPath, reason));
-			process.loginuid.setStatus(StatusEnumeration.NOT_COLLECTED);
-		    }
+		}
+		if (uids.containsKey(pid)) {
+		    process.loginuid.setValue(uids.get(pid).toString());
+		    process.loginuid.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		} else {
 		    process.loginuid.setStatus(StatusEnumeration.NOT_COLLECTED);
 		}

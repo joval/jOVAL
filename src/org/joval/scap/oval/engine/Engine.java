@@ -4,6 +4,7 @@
 package org.joval.scap.oval.engine;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -39,6 +40,9 @@ import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.stream.FactoryConfigurationError;
 
 import jsaf.intf.system.IComputerSystem;
 import jsaf.intf.util.ILoggable;
@@ -148,10 +152,12 @@ import org.joval.scap.oval.types.RecordType;
 import org.joval.scap.oval.types.StringType;
 import org.joval.scap.oval.types.TypeConversionException;
 import org.joval.scap.oval.types.TypeFactory;
+import org.joval.util.Index;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
 import org.joval.util.Version;
+import org.joval.xml.SchemaRegistry;
 import org.joval.xml.XSITools;
 
 /**
@@ -192,6 +198,10 @@ public class Engine implements IOvalEngine, IProvider {
     private boolean evalEnabled = true, abort = false;
     private Producer<Message> producer;
     private LocLogger logger;
+    private Marshaller marshaller;
+    private Index<Integer> objectIndex;
+    private Map<Integer, Collection<ItemType>> objectItems;
+    private int objectCounter = 0;
 
     /**
      * Create an engine for evaluating OVAL definitions using a plugin.
@@ -206,6 +216,13 @@ public class Engine implements IOvalEngine, IProvider {
 	this.mode = mode;
 	producer = new Producer<Message>();
 	filter = new DefinitionFilter();
+	try {
+	    marshaller = SchemaRegistry.OVAL_DEFINITIONS.createMarshaller();
+	} catch (JAXBException e) {
+	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (FactoryConfigurationError e) {
+	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
 	reset();
     }
 
@@ -215,9 +232,20 @@ public class Engine implements IOvalEngine, IProvider {
 	if (abort) {
 	    throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
 	}
+
+	//
+	// If the exact same object has been scanned before (without error), then return the previously-gathered results.
+	//
+	Integer indexId = objectIndex.getId(toCanonicalBytes(obj), objectCounter);
+	if (objectCounter == indexId) {
+	    objectCounter++;
+	} else {
+	    return objectItems.get(indexId);
+	}
+
+	Collection<ItemType> items = new ArrayList<ItemType>();
 	if (obj instanceof VariableObject) {
 	    VariableObject vObj = (VariableObject)obj;
-	    Collection<VariableItem> items = new ArrayList<VariableItem>();
 	    try {
 		Collection<IType> values = resolveVariable((String)vObj.getVarRef().getValue(), (RequestContext)rc);
 		if (values.size() > 0) {
@@ -241,12 +269,13 @@ public class Engine implements IOvalEngine, IProvider {
 	    } catch (OvalException e) {
 		throw new CollectException(e.getMessage(), FlagEnumeration.ERROR);
 	    }
-	    return items;
 	} else if (plugin == null) {
 	    throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_MODE_SC), FlagEnumeration.NOT_COLLECTED);
 	} else {
-	    return plugin.getOvalProvider().getItems(obj, rc);
+	    items.addAll(plugin.getOvalProvider().getItems(obj, rc));
 	}
+	objectItems.put(indexId, items);
+	return items;
     }
 
     // Implement IOvalEngine
@@ -539,6 +568,9 @@ public class Engine implements IOvalEngine, IProvider {
 	variableMap = new Hashtable<String, Collection<IType>>();
 	scanQueue = null;
 	error = null;
+	objectIndex = new Index<Integer>();
+	objectItems = new HashMap<Integer, Collection<ItemType>>();
+	objectCounter = 0;
     }
 
     /**
@@ -3493,5 +3525,51 @@ logger.warn("DAS", e);
 	    mask = field.getMask();
 	    value = field.getValue();
 	}
+    }
+
+    /**
+     * Canonicalize an ObjectType by stripping out its ID, marshalling it to XML, and returning the bytes.
+     */
+    private byte[] toCanonicalBytes(ObjectType objectType) {
+	JAXBElement<? extends ObjectType> object = wrapObject(objectType);
+	ByteArrayOutputStream out = new ByteArrayOutputStream();
+	synchronized(object) {
+	    String objectId = objectType.getId();
+	    objectType.setId(null);
+	    try {
+		marshaller.marshal(object, out);
+	    } catch (JAXBException e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    } finally {
+		objectType.setId(objectId);
+	    }
+	}
+	return out.toByteArray();
+    }
+
+    private Map<Class, Object> wrapperFactories = new HashMap<Class, Object>();
+    private Map<Class, Method> wrapperMethods = new HashMap<Class, Method>();
+
+    private JAXBElement<? extends ObjectType> wrapObject(ObjectType object) {
+        try {
+            Class clazz = object.getClass();
+            Method method = wrapperMethods.get(clazz);
+            Object factory = wrapperFactories.get(clazz);
+            if (method == null || factory == null) {
+                String packageName = clazz.getPackage().getName();
+                String unqualClassName = clazz.getName().substring(packageName.length()+1);
+                Class<?> factoryClass = Class.forName(packageName + ".ObjectFactory");
+                factory = factoryClass.newInstance();
+                wrapperFactories.put(clazz, factory);
+                method = factoryClass.getMethod("create" + unqualClassName, object.getClass());
+                wrapperMethods.put(clazz, method);
+            }
+            @SuppressWarnings("unchecked")
+            JAXBElement<ObjectType> wrapped = (JAXBElement<ObjectType>)method.invoke(factory, object);
+            return wrapped;
+        } catch (Exception e) {
+            logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+            throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), object.getId()));
+        }
     }
 }

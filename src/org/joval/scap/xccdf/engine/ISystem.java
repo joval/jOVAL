@@ -42,6 +42,11 @@ interface ISystem {
     Map<String, ? extends ITransformable<?>> exec(IPlugin plugin) throws Exception;
 
     /**
+     * Cancel exec.
+     */
+    void destroy();
+
+    /**
      * Get the result for a rule.
      *
      * @param multi overrides CheckType.getMultiCheck().

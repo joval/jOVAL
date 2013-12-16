@@ -801,18 +801,30 @@ public class Report implements IReport, ILoggable {
 	    QuestionResultType qrt = elt.getValue();
 	    String id = qrt.getQuestionRef();
 	    if (qrt instanceof BooleanQuestionResultType) {
-		questionResults.put(id, ((BooleanQuestionResultType)qrt).getAnswer().toString());
+		BooleanQuestionResultType bqrt = (BooleanQuestionResultType)qrt;
+		if (bqrt.isSetAnswer()) {
+		    questionResults.put(id, bqrt.getAnswer().toString());
+		}
 	    } else if (qrt instanceof ChoiceQuestionResultType) {
-		ChoiceType choice = checklist.getChoice(((ChoiceQuestionResultType)qrt).getAnswer().getChoiceRef());
-		if (choice.isSetValue()) {
-		    questionResults.put(id, choice.getValue());
-		} else if (choice.isSetVarRef()) {
-		    questionResults.put(id, choice.getVarRef()); // TBD: get value from somewhere?
+		ChoiceQuestionResultType cqrt = (ChoiceQuestionResultType)qrt;
+		if (cqrt.isSetAnswer()) {
+		    ChoiceType choice = checklist.getChoice(cqrt.getAnswer().getChoiceRef());
+		    if (choice.isSetValue()) {
+		        questionResults.put(id, choice.getValue());
+		    } else if (choice.isSetVarRef()) {
+		        questionResults.put(id, choice.getVarRef()); // TBD: get value from somewhere?
+		    }
 		}
 	    } else if (qrt instanceof NumericQuestionResultType) {
-		questionResults.put(id, ((NumericQuestionResultType)qrt).getAnswer().toString());
+		NumericQuestionResultType nqrt = (NumericQuestionResultType)qrt;
+		if (nqrt.isSetAnswer()) {
+		    questionResults.put(id, ((NumericQuestionResultType)qrt).getAnswer().toString());
+		}
 	    } else if (qrt instanceof StringQuestionResultType) {
-		questionResults.put(id, ((StringQuestionResultType)qrt).getAnswer());
+		StringQuestionResultType sqrt = (StringQuestionResultType)qrt;
+		if (sqrt.isSetAnswer()) {
+		    questionResults.put(id, ((StringQuestionResultType)qrt).getAnswer());
+		}
 	    }
 	}
 

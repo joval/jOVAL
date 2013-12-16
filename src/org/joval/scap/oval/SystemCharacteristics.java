@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.zip.Adler32;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -51,6 +50,7 @@ import scap.oval.systemcharacteristics.core.SystemInfoType;
 import scap.oval.systemcharacteristics.core.VariableValueType;
 
 import org.joval.intf.scap.oval.ISystemCharacteristics;
+import org.joval.util.Index;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.DOMTools;
 import org.joval.xml.SchemaRegistry;
@@ -106,7 +106,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     private Map<String, Collection<VariableValueType>> variableTable;
     private Map<String, Collection<BigInteger>> objectItemTable;
     private Map<String, Collection<String>> objectVariableTable;
-    private Map<String, Collection<BigInteger>> itemChecksums;
+    private Index<BigInteger> index;
     private int nextItemId = 0;
     private Marshaller marshaller = null;
 
@@ -116,7 +116,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     SystemCharacteristics() {
 	objectTable = new HashMap<String, ObjectData>();
 	itemTable = new HashMap<BigInteger, JAXBElement<? extends ItemType>>();
-	itemChecksums = new HashMap<String, Collection<BigInteger>>();
+	index = new Index<BigInteger>();
 	variableTable = new HashMap<String, Collection<VariableValueType>>();
 	objectItemTable = new HashMap<String, Collection<BigInteger>>();
 	objectVariableTable = new HashMap<String, Collection<String>>();
@@ -247,10 +247,9 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    throw new IllegalStateException("read-only");
 	}
 	JAXBElement<? extends ItemType> item = wrapItem(it);
-	BigInteger itemId = null;
 	if (item.getValue().isSetId()) {
 	    //
-	    // The item has been stored previously someplace else, so store a copy of it here.
+	    // The item has been stored previously someplace else, so make a copy of it here.
 	    //
 	    @SuppressWarnings("unchecked")
 	    JAXBElement<? extends ItemType> clone =
@@ -258,51 +257,12 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    item = clone;
 	}
 	byte[] data = toCanonicalBytes(item);
-	Adler32 adler = new Adler32();
-	adler.update(data);
-	String cs = Long.toString(adler.getValue());
-	if (itemChecksums.containsKey(cs)) {
-	    //
-	    // If another item with the same Adler32 checksum has been stored previously, that doesn't mean
-	    // it contains the same data.  So, we compare it to all the previously-stored items with the
-	    // same checksum.
-	    //
-	    boolean match = true;
-	    for (BigInteger id : itemChecksums.get(cs)) {
-		byte[] candidate = toCanonicalBytes(itemTable.get(id));
-		if (candidate.length == data.length) {
-		    match = true;
-		    for (int i=0; i < data.length; i++) {
-			if (candidate[i] != data[i]) {
-			    match = false;
-			    break;
-			}
-		    }
-		} else {
-		    match = false;
-		}
-		if (match) {
-		    itemId = id;
-		    item.getValue().setId(itemId);
-		    break;
-		}
-	    }
-	    //
-	    // Having determined that the item is indeed new, we store it.
-	    //
-	    if (!match) {
-		itemId = new BigInteger(Integer.toString(nextItemId++));
-		item.getValue().setId(itemId);
-		itemTable.put(itemId, item);
-		itemChecksums.get(cs).add(itemId);
-	    }
-	} else {
-	    itemId = new BigInteger(Integer.toString(nextItemId++));
-	    item.getValue().setId(itemId);
+	BigInteger suggestedId = new BigInteger(Integer.toString(nextItemId));
+	BigInteger itemId = index.getId(data, suggestedId);
+	item.getValue().setId(itemId);
+	if (suggestedId.equals(itemId)) {
 	    itemTable.put(itemId, item);
-	    Collection<BigInteger> set = new HashSet<BigInteger>();
-	    set.add(itemId);
-	    itemChecksums.put(cs, set);
+	    nextItemId++;
 	}
 	return itemId;
     }
@@ -529,7 +489,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     /**
      * Canonicalize the item by stripping out its ID (if any) marshalling it to XML, and returning the bytes.
      */
-    private byte[] toCanonicalBytes(JAXBElement<? extends ItemType> item) throws OvalException {
+    private byte[] toCanonicalBytes(JAXBElement<? extends ItemType> item) {
 	ByteArrayOutputStream out = new ByteArrayOutputStream();
 	synchronized(item) {
 	    BigInteger itemId = item.getValue().getId();
