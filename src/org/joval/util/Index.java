@@ -19,12 +19,14 @@ import java.util.zip.Adler32;
 import jsaf.util.Checksum;
 
 /**
- * An index for binary data.
+ * An index for binary data. Stores up to 1MB of data to avoid computing MD5 hashes.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 public class Index<T> {
+    private static final int MAX_MEM = 1048576;
+
     /**
      * A place-holder to indicate than data with an Adler checksum has been previously encountered.
      */
@@ -32,6 +34,7 @@ public class Index<T> {
 
     private Map<String, Entry> adlerIndex;
     private Map<String, T> md5Index;
+    private int mem_used = 0;
 
     /**
      * Create an empty SystemCharacteristics.
@@ -49,15 +52,17 @@ public class Index<T> {
 	adler.update(data);
 	String cs = Long.toString(adler.getValue());
 
-	if (adlerIndex.containsKey(cs)) {
+	if (mem_used > MAX_MEM || adlerIndex.containsKey(cs)) {
 	    Entry entry = adlerIndex.get(cs);
-	    if (!entry.equals(VISITED)) {
+	    if (entry != null && !entry.equals(VISITED)) {
 		//
 		// Time to compute the MD5 of the first entry with this Adler CS.
 		//
 		md5Index.put(Checksum.getChecksum(entry.data, Checksum.Algorithm.MD5), entry.id);
+		int len = entry.data.length;
 		entry.data = null;
 		adlerIndex.put(cs, VISITED);
+		mem_used = mem_used - len;
 	    }
 
 	    String md5 = Checksum.getChecksum(data, Checksum.Algorithm.MD5);
@@ -69,6 +74,7 @@ public class Index<T> {
 	    }
 	} else {
 	    adlerIndex.put(cs, new Entry(data, suggestedId));
+	    mem_used = mem_used + data.length;
 	    return suggestedId;
 	}
     }

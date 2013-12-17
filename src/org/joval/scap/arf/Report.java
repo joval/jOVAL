@@ -808,7 +808,7 @@ public class Report implements IReport, ILoggable {
 		      case MODEL_TRUE_FALSE:
 			questionResults.put(id, bqrt.getAnswer().booleanValue() ? "TRUE" : "FALSE");
 			break;
-		      case YES_NO:
+		      case MODEL_YES_NO:
 			questionResults.put(id, bqrt.getAnswer().booleanValue() ? "YES" : "NO");
 			break;
 		    }

@@ -809,10 +809,6 @@ public class Engine implements IXccdfEngine {
 
 	sysinfo = plugin.getSystemInfo();
 	applicableCpes = new ArrayList<String>();
-logger.info("DAS testResult: " + testResult.toString());
-logger.info("DAS testResult.target: " + testResult.getTarget().toString());
-logger.info("DAS sysinfo: " + sysinfo.toString());
-logger.info("DAS sysinfo.getPHN: " + sysinfo.getPrimaryHostName());
 	if (!testResult.getTarget().contains(sysinfo.getPrimaryHostName())) {
 	    testResult.getTarget().add(sysinfo.getPrimaryHostName());
 	}

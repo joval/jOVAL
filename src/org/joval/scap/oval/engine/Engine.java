@@ -2435,7 +2435,6 @@ public class Engine implements IOvalEngine, IProvider {
 		    }
 		}
 	    } catch (TypeConversionException e) {
-logger.warn("DAS", e);
 		String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CONVERSION, e.getMessage());
 		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, ref, reason));
 	    } catch (NoSuchElementException e) {
@@ -2717,7 +2716,6 @@ logger.warn("DAS", e);
 			variableValueType.setValue(value.getString());
 			rc.addVar(variableValueType);
 		    } catch (TypeConversionException e) {
-logger.warn("DAS", e);
 			MessageType message = Factories.common.createMessageType();
 			message.setLevel(MessageLevelEnumeration.ERROR);
 			message.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CONVERSION, e.getMessage()));
