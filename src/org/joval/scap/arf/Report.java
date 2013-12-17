@@ -57,13 +57,14 @@ import scap.arf.core.AssetReportCollection.ExtendedInfos.ExtendedInfo;
 import scap.arf.reporting.RelationshipsContainerType;
 import scap.arf.reporting.RelationshipType;
 import scap.ocil.core.BooleanQuestionResultType;
+import scap.ocil.core.BooleanQuestionType;
 import scap.ocil.core.ChoiceQuestionResultType;
 import scap.ocil.core.ChoiceType;
 import scap.ocil.core.ExtensionContainerType;
 import scap.ocil.core.NumericQuestionResultType;
 import scap.ocil.core.OCILType;
-import scap.ocil.core.QuestionResultType;
 import scap.ocil.core.QuestionnaireResultType;
+import scap.ocil.core.QuestionResultType;
 import scap.ocil.core.QuestionTestActionType;
 import scap.ocil.core.StringQuestionResultType;
 import scap.oval.definitions.core.CriteriaType;
@@ -803,17 +804,21 @@ public class Report implements IReport, ILoggable {
 	    if (qrt instanceof BooleanQuestionResultType) {
 		BooleanQuestionResultType bqrt = (BooleanQuestionResultType)qrt;
 		if (bqrt.isSetAnswer()) {
-		    questionResults.put(id, bqrt.getAnswer().toString());
+		    switch(((BooleanQuestionType)checklist.getQuestion(id)).getModel()) {
+		      case MODEL_TRUE_FALSE:
+			questionResults.put(id, bqrt.getAnswer().booleanValue() ? "TRUE" : "FALSE");
+			break;
+		      case YES_NO:
+			questionResults.put(id, bqrt.getAnswer().booleanValue() ? "YES" : "NO");
+			break;
+		    }
 		}
 	    } else if (qrt instanceof ChoiceQuestionResultType) {
 		ChoiceQuestionResultType cqrt = (ChoiceQuestionResultType)qrt;
 		if (cqrt.isSetAnswer()) {
 		    ChoiceType choice = checklist.getChoice(cqrt.getAnswer().getChoiceRef());
-		    if (choice.isSetValue()) {
-		        questionResults.put(id, choice.getValue());
-		    } else if (choice.isSetVarRef()) {
-		        questionResults.put(id, choice.getVarRef()); // TBD: get value from somewhere?
-		    }
+		    // NB: In the var_ref case, the player will have already set a value for us.
+		    questionResults.put(id, choice.getValue());
 		}
 	    } else if (qrt instanceof NumericQuestionResultType) {
 		NumericQuestionResultType nqrt = (NumericQuestionResultType)qrt;

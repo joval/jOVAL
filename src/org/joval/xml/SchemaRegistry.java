@@ -169,7 +169,7 @@ public enum SchemaRegistry {
      * Register additional schemas.
      *
      * @param basename The package basename under which, visible to the static initializer's context ClassLoader, the
-     *                 resources [basename]/registry.ini and [basename]/schemas.cat will be found.
+     *		 resources [basename]/registry.ini and [basename]/schemas.cat will be found.
      *
      * @see registry.ini
      * @see schemas.cat
@@ -276,21 +276,23 @@ public enum SchemaRegistry {
 		}
 	    }
 
-            reader = new BufferedReader(new InputStreamReader(CL.getResourceAsStream(associations)));
-            while((line = reader.readLine()) != null) {
-                if (!line.startsWith("#")) {
-                    int ptr = line.indexOf("=");
-                    @SuppressWarnings("unchecked")
-                    Class<? extends ObjectType> objectType = (Class<? extends ObjectType>)Class.forName(line.substring(0,ptr));
-                    @SuppressWarnings("unchecked")
-                    Class<? extends ItemType> itemType = (Class<? extends ItemType>)Class.forName(line.substring(ptr+1));
-                    OvalFactory.setObjectItem(objectType, itemType);
-                }
-            }
+	    reader = new BufferedReader(new InputStreamReader(CL.getResourceAsStream(associations)));
+	    while((line = reader.readLine()) != null) {
+		if (!line.startsWith("#")) {
+		    int ptr = line.indexOf("=");
+		    @SuppressWarnings("unchecked")
+		    Class<? extends ObjectType> objectType = (Class<? extends ObjectType>)Class.forName(line.substring(0,ptr));
+		    @SuppressWarnings("unchecked")
+		    Class<? extends ItemType> itemType = (Class<? extends ItemType>)Class.forName(line.substring(ptr+1));
+		    OvalFactory.setObjectItem(objectType, itemType);
+		}
+	    }
 	} finally {
-	    try {
-		in.close();
-	    } catch (IOException e) {
+	    if(in != null) {
+		try {
+		    in.close();
+		} catch (IOException e) {
+		}
 	    }
 	}
     }
@@ -451,9 +453,14 @@ public enum SchemaRegistry {
 	publicId2URL = new HashMap<String, URL>();
 	try {
 	    register("scap");
-	    register("scapx");
 	} catch (Exception e) {
 	    throw new RuntimeException(e);
+	}
+	try {
+	    register("scapx");
+	} catch (Exception e) {
+	    // Extensions are optional
+	    JOVALMsg.getLogger().warn(e.getMessage());
 	}
     }
 
