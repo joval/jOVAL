@@ -275,20 +275,27 @@ public enum SchemaRegistry {
 		    }
 		}
 	    }
-
-	    reader = new BufferedReader(new InputStreamReader(CL.getResourceAsStream(associations)));
-	    while((line = reader.readLine()) != null) {
-		if (!line.startsWith("#")) {
-		    int ptr = line.indexOf("=");
-		    @SuppressWarnings("unchecked")
-		    Class<? extends ObjectType> objectType = (Class<? extends ObjectType>)Class.forName(line.substring(0,ptr));
-		    @SuppressWarnings("unchecked")
-		    Class<? extends ItemType> itemType = (Class<? extends ItemType>)Class.forName(line.substring(ptr+1));
-		    OvalFactory.setObjectItem(objectType, itemType);
-		}
+	    in.close();
+	    in = CL.getResourceAsStream(associations);
+	    if (in == null) {
+		throw JOVALMsg.getLogger().warn(JOVALMsg.ERROR_MISSING_RESOURCE, associations);
+	    } else {
+	        reader = new BufferedReader(new InputStreamReader(CL.getResourceAsStream(associations)));
+	        while((line = reader.readLine()) != null) {
+		    if (!line.startsWith("#")) {
+		        int ptr = line.indexOf("=");
+			String objectClassName = line.substring(0,ptr);
+			String itemClassName = line.substring(ptr+1);
+		        @SuppressWarnings("unchecked")
+		        Class<? extends ObjectType> objectType = (Class<? extends ObjectType>)Class.forName(objectClassName);
+		        @SuppressWarnings("unchecked")
+		        Class<? extends ItemType> itemType = (Class<? extends ItemType>)Class.forName(itemClassName);
+		        OvalFactory.setObjectItem(objectType, itemType);
+		    }
+	        }
 	    }
 	} finally {
-	    if(in != null) {
+	    if (in != null) {
 		try {
 		    in.close();
 		} catch (IOException e) {
