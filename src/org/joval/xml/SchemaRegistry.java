@@ -278,7 +278,7 @@ public enum SchemaRegistry {
 	    in.close();
 	    in = CL.getResourceAsStream(associations);
 	    if (in == null) {
-		throw JOVALMsg.getLogger().warn(JOVALMsg.ERROR_MISSING_RESOURCE, associations);
+		JOVALMsg.getLogger().warn(JOVALMsg.ERROR_MISSING_RESOURCE, associations);
 	    } else {
 	        reader = new BufferedReader(new InputStreamReader(CL.getResourceAsStream(associations)));
 	        while((line = reader.readLine()) != null) {
