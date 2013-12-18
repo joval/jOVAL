@@ -23,6 +23,7 @@ clean: logic-clean
 	@$(MAKE) --keep-going --directory=$(JSAF_COMPONENTS) clean
 	@$(MAKE) --keep-going --directory=jovaldi dist-clean
 	@$(MAKE) --keep-going --directory=scap clean
+	@$(MAKE) --keep-going --directory=scap-extensions clean
 	@$(MAKE) --keep-going --directory=schematron clean
 	@$(MAKE) --keep-going --directory=$(JPE_HOME) clean
 
@@ -48,5 +49,5 @@ _scap:
 	@$(MAKE) --keep-going --directory=scap all
 	@$(MAKE) --keep-going --directory=scap-extensions all
 
-_schematron:
+_schematron: _scap
 	@$(MAKE) --keep-going --directory=schematron all
