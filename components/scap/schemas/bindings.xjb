@@ -424,6 +424,10 @@
     <jxb:bindings node="xs:element[@name='slackwarepkginfo_item']//xs:element[@name='version']">
         <jxb:property name="slackwarepkginfo_version" />
     </jxb:bindings>
+    <!-- rename to conform with object/state/test name pattern -->
+    <jxb:bindings node="xs:element[@name='inetlisteningserver_item']//xs:complexType">
+        <jxb:class name="InetlisteningserversItem" />
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.10.1/macos-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
@@ -434,6 +438,10 @@
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.systemcharacteristics.macos"/>
     </jxb:schemaBindings>
+    <!-- rename to conform with with object/state/test name pattern -->
+    <jxb:bindings node="xs:element[@name='inetlisteningserver_item']//xs:complexType">
+        <jxb:class name="InetlisteningserversItem" />
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.10.1/pixos-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>

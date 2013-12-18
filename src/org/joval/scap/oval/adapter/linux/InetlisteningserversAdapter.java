@@ -30,7 +30,7 @@ import scap.oval.systemcharacteristics.core.EntityItemStringType;
 import scap.oval.systemcharacteristics.core.FlagEnumeration;
 import scap.oval.systemcharacteristics.core.ItemType;
 import scap.oval.systemcharacteristics.core.StatusEnumeration;
-import scap.oval.systemcharacteristics.linux.InetlisteningserverItem;
+import scap.oval.systemcharacteristics.linux.InetlisteningserversItem;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;
@@ -45,7 +45,7 @@ import org.joval.util.JOVALMsg;
  */
 public class InetlisteningserversAdapter implements IAdapter {
     protected IUnixSession session;
-    private Collection<InetlisteningserverItem> portItems = null;
+    private Collection<InetlisteningserversItem> portItems = null;
 
     // Implement IAdapter
 
@@ -72,12 +72,12 @@ public class InetlisteningserversAdapter implements IAdapter {
 	//
 	// Create a list of items with matching addresses
 	//
-	Collection<InetlisteningserverItem> items = new ArrayList<InetlisteningserverItem>();
+	Collection<InetlisteningserversItem> items = new ArrayList<InetlisteningserversItem>();
 	EntityObjectIPAddressStringType localAddress = iObj.getLocalAddress();
 	OperationEnumeration op = localAddress.getOperation();
 	switch(op) {
 	  case EQUALS:
-	    for (InetlisteningserverItem item : portItems) {
+	    for (InetlisteningserversItem item : portItems) {
 		if (item.getLocalAddress().getValue().equals(localAddress.getValue())) {
 		    items.add(item);
 		}
@@ -85,7 +85,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 	    break;
 
 	  case NOT_EQUAL:
-	    for (InetlisteningserverItem item : portItems) {
+	    for (InetlisteningserversItem item : portItems) {
 		if (!item.getLocalAddress().getValue().equals(localAddress.getValue())) {
 		    items.add(item);
 		}
@@ -95,7 +95,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 	  case PATTERN_MATCH:
 	    try {
 		Pattern p = StringTools.pattern((String)localAddress.getValue());
-		for (InetlisteningserverItem item : portItems) {
+		for (InetlisteningserversItem item : portItems) {
 		    if (p.matcher((String)item.getLocalAddress().getValue()).find()) {
 			items.add(item);
 		    }
@@ -114,10 +114,10 @@ public class InetlisteningserversAdapter implements IAdapter {
 	//
 	// Remove items not matching the protocol
 	//
-	Iterator<InetlisteningserverItem> iter = items.iterator();
+	Iterator<InetlisteningserversItem> iter = items.iterator();
 	String protocol = (String)iObj.getProtocol().getValue();
 	while(iter.hasNext()) {
-	    InetlisteningserverItem item = iter.next();
+	    InetlisteningserversItem item = iter.next();
 	    String itemProtocol = (String)item.getProtocol().getValue();
 	    op = iObj.getProtocol().getOperation();
 	    switch(op) {
@@ -157,7 +157,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 	iter = items.iterator();
 	int port = Integer.parseInt((String)iObj.getLocalPort().getValue());
 	while(iter.hasNext()) {
-	    InetlisteningserverItem item = iter.next();
+	    InetlisteningserversItem item = iter.next();
 	    int itemPort = Integer.parseInt((String)item.getLocalPort().getValue());
 	    op = iObj.getLocalPort().getOperation();
 	    switch(op) {
@@ -234,7 +234,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 	    //
 	    // List the listeners and established TCP connections
 	    //
-	    portItems = new ArrayList<InetlisteningserverItem>();
+	    portItems = new ArrayList<InetlisteningserversItem>();
 	    Collection<String> data = new ArrayList<String>();
 	    data.addAll(SafeCLI.multiLine("netstat -lnptu", session, IUnixSession.Timeout.S));
 	    data.addAll(SafeCLI.multiLine("netstat -nptu | grep ESTABLISHED", session, IUnixSession.Timeout.S));
@@ -243,7 +243,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 		String line = lines.next().trim();
 		StringTokenizer tok = new StringTokenizer(line);
 		if (tok.countTokens() >= 6) {
-		    InetlisteningserverItem item = Factories.sc.linux.createInetlisteningserverItem();
+		    InetlisteningserversItem item = Factories.sc.linux.createInetlisteningserversItem();
 
 		    String protocol = tok.nextToken();
 		    if (!"tcp".equals(protocol) && !"udp".equals(protocol)) {

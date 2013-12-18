@@ -1061,7 +1061,7 @@ CLASSES=\
 	scap.oval.systemcharacteristics.linux.EntityItemProtocolType	\
 	scap.oval.systemcharacteristics.linux.EntityItemRpmVerifyResultType	\
 	scap.oval.systemcharacteristics.linux.IflistenersItem	\
-	scap.oval.systemcharacteristics.linux.InetlisteningserverItem	\
+	scap.oval.systemcharacteristics.linux.InetlisteningserversItem	\
 	scap.oval.systemcharacteristics.linux.ObjectFactory	\
 	scap.oval.systemcharacteristics.linux.package-info	\
 	scap.oval.systemcharacteristics.linux.PartitionItem	\
@@ -1077,7 +1077,7 @@ CLASSES=\
 	scap.oval.systemcharacteristics.macos.EntityItemPermissionCompareType	\
 	scap.oval.systemcharacteristics.macos.EntityItemPlistTypeType	\
 	scap.oval.systemcharacteristics.macos.Inetlisteningserver510Item	\
-	scap.oval.systemcharacteristics.macos.InetlisteningserverItem	\
+	scap.oval.systemcharacteristics.macos.InetlisteningserversItem	\
 	scap.oval.systemcharacteristics.macos.NvramItem	\
 	scap.oval.systemcharacteristics.macos.ObjectFactory	\
 	scap.oval.systemcharacteristics.macos.package-info	\

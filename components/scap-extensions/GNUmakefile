@@ -48,7 +48,6 @@ resources:
 	mkdir -p $(BUILD)/scapx/schemas
 	cp $(CATALOG) $(BUILD)/scapx
 	cp $(RSRC)/registry.ini $(BUILD)/scapx
-	cp $(RSRC)/ObjectItem.properties $(BUILD)/scapx
 	cp -R $(SCHEMADIR)/* $(BUILD)/scapx/schemas
 	rm $(BUILD)/scapx/schemas/bindings.xjb
 

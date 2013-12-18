@@ -17,6 +17,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -38,6 +40,7 @@ import com.sun.xml.internal.bind.marshaller.NamespacePrefixMapper;
 
 import jsaf.intf.util.IProperty;
 import jsaf.util.IniFile;
+import jsaf.util.StringTools;
 
 import scap.oval.definitions.core.ObjectType;
 import scap.oval.systemcharacteristics.core.ItemType;
@@ -177,19 +180,51 @@ public enum SchemaRegistry {
     public static final void register(String basename) throws IOException, ClassNotFoundException {
 	String registry = new StringBuffer(basename).append("/registry.ini").toString();
 	String catalog = new StringBuffer(basename).append("/schemas.cat").toString();
-	String associations = new StringBuffer(basename).append("/ObjectItem.properties").toString();
 
 	InputStream in = null;
 	try {
-	    Collection<String> changedGroups = new HashSet<String>();
+	    //
+	    // Build a manifest of classes in the originating JAR file for the resource
+	    //
+	    URL registryUrl = CL.getResource(registry);
+	    if (registryUrl == null) {
+		throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, registry));
+	    }
+	    Map<String, Collection<String>> manifest = new HashMap<String, Collection<String>>();
+	    URL jarUrl = new URL(registryUrl, "/");
+	    if ("jar".equals(jarUrl.getProtocol())) {
+		String spec = jarUrl.getPath();
+		spec = spec.substring(0, spec.indexOf("!"));
+		jarUrl = new URL(spec);
+		ZipInputStream zin = new ZipInputStream(jarUrl.openStream());
+		try {
+		    ZipEntry entry = null;
+		    while((entry = zin.getNextEntry()) != null) {
+			String name = entry.getName();
+			if (!entry.isDirectory() && name.endsWith(".class") && name.indexOf("$") == -1) {
+			    String packageName = name.substring(0, name.lastIndexOf("/")).replace('/','.');
+			    String className = name.substring(name.lastIndexOf("/")+1, name.lastIndexOf("."));
+			    if (!manifest.containsKey(packageName)) {
+				manifest.put(packageName, new HashSet<String>());
+			    }
+			    manifest.get(packageName).add(className);
+			}
+		    }
+		} finally {
+		    try {
+			zin.close();
+		    } catch (IOException e) {
+		    }
+		}
+	    } else {
+		JOVALMsg.getLogger().warn(JOVALMsg.WARNING_XML_REG_URI, jarUrl.toString());
+	    }
 
 	    //
 	    // Process the registry
 	    //
-	    in = CL.getResourceAsStream(registry);
-	    if (in == null) {
-		throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, registry));
-	    }
+	    Collection<String> changedGroups = new HashSet<String>();
+	    in = registryUrl.openStream();
 	    IniFile ini = new IniFile(in);
 	    for (String prefix : ini.listSections()) {
 		IProperty props = ini.getSection(prefix);
@@ -208,6 +243,55 @@ public enum SchemaRegistry {
 		}
 
 		String packageName = props.getProperty("package");
+		if (manifest.containsKey(packageName)) {
+		    for (String objectClassName : manifest.get(packageName)) {
+			if (objectClassName.endsWith("Object")) {
+			    Class<?> objectClass = Class.forName(packageName + "." + objectClassName);
+			    if (OBJECT_TYPE.isAssignableFrom(objectClass)) {
+				String stem = objectClassName.substring(0, objectClassName.length() - 6);
+				char[] ocn = stem.toCharArray();
+				StringBuffer sb = new StringBuffer();
+				for (char c : ocn) {
+				    if (!StringTools.isNumber(c)) {
+					sb.append(c);
+				    }
+				}
+				String stemBase = sb.toString();
+				String itemClassName = null;
+				String scPackageName = packageName.replaceFirst("definitions", "systemcharacteristics");
+				if (manifest.containsKey(scPackageName)) {
+				    Collection<String> scClassNames = manifest.get(scPackageName);
+				    if (scClassNames.contains(stem + "Item")) {
+					itemClassName = stem + "Item";
+				    } else if (scClassNames.contains(stemBase + "Item")) {
+					itemClassName = stemBase + "Item";
+				    }
+				}
+				Class<?> itemClass = null;
+				if (itemClassName != null) {
+				    itemClass = Class.forName(scPackageName + "." + itemClassName);
+				    if (!ITEM_TYPE.isAssignableFrom(itemClass)) {
+					itemClass = null;
+				    }
+				}
+				if (itemClass == null) {
+				    JOVALMsg.getLogger().warn(JOVALMsg.STATUS_OBJECT_NOITEM_ASSOC, objectClassName);
+				} else {
+		   	 	    @SuppressWarnings("unchecked")
+		   	 	    Class<? extends ObjectType> objectType = (Class<? extends ObjectType>)objectClass;
+		   	 	    @SuppressWarnings("unchecked")
+		   	 	    Class<? extends ItemType> itemType = (Class<? extends ItemType>)itemClass;
+		   		    OvalFactory.setObjectItem(objectType, itemType);
+				    JOVALMsg.getLogger().trace(JOVALMsg.STATUS_OBJECT_ITEM_ASSOC,
+					objectClassName, itemClassName);
+				}
+			    }
+			}
+		    }
+	        } else {
+		    JOVALMsg.getLogger().warn(JOVALMsg.WARNING_XML_REG_PACKAGE, packageName, jarUrl.toString());
+		}
+
 		StringTokenizer tok = new StringTokenizer(props.getProperty("groups"), ",");
 		while (tok.hasMoreTokens()) {
 		    String group = tok.nextToken().trim();
@@ -274,25 +358,6 @@ public enum SchemaRegistry {
 			}
 		    }
 		}
-	    }
-	    in.close();
-	    in = CL.getResourceAsStream(associations);
-	    if (in == null) {
-		JOVALMsg.getLogger().warn(JOVALMsg.ERROR_MISSING_RESOURCE, associations);
-	    } else {
-	        reader = new BufferedReader(new InputStreamReader(CL.getResourceAsStream(associations)));
-	        while((line = reader.readLine()) != null) {
-		    if (!line.startsWith("#")) {
-		        int ptr = line.indexOf("=");
-			String objectClassName = line.substring(0,ptr);
-			String itemClassName = line.substring(ptr+1);
-		        @SuppressWarnings("unchecked")
-		        Class<? extends ObjectType> objectType = (Class<? extends ObjectType>)Class.forName(objectClassName);
-		        @SuppressWarnings("unchecked")
-		        Class<? extends ItemType> itemType = (Class<? extends ItemType>)Class.forName(itemClassName);
-		        OvalFactory.setObjectItem(objectType, itemType);
-		    }
-	        }
 	    }
 	} finally {
 	    if (in != null) {
@@ -446,6 +511,8 @@ public enum SchemaRegistry {
 
     private static final String PREFIXMAPPER_PROP = "com.sun.xml.internal.bind.namespacePrefixMapper";
     private static final ClassLoader CL = Thread.currentThread().getContextClassLoader();
+    private static final Class<?> OBJECT_TYPE;
+    private static final Class<?> ITEM_TYPE;
 
     private static Map<String, Collection<String>> groupPackages;
     private static Map<String, Collection<String>> groupNamespaces;
@@ -458,6 +525,12 @@ public enum SchemaRegistry {
 	ns2Prefix = new HashMap<String, String>();
 	systemId2URL = new HashMap<String, URL>();
 	publicId2URL = new HashMap<String, URL>();
+	try {
+	    OBJECT_TYPE = Class.forName("scap.oval.definitions.core.ObjectType");
+	    ITEM_TYPE = Class.forName("scap.oval.systemcharacteristics.core.ItemType");
+	} catch (ClassNotFoundException e) {
+	    throw new RuntimeException(e);
+	}
 	try {
 	    register("scap");
 	} catch (Exception e) {

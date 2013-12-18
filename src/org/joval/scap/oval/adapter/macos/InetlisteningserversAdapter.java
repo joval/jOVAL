@@ -32,7 +32,7 @@ import scap.oval.systemcharacteristics.core.EntityItemStringType;
 import scap.oval.systemcharacteristics.core.FlagEnumeration;
 import scap.oval.systemcharacteristics.core.ItemType;
 import scap.oval.systemcharacteristics.core.StatusEnumeration;
-import scap.oval.systemcharacteristics.macos.InetlisteningserverItem;
+import scap.oval.systemcharacteristics.macos.InetlisteningserversItem;
 import scap.oval.systemcharacteristics.macos.Inetlisteningserver510Item;
 
 import org.joval.intf.plugin.IAdapter;
@@ -48,7 +48,7 @@ import org.joval.util.JOVALMsg;
  */
 public class InetlisteningserversAdapter implements IAdapter {
     private IUnixSession session;
-    private Collection<InetlisteningserverItem> portItems;
+    private Collection<InetlisteningserversItem> portItems;
     private CollectException error;
 
     // Implement IAdapter
@@ -91,14 +91,14 @@ public class InetlisteningserversAdapter implements IAdapter {
 
     // Private
 
-    private Collection<InetlisteningserverItem> getItems(InetlisteningserversObject iObj, IRequestContext rc)
+    private Collection<InetlisteningserversItem> getItems(InetlisteningserversObject iObj, IRequestContext rc)
 		throws Exception {
-	Collection<InetlisteningserverItem> items = new ArrayList<InetlisteningserverItem>();
+	Collection<InetlisteningserversItem> items = new ArrayList<InetlisteningserversItem>();
 	EntityObjectStringType programName = iObj.getProgramName();
 	OperationEnumeration op = programName.getOperation();
 	switch(op) {
 	  case EQUALS:
-	    for (InetlisteningserverItem item : portItems) {
+	    for (InetlisteningserversItem item : portItems) {
 		if (((String)programName.getValue()).equals((String)item.getProgramName().getValue())) {
 		    items.add(item);
 		}
@@ -106,7 +106,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 	    break;
 
 	  case NOT_EQUAL:
-	    for (InetlisteningserverItem item : portItems) {
+	    for (InetlisteningserversItem item : portItems) {
 		if (!((String)programName.getValue()).equals((String)item.getProgramName().getValue())) {
 		    items.add(item);
 		}
@@ -116,7 +116,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 	  case PATTERN_MATCH:
 	    try {
 		Pattern p = StringTools.pattern((String)programName.getValue());
-	        for (InetlisteningserverItem item : portItems) {
+	        for (InetlisteningserversItem item : portItems) {
 		    if (p.matcher((String)item.getProgramName().getValue()).find()) {
 		        items.add(item);
 		    }
@@ -140,12 +140,12 @@ public class InetlisteningserversAdapter implements IAdapter {
 	//
 	// Create a list of items with matching addresses
 	//
-	Collection<InetlisteningserverItem> items = new ArrayList<InetlisteningserverItem>();
+	Collection<InetlisteningserversItem> items = new ArrayList<InetlisteningserversItem>();
 	EntityObjectIPAddressStringType localAddress = iObj.getLocalAddress();
 	OperationEnumeration op = localAddress.getOperation();
 	switch(op) {
 	  case EQUALS:
-	    for (InetlisteningserverItem item : portItems) {
+	    for (InetlisteningserversItem item : portItems) {
 		if (item.getLocalAddress().getValue().equals(localAddress.getValue())) {
 		    items.add(item);
 		}
@@ -153,7 +153,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 	    break;
 
 	  case NOT_EQUAL:
-	    for (InetlisteningserverItem item : portItems) {
+	    for (InetlisteningserversItem item : portItems) {
 		if (!item.getLocalAddress().getValue().equals(localAddress.getValue())) {
 		    items.add(item);
 		}
@@ -163,7 +163,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 	  case PATTERN_MATCH:
 	    try {
 		Pattern p = StringTools.pattern((String)localAddress.getValue());
-		for (InetlisteningserverItem item : portItems) {
+		for (InetlisteningserversItem item : portItems) {
 		    if (p.matcher((String)item.getLocalAddress().getValue()).find()) {
 			items.add(item);
 		    }
@@ -182,10 +182,10 @@ public class InetlisteningserversAdapter implements IAdapter {
 	//
 	// Remove items not matching the protocol
 	//
-	Iterator<InetlisteningserverItem> iter = items.iterator();
+	Iterator<InetlisteningserversItem> iter = items.iterator();
 	String protocol = (String)iObj.getProtocol().getValue();
 	while(iter.hasNext()) {
-	    InetlisteningserverItem item = iter.next();
+	    InetlisteningserversItem item = iter.next();
 	    String itemProtocol = (String)item.getProtocol().getValue();
 	    op = iObj.getProtocol().getOperation();
 	    switch(op) {
@@ -225,7 +225,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 	iter = items.iterator();
 	int port = Integer.parseInt((String)iObj.getLocalPort().getValue());
 	while(iter.hasNext()) {
-	    InetlisteningserverItem item = iter.next();
+	    InetlisteningserversItem item = iter.next();
 	    int itemPort = Integer.parseInt((String)item.getLocalPort().getValue());
 	    op = iObj.getLocalPort().getOperation();
 	    switch(op) {
@@ -272,7 +272,7 @@ public class InetlisteningserversAdapter implements IAdapter {
 	}
 
 	Collection<Inetlisteningserver510Item> result = new ArrayList<Inetlisteningserver510Item>();
-	for (InetlisteningserverItem item : items) {
+	for (InetlisteningserversItem item : items) {
 	    Inetlisteningserver510Item newItem = Factories.sc.macos.createInetlisteningserver510Item();
 	    newItem.setProgramName(item.getProgramName());
 	    newItem.setPid(item.getPid());
@@ -362,14 +362,14 @@ public class InetlisteningserversAdapter implements IAdapter {
 		throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_LSOF, Integer.toString(ed.getExitCode())));
 	    }
 
-	    portItems = new ArrayList<InetlisteningserverItem>();
+	    portItems = new ArrayList<InetlisteningserversItem>();
 	    lines = data.iterator();
 	    while(lines.hasNext()) {
 		String line = lines.next().trim();
 		StringTokenizer tok = new StringTokenizer(line);
 		if (tok.countTokens() >= 9) {
 		    String s = tok.nextToken();
-		    InetlisteningserverItem item = Factories.sc.macos.createInetlisteningserverItem();
+		    InetlisteningserversItem item = Factories.sc.macos.createInetlisteningserversItem();
 
 		    Integer pid = new Integer(tok.nextToken());
 		    EntityItemIntType pidType = Factories.sc.core.createEntityItemIntType();

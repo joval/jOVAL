@@ -48,7 +48,6 @@ resources:
 	mkdir -p $(BUILD)/scap/schemas
 	cp $(CATALOG) $(BUILD)/scap
 	cp $(RSRC)/registry.ini $(BUILD)/scap
-	cp $(RSRC)/ObjectItem.properties $(BUILD)/scap
 	cp -R $(SCHEMADIR)/* $(BUILD)/scap/schemas
 	rm $(BUILD)/scap/schemas/bindings.xjb
 
