@@ -428,6 +428,9 @@
     <jxb:bindings node="xs:element[@name='inetlisteningserver_item']//xs:complexType">
         <jxb:class name="InetlisteningserversItem" />
     </jxb:bindings>
+    <jxb:bindings node="xs:element[@name='inetlisteningserver_item']">
+        <jxb:factoryMethod name="InetlisteningserversItem" />
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.10.1/macos-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
@@ -441,6 +444,9 @@
     <!-- rename to conform with with object/state/test name pattern -->
     <jxb:bindings node="xs:element[@name='inetlisteningserver_item']//xs:complexType">
         <jxb:class name="InetlisteningserversItem" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:element[@name='inetlisteningserver_item']">
+        <jxb:factoryMethod name="InetlisteningserversItem" />
     </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.10.1/pixos-definitions-schema.xsd" node="/xs:schema">
