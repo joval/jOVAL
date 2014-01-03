@@ -5,6 +5,7 @@ org.joval.scap.oval.functions.CountFunction
 org.joval.scap.oval.functions.EndFunction
 org.joval.scap.oval.functions.EscapeRegexFunction
 org.joval.scap.oval.functions.RegexCaptureFunction
+org.joval.scap.oval.functions.SplitFunction
 org.joval.scap.oval.functions.SubstringFunction
 org.joval.scap.oval.functions.TimeDifferenceFunction
 org.joval.scap.oval.functions.UniqueFunction

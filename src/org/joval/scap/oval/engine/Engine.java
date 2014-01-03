@@ -3138,15 +3138,15 @@ public class Engine implements IOvalEngine, IProvider {
 	    String className = clazz.getName();
 	    if (className.endsWith("FunctionType")) {
 		int ptr = className.lastIndexOf(".");
-		String functionName = className.substring(ptr+1, className.length() - 12);
-		obj = ReflectionTool.invokeMethod(unknown, new StringBuffer("get").append(functionName).toString());
+		String baseName = className.substring(ptr+1, className.length() - 12);
+		obj = ReflectionTool.invokeMethod(unknown, new StringBuffer("get").append(baseName).toString());
 		if (obj != null) {
 		    return obj;
 		}
 	    }
 	}
 
-	throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_COMPONENT, unknown.getClass().getName()));
+	throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_SUBCOMPONENT, unknown.getClass().getName()));
     }
 
     private static java.util.Set<String> OBJECT_METHOD_NAMES;
