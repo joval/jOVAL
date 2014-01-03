@@ -10,8 +10,7 @@
 #
 # JAVA_HOME is where you've installed your JDK.
 #
-#JAVA_HOME=$(TOP)/../../tools/jdk1.7.0_21
-JAVA_HOME=$(TOP)/../../tools/jdk1.6.0_26
+JAVA_HOME=$(TOP)/../../tools/jdk1.7.0_21
 
 #
 # JSAF_HOME is the location of the jSAF FOSS git repository
@@ -31,9 +30,3 @@ JPE_HOME=$(TOP)/../jPE
 #
 JRE32_HOME=$(TOP)/../../tools/jre170_21_x86
 JRE64_HOME=$(TOP)/../../tools/jre170_21_x64
-
-#
-# JAXB_HOME is where you've installed JAXB
-# Note: This is only required when building with a pre-Java7 JDK
-#
-JAXB_HOME=$(TOP)/../../tools/jaxb-ri-2.2.6
