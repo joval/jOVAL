@@ -258,7 +258,10 @@ public enum JOVALMsg {
     WARNING_XCCDF_PLATFORM,
     WARNING_XCCDF_SELECTED,
     WARNING_XML_REG_PACKAGE,
-    WARNING_XML_REG_URI;
+    WARNING_XML_REG_URI,
+    XSL_ERROR,
+    XSL_FATAL,
+    XSL_WARNING;
 
     private static IMessageConveyor baseConveyor;
     private static Conveyor conveyor;

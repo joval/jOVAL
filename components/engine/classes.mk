@@ -54,13 +54,24 @@ CLASSES=\
 	org.joval.scap.oval.SystemCharacteristics		\
 	org.joval.scap.oval.Variables				\
 	org.joval.scap.oval.engine.CheckData			\
-	org.joval.scap.oval.engine.DateTime			\
 	org.joval.scap.oval.engine.Engine			\
 	org.joval.scap.oval.engine.ExistenceData		\
 	org.joval.scap.oval.engine.FlagData			\
 	org.joval.scap.oval.engine.OperatorData			\
-	org.joval.scap.oval.engine.ResolveException		\
 	org.joval.scap.oval.engine.TestException		\
+	org.joval.scap.oval.functions.ArithmeticFunction	\
+	org.joval.scap.oval.functions.BeginFunction		\
+	org.joval.scap.oval.functions.ConcatFunction		\
+	org.joval.scap.oval.functions.CountFunction		\
+	org.joval.scap.oval.functions.EndFunction		\
+	org.joval.scap.oval.functions.EscapeRegexFunction	\
+	org.joval.scap.oval.functions.IFunction			\
+	org.joval.scap.oval.functions.RegexCaptureFunction	\
+	org.joval.scap.oval.functions.ResolveException		\
+	org.joval.scap.oval.functions.SplitFunction		\
+	org.joval.scap.oval.functions.SubstringFunction		\
+	org.joval.scap.oval.functions.TimeDifferenceFunction	\
+	org.joval.scap.oval.functions.UniqueFunction		\
 	org.joval.scap.oval.types.AbstractType			\
 	org.joval.scap.oval.types.BinaryType			\
 	org.joval.scap.oval.types.BooleanType			\
@@ -95,6 +106,7 @@ CLASSES=\
 	org.joval.util.JOVALMsg					\
 	org.joval.util.JOVALSystem				\
 	org.joval.util.Producer					\
+	org.joval.util.ReflectionTool				\
 	org.joval.util.Version					\
 	org.joval.xml.DOMTools					\
 	org.joval.xml.SchemaRegistry				\

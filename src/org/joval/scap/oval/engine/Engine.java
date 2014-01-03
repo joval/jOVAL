@@ -44,9 +44,10 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.stream.FactoryConfigurationError;
 
-import jsaf.intf.system.IComputerSystem;
+import jsaf.intf.system.ISession;
 import jsaf.intf.util.ILoggable;
 import jsaf.util.StringTools;
+
 import org.slf4j.cal10n.LocLogger;
 
 import scap.oval.common.CheckEnumeration;
@@ -57,18 +58,11 @@ import scap.oval.common.MessageType;
 import scap.oval.common.OperatorEnumeration;
 import scap.oval.common.OperationEnumeration;
 import scap.oval.common.SimpleDatatypeEnumeration;
-import scap.oval.definitions.core.ArithmeticEnumeration;
-import scap.oval.definitions.core.ArithmeticFunctionType;
-import scap.oval.definitions.core.BeginFunctionType;
-import scap.oval.definitions.core.ConcatFunctionType;
 import scap.oval.definitions.core.ConstantVariable;
-import scap.oval.definitions.core.CountFunctionType;
 import scap.oval.definitions.core.CriteriaType;
 import scap.oval.definitions.core.CriterionType;
-import scap.oval.definitions.core.DateTimeFormatEnumeration;
 import scap.oval.definitions.core.DefinitionType;
 import scap.oval.definitions.core.DefinitionsType;
-import scap.oval.definitions.core.EndFunctionType;
 import scap.oval.definitions.core.EntityComplexBaseType;
 import scap.oval.definitions.core.EntityObjectFieldType;
 import scap.oval.definitions.core.EntityObjectRecordType;
@@ -77,7 +71,6 @@ import scap.oval.definitions.core.EntitySimpleBaseType;
 import scap.oval.definitions.core.EntityStateFieldType;
 import scap.oval.definitions.core.EntityStateRecordType;
 import scap.oval.definitions.core.EntityStateSimpleBaseType;
-import scap.oval.definitions.core.EscapeRegexFunctionType;
 import scap.oval.definitions.core.ExtendDefinitionType;
 import scap.oval.definitions.core.ExternalVariable;
 import scap.oval.definitions.core.Filter;
@@ -88,17 +81,12 @@ import scap.oval.definitions.core.ObjectRefType;
 import scap.oval.definitions.core.ObjectType;
 import scap.oval.definitions.core.ObjectsType;
 import scap.oval.definitions.core.OvalDefinitions;
-import scap.oval.definitions.core.RegexCaptureFunctionType;
 import scap.oval.definitions.core.Set;
 import scap.oval.definitions.core.SetOperatorEnumeration;
-import scap.oval.definitions.core.SplitFunctionType;
 import scap.oval.definitions.core.StateRefType;
 import scap.oval.definitions.core.StateType;
 import scap.oval.definitions.core.StatesType;
-import scap.oval.definitions.core.SubstringFunctionType;
 import scap.oval.definitions.core.TestsType;
-import scap.oval.definitions.core.TimeDifferenceFunctionType;
-import scap.oval.definitions.core.UniqueFunctionType;
 import scap.oval.definitions.core.ValueType;
 import scap.oval.definitions.core.VariableComponentType;
 import scap.oval.definitions.core.VariableType;
@@ -145,6 +133,8 @@ import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.oval.Results;
 import org.joval.scap.oval.SystemCharacteristics;
+import org.joval.scap.oval.functions.IFunction;
+import org.joval.scap.oval.functions.ResolveException;
 import org.joval.scap.oval.types.IntType;
 import org.joval.scap.oval.types.Ip4AddressType;
 import org.joval.scap.oval.types.Ip6AddressType;
@@ -156,6 +146,7 @@ import org.joval.util.Index;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
+import org.joval.util.ReflectionTool;
 import org.joval.util.Version;
 import org.joval.xml.SchemaRegistry;
 import org.joval.xml.XSITools;
@@ -167,6 +158,55 @@ import org.joval.xml.XSITools;
  * @version %I% %G%
  */
 public class Engine implements IOvalEngine, IProvider {
+    /**
+     * Internal states for the engine.
+     */
+    private static enum State {
+	CONFIGURE,
+	RUNNING,
+	COMPLETE_OK,
+	COMPLETE_ERR;
+    }
+
+    private static final String FUNCTIONS_RESOURCE = "functions.txt";
+    private static Map<Class<?>, IFunction> FUNCTIONS = new HashMap<Class<?>, IFunction>();
+    static {
+	try {
+	    ClassLoader cl = Engine.class.getClassLoader();
+	    InputStream rsc = cl.getResourceAsStream(FUNCTIONS_RESOURCE);
+	    if (rsc == null) {
+		JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, FUNCTIONS_RESOURCE));
+	    } else {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(rsc));
+		String line = null;
+		while ((line = reader.readLine()) != null) {
+		    if (!line.startsWith("#")) {
+			try {
+			    Class<?> clazz = Class.forName(line.trim());
+			    for (Class<?> iface : ReflectionTool.getInterfaces(clazz)) {
+				if ("org.joval.scap.oval.functions.IFunction".equals(iface.getName())) {
+				    @SuppressWarnings("unchecked")
+				    Class<IFunction> functionClass = (Class<IFunction>)clazz;
+				    IFunction function = functionClass.newInstance();
+				    FUNCTIONS.put(function.getFunctionType(), function);
+				    break;
+				}
+			    }
+			} catch (ClassNotFoundException e) {
+			    JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			} catch (InstantiationException e) {
+			    JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			} catch (IllegalAccessException e) {
+			    JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			}
+		    }
+		}
+	    }
+	} catch (IOException e) {
+	    JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+    }
+
     private static Map<Class<? extends ObjectType>, Class<? extends ItemType>> OBJECT_ITEM_MAP
 	= new HashMap<Class<? extends ObjectType>, Class<? extends ItemType>>();
 
@@ -175,13 +215,6 @@ public class Engine implements IOvalEngine, IProvider {
      */
     protected static void setObjectItem(Class<? extends ObjectType> objectType, Class<? extends ItemType> itemType) {
 	OBJECT_ITEM_MAP.put(objectType, itemType);
-    }
-
-    private enum State {
-	CONFIGURE,
-	RUNNING,
-	COMPLETE_OK,
-	COMPLETE_ERR;
     }
 
     private Hashtable <String, Collection<IType>>variableMap;
@@ -574,6 +607,137 @@ public class Engine implements IOvalEngine, IProvider {
     }
 
     /**
+     * Recursively determine all the Object IDs referred to by the specified definition, extend_definition, criteria,
+     * criterion, test, object, state, filter, set, variable or component.
+     *
+     * @param obj the object whose object references are to be recursively resolved
+     * @param indirect specifies whether or not indirect references should be followed (i.e., variables, filters and sets).
+     */
+    private Collection<String> getObjectReferences(Object obj, boolean indirect) throws OvalException {
+	Collection<String> results = new HashSet<String>();
+	String reflectionId = null;
+	try {
+	    if (obj instanceof DefinitionType) {
+		DefinitionType def = (DefinitionType)obj;
+		if (def.isSetCriteria()) {
+		    for (Object sub : def.getCriteria().getCriteriaOrCriterionOrExtendDefinition()) {
+			results.addAll(getObjectReferences(sub, indirect));
+		    }
+		}
+	    } else if (obj instanceof CriteriaType) {
+		for (Object sub : ((CriteriaType)obj).getCriteriaOrCriterionOrExtendDefinition()) {
+		    results.addAll(getObjectReferences(sub, indirect));
+		}
+	    } else if (obj instanceof ExtendDefinitionType) {
+		Object next = definitions.getDefinition(((ExtendDefinitionType)obj).getDefinitionRef());
+		results = getObjectReferences(next, indirect);
+	    } else if (obj instanceof CriterionType) {
+		results = getObjectReferences(definitions.getTest(((CriterionType)obj).getTestRef()).getValue(), indirect);
+	    } else if (obj instanceof scap.oval.definitions.core.TestType) {
+		ObjectRefType oRef = (ObjectRefType)ReflectionTool.invokeMethod(obj, "getObject");
+		if (oRef != null) {
+		    results.addAll(getObjectReferences(definitions.getObject(oRef.getObjectRef()).getValue(), indirect));
+		}
+		Object oRefs = ReflectionTool.invokeMethod(obj, "getState");
+		@SuppressWarnings("unchecked")
+		List<StateRefType> sRefs = (List<StateRefType>)oRefs;
+		if (sRefs != null) {
+		    for (StateRefType sRef : sRefs) {
+			results.addAll(getObjectReferences(definitions.getState(sRef.getStateRef()).getValue(), indirect));
+		    }
+		}
+	    } else if (obj instanceof ObjectType) {
+		ObjectType ot = (ObjectType)obj;
+		reflectionId = ot.getId();
+		results.add(ot.getId());
+		results.addAll(getObjectReferences(getObjectFilters(ot), indirect));
+		results.addAll(getObjectReferences(getObjectSet(ot), indirect));
+		if (ot instanceof VariableObject) {
+		    VariableObject vo = (VariableObject)ot;
+		    if (vo.isSetVarRef()) {
+			Object next = definitions.getVariable((String)vo.getVarRef().getValue());
+			results.addAll(getObjectReferences(next, indirect));
+		    }
+		} else {
+		    for (Method method : ReflectionTool.getMethods(ot.getClass()).values()) {
+			String methodName = method.getName();
+			if (methodName.startsWith("get") && !OBJECT_METHOD_NAMES.contains(methodName)) {
+			    results.addAll(getObjectReferences(method.invoke(ot), indirect));
+			}
+		    }
+		}
+	    } else if (obj instanceof StateType) {
+		StateType st = (StateType)obj;
+		reflectionId = st.getId();
+		for (Method method : ReflectionTool.getMethods(obj.getClass()).values()) {
+		    String methodName = method.getName();
+		    if (methodName.startsWith("get") && !STATE_METHOD_NAMES.contains(methodName)) {
+			results.addAll(getObjectReferences(method.invoke(st), indirect));
+		    }
+		}
+	    } else if (obj instanceof Filter) {
+		if (indirect) {
+		    results = getObjectReferences(definitions.getState(((Filter)obj).getValue()), indirect);
+		}
+	    } else if (obj instanceof Set) {
+		if (indirect) {
+		    Set set = (Set)obj;
+		    if (set.isSetObjectReference()) {
+			for (String id : set.getObjectReference()) {
+			    results.addAll(getObjectReferences(definitions.getObject(id).getValue(), indirect));
+			}
+			results.addAll(getObjectReferences(set.getFilter(), indirect));
+		    } else {
+			results = getObjectReferences(set.getSet(), indirect);
+		    }
+		}
+	    } else if (obj instanceof JAXBElement) {
+		results = getObjectReferences(((JAXBElement)obj).getValue(), indirect);
+	    } else if (obj instanceof EntitySimpleBaseType) {
+		EntitySimpleBaseType simple = (EntitySimpleBaseType)obj;
+		if (indirect && simple.isSetVarRef()) {
+		    results = getObjectReferences(definitions.getVariable(simple.getVarRef()), indirect);
+		}
+	    } else if (obj instanceof EntityComplexBaseType) {
+		EntityComplexBaseType complex = (EntityComplexBaseType)obj;
+		if (indirect && complex.isSetVarRef()) {
+		    results = getObjectReferences(definitions.getVariable(complex.getVarRef()), indirect);
+		}
+	    } else if (obj instanceof List) {
+		for (Object elt : (List)obj) {
+		    results.addAll(getObjectReferences(elt, indirect));
+		}
+	    } else if (obj instanceof ObjectComponentType) {
+		Object next = definitions.getObject(((ObjectComponentType)obj).getObjectRef()).getValue();
+		results = getObjectReferences(next, indirect);
+	    } else if (obj instanceof VariableComponentType) {
+		VariableType var = definitions.getVariable(((VariableComponentType)obj).getVarRef());
+		if (var instanceof LocalVariable) {
+		    results = getObjectReferences(var, indirect);
+		}
+	    } else if (obj != null) {
+		try {
+		    results = getObjectReferences(getComponent(obj, true), indirect);
+		} catch (OvalException e) {
+		    // not a component
+		}
+	    }
+	} catch (NoSuchElementException e) {
+	    // this will lead to an error evaluating the definition later on
+	} catch (ClassCastException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), reflectionId));
+	} catch (IllegalAccessException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), reflectionId));
+	} catch (InvocationTargetException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), reflectionId));
+	}
+	return results;
+    }
+
+    /**
      * Generate object item references in the system-characteristics.
      */
     private ISystemCharacteristics mapSystemCharacteristics() throws Exception {
@@ -917,14 +1081,14 @@ public class Engine implements IOvalEngine, IProvider {
 		factory = factoryClass.newInstance();
 		String unqualClassName = clazz.getName().substring(pkgName.length() + 1);
 		create = factoryClass.getMethod("create" + unqualClassName);
-		behaviors = safeInvokeMethod(obj, "getBehaviors");
+		behaviors = ReflectionTool.invokeMethod(obj, "getBehaviors");
 
 		//
 		// Collect all the entity values
 		//
 		entities = new Hashtable<String, List<Object>>();
 		varChecks = new Hashtable<String, CheckEnumeration>();
-		for (Method method : getMethods(clazz).values()) {
+		for (Method method : ReflectionTool.getMethods(clazz).values()) {
 		    String methodName = method.getName();
 		    if (methodName.startsWith("get") && !OBJECT_METHOD_NAMES.contains(methodName)) {
 			Object entity = method.invoke(obj);
@@ -1257,9 +1421,9 @@ public class Engine implements IOvalEngine, IProvider {
     }
 
     /**
-     * Implementation of IProvider.IRequestContext.
+     * Implementation of IFunction.IFunctionContext.
      */
-    class RequestContext implements IRequestContext {
+    class RequestContext implements IFunction.IFunctionContext {
 	private Stack<Level> levels;
 	private Map<Variant, RequestContext> variants;
 	private Variant variant = null;
@@ -1338,6 +1502,22 @@ public class Engine implements IOvalEngine, IProvider {
 
 	public void addMessage(MessageType msg) {
 	    levels.peek().messages.add(msg);
+	}
+
+	// Implement IFunction.IFunctionContext
+
+	public ISession getSession() {
+	    return Engine.this.plugin.getSession();
+	}
+
+	public Object getComponent(Object obj) throws OvalException {
+	    return Engine.this.getComponent(obj, false);
+	}
+
+	public Collection<IType> resolveComponent(Object component) throws NoSuchElementException,
+		UnsupportedOperationException, IllegalArgumentException, ResolveException, OvalException {
+
+	    return Engine.this.resolveComponent(component, this);
 	}
 
 	// Private
@@ -1503,7 +1683,7 @@ public class Engine implements IOvalEngine, IProvider {
 	} else if (entity instanceof EntitySimpleBaseType) {
 	    EntitySimpleBaseType simple = (EntitySimpleBaseType)entity;
 	    if (simple.isSetVarRef()) {
-		vd.setCheck((CheckEnumeration)safeInvokeMethod(simple, "getVarCheck"));
+		vd.setCheck((CheckEnumeration)ReflectionTool.invokeMethod(simple, "getVarCheck"));
 		try {
 		    IType.Type t = TypeFactory.convertType(TypeFactory.getSimpleDatatype(simple.getDatatype()));
 		    Class objClass = entity.getClass();
@@ -1535,7 +1715,7 @@ public class Engine implements IOvalEngine, IProvider {
 	} else if (entity instanceof EntityObjectRecordType) {
 	    EntityObjectRecordType record = (EntityObjectRecordType)entity;
 	    if (record.isSetVarRef()) {
-		vd.setCheck((CheckEnumeration)safeInvokeMethod(record, "getVarCheck"));
+		vd.setCheck((CheckEnumeration)ReflectionTool.invokeMethod(record, "getVarCheck"));
 		for (IType type : resolveVariable(record.getVarRef(), rc)) {
 		    switch(type.getType()) {
 		      case RECORD: {
@@ -1688,7 +1868,7 @@ public class Engine implements IOvalEngine, IProvider {
      */
     private List<Filter> getObjectFilters(ObjectType obj) {
 	List<Filter> filters = new ArrayList<Filter>();
-	Object oFilters = safeInvokeMethod(obj, "getFilter");
+	Object oFilters = ReflectionTool.invokeMethod(obj, "getFilter");
 	if (oFilters != null && oFilters instanceof List) {
 	    for (Object oFilter : (List)oFilters) {
 		if (oFilter instanceof Filter) {
@@ -2148,14 +2328,14 @@ public class Engine implements IOvalEngine, IProvider {
 	try {
 	    OperatorData result = new OperatorData(false);
 	    int facets = 0;
-	    for (Method method : getMethods(object.getClass()).values()) {
+	    for (Method method : ReflectionTool.getMethods(object.getClass()).values()) {
 		String methodName = method.getName();
 		if (methodName.startsWith("get") && !OBJECT_METHOD_NAMES.contains(methodName)) {
 		    facets++;
 		    Object objectEntityObj = method.invoke(object);
 		    if (objectEntityObj instanceof JAXBElement) {
 			if (XSITools.isNil((JAXBElement)objectEntityObj)) {
-			    Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
+			    Object itemEntityObj = ReflectionTool.getMethod(item.getClass(), methodName).invoke(item);
 			    if (itemEntityObj == null) {
 				result.addResult(ResultEnumeration.TRUE);
 			    } else if (itemEntityObj instanceof JAXBElement) {
@@ -2176,7 +2356,7 @@ public class Engine implements IOvalEngine, IProvider {
 			// continue
 		    } else if (objectEntityObj instanceof EntitySimpleBaseType) {
 			EntitySimpleBaseType objectEntity = (EntitySimpleBaseType)objectEntityObj;
-			Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
+			Object itemEntityObj = ReflectionTool.getMethod(item.getClass(), methodName).invoke(item);
 			if (itemEntityObj instanceof JAXBElement) {
 			    itemEntityObj = ((JAXBElement)itemEntityObj).getValue();
 			}
@@ -2189,7 +2369,7 @@ public class Engine implements IOvalEngine, IProvider {
 			}
 		    } else if (objectEntityObj instanceof EntityObjectRecordType) {
 			EntityObjectRecordType objectEntity = (EntityObjectRecordType)objectEntityObj;
-			Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
+			Object itemEntityObj = ReflectionTool.getMethod(item.getClass(), methodName).invoke(item);
 			if (itemEntityObj instanceof JAXBElement) {
 			    itemEntityObj = ((JAXBElement)itemEntityObj).getValue();
 			}
@@ -2231,7 +2411,7 @@ public class Engine implements IOvalEngine, IProvider {
     private ResultEnumeration compare(StateType state, ItemType item, RequestContext rc) throws OvalException, TestException {
 	try {
 	    OperatorData result = new OperatorData(false);
-	    for (Method method : getMethods(state.getClass()).values()) {
+	    for (Method method : ReflectionTool.getMethods(state.getClass()).values()) {
 		String methodName = method.getName();
 		if (methodName.startsWith("get") && !STATE_METHOD_NAMES.contains(methodName)) {
 		    Object stateEntityObj = method.invoke(state);
@@ -2239,7 +2419,7 @@ public class Engine implements IOvalEngine, IProvider {
 			// continue
 		    } else if (stateEntityObj instanceof EntityStateSimpleBaseType) {
 			EntityStateSimpleBaseType stateEntity = (EntityStateSimpleBaseType)stateEntityObj;
-			Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
+			Object itemEntityObj = ReflectionTool.getMethod(item.getClass(), methodName).invoke(item);
 			if (itemEntityObj instanceof JAXBElement) {
 			    itemEntityObj = ((JAXBElement)itemEntityObj).getValue();
 			}
@@ -2264,7 +2444,7 @@ public class Engine implements IOvalEngine, IProvider {
 			}
 		    } else if (stateEntityObj instanceof EntityStateRecordType) {
 			EntityStateRecordType stateEntity = (EntityStateRecordType)stateEntityObj;
-			Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
+			Object itemEntityObj = ReflectionTool.getMethod(item.getClass(), methodName).invoke(item);
 			if (itemEntityObj instanceof JAXBElement) {
 			    itemEntityObj = ((JAXBElement)itemEntityObj).getValue();
 			}
@@ -2482,6 +2662,8 @@ public class Engine implements IOvalEngine, IProvider {
 	// Validate the operation by datatype, then execute it. See section 5.3.6.3.1 of the specification:
 	// http://oval.mitre.org/language/version5.10.1/OVAL_Language_Specification_01-20-2012.pdf
 	//
+	// DAS: Does it make sense to migrate comparisons to the type implementation classes, for improved modularity?
+	//
 	OperationEnumeration op = base.getOperation();
 	switch(baseValue.getType()) {
 	  case BINARY:
@@ -2693,11 +2875,11 @@ public class Engine implements IOvalEngine, IProvider {
 	}
 
 	//
-	// Why do variables point to variables?  Because sometimes they are nested.
+	// Resolve a local variable
 	//
 	if (object instanceof LocalVariable) {
 	    LocalVariable localVariable = (LocalVariable)object;
-	    Collection<IType> values = resolveComponent(getComponent(localVariable), rc);
+	    Collection<IType> values = resolveComponent(getComponent(localVariable, false), rc);
 	    if (values.size() == 0) {
 		VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
 		variableValueType.setVariableId(localVariable.getId());
@@ -2766,7 +2948,7 @@ public class Engine implements IOvalEngine, IProvider {
 	    }
 
 	//
-	// Add a constant variable.
+	// Resolve a constant variable.
 	//
 	} else if (object instanceof ConstantVariable) {
 	    ConstantVariable constantVariable = (ConstantVariable)object;
@@ -2790,7 +2972,7 @@ public class Engine implements IOvalEngine, IProvider {
 	    return values;
 
 	//
-	// Add a static (literal) value.
+	// Return a static (literal) value.
 	//
 	} else if (object instanceof LiteralComponentType) {
 	    LiteralComponentType literal = (LiteralComponentType)object;
@@ -2799,7 +2981,7 @@ public class Engine implements IOvalEngine, IProvider {
 	    return values;
 
 	//
-	// Retrieve from an ItemType (which possibly has to be fetched from an adapter)
+	// Resolve from an ItemType (which possibly has to be fetched from an adapter)
 	//
 	} else if (object instanceof ObjectComponentType) {
 	    ObjectComponentType oc = (ObjectComponentType)object;
@@ -2823,295 +3005,22 @@ public class Engine implements IOvalEngine, IProvider {
 	    return extractItemData(objectId, oc, items);
 
 	//
-	// Resolve and return.
+	// Resolve a wrapper pointing to another variable
 	//
 	} else if (object instanceof VariableComponentType) {
 	    return resolveComponent(definitions.getVariable(((VariableComponentType)object).getVarRef()), rc);
 
 	//
-	// Resolve and concatenate child components.
+	// Check IFunctions
 	//
-	} else if (object instanceof ConcatFunctionType) {
-	    Collection<IType> values = new ArrayList<IType>();
-	    ConcatFunctionType concat = (ConcatFunctionType)object;
-	    for (Object child : concat.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		Collection<IType> next = resolveComponent(child, rc);
-		if (next.size() == 0) {
-		    @SuppressWarnings("unchecked")
-		    Collection<IType> empty = (Collection<IType>)Collections.EMPTY_LIST;
-		    return empty;
-		} else if (values.size() == 0) {
-		    values.addAll(next);
-		} else {
-		    Collection<IType> newValues = new ArrayList<IType>();
-		    for (IType base : values) {
-			for (IType val : next) {
-			    newValues.add(TypeFactory.createType(IType.Type.STRING, base.getString() + val.getString()));
-			}
-		    }
-		    values = newValues;
-		}
-	    }
-	    return values;
-
-	//
-	// Escape anything that could be pattern-matched.
-	//
-	} else if (object instanceof EscapeRegexFunctionType) {
-	    Collection<IType> values = new ArrayList<IType>();
-	    for (IType value : resolveComponent(getComponent((EscapeRegexFunctionType)object), rc)) {
-		values.add(TypeFactory.createType(IType.Type.STRING, StringTools.escapeRegex(value.getString())));
-	    }
-	    return values;
-
-	//
-	// Process a Split, which contains a component and a delimiter with which to split it up.
-	//
-	} else if (object instanceof SplitFunctionType) {
-	    SplitFunctionType split = (SplitFunctionType)object;
-	    Collection<IType> values = new ArrayList<IType>();
-	    for (IType value : resolveComponent(getComponent(split), rc)) {
-		for (String s : StringTools.toList(StringTools.tokenize(value.getString(), split.getDelimiter(), false))) {
-		    values.add(TypeFactory.createType(IType.Type.STRING, s));
-		}
-	    }
-	    return values;
-
-	//
-	// Process a RegexCapture, which returns the regions of a component resolved as a String that match the first
-	// subexpression in the given pattern.
-	//
-	} else if (object instanceof RegexCaptureFunctionType) {
-	    RegexCaptureFunctionType regexCapture = (RegexCaptureFunctionType)object;
-	    Pattern p = StringTools.pattern(regexCapture.getPattern());
-	    Collection<IType> values = new ArrayList<IType>();
-	    for (IType value : resolveComponent(getComponent(regexCapture), rc)) {
-		Matcher m = p.matcher(value.getString());
-		if (m.groupCount() >= 1) {
-		    if (m.find()) {
-			values.add(TypeFactory.createType(IType.Type.STRING, m.group(1)));
-		    } else {
-			values.add(StringType.EMPTY);
-		    }
-		} else {
-		    values.add(StringType.EMPTY);
-		    MessageType message = Factories.common.createMessageType();
-		    message.setLevel(MessageLevelEnumeration.WARNING);
-		    message.setValue(JOVALMsg.getMessage(JOVALMsg.WARNING_REGEX_GROUP, p.pattern()));
-		    rc.addMessage(message);
-		}
-	    }
-	    return values;
-
-	//
-	// Process a Substring
-	//
-	} else if (object instanceof SubstringFunctionType) {
-	    SubstringFunctionType st = (SubstringFunctionType)object;
-	    int start = st.getSubstringStart();
-	    start = Math.max(1, start); // a start index < 1 means start at 1
-	    start--;			// OVAL counter begins at 1 instead of 0
-	    int len = st.getSubstringLength();
-	    Collection<IType> values = new ArrayList<IType>();
-	    for (IType value : resolveComponent(getComponent(st), rc)) {
-		String str = value.getString();
-
-		//
-		// If the substring_start attribute has value greater than the length of the original string
-		// an error should be reported.
-		//
-		if (start > str.length()) {
-		    throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_SUBSTRING, str, new Integer(start)));
-
-		//
-		// A substring_length value greater than the actual length of the string, or a negative value,
-		// means to include all of the characters after the starting character.
-		//
-		} else if (len < 0 || str.length() <= (start+len)) {
-		    values.add(TypeFactory.createType(IType.Type.STRING, str.substring(start)));
-
-		} else {
-		    values.add(TypeFactory.createType(IType.Type.STRING, str.substring(start, start+len)));
-		}
-	    }
-	    return values;
-
-	//
-	// Process a Begin
-	//
-	} else if (object instanceof BeginFunctionType) {
-	    BeginFunctionType bt = (BeginFunctionType)object;
-	    String s = bt.getCharacter();
-	    Collection<IType> values = new ArrayList<IType>();
-	    for (IType value : resolveComponent(getComponent(bt), rc)) {
-		String str = value.getString();
-		if (str.startsWith(s)) {
-		    values.add(value);
-		} else {
-		    values.add(TypeFactory.createType(IType.Type.STRING, s + str));
-		}
-	    }
-	    return values;
-
-	//
-	// Process an End
-	//
-	} else if (object instanceof EndFunctionType) {
-	    EndFunctionType et = (EndFunctionType)object;
-	    String s = et.getCharacter();
-	    Collection<IType> values = new ArrayList<IType>();
-	    for (IType value : resolveComponent(getComponent(et), rc)) {
-		String str = value.getString();
-		if (str.endsWith(s)) {
-		    values.add(value);
-		} else {
-		    values.add(TypeFactory.createType(IType.Type.STRING, str + s));
-		}
-	    }
-	    return values;
-
-	//
-	// Process a TimeDifference
-	//
-	} else if (object instanceof TimeDifferenceFunctionType) {
-	    TimeDifferenceFunctionType tt = (TimeDifferenceFunctionType)object;
-	    Collection<IType> values = new ArrayList<IType>();
-	    List<Object> children = tt.getObjectComponentOrVariableComponentOrLiteralComponent();
-	    Collection<IType> ts1;
-	    Collection<IType> ts2;
-	    if (children.size() == 1) {
-		tt.setFormat1(DateTimeFormatEnumeration.SECONDS_SINCE_EPOCH);
-		ts1 = new ArrayList<IType>();
-		try {
-		    long tm = System.currentTimeMillis() / 1000L;
-		    if (plugin.getSession() instanceof IComputerSystem) {
-			//
-			// If the target is a computer, get the time from its clock, not ours.
-			//
-			tm = ((IComputerSystem)plugin.getSession()).getTime() / 1000L;
-		    }
-		    ts1.add(TypeFactory.createType(IType.Type.INT, Long.toString(tm)));
-		} catch (Exception e) {
-		    // NB: if the ISession is not an IComputerSystem, we get a ClassCastException, which is fine
-		    throw new ResolveException(e);
-		}
-		ts2 = resolveComponent(children.get(0), rc);
-	    } else if (children.size() == 2) {
-		ts1 = resolveComponent(children.get(0), rc);
-		ts2 = resolveComponent(children.get(1), rc);
+	} else {
+	    Class<?> clazz = object.getClass();
+	    if (FUNCTIONS.containsKey(clazz)) {
+		return FUNCTIONS.get(clazz).compute(clazz.cast(object), rc);
 	    } else {
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_TIMEDIFFERENCE, Integer.toString(children.size()));
-		throw new ResolveException(msg);
-	    }
-	    for (IType time1 : ts1) {
-		try {
-		    long tm1 = DateTime.getTime(time1.getString(), tt.getFormat1());
-		    for (IType time2 : ts2) {
-			long tm2 = DateTime.getTime(time2.getString(), tt.getFormat2());
-			long diff = (tm1 - tm2)/1000L; // convert diff to seconds
-			values.add(TypeFactory.createType(IType.Type.INT, Long.toString(diff)));
-		    }
-		} catch (IllegalArgumentException e) {
-		    throw new ResolveException(e.getMessage());
-		} catch (ParseException e) {
-		    throw new ResolveException(e.getMessage());
-		}
-	    }
-	    return values;
-
-	//
-	// Process Arithmetic
-	//
-	} else if (object instanceof ArithmeticFunctionType) {
-	    ArithmeticFunctionType at = (ArithmeticFunctionType)object;
-	    Stack<Collection<IType>> rows = new Stack<Collection<IType>>();
-	    ArithmeticEnumeration op = at.getArithmeticOperation();
-	    for (Object child : at.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		Collection<IType> row = new ArrayList<IType>();
-		for (IType cell : resolveComponent(child, rc)) {
-		    row.add(cell);
-		}
-		rows.add(row);
-	    }
-	    return computeProduct(op, rows);
-
-	//
-	// Process Count
-	//
-	} else if (object instanceof CountFunctionType) {
-	    CountFunctionType ct = (CountFunctionType)object;
-	    Collection<IType> children = new ArrayList<IType>();
-	    for (Object child : ct.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		children.addAll(resolveComponent(child, rc));
-	    }
-	    Collection<IType> values = new ArrayList<IType>();
-	    values.add(TypeFactory.createType(IType.Type.INT, Integer.toString(children.size())));
-	    return values;
-
-	//
-	// Process Unique
-	//
-	} else if (object instanceof UniqueFunctionType) {
-	    UniqueFunctionType ut = (UniqueFunctionType)object;
-	    HashSet<IType> values = new HashSet<IType>();
-	    for (Object child : ut.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		values.addAll(resolveComponent(child, rc));
-	    }
-	    return values;
-
-	} else {
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_COMPONENT, object.getClass().getName()));
-	}
-    }
-
-    /**
-     * Perform the Arithmetic operation on permutations of the Stack, and return the resulting permutations.
-     */
-    private List<IType> computeProduct(ArithmeticEnumeration op, Stack<Collection<IType>> rows)
-		throws IllegalArgumentException {
-
-	List<IType> results = new ArrayList<IType>();
-	if (rows.empty()) {
-	    switch(op) {
-		case ADD:
-		  results.add(TypeFactory.createType(IType.Type.INT, "0"));
-		  break;
-		case MULTIPLY:
-		  results.add(TypeFactory.createType(IType.Type.INT, "1"));
-		  break;
-	    }
-	} else {
-	    for (IType type : rows.pop()) {
-		String value = type.getString();
-		Stack<Collection<IType>> copy = new Stack<Collection<IType>>();
-		copy.addAll(rows);
-		for (IType otherType : computeProduct(op, copy)) {
-		    String otherValue = otherType.getString();
-		    switch(op) {
-		      case ADD:
-			if (value.indexOf(".") == -1 && otherValue.indexOf(".") == -1) {
-			    String sum =  new BigInteger(value).add(new BigInteger(otherValue)).toString();
-			    results.add(TypeFactory.createType(IType.Type.INT, sum));
-			} else {
-			    String sum = new BigDecimal(value).add(new BigDecimal(otherValue)).toString();
-			    results.add(TypeFactory.createType(IType.Type.FLOAT, sum));
-			}
-			break;
-
-		      case MULTIPLY:
-			if (value.indexOf(".") == -1 && otherValue.indexOf(".") == -1) {
-			    String product = new BigInteger(value).multiply(new BigInteger(otherValue)).toString();
-			    results.add(TypeFactory.createType(IType.Type.INT, product));
-			} else {
-			    String product = new BigDecimal(value).multiply(new BigDecimal(otherValue)).toString();
-			    results.add(TypeFactory.createType(IType.Type.FLOAT, product));
-			}
-			break;
-		    }
-		}
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_COMPONENT, clazz.getName()));
 	    }
 	}
-	return results;
     }
 
     /**
@@ -3197,215 +3106,57 @@ public class Engine implements IOvalEngine, IProvider {
     }
 
     /**
-     * Recursively determine all the Object IDs referred to by the specified definition, extend_definition, criteria,
-     * criterion, test, object, state, filter, set, variable or component.
-     *
-     * @param obj the object whose object references are to be recursively resolved
-     * @param indirect specifies whether or not indirect references should be followed (i.e., variables, filters and sets).
-     */
-    private Collection<String> getObjectReferences(Object obj, boolean indirect) throws OvalException {
-	Collection<String> results = new HashSet<String>();
-	String reflectionId = null;
-	try {
-	    if (obj instanceof DefinitionType) {
-		DefinitionType def = (DefinitionType)obj;
-		if (def.isSetCriteria()) {
-		    for (Object sub : def.getCriteria().getCriteriaOrCriterionOrExtendDefinition()) {
-			results.addAll(getObjectReferences(sub, indirect));
-		    }
-		}
-	    } else if (obj instanceof CriteriaType) {
-		for (Object sub : ((CriteriaType)obj).getCriteriaOrCriterionOrExtendDefinition()) {
-		    results.addAll(getObjectReferences(sub, indirect));
-		}
-	    } else if (obj instanceof ExtendDefinitionType) {
-		Object next = definitions.getDefinition(((ExtendDefinitionType)obj).getDefinitionRef());
-		results = getObjectReferences(next, indirect);
-	    } else if (obj instanceof CriterionType) {
-		results = getObjectReferences(definitions.getTest(((CriterionType)obj).getTestRef()).getValue(), indirect);
-	    } else if (obj instanceof scap.oval.definitions.core.TestType) {
-		ObjectRefType oRef = (ObjectRefType)safeInvokeMethod(obj, "getObject");
-		if (oRef != null) {
-		    results.addAll(getObjectReferences(definitions.getObject(oRef.getObjectRef()).getValue(), indirect));
-		}
-		Object oRefs = safeInvokeMethod(obj, "getState");
-		@SuppressWarnings("unchecked")
-		List<StateRefType> sRefs = (List<StateRefType>)oRefs;
-		if (sRefs != null) {
-		    for (StateRefType sRef : sRefs) {
-			results.addAll(getObjectReferences(definitions.getState(sRef.getStateRef()).getValue(), indirect));
-		    }
-		}
-	    } else if (obj instanceof ObjectType) {
-		ObjectType ot = (ObjectType)obj;
-		reflectionId = ot.getId();
-		results.add(ot.getId());
-		results.addAll(getObjectReferences(getObjectFilters(ot), indirect));
-		results.addAll(getObjectReferences(getObjectSet(ot), indirect));
-		if (ot instanceof VariableObject) {
-		    VariableObject vo = (VariableObject)ot;
-		    if (vo.isSetVarRef()) {
-			Object next = definitions.getVariable((String)vo.getVarRef().getValue());
-			results.addAll(getObjectReferences(next, indirect));
-		    }
-		} else {
-		    for (Method method : getMethods(ot.getClass()).values()) {
-			String methodName = method.getName();
-			if (methodName.startsWith("get") && !OBJECT_METHOD_NAMES.contains(methodName)) {
-			    results.addAll(getObjectReferences(method.invoke(ot), indirect));
-			}
-		    }
-		}
-	    } else if (obj instanceof StateType) {
-		StateType st = (StateType)obj;
-		reflectionId = st.getId();
-		for (Method method : getMethods(obj.getClass()).values()) {
-		    String methodName = method.getName();
-		    if (methodName.startsWith("get") && !STATE_METHOD_NAMES.contains(methodName)) {
-			results.addAll(getObjectReferences(method.invoke(st), indirect));
-		    }
-		}
-	    } else if (obj instanceof Filter) {
-		if (indirect) {
-		    results = getObjectReferences(definitions.getState(((Filter)obj).getValue()), indirect);
-		}
-	    } else if (obj instanceof Set) {
-		if (indirect) {
-		    Set set = (Set)obj;
-		    if (set.isSetObjectReference()) {
-			for (String id : set.getObjectReference()) {
-			    results.addAll(getObjectReferences(definitions.getObject(id).getValue(), indirect));
-			}
-			results.addAll(getObjectReferences(set.getFilter(), indirect));
-		    } else {
-			results = getObjectReferences(set.getSet(), indirect);
-		    }
-		}
-	    } else if (obj instanceof JAXBElement) {
-		results = getObjectReferences(((JAXBElement)obj).getValue(), indirect);
-	    } else if (obj instanceof EntitySimpleBaseType) {
-		EntitySimpleBaseType simple = (EntitySimpleBaseType)obj;
-		if (indirect && simple.isSetVarRef()) {
-		    results = getObjectReferences(definitions.getVariable(simple.getVarRef()), indirect);
-		}
-	    } else if (obj instanceof EntityComplexBaseType) {
-		EntityComplexBaseType complex = (EntityComplexBaseType)obj;
-		if (indirect && complex.isSetVarRef()) {
-		    results = getObjectReferences(definitions.getVariable(complex.getVarRef()), indirect);
-		}
-	    } else if (obj instanceof List) {
-		for (Object elt : (List)obj) {
-		    results.addAll(getObjectReferences(elt, indirect));
-		}
-	    } else if (obj instanceof ObjectComponentType) {
-		Object next = definitions.getObject(((ObjectComponentType)obj).getObjectRef()).getValue();
-		results = getObjectReferences(next, indirect);
-	    } else if (obj instanceof VariableComponentType) {
-		VariableType var = definitions.getVariable(((VariableComponentType)obj).getVarRef());
-		if (var instanceof LocalVariable) {
-		    results = getObjectReferences(var, indirect);
-		}
-	    } else if (obj != null) {
-		try {
-		    results = getObjectReferences(getComponent(obj), indirect);
-		} catch (OvalException e) {
-		    // not a component
-		}
-	    }
-	} catch (NoSuchElementException e) {
-	    // this will lead to an error evaluating the definition later on
-	} catch (ClassCastException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), reflectionId));
-	} catch (IllegalAccessException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), reflectionId));
-	} catch (InvocationTargetException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), reflectionId));
-	}
-	return results;
-    }
-
-    /**
      * Use reflection to get the child component of a function type.  Since there is no base class for all the OVAL function
      * types, this method accepts any Object.
      */
-    private Object getComponent(Object unknown) throws OvalException {
-	Object obj = safeInvokeMethod(unknown, "getArithmetic");
+    private Object getComponent(Object unknown, boolean allowList) throws OvalException {
+	// Components
+
+	Object obj = null;
+	if (allowList) {
+	    obj = ReflectionTool.invokeMethod(unknown, "getObjectComponentOrVariableComponentOrLiteralComponent");
+	    if (obj != null) {
+		return obj;
+	    }
+	}
+	obj = ReflectionTool.invokeMethod(unknown, "getObjectComponent");
 	if (obj != null) {
 	    return obj;
 	}
-	obj = safeInvokeMethod(unknown, "getBegin");
+	obj = ReflectionTool.invokeMethod(unknown, "getVariableComponent");
 	if (obj != null) {
 	    return obj;
 	}
-	obj = safeInvokeMethod(unknown, "getCount");
+	obj = ReflectionTool.invokeMethod(unknown, "getLiteralComponent");
 	if (obj != null) {
 	    return obj;
 	}
-	obj = safeInvokeMethod(unknown, "getConcat");
-	if (obj != null) {
-	    return obj;
-	}
-	obj = safeInvokeMethod(unknown, "getEnd");
-	if (obj != null) {
-	    return obj;
-	}
-	obj = safeInvokeMethod(unknown, "getEscapeRegex");
-	if (obj != null) {
-	    return obj;
-	}
-	obj = safeInvokeMethod(unknown, "getLiteralComponent");
-	if (obj != null) {
-	    return obj;
-	}
-	obj = safeInvokeMethod(unknown, "getObjectComponent");
-	if (obj != null) {
-	    return obj;
-	}
-	obj = safeInvokeMethod(unknown, "getRegexCapture");
-	if (obj != null) {
-	    return obj;
-	}
-	obj = safeInvokeMethod(unknown, "getSplit");
-	if (obj != null) {
-	    return obj;
-	}
-	obj = safeInvokeMethod(unknown, "getSubstring");
-	if (obj != null) {
-	    return obj;
-	}
-	obj = safeInvokeMethod(unknown, "getTimeDifference");
-	if (obj != null) {
-	    return obj;
-	}
-	obj = safeInvokeMethod(unknown, "getUnique");
-	if (obj != null) {
-	    return obj;
-	}
-	obj = safeInvokeMethod(unknown, "getVariableComponent");
-	if (obj != null) {
-	    return obj;
-	}
-	obj = safeInvokeMethod(unknown, "getObjectComponentOrVariableComponentOrLiteralComponent");
-	if (obj != null) {
-	    return obj;
+
+	// Functions
+
+	for (Class<?> clazz : FUNCTIONS.keySet()) {
+	    String className = clazz.getName();
+	    if (className.endsWith("FunctionType")) {
+		int ptr = className.lastIndexOf(".");
+		String functionName = className.substring(ptr+1, className.length() - 12);
+		obj = ReflectionTool.invokeMethod(unknown, new StringBuffer("get").append(functionName).toString());
+		if (obj != null) {
+		    return obj;
+		}
+	    }
 	}
 
 	throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_COMPONENT, unknown.getClass().getName()));
     }
 
-    private static Map<String, Map<String, Method>> METHOD_REGISTRY;
     private static java.util.Set<String> OBJECT_METHOD_NAMES;
     static {
-	METHOD_REGISTRY = new HashMap<String, Map<String, Method>>();
-	OBJECT_METHOD_NAMES = getNames(getMethods(ObjectType.class).values());
+	OBJECT_METHOD_NAMES = getNames(ReflectionTool.getMethods(ObjectType.class).values());
 	OBJECT_METHOD_NAMES.add("getBehaviors");
 	OBJECT_METHOD_NAMES.add("getFilter");
 	OBJECT_METHOD_NAMES.add("getSet");
     }
-    private static java.util.Set<String> STATE_METHOD_NAMES = getNames(getMethods(StateType.class).values());
+    private static java.util.Set<String> STATE_METHOD_NAMES = getNames(ReflectionTool.getMethods(StateType.class).values());
 
     /**
      * List the unique names of all the no-argument methods. This is not necessarily a fast method.
@@ -3416,36 +3167,6 @@ public class Engine implements IOvalEngine, IProvider {
 	    names.add(m.getName());
 	}
 	return names;
-    }
-
-    /**
-     * Use introspection to list all the no-argument methods of the specified Class, organized by name.
-     */
-    private static Map<String, Method> getMethods(Class clazz) {
-	String className = clazz.getName();
-	if (METHOD_REGISTRY.containsKey(className)) {
-	    return METHOD_REGISTRY.get(className);
-	} else {
-	    Map<String, Method> methods = new HashMap<String, Method>();
-	    Method[] m = clazz.getMethods();
-	    for (int i=0; i < m.length; i++) {
-		methods.put(m[i].getName(), m[i]);
-	    }
-	    METHOD_REGISTRY.put(className, methods);
-	    return methods;
-	}
-    }
-
-    /**
-     * Use introspection to get the no-argument method of the specified Class, with the specified name.
-     */
-    private static Method getMethod(Class clazz, String name) throws NoSuchMethodException {
-	Map<String, Method> methods = getMethods(clazz);
-	if (methods.containsKey(name)) {
-	    return methods.get(name);
-	} else {
-	    throw new NoSuchMethodException(clazz.getName() + "." + name + "()");
-	}
     }
 
     /**
@@ -3463,26 +3184,6 @@ public class Engine implements IOvalEngine, IProvider {
 	    sb.append(new String(ba, StringTools.ASCII));
 	}
 	return sb.toString();
-    }
-
-    /**
-     * Safely invoke a method that takes no arguments and returns an Object.
-     *
-     * @returns null if the method is not implemented, if there was an error, or if the method returned null.
-     */
-    private Object safeInvokeMethod(Object obj, String name) {
-	Object result = null;
-	try {
-	    Method m = obj.getClass().getMethod(name);
-	    result = m.invoke(obj);
-	} catch (NoSuchMethodException e) {
-	    // Object doesn't implement the method; no big deal.
-	} catch (IllegalAccessException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (InvocationTargetException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	return result;
     }
 
     /**
@@ -3549,25 +3250,25 @@ public class Engine implements IOvalEngine, IProvider {
     private Map<Class, Method> wrapperMethods = new HashMap<Class, Method>();
 
     private JAXBElement<? extends ObjectType> wrapObject(ObjectType object) {
-        try {
-            Class clazz = object.getClass();
-            Method method = wrapperMethods.get(clazz);
-            Object factory = wrapperFactories.get(clazz);
-            if (method == null || factory == null) {
-                String packageName = clazz.getPackage().getName();
-                String unqualClassName = clazz.getName().substring(packageName.length()+1);
-                Class<?> factoryClass = Class.forName(packageName + ".ObjectFactory");
-                factory = factoryClass.newInstance();
-                wrapperFactories.put(clazz, factory);
-                method = factoryClass.getMethod("create" + unqualClassName, object.getClass());
-                wrapperMethods.put(clazz, method);
-            }
-            @SuppressWarnings("unchecked")
-            JAXBElement<ObjectType> wrapped = (JAXBElement<ObjectType>)method.invoke(factory, object);
-            return wrapped;
-        } catch (Exception e) {
-            logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-            throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), object.getId()));
-        }
+	try {
+	    Class clazz = object.getClass();
+	    Method method = wrapperMethods.get(clazz);
+	    Object factory = wrapperFactories.get(clazz);
+	    if (method == null || factory == null) {
+		String packageName = clazz.getPackage().getName();
+		String unqualClassName = clazz.getName().substring(packageName.length()+1);
+		Class<?> factoryClass = Class.forName(packageName + ".ObjectFactory");
+		factory = factoryClass.newInstance();
+		wrapperFactories.put(clazz, factory);
+		method = factoryClass.getMethod("create" + unqualClassName, object.getClass());
+		wrapperMethods.put(clazz, method);
+	    }
+	    @SuppressWarnings("unchecked")
+	    JAXBElement<ObjectType> wrapped = (JAXBElement<ObjectType>)method.invoke(factory, object);
+	    return wrapped;
+	} catch (Exception e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), object.getId()));
+	}
     }
 }

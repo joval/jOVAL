@@ -23,6 +23,7 @@ $(JOVAL_CORE_LIB): classes resources
 resources:
 	rm -f $(BUILD)/*.properties
 	cp $(RSRC)/*.properties $(BUILD)
+	cp $(RSRC)/functions.txt $(BUILD)
 	rm -f $(BUILD)/org/joval/scap/xccdf/*.xsl
 	cp $(SRC)/org/joval/scap/xccdf/xccdf_convert_1.1.4_to_1.2.xsl $(BUILD)/org/joval/scap/xccdf
 	echo "productName=jOVAL(tm) SDK" >> $(BUILD)/joval.system.properties

@@ -48,6 +48,7 @@ import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.sysinfo.SysinfoFactory;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.ReflectionTool;
 
 /**
  * The abstract base class for all functional jovaldi plug-ins.
@@ -83,7 +84,7 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 		    if (!line.startsWith("#")) {
 			try {
 			    Class<?> clazz = Class.forName(line);
-			    for (Class<?> iface : getInterfaces(clazz)) {
+			    for (Class<?> iface : ReflectionTool.getInterfaces(clazz)) {
 				if ("org.joval.intf.plugin.IAdapter".equals(iface.getName())) {
 				    @SuppressWarnings("unchecked")
 				    Class<IAdapter> adapterClass = (Class<IAdapter>)clazz;
@@ -98,22 +99,6 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 	    }
 	} catch (IOException e) {
 	    JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-    }
-
-    private static Collection<Class<?>> getInterfaces(Class<?> clazz) {
-	Collection<Class<?>> accumulator = new HashSet<Class<?>>();
-	getInterfaces(clazz, accumulator);
-	return accumulator;
-    }
-
-    private static void getInterfaces(Class<?> clazz, Collection<Class<?>> accumulator) {
-	if (clazz != null && !accumulator.contains(clazz)) {
-	    for (Class<?> iface : clazz.getInterfaces()) {
-		accumulator.add(iface);
-		getInterfaces(iface.getSuperclass());
-	    }
-	    getInterfaces(clazz.getSuperclass(), accumulator);
 	}
     }
 

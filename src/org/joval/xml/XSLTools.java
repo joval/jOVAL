@@ -9,9 +9,11 @@ import java.util.NoSuchElementException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.ErrorListener;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import org.w3c.dom.Document;
@@ -19,6 +21,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import org.joval.util.JOVALMsg;
 
 /**
  * Utility for working with XSI.
@@ -91,11 +95,28 @@ public class XSLTools {
 		    } else {
 			throw new IllegalArgumentException("XSL version: " + version);
 		    }
+		    xf.setErrorListener(new Listener());
 		    return xf.newTransformer(new DOMSource(doc));
 		}
 		break;
 	    }
 	}
 	throw new NoSuchElementException("xsl:stylesheet");
+    }
+
+    // Internal
+
+    static class Listener implements ErrorListener {
+	public void error(TransformerException e) {
+	    JOVALMsg.getLogger().warn(JOVALMsg.XSL_ERROR, e.getMessage());
+	}
+
+	public void fatalError(TransformerException e) {
+	    JOVALMsg.getLogger().warn(JOVALMsg.XSL_FATAL, e.getMessage());
+	}
+
+	public void warning(TransformerException e) {
+	    JOVALMsg.getLogger().warn(JOVALMsg.XSL_WARNING, e.getMessage());
+	}
     }
 }

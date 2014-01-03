@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.scap.oval.engine;
+package org.joval.scap.oval.functions;
 
 /**
  * An exception class for variable resolution, used to propagate messages upstream to the originator so that an error
@@ -13,12 +13,12 @@ package org.joval.scap.oval.engine;
  * @author David A. Solin
  * @version %I% %G%
  */
-class ResolveException extends Exception {
-    ResolveException(String message) {
+public class ResolveException extends Exception {
+    public ResolveException(String message) {
 	super(message);
     }
 
-    ResolveException(Exception e) {
+    public ResolveException(Exception e) {
 	super(e);
     }
 }
