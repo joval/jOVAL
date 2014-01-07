@@ -272,7 +272,7 @@ public class Engine implements IOvalEngine, IProvider {
 	Integer indexId = objectIndex.getId(toCanonicalBytes(obj), objectCounter);
 	if (objectCounter == indexId) {
 	    objectCounter++;
-	} else {
+	} else if (objectItems.containsKey(indexId)) {
 	    return objectItems.get(indexId);
 	}
 
