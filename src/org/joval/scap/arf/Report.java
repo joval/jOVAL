@@ -272,14 +272,25 @@ public class Report implements IReport, ILoggable {
     public RuleDiagnostics getDiagnostics(String assetId, String benchmarkId, String profileId, String ruleId)
 		throws NoSuchElementException, ScapException {
 
+	RuleDiagnostics result = null;
 	Catalog catalog = getCatalog(assetId);
 	RuleResultType rrt = null;
-	for (RuleResultType result : getTestResult(assetId, benchmarkId, profileId).getRuleResult()) {
-	    if (result.getIdref().equals(ruleId)) {
-		return getDiagnostics(result, catalog);
+	for (RuleResultType ruleResult : getTestResult(assetId, benchmarkId, profileId).getRuleResult()) {
+	    if (ruleResult.getIdref().equals(ruleId)) {
+		if (result == null) {
+		    result = getDiagnostics(ruleResult, catalog);
+		} else {
+		    // multi-check case
+		    result.getCheckDiagnostics().addAll(getDiagnostics(ruleResult, catalog).getCheckDiagnostics());
+		    result.setRuleResult(null);
+		}
 	    }
 	}
-	throw new NoSuchElementException(ruleId);
+	if (result == null) {
+	    throw new NoSuchElementException(ruleId);
+	} else {
+	    return result;
+	}
     }
 
     public Catalog getCatalog() throws ArfException, NoSuchElementException {
