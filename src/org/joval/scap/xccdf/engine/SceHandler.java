@@ -130,7 +130,7 @@ public class SceHandler implements ISystem {
 	cancelled = true;
     }
 
-    public IResult getResult(CheckType check, boolean multi) throws IllegalArgumentException {
+    public IResult getResult(CheckType check) throws IllegalArgumentException {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());
 	}

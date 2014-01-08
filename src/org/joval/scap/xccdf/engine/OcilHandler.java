@@ -18,7 +18,6 @@ import scap.xccdf.CcOperatorEnumType;
 import scap.xccdf.CheckContentRefType;
 import scap.xccdf.CheckImportType;
 import scap.xccdf.CheckType;
-import scap.xccdf.InstanceResultType;
 import scap.xccdf.ResultEnumType;
 import scap.xccdf.RuleType;
 import scap.xccdf.TestResultType;
@@ -124,43 +123,57 @@ public class OcilHandler implements ISystem {
 	// no-op
     }
 
-    public IResult getResult(CheckType check, boolean multi) throws IllegalArgumentException {
+    public IResult getResult(CheckType check) throws IllegalArgumentException {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
 	for (CheckContentRefType ref : check.getCheckContentRef()) {
-	    if (results.containsKey(ref.getHref())) {
-		CheckData data = new CheckData(check.getNegate());
-		Map<String, String> ocilResults = results.get(ref.getHref());
-		if (ref.isSetName()) {
-		    String name = ref.getName();
-		    if (ocilResults.containsKey(name)) {
-			data.add(convertResult(ocilResults.get(name)));
-		    } else {
-			data.add(ResultEnumType.UNKNOWN);
-		    }
-		} else if (multi) {
-		    CheckResult cr = new CheckResult();
-		    for (Map.Entry<String, String> entry : ocilResults.entrySet()) {
-			data = new CheckData(check.getNegate());
-			data.add(convertResult(entry.getValue()));
-			InstanceResultType inst = Engine.FACTORY.createInstanceResultType();
-			inst.setValue(entry.getKey());
-			cr.getResults().add(new CheckResult(data.getResult(CcOperatorEnumType.AND), check, inst));
-		    }
-		    return cr;
-		} else {
-		    for (String qr : ocilResults.values()) {
-			data.add(convertResult(qr));
-		    }
-		}
-		return new CheckResult(data.getResult(CcOperatorEnumType.AND), check);
+	    String href = ref.getHref();
+	    if (results.containsKey(href)) {
+		return getResult(check, ref, results.get(href));
 	    }
 	}
 	return new CheckResult(ResultEnumType.NOTCHECKED, check);
     }
 
     // Private
+
+    private IResult getResult(CheckType check, CheckContentRefType ref, Map<String, String> ocilResults) {
+        CheckType checkResult = Engine.FACTORY.createCheckType();
+        checkResult.setId(check.getId());
+        checkResult.setMultiCheck(check.getMultiCheck());
+        checkResult.setNegate(check.getNegate());
+        checkResult.setSelector(check.getSelector());
+        checkResult.setSystem(NAMESPACE);
+        checkResult.getCheckExport().addAll(check.getCheckExport());
+        checkResult.getCheckContentRef().add(ref);
+	// TBD: process check-imports
+
+	CheckData data = new CheckData(check.getNegate());
+	if (ref.isSetName()) {
+	    String name = ref.getName();
+	    if (ocilResults.containsKey(name)) {
+		data.add(convertResult(ocilResults.get(name)));
+	    } else {
+		data.add(ResultEnumType.UNKNOWN);
+	    }
+	} else if (check.getMultiCheck()) {
+	    CheckResult cr = new CheckResult();
+	    for (Map.Entry<String, String> entry : ocilResults.entrySet()) {
+		data = new CheckData(check.getNegate());
+		data.add(convertResult(entry.getValue()));
+		CheckType ct = Engine.copy(checkResult);
+		ct.getCheckContentRef().get(0).setName(entry.getKey());
+		cr.getResults().add(new CheckResult(data.getResult(CcOperatorEnumType.AND), ct));
+	    }
+	    return cr;
+	} else {
+	    for (String qr : ocilResults.values()) {
+		data.add(convertResult(qr));
+	    }
+	}
+	return new CheckResult(data.getResult(CcOperatorEnumType.AND), checkResult);
+    }
 
     /**
      * Convert a String questionnaire result into a check result.

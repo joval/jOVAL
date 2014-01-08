@@ -49,6 +49,8 @@ import scap.oval.systemcharacteristics.core.SystemInfoType;
 import scap.oval.variables.VariableType;
 import scap.xccdf.CcOperatorEnumType;
 import scap.xccdf.CheckContentRefType;
+import scap.xccdf.CheckExportType;
+import scap.xccdf.CheckImportType;
 import scap.xccdf.CheckType;
 import scap.xccdf.ComplexCheckType;
 import scap.xccdf.CPE2IdrefType;
@@ -125,6 +127,38 @@ public class Engine implements IXccdfEngine {
 	} catch (DatatypeConfigurationException e) {
 	    JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
+    }
+
+    /**
+     * Make a copy of a CheckType, except for check-import content (although the import defs will be copied).
+     */
+    static CheckType copy(CheckType check) {
+        CheckType result = Engine.FACTORY.createCheckType();
+        result.setId(check.getId());
+        result.setMultiCheck(check.getMultiCheck());
+        result.setNegate(check.getNegate());
+        result.setSelector(check.getSelector());
+        result.setSystem(check.getSystem());
+        result.getCheckExport().addAll(check.getCheckExport());
+        for (CheckExportType exportType : check.getCheckExport()) {
+            CheckExportType copy = FACTORY.createCheckExportType();
+            copy.setExportName(exportType.getExportName());
+            copy.setValueId(exportType.getValueId());
+            result.getCheckExport().add(copy);
+        }
+        for (CheckImportType importType : check.getCheckImport()) {
+            CheckImportType copy = FACTORY.createCheckImportType();
+            copy.setImportName(importType.getImportName());
+            copy.setImportXpath(importType.getImportXpath());
+            result.getCheckImport().add(copy);
+        }
+        for (CheckContentRefType ref : check.getCheckContentRef()) {
+            CheckContentRefType copy = FACTORY.createCheckContentRefType();
+            copy.setHref(ref.getHref());
+            copy.setName(ref.getName());
+            result.getCheckContentRef().add(copy);
+        }
+        return result;
     }
 
     private enum State {
@@ -635,7 +669,7 @@ public class Engine implements IXccdfEngine {
 	} else {
 	    for (CheckType check : rule.getCheck()) {
 		if (handlers.containsKey(check.getSystem())) {
-		    ISystem.IResult result = handlers.get(check.getSystem()).getResult(check, check.getMultiCheck());
+		    ISystem.IResult result = handlers.get(check.getSystem()).getResult(check);
 		    switch(result.getType()) {
 		      case SINGLE: {
 			RuleResultType rrt = FACTORY.createRuleResultType();
@@ -662,7 +696,6 @@ public class Engine implements IXccdfEngine {
 			    rrt.setWeight(rule.getWeight());
 			    rrt.setRole(rule.getRole());
 			    rrt.getCheck().add(subresult.getCheck());
-			    rrt.getInstance().add(subresult.getInstance());
 			    for (MessageType message : subresult.getMessages()) {
 				rrt.getMessage().add(message);
 			    }
@@ -694,9 +727,16 @@ public class Engine implements IXccdfEngine {
 	    if (obj instanceof CheckType) {
 		CheckType subCheck = (CheckType)obj;
 		if (handlers.containsKey(subCheck.getSystem())) {
-		    ISystem.IResult result = handlers.get(subCheck.getSystem()).getResult(subCheck, false);
-		    checkResult.getCheckOrComplexCheck().add(result.getCheck());
-		    data.add(result.getResult());
+		    ISystem.IResult result = handlers.get(subCheck.getSystem()).getResult(subCheck);
+		    if (subCheck.getMultiCheck()) {
+			for (ISystem.IResult subresult : result.getResults()) {
+			    checkResult.getCheckOrComplexCheck().add(subresult.getCheck());
+			    data.add(subresult.getResult());
+			}
+		    } else {
+			checkResult.getCheckOrComplexCheck().add(result.getCheck());
+			data.add(result.getResult());
+		    }
 		} else {
 		    data.add(ResultEnumType.NOTCHECKED);
 		}

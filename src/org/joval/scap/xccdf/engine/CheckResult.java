@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.NoSuchElementException;
 
 import scap.xccdf.CheckType;
-import scap.xccdf.InstanceResultType;
 import scap.xccdf.MessageType;
 import scap.xccdf.ResultEnumType;
 
@@ -23,19 +22,13 @@ public class CheckResult implements ISystem.IResult {
     private Type type;
     private ResultEnumType result;
     private CheckType check;
-    private InstanceResultType inst;
     private Collection<MessageType> messages;
     private Collection<ISystem.IResult> results;
 
     CheckResult(ResultEnumType result, CheckType check) {
-	this(result, check, null);
-    }
-
-    CheckResult(ResultEnumType result, CheckType check, InstanceResultType inst) {
         type = Type.SINGLE;
         this.result = result;
         this.check = check;
-        this.inst = inst;
     }
 
     CheckResult() {
@@ -79,14 +72,6 @@ public class CheckResult implements ISystem.IResult {
             throw new NoSuchElementException();
         } else {
             return check;
-        }
-    }
-
-    public InstanceResultType getInstance() throws NoSuchElementException {
-        if (inst == null) {
-            throw new NoSuchElementException();
-        } else {
-            return inst;
         }
     }
 

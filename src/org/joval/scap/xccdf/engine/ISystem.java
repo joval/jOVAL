@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import scap.xccdf.CheckType;
-import scap.xccdf.InstanceResultType;
 import scap.xccdf.MessageType;
 import scap.xccdf.ResultEnumType;
 
@@ -48,10 +47,8 @@ interface ISystem {
 
     /**
      * Get the result for a rule.
-     *
-     * @param multi overrides CheckType.getMultiCheck().
      */
-    IResult getResult(CheckType check, boolean multi) throws ScapException, IllegalArgumentException;
+    IResult getResult(CheckType check) throws ScapException, IllegalArgumentException;
 
     /**
      * Interface definition for getting check result information. Since a check can be a regular single check, or a
@@ -75,11 +72,6 @@ interface ISystem {
 	 * For Type.SINGLE.
 	 */
 	CheckType getCheck() throws NoSuchElementException;
-
-	/**
-	 * For the children of Type.MULTI.
-	 */
-	InstanceResultType getInstance() throws NoSuchElementException;
 
 	/**
 	 * For Type.MULTI (for multi-check) - returns a list of Type.SINGLE-type IResult instances.

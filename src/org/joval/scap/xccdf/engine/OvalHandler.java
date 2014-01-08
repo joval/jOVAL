@@ -32,7 +32,6 @@ import scap.xccdf.CheckContentRefType;
 import scap.xccdf.CheckExportType;
 import scap.xccdf.CheckImportType;
 import scap.xccdf.CheckType;
-import scap.xccdf.InstanceResultType;
 import scap.xccdf.MsgSevEnumType;
 import scap.xccdf.MessageType;
 import scap.xccdf.ResultEnumType;
@@ -173,19 +172,19 @@ public class OvalHandler implements ISystem {
 	}
     }
 
-    public IResult getResult(CheckType check, boolean multi) throws OvalException, IllegalArgumentException {
+    public IResult getResult(CheckType check) throws OvalException, IllegalArgumentException {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
 	for (CheckContentRefType ref : check.getCheckContentRef()) {
 	    String href = ref.getHref();
 	    if (results.containsKey(href)) {
-		return getResult(check, multi, ref, results.get(href));
+		return getResult(check, ref, results.get(href));
 	    } else if (engines.containsKey(href)) {
 		IOvalEngine engine = engines.get(href).getEngine();
 		switch(engine.getResult()) {
 		  case OK:
-		    return getResult(check, multi, ref, engine.getResults());
+		    return getResult(check, ref, engine.getResults());
 		  case ERR:
 		    MessageType message = ScapFactory.XCCDF.createMessageType();
 		    message.setSeverity(MsgSevEnumType.ERROR);
@@ -201,12 +200,10 @@ public class OvalHandler implements ISystem {
 
     // Private
 
-    private IResult getResult(CheckType check, boolean multi, CheckContentRefType ref, IResults ovalResult)
-		throws OvalException {
-
+    private IResult getResult(CheckType check, CheckContentRefType ref, IResults ovalResult) throws OvalException {
 	CheckType checkResult = Engine.FACTORY.createCheckType();
 	checkResult.setId(check.getId());
-	checkResult.setMultiCheck(false);
+	checkResult.setMultiCheck(check.getMultiCheck());
 	checkResult.setNegate(check.getNegate());
 	checkResult.setSelector(check.getSelector());
 	checkResult.setSystem(NAMESPACE);
@@ -247,7 +244,7 @@ public class OvalHandler implements ISystem {
 	    } catch (NoSuchElementException e) {
 		data.add(ResultEnumType.UNKNOWN);
 	    }
-	} else if (multi) {
+	} else if (check.getMultiCheck()) {
 	    CheckResult cr = new CheckResult();
 	    for (DefinitionType def : ovalResult.getDefinitionResults()) {
 		data = new CheckData(check.getNegate());
@@ -255,9 +252,9 @@ public class OvalHandler implements ISystem {
 		ClassEnumeration definitionClass = ovalResult.getDefinition(definitionId).getClazz();
 		ResultEnumeration definitionResult = ovalResult.getDefinitionResult(definitionId);
 		data.add(convertResult(definitionClass, definitionResult));
-		InstanceResultType inst = Engine.FACTORY.createInstanceResultType();
-		inst.setValue(def.getDefinitionId());
-		cr.getResults().add(new CheckResult(data.getResult(CcOperatorEnumType.AND), checkResult, inst));
+		CheckType ct = Engine.copy(checkResult);
+		ct.getCheckContentRef().get(0).setName(def.getDefinitionId());
+		cr.getResults().add(new CheckResult(data.getResult(CcOperatorEnumType.AND), ct));
 	    }
 	    return cr;
 	} else {

@@ -62,6 +62,7 @@ import org.joval.plugin.PluginConfigurationException;
 import org.joval.scap.ScapException;
 import org.joval.scap.ScapFactory;
 import org.joval.scap.cpe.CpeException;
+import org.joval.scap.diagnostics.CheckDiagnostics;
 import org.joval.scap.diagnostics.RuleDiagnostics;
 import org.joval.scap.datastream.DatastreamCollection;
 import org.joval.scap.ocil.Checklist;
@@ -535,13 +536,16 @@ public class XPERT {
 				    String ruleId = rd.getRuleId();
 				    logger.info(getMessage("message.diagnostics.rule", ruleId));
 				    rd.setRuleResult(null);
-				    diagnostics.put(ruleId, rd);
+				    if (diagnostics.containsKey(ruleId)) {
+					// a multi-check rule will appear multiple times
+					diagnostics.get(ruleId).getCheckDiagnostics().addAll(rd.getCheckDiagnostics());
+				    } else {
+					diagnostics.put(ruleId, rd);
+				    }
 				}
 				TestResultType trt = ctx.getBenchmark().getRootObject().getTestResult().get(0);
 				for (RuleResultType rrt : trt.getRuleResult()) {
-				    MetadataType md = ScapFactory.XCCDF.createMetadataType();
-				    md.getAny().add(diagnostics.get(rrt.getIdref()));
-				    rrt.getMetadata().add(md);
+				    addMetadata(rrt, diagnostics);
 				}
 			    } else {
 				report = engine.getReport(SystemEnumeration.XCCDF);
@@ -719,6 +723,35 @@ public class XPERT {
 	    }
 	}
 	return checks;
+    }
+
+    private static void addMetadata(RuleResultType rrt, Map<String, RuleDiagnostics> diagnostics) {
+	String ruleId = rrt.getIdref();
+	if (diagnostics.containsKey(ruleId)) {
+	    RuleDiagnostics rd = new RuleDiagnostics();
+	    rd.setRuleId(ruleId);
+	    if (rrt.isSetComplexCheck()) {
+		rd.getCheckDiagnostics().addAll(diagnostics.get(ruleId).getCheckDiagnostics());
+	    } else {
+		CheckType check = rrt.getCheck().get(0);
+		if (check.isSetMultiCheck()) {
+		    CheckContentRefType ref = check.getCheckContentRef().get(0);
+		    for (CheckDiagnostics cd : diagnostics.get(ruleId).getCheckDiagnostics()) {
+			CheckContentRefType cdRef = cd.getCheck().getCheckContentRef().get(0);
+			if (ref.getHref().equals(cdRef.getHref()) && ref.getName().equals(cdRef.getName())) {
+			    rd.getCheckDiagnostics().add(cd);
+			    break;
+			}
+		    }
+		} else {
+		    rd.getCheckDiagnostics().addAll(diagnostics.get(ruleId).getCheckDiagnostics());
+		}
+	    }
+
+	    MetadataType md = ScapFactory.XCCDF.createMetadataType();
+	    md.getAny().add(rd);
+	    rrt.getMetadata().add(md);
+	}
     }
 
     private static void validateDatastream(File f) throws SAXException, IOException, XPERTException {
