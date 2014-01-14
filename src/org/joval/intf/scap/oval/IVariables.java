@@ -5,6 +5,7 @@ package org.joval.intf.scap.oval;
 
 import java.io.File;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import scap.oval.common.SimpleDatatypeEnumeration;
 import scap.oval.definitions.core.VariableType;
@@ -22,7 +23,7 @@ public interface IVariables extends ITransformable<OvalVariables> {
     /**
      * Get the values of the variable, specified by its ID.
      */
-    List<IType> getValue(String id);
+    List<IType> getValue(String id) throws NoSuchElementException;
 
     /**
      * Set an untyped multi-valued variable, over-writing any previously set/added values.

@@ -3002,7 +3002,23 @@ public class Engine implements IOvalEngine, IProvider {
 		items = scanObject(rc);
 		rc.popObject();
 	    }
-	    return extractItemData(objectId, oc, items);
+	    List<IType> result = extractItemData(objectId, oc, items);
+	    if (result.size() == 0) {
+		//
+		// Per the schema documentation, object components are required to resolve to values or generate an error.
+		//
+		String msg = null;
+		String itemField = oc.getItemField();
+		if (oc.isSetRecordField()) {
+		    String recordField = oc.getRecordField();
+		    msg = JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_OBJECT_COMPONENT_RECORD, objectId, itemField, recordField);
+		} else {
+		    msg = JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_OBJECT_COMPONENT, objectId, itemField);
+		}
+		throw new ResolveException(msg);
+	    } else {
+		return result;
+	    }
 
 	//
 	// Resolve a wrapper pointing to another variable
@@ -3060,12 +3076,15 @@ public class Engine implements IOvalEngine, IProvider {
 	    if (o == null) {
 		// skip nulls
 	    } else if (o instanceof EntityItemSimpleBaseType) {
-		try {
-		    EntityItemSimpleBaseType base = (EntityItemSimpleBaseType)o;
+		EntityItemSimpleBaseType base = (EntityItemSimpleBaseType)o;
+		switch(base.getStatus()) {
+		  case EXISTS:
 		    SimpleDatatypeEnumeration type = TypeFactory.getSimpleDatatype(base.getDatatype());
 		    values.add(TypeFactory.createType(type, (String)base.getValue()));
-		} catch (IllegalArgumentException e) {
-		    throw new ResolveException(e);
+		    break;
+		  default:
+		    logger.debug(JOVALMsg.WARNING_ITEM_FIELD_STATUS, oc.getItemField(), base.getStatus(), objectId);
+		    break;
 		}
 	    } else if (o instanceof List) {
 		values.addAll(extractItemData(objectId, oc, (List)o));
@@ -3077,26 +3096,17 @@ public class Engine implements IOvalEngine, IProvider {
 			if (fieldName.equals(field.getName())) {
 			    switch(field.getStatus()) {
 			      case EXISTS:
-				try {
-		    		    SimpleDatatypeEnumeration type = TypeFactory.getSimpleDatatype(field.getDatatype());
-				    values.add(TypeFactory.createType(type, (String)field.getValue()));
-				} catch (IllegalArgumentException e) {
-				    throw new ResolveException(e);
-				}
+		    		SimpleDatatypeEnumeration type = TypeFactory.getSimpleDatatype(field.getDatatype());
+				values.add(TypeFactory.createType(type, (String)field.getValue()));
 				break;
-
 			      default:
-				logger.warn(JOVALMsg.WARNING_FIELD_STATUS, field.getName(), field.getStatus(), objectId);
+				logger.debug(JOVALMsg.WARNING_RECORD_FIELD_STATUS,field.getName(),field.getStatus(),objectId);
 				break;
 			    }
 			}
 		    }
 		} else {
-		    try {
-			values.add(new RecordType(record));
-		    } catch (IllegalArgumentException e) {
-			throw new ResolveException(e);
-		    }
+		    values.add(new RecordType(record));
 		}
 	    } else {
 		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, o.getClass().getName(), objectId));
