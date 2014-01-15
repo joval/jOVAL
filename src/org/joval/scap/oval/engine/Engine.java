@@ -4,6 +4,7 @@
 package org.joval.scap.oval.engine;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
@@ -42,6 +43,7 @@ import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.stream.FactoryConfigurationError;
 
 import jsaf.intf.system.ISession;
@@ -232,6 +234,7 @@ public class Engine implements IOvalEngine, IProvider {
     private Producer<Message> producer;
     private LocLogger logger;
     private Marshaller marshaller;
+    private Unmarshaller unmarshaller;
     private Index<Integer> objectIndex;
     private Map<Integer, Collection<ItemType>> objectItems;
     private int objectCounter = 0;
@@ -251,6 +254,7 @@ public class Engine implements IOvalEngine, IProvider {
 	filter = new DefinitionFilter();
 	try {
 	    marshaller = SchemaRegistry.OVAL_DEFINITIONS.createMarshaller();
+	    unmarshaller = SchemaRegistry.OVAL_DEFINITIONS.getJAXBContext().createUnmarshaller();
 	} catch (JAXBException e) {
 	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FactoryConfigurationError e) {
@@ -649,7 +653,7 @@ public class Engine implements IOvalEngine, IProvider {
 	    } else if (obj instanceof ObjectType) {
 		ObjectType ot = (ObjectType)obj;
 		reflectionId = ot.getId();
-		results.add(ot.getId());
+		results.add(reflectionId);
 		results.addAll(getObjectReferences(getObjectFilters(ot), indirect));
 		results.addAll(getObjectReferences(getObjectSet(ot), indirect));
 		if (ot instanceof VariableObject) {
@@ -724,6 +728,7 @@ public class Engine implements IOvalEngine, IProvider {
 	    }
 	} catch (NoSuchElementException e) {
 	    // this will lead to an error evaluating the definition later on
+	    logger.warn(e.getMessage());
 	} catch (ClassCastException e) {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), reflectionId));
@@ -957,7 +962,7 @@ public class Engine implements IOvalEngine, IProvider {
 		    scanObject(rc);
 		}
 	    } catch (ResolveException e) {
-		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		logger.warn(e.getMessage());
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(e.getMessage());
@@ -2018,6 +2023,7 @@ public class Engine implements IOvalEngine, IProvider {
 	    }
 	    definitionResult.setResult(criteriaResult);
 	} catch (NoSuchElementException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    definitionResult.setResult(ResultEnumeration.ERROR);
 	    MessageType message = Factories.common.createMessageType();
 	    message.setLevel(MessageLevelEnumeration.ERROR);
@@ -3237,21 +3243,18 @@ public class Engine implements IOvalEngine, IProvider {
     }
 
     /**
-     * Canonicalize an ObjectType by stripping out its ID, marshalling it to XML, and returning the bytes.
+     * Canonicalize an ObjectType by making a copy, removing the ID, marshalling it, and returning the bytes.
      */
     private byte[] toCanonicalBytes(ObjectType objectType) {
 	JAXBElement<? extends ObjectType> object = wrapObject(objectType);
 	ByteArrayOutputStream out = new ByteArrayOutputStream();
-	synchronized(object) {
-	    String objectId = objectType.getId();
-	    objectType.setId(null);
-	    try {
-		marshaller.marshal(object, out);
-	    } catch (JAXBException e) {
-		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    } finally {
-		objectType.setId(objectId);
-	    }
+	try {
+	    marshaller.marshal(object, out);
+	    Object copy = unmarshaller.unmarshal(new ByteArrayInputStream(out.toByteArray()));
+	    ((ObjectType)((JAXBElement)copy).getValue()).setId(null);
+	    marshaller.marshal(copy, out);
+	} catch (JAXBException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return out.toByteArray();
     }

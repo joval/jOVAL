@@ -20,7 +20,6 @@ import scap.oval.definitions.core.CriteriaType;
 import scap.oval.definitions.core.CriterionType;
 import scap.oval.definitions.core.ExtendDefinitionType;
 import scap.oval.definitions.core.ObjectRefType;
-import scap.oval.definitions.core.OvalDefinitions;
 import scap.oval.definitions.core.TestType;
 import scap.oval.results.ResultEnumeration;
 import scap.oval.results.DefinitionType;
@@ -48,7 +47,7 @@ import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.xml.ITransformable;
 import org.joval.scap.ScapException;
 import org.joval.scap.ScapFactory;
-import org.joval.scap.oval.Factories;
+import org.joval.scap.oval.Definitions;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.xccdf.XccdfException;
@@ -63,6 +62,8 @@ import org.joval.util.Producer;
  */
 public class OvalHandler implements ISystem {
     private static final String EMPTY_URI = "http://www.gocil.org/checklists/empty.xml";
+    private static final IDefinitions EMPTY_DEFINITIONS = new Definitions();
+
     private static final String NAMESPACE = SystemEnumeration.OVAL.namespace();
 
     private Map<String, EngineData> engines;
@@ -138,8 +139,7 @@ public class OvalHandler implements ISystem {
 
     public Map<String, ? extends ITransformable<?>> exec(IPlugin plugin) throws Exception {
 	if (engines.size() == 0) {
-	    engines.put(EMPTY_URI,
-		new EngineData(EMPTY_URI, OvalFactory.createDefinitions(Factories.definitions.core.createOvalDefinitions())));
+	    engines.put(EMPTY_URI, new EngineData(EMPTY_URI, EMPTY_DEFINITIONS));
 	}
 	Iterator<Map.Entry<String, EngineData>> iter = engines.entrySet().iterator();
 	while(iter.hasNext()) {

@@ -70,6 +70,9 @@ public class Datastream implements IDatastream, ILoggable {
     private Map<String, Object> hrefMap;
     private Map<String, Component> components;
     private Map<String, IBenchmark> benchmarks;
+    private Map<String, IDefinitions> definitions;
+    private Map<String, IChecklist> checklists;
+    private Map<String, IScript> scripts;
     private Map<String, ExtendedComponent> extendedComponents;
 
     /**
@@ -84,6 +87,9 @@ public class Datastream implements IDatastream, ILoggable {
 	//
 	components = new HashMap<String, Component>();
 	benchmarks = new HashMap<String, IBenchmark>();
+	definitions = new HashMap<String, IDefinitions>();
+	checklists = new HashMap<String, IChecklist>();
+	scripts = new HashMap<String, IScript>();
 	for (Component component : dsc.getComponent()) {
 	    components.put(component.getId(), component);
 	    if (component.isSetBenchmark()) {
@@ -184,50 +190,59 @@ public class Datastream implements IDatastream, ILoggable {
 	return new Context(benchmark, null, profileId);
     }
 
-    public IChecklist getOcil(String href) throws NoSuchElementException, OcilException {
-	Object obj = resolve(href);
-	if (obj instanceof Component) {
-	    Component comp = (Component)obj;
-	    if (comp.isSetOcil()) {
-		return new Checklist(comp.getOcil());
+    public synchronized IChecklist getOcil(String href) throws NoSuchElementException, OcilException {
+	if (!checklists.containsKey(href)) {
+	    Object obj = resolve(href);
+	    if (obj instanceof Component) {
+		Component comp = (Component)obj;
+		if (comp.isSetOcil()) {
+		    checklists.put(href, new Checklist(comp.getOcil()));
+		} else {
+		    throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, href, "OCIL"));
+		}
 	    } else {
-		throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, href, "OCIL"));
+		throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMPONENT, href));
 	    }
-	} else {
-	    throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMPONENT, href));
 	}
+	return checklists.get(href);
     }
 
-    public IDefinitions getOval(String href) throws NoSuchElementException, OvalException {
-	Object obj = resolve(href);
-	if (obj instanceof Component) {
-	    Component comp = (Component)obj;
-	    if (comp.isSetOvalDefinitions()) {
-		return new Definitions(comp.getOvalDefinitions());
+    public synchronized IDefinitions getOval(String href) throws NoSuchElementException, OvalException {
+	if (!definitions.containsKey(href)) {
+	    Object obj = resolve(href);
+	    if (obj instanceof Component) {
+		Component comp = (Component)obj;
+		if (comp.isSetOvalDefinitions()) {
+		    definitions.put(href, new Definitions(comp.getOvalDefinitions()));
+		} else {
+		    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, href, "OVAL"));
+		}
 	    } else {
-		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, href, "OVAL"));
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMPONENT, href));
 	    }
-	} else {
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMPONENT, href));
 	}
+	return definitions.get(href);
     }
 
-    public IScript getSce(String href) throws NoSuchElementException, SceException {
-	Object obj = resolve(href);
-	if (obj instanceof ExtendedComponent) {
-	    ExtendedComponent comp = (ExtendedComponent)obj;
-	    Object data = comp.getAny();
-	    if (data instanceof JAXBElement) {
-		data = ((JAXBElement)data).getValue();
-	    }
-	    if (data instanceof ScriptDataType) {
-		return new Script(href, (ScriptDataType)data);
+    public synchronized IScript getSce(String href) throws NoSuchElementException, SceException {
+	if (!scripts.containsKey(href)) {
+	    Object obj = resolve(href);
+	    if (obj instanceof ExtendedComponent) {
+		ExtendedComponent comp = (ExtendedComponent)obj;
+		Object data = comp.getAny();
+		if (data instanceof JAXBElement) {
+		    data = ((JAXBElement)data).getValue();
+		}
+		if (data instanceof ScriptDataType) {
+		    scripts.put(href, new Script(href, (ScriptDataType)data));
+		} else {
+		    throw new SceException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, href, "SCE"));
+		}
 	    } else {
-		throw new SceException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, href, "SCE"));
+		throw new SceException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMPONENT, href));
 	    }
-	} else {
-	    throw new SceException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMPONENT, href));
 	}
+	return scripts.get(href);
     }
 
     // Implement ILoggable

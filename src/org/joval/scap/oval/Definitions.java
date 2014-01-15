@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -40,6 +41,7 @@ import scap.oval.definitions.core.VariablesType;
 
 import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.oval.IDefinitions;
+import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.DOMTools;
 import org.joval.xml.SchemaRegistry;
@@ -93,44 +95,48 @@ public class Definitions implements IDefinitions, ILoggable {
     }
 
     public Definitions(OvalDefinitions defs) {
+	this();
 	this.defs = defs;
-	this.logger = JOVALMsg.getLogger();
-
-	objects = new HashMap<String, JAXBElement<? extends ObjectType>>();
-	if (defs.getObjects() != null) {
+	if (defs.isSetObjects() && defs.getObjects().isSetObject()) {
 	    for (JAXBElement<? extends ObjectType> jot : defs.getObjects().getObject()) {
 		objects.put(jot.getValue().getId(), jot);
 	    }
 	}
 
-	tests = new HashMap<String, JAXBElement<? extends TestType>>();
 	if (defs.isSetTests() && defs.getTests().isSetTest()) {
 	    for (JAXBElement<? extends TestType> jtt : defs.getTests().getTest()) {
 		tests.put(jtt.getValue().getId(), jtt);
 	    }
 	}
 
-	variables = new HashMap<String, VariableType>();
-	if (defs.getVariables() != null) {
+	if (defs.isSetVariables() && defs.getVariables().isSetVariable()) {
 	    for (JAXBElement<? extends VariableType> jvt : defs.getVariables().getVariable()) {
 		VariableType vt = jvt.getValue();
 		variables.put(vt.getId(), vt);
 	    }
 	}
 
-	states = new HashMap<String, JAXBElement<? extends StateType>>();
-	if (defs.getStates() != null) {
+	if (defs.isSetStates() && defs.getStates().isSetState()) {
 	    for (JAXBElement<? extends StateType> jst : defs.getStates().getState()) {
 		states.put(jst.getValue().getId(), jst);
 	    }
 	}
 
-	definitions = new HashMap<String, DefinitionType>();
 	if (defs.isSetDefinitions() && defs.getDefinitions().isSetDefinition()) {
 	    for (DefinitionType dt : defs.getDefinitions().getDefinition()) {
 		definitions.put(dt.getId(), dt);
 	    }
 	}
+    }
+
+    public Definitions() {
+	defs = Factories.definitions.core.createOvalDefinitions();
+	this.logger = JOVALMsg.getLogger();
+	objects = new HashMap<String, JAXBElement<? extends ObjectType>>();
+	tests = new HashMap<String, JAXBElement<? extends TestType>>();
+	variables = new HashMap<String, VariableType>();
+	states = new HashMap<String, JAXBElement<? extends StateType>>();
+	definitions = new HashMap<String, DefinitionType>();
     }
 
     // Implement ILoggable
@@ -191,7 +197,7 @@ public class Definitions implements IDefinitions, ILoggable {
     }
 
     public Collection<VariableType> getVariables() {
-	return variables.values();
+	return Collections.unmodifiableCollection(variables.values());
     }
 
     public JAXBElement<? extends StateType> getState(String id) throws NoSuchElementException {
