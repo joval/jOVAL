@@ -27,6 +27,9 @@ import javax.xml.transform.Source;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
 
+import jsaf.intf.util.ILoggable;
+import org.slf4j.cal10n.LocLogger;
+
 import scap.datastream.DataStream;
 import scap.datastream.DataStreamCollection;
 
@@ -43,7 +46,7 @@ import org.joval.xml.SchemaRegistry;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class DatastreamCollection implements IDatastreamCollection {
+public class DatastreamCollection implements IDatastreamCollection, ILoggable {
     public static final DataStreamCollection getDSCollection(File f) throws ScapException {
 	return getDSCollection(new StreamSource(f));
     }
@@ -73,6 +76,7 @@ public class DatastreamCollection implements IDatastreamCollection {
 	}
     }
 
+    private LocLogger logger;
     private DataStreamCollection dsc;
     private Map<String, DataStream> streams;
 
@@ -95,11 +99,22 @@ public class DatastreamCollection implements IDatastreamCollection {
      * Create a Datastream collection from unmarshalled XML.
      */
     public DatastreamCollection(DataStreamCollection dsc) throws ScapException {
+	logger = JOVALMsg.getLogger();
 	this.dsc = dsc;
 	streams = new HashMap<String, DataStream>();
 	for (DataStream stream : dsc.getDataStream()) {
 	    streams.put(stream.getId(), stream);
 	} 
+    }
+
+    // Implement ILoggable
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+    }
+
+    public LocLogger getLogger() {
+	return logger;
     }
 
     // Implement ITransformable
@@ -128,21 +143,38 @@ public class DatastreamCollection implements IDatastreamCollection {
 
     // Implement IDatastreamCollection
 
-    /**
-     * Return a collection of the DataStream IDs in the source document.
-     */
     public Collection<String> getStreamIds() {
 	return streams.keySet();
     }
 
-    /**
-     * Return a collection of Benchmark component IDs, for the given stream ID.
-     */
     public IDatastream getDatastream(String id) throws NoSuchElementException, ScapException {
 	if (streams.containsKey(id)) {
 	    return new Datastream(streams.get(id), dsc); 
 	} else {
 	    throw new NoSuchElementException(id);
+	}
+    }
+
+    public void writeXML(File f) {
+	OutputStream out = null;
+	try {
+	    Marshaller marshaller = SchemaRegistry.DS.createMarshaller();
+	    out = new FileOutputStream(f);
+	    marshaller.marshal(getRootObject(), out);
+	} catch (JAXBException e) {
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	} catch (FactoryConfigurationError e) {
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	} catch (FileNotFoundException e) {
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	} finally {
+	    if (out != null) {
+		try {
+		    out.close();
+		} catch (IOException e) {
+		    logger.warn(JOVALMsg.ERROR_FILE_CLOSE,  e.toString());
+		}
+	    }
 	}
     }
 }

@@ -3,6 +3,7 @@
 
 package org.joval.intf.scap.datastream;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
@@ -27,4 +28,9 @@ public interface IDatastreamCollection extends ITransformable<DataStreamCollecti
      * Get a specific datastream.
      */
     IDatastream getDatastream(String id) throws NoSuchElementException, ScapException;
+
+    /**
+     * Serialize the contents of this IDatastreamCollection to a file.
+     */
+    void writeXML(File f);
 }
