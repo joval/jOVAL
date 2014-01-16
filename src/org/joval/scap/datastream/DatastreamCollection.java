@@ -98,7 +98,7 @@ public class DatastreamCollection implements IDatastreamCollection, ILoggable {
     /**
      * Create a Datastream collection from unmarshalled XML.
      */
-    public DatastreamCollection(DataStreamCollection dsc) throws ScapException {
+    public DatastreamCollection(DataStreamCollection dsc) {
 	logger = JOVALMsg.getLogger();
 	this.dsc = dsc;
 	streams = new HashMap<String, DataStream>();
