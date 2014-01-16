@@ -15,7 +15,6 @@
             xmlns:ocil-diag="http://www.gocil.org/schemas/ocil/2.0/diagnostic"
             xmlns:sce="http://open-scap.org/page/SCE_result_file"
             xmlns:cdf="http://checklists.nist.gov/xccdf/1.2"
-            xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
             targetNamespace="http://www.joval.org/schemas/scap/1.2/diagnostic"
             elementFormDefault="qualified"
             version="1.0">
@@ -27,7 +26,6 @@
    <xsd:import namespace="http://www.gocil.org/schemas/ocil/2.0/diagnostic"/>
    <xsd:import namespace="http://open-scap.org/page/SCE_result_file"/>
    <xsd:import namespace="http://checklists.nist.gov/xccdf/1.2"/>
-   <xsd:import namespace="http://www.w3.org/2000/09/xmldsig#"/>
    <xsd:element name="rule_diagnostics">
       <xsd:complexType>
          <xsd:sequence>
