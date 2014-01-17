@@ -6,7 +6,7 @@ package org.joval.scap.xccdf;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.File;
-import java.io.FileInputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,16 +48,24 @@ import org.joval.scap.xccdf.XccdfException;
  * @version %I% %G%
  */
 public class Bundle implements IDatastream {
-    private File base;
-    private ZipFile zip;
+    private URL base;
     private Map<String, IBenchmark> benchmarks;
     private IDictionary dictionary;
 
     public Bundle(File file) throws ScapException {
 	benchmarks = new HashMap<String, IBenchmark>();
 	if (file.isDirectory()) {
-	    base = file;
-	    for (File f : base.listFiles()) {
+	    try {
+		StringBuffer sb = new StringBuffer(file.toURI().toURL().toExternalForm());
+		if (sb.toString().endsWith("/")) {
+		    base = new URL(sb.toString());
+		} else {
+		    base = new URL(sb.append("/").toString());
+		}
+	    } catch (MalformedURLException e) {
+		throw new ScapException(e);
+	    }
+	    for (File f : file.listFiles()) {
 		if (f.isFile() && f.getName().endsWith(".xml")) {
 		    if (f.getName().toLowerCase().indexOf("xccdf") != -1) {
 			IBenchmark benchmark = new Benchmark(f.getName(), Benchmark.getXccdfBenchmark(f));
@@ -68,7 +76,10 @@ public class Bundle implements IDatastream {
 		}
 	    }
 	} else if (file.getName().toLowerCase().endsWith(".zip")) {
+	    ZipFile zip = null;
 	    try {
+		StringBuffer sb = new StringBuffer("zip:").append(file.toURI().toURL().toString()).append("!/");
+		base = new URL(null, sb.toString(), new ZipURLStreamHandler());
 		zip = new ZipFile(file);
 		Enumeration<? extends ZipEntry> entries = zip.entries();
 		while(entries.hasMoreElements()) {
@@ -76,9 +87,7 @@ public class Bundle implements IDatastream {
 		    if (!entry.isDirectory() && entry.getName().toLowerCase().endsWith(".xml")) {
 			InputStream in = null;
 			try {
-			    if (entry.getName().indexOf("/") != -1) {
-				// only scan the top-level directory
-			    } else if (entry.getName().toLowerCase().endsWith("-xccdf.xml")) {
+			    if (entry.getName().toLowerCase().endsWith("-xccdf.xml")) {
 				in = zip.getInputStream(entry);
 				IBenchmark benchmark = new Benchmark(entry.getName(), Benchmark.getXccdfBenchmark(in));
 				benchmarks.put(benchmark.getId(), benchmark);
@@ -96,39 +105,19 @@ public class Bundle implements IDatastream {
 			}
 		    }
 		}
-	    } catch (ScapException e) {
-		if (zip != null) {
-		    try {
-			zip.close();
-		    } catch (IOException e2) {
-		    }
-		}
-		throw e;
 	    } catch (IOException e) {
+		throw new ScapException(e);
+	    } finally {
 		if (zip != null) {
 		    try {
 			zip.close();
-		    } catch (IOException e2) {
+		    } catch (IOException ie) {
 		    }
 		}
-		throw new ScapException(e);
 	    }
 	} else {
 	    String msg = Message.getMessage(Message.ERROR_IO, file.toString(), Message.getMessage(Message.ERROR_IO_NOT_DIR));
 	    throw new ScapException(msg);
-	}
-    }
-
-    /**
-     * Release the ZIP file (if created from a ZIP).
-     */
-    public void close() {
-	if (zip != null) {
-	    try {
-		zip.close();
-	    } catch (IOException e) {
-	    }
-	    zip = null;
 	}
     }
 
@@ -180,130 +169,86 @@ public class Bundle implements IDatastream {
 	}
     }
 
-    public IChecklist getOcil(String href) throws NoSuchElementException, OcilException {
-	if (href.startsWith("http://") || href.startsWith("https://")) {
-	    throw new NoSuchElementException(href);
-	} else if (base != null) {
-	    File f = new File(base, href);
-	    if (f.exists()) {
-		return new Checklist(Checklist.getOCILType(f));
-	    } else {
-		throw new NoSuchElementException(href);
-	    }
-	} else {
-	    InputStream in = null;
-	    try {
-		ZipEntry entry = zip.getEntry(href);
-		if (entry == null) {
-		    throw new NoSuchElementException(href);
-		} else {
-		    return new Checklist(Checklist.getOCILType(zip.getInputStream(entry)));
-		}
-	    } catch (IOException e) {
-		throw new OcilException(e);
-	    } finally {
-		if (in != null) {
-		    try {
-			in.close();
-		    } catch (IOException e) {
-		    }
-		}
-	    }
-	}
-    }
-
-    public IDefinitions getOval(String href) throws NoSuchElementException, OvalException {
-	if (href.startsWith("http://")) {
-	    throw new NoSuchElementException(href);
-	} else if (base != null) {
-	    File f = new File(base, href);
-	    if (f.exists()) {
-		return new Definitions(Definitions.getOvalDefinitions(f));
-	    } else {
-		throw new NoSuchElementException(href);
-	    }
-	} else {
-	    InputStream in = null;
-	    try {
-		ZipEntry entry = zip.getEntry(href);
-		if (entry == null) {
-		    throw new NoSuchElementException(href);
-		} else {
-		    return new Definitions(Definitions.getOvalDefinitions(zip.getInputStream(entry)));
-		}
-	    } catch (IOException e) {
-		throw new OvalException(e);
-	    } finally {
-		if (in != null) {
-		    try {
-			in.close();
-		    } catch (IOException e) {
-		    }
-		}
-	    }
-	}
-    }
-
-    public IScript getSce(String href) throws NoSuchElementException, SceException {
-	if (href.startsWith("http://")) {
-	    throw new NoSuchElementException(href);
-	} else if (base != null) {
-	    File f = new File(base, href);
-	    if (f.exists()) {
+    public IChecklist getOcil(String href) throws OcilException {
+	InputStream in = null;
+	try {
+	    in = new URL(base, href).openStream();
+	    return new Checklist(Checklist.getOCILType(in));
+	} catch (IOException e) {
+	    throw new OcilException(e);
+	} finally {
+	    if (in != null) {
 		try {
-		    return new Script(href, f.toURI().toURL());
+		    in.close();
 		} catch (IOException e) {
-		    throw new SceException(e);
 		}
-	    } else {
-		throw new NoSuchElementException(href);
 	    }
-	} else {
-	    try {
-		StringBuffer sb = new StringBuffer("zip:");
-		sb.append(new File(zip.getName()).toURI().toURL().toString());
-		sb.append("!");
-		if (!href.startsWith("/")) {
-		    sb.append("/");
+	}
+    }
+
+    public IDefinitions getOval(String href) throws OvalException {
+	InputStream in = null;
+	try {
+	    in = new URL(base, href).openStream();
+	    return new Definitions(Definitions.getOvalDefinitions(in));
+	} catch (IOException e) {
+	    throw new OvalException(e);
+	} finally {
+	    if (in != null) {
+		try {
+		    in.close();
+		} catch (IOException e) {
 		}
-		sb.append(href);
-		URL url = new URL(null, sb.toString(), new ZipURLStreamHandler());
-		return new Script(href, url);
-	    } catch (IOException e) {
-		throw new SceException(e);
 	    }
+	}
+    }
+
+    public IScript getSce(String href) throws SceException {
+	try {
+	    return new Script(href, new URL(base, href));
+	} catch (MalformedURLException e) {
+	    throw new SceException(e);
 	}
     }
 
     // Internal
 
-    @Override
-    protected void finalize() {
-	close();
-    }
-
     class Context extends ScapContext {
+	private URL contextBase;
+
 	Context(IBenchmark benchmark, ITailoring tailoring, String profileId) throws XccdfException {
 	    super(benchmark, dictionary, tailoring, profileId);
+	    try {
+		contextBase = new URL(base, benchmark.getHref());
+	    } catch (MalformedURLException e) {
+		throw new XccdfException(e);
+	    }
 	}
 
 	// Implement IScapContext
 
-	@Override
-	public void close() {
-	    Bundle.this.close();
+	public IChecklist getOcil(String href) throws OcilException {
+	    try {
+		return Bundle.this.getOcil(new URL(contextBase, href).toString());
+	    } catch (MalformedURLException e) {
+		throw new OcilException(e);
+	    }
 	}
 
-	public IChecklist getOcil(String href) throws NoSuchElementException, OcilException {
-	    return Bundle.this.getOcil(href);
+	public IDefinitions getOval(String href) throws OvalException {
+	    try {
+		return Bundle.this.getOval(new URL(contextBase, href).toString());
+	    } catch (MalformedURLException e) {
+		throw new OvalException(e);
+	    }
 	}
 
-	public IDefinitions getOval(String href) throws NoSuchElementException, OvalException {
-	    return Bundle.this.getOval(href);
-	}
-
-	public IScript getSce(String href) throws NoSuchElementException, SceException {
-	    return Bundle.this.getSce(href);
+	public IScript getSce(String href) throws SceException {
+	    try {
+		return Bundle.this.getSce(new URL(contextBase, href).toString());
+	    } catch (MalformedURLException e) {
+		throw new SceException(e);
+	    }
 	}
     }
 }

@@ -190,35 +190,43 @@ public class Datastream implements IDatastream, ILoggable {
 	return new Context(benchmark, null, profileId);
     }
 
-    public synchronized IChecklist getOcil(String href) throws NoSuchElementException, OcilException {
+    public synchronized IChecklist getOcil(String href) throws OcilException {
 	if (!checklists.containsKey(href)) {
-	    Object obj = resolve(href);
-	    if (obj instanceof Component) {
-		Component comp = (Component)obj;
-		if (comp.isSetOcil()) {
-		    checklists.put(href, new Checklist(comp.getOcil()));
+	    try {
+		Object obj = resolve(href);
+		if (obj instanceof Component) {
+		    Component comp = (Component)obj;
+		    if (comp.isSetOcil()) {
+			checklists.put(href, new Checklist(comp.getOcil()));
+		    } else {
+			throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, href, "OCIL"));
+		    }
 		} else {
-		    throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, href, "OCIL"));
+		    throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMPONENT, href));
 		}
-	    } else {
-		throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMPONENT, href));
+	    } catch (NoSuchElementException e) {
+		throw new OcilException(e);
 	    }
 	}
 	return checklists.get(href);
     }
 
-    public synchronized IDefinitions getOval(String href) throws NoSuchElementException, OvalException {
+    public synchronized IDefinitions getOval(String href) throws OvalException {
 	if (!definitions.containsKey(href)) {
-	    Object obj = resolve(href);
-	    if (obj instanceof Component) {
-		Component comp = (Component)obj;
-		if (comp.isSetOvalDefinitions()) {
-		    definitions.put(href, new Definitions(comp.getOvalDefinitions()));
+	    try {
+		Object obj = resolve(href);
+		if (obj instanceof Component) {
+		    Component comp = (Component)obj;
+		    if (comp.isSetOvalDefinitions()) {
+			definitions.put(href, new Definitions(comp.getOvalDefinitions()));
+		    } else {
+			throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, href, "OVAL"));
+		    }
 		} else {
-		    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, href, "OVAL"));
+		    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMPONENT, href));
 		}
-	    } else {
-		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMPONENT, href));
+	    } catch (NoSuchElementException e) {
+		throw new OvalException(e);
 	    }
 	}
 	return definitions.get(href);
@@ -226,20 +234,24 @@ public class Datastream implements IDatastream, ILoggable {
 
     public synchronized IScript getSce(String href) throws NoSuchElementException, SceException {
 	if (!scripts.containsKey(href)) {
-	    Object obj = resolve(href);
-	    if (obj instanceof ExtendedComponent) {
-		ExtendedComponent comp = (ExtendedComponent)obj;
-		Object data = comp.getAny();
-		if (data instanceof JAXBElement) {
-		    data = ((JAXBElement)data).getValue();
-		}
-		if (data instanceof ScriptDataType) {
-		    scripts.put(href, new Script(href, (ScriptDataType)data));
+	    try {
+		Object obj = resolve(href);
+		if (obj instanceof ExtendedComponent) {
+		    ExtendedComponent comp = (ExtendedComponent)obj;
+		    Object data = comp.getAny();
+		    if (data instanceof JAXBElement) {
+			data = ((JAXBElement)data).getValue();
+		    }
+		    if (data instanceof ScriptDataType) {
+			scripts.put(href, new Script(href, (ScriptDataType)data));
+		    } else {
+			throw new SceException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, href, "SCE"));
+		    }
 		} else {
-		    throw new SceException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, href, "SCE"));
+		    throw new SceException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMPONENT, href));
 		}
-	    } else {
-		throw new SceException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMPONENT, href));
+	    } catch (NoSuchElementException e) {
+		throw new SceException(e);
 	    }
 	}
 	return scripts.get(href);

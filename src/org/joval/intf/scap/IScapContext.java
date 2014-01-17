@@ -36,11 +36,6 @@ import org.joval.scap.xccdf.XccdfException;
  */
 public interface IScapContext {
     /**
-     * Close any resources associated with the context.
-     */
-    void close();
-
-    /**
      * Get the CPE dictionary for the context.
      */
     IDictionary getDictionary();
@@ -85,15 +80,15 @@ public interface IScapContext {
     /**
      * Get an OCIL checklist document with the specified component href.
      */
-    IChecklist getOcil(String href) throws NoSuchElementException, OcilException;
+    IChecklist getOcil(String href) throws OcilException;
 
     /**
      * Get an OVAL definitions document with the specified component href.
      */
-    IDefinitions getOval(String href) throws NoSuchElementException, OvalException;
+    IDefinitions getOval(String href) throws OvalException;
 
     /**
      * Get SCE script data with the specified component href.
      */
-    IScript getSce(String href) throws NoSuchElementException, SceException;
+    IScript getSce(String href) throws SceException;
 }

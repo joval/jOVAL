@@ -54,7 +54,7 @@ public class Script implements IScript {
     /**
      * Create a new SCE script from the contents of an SCAP datastream extended component.
      */
-    public Script(String href, ScriptDataType source) throws IllegalArgumentException {
+    public Script(String href, ScriptDataType source) {
 	this.href = href;
 	lang = source.getLang();
 	data = source.getValue().getBytes(StringTools.ASCII);
@@ -63,7 +63,7 @@ public class Script implements IScript {
     /**
      * Create a new SCE script from a URL.
      */
-    public Script(String href, URL url) throws SceException, IOException {
+    public Script(String href, URL url) {
 	this.href = href;
 	lang = getLang(href);
 	this.url = url;

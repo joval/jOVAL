@@ -932,8 +932,6 @@ public class Engine implements IXccdfEngine {
 		  case ERR:
 		    throw engine.getError();
 		}
-	    } catch (NoSuchElementException e) {
-		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, e.getMessage()));
 	    } finally {
 		engine.getNotificationProducer().removeObserver(monitor);
 	    }
