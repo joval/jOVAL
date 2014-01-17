@@ -734,7 +734,7 @@ public class XPERT {
 		rd.getCheckDiagnostics().addAll(diagnostics.get(ruleId).getCheckDiagnostics());
 	    } else {
 		CheckType check = rrt.getCheck().get(0);
-		if (check.isSetMultiCheck()) {
+		if (check.getMultiCheck()) {
 		    CheckContentRefType ref = check.getCheckContentRef().get(0);
 		    for (CheckDiagnostics cd : diagnostics.get(ruleId).getCheckDiagnostics()) {
 			CheckContentRefType cdRef = cd.getCheck().getCheckContentRef().get(0);
@@ -752,8 +752,5 @@ public class XPERT {
 	    md.getAny().add(rd);
 	    rrt.getMetadata().add(md);
 	}
-    }
-
-    private static void validateDatastream(File f) throws SAXException, IOException, XPERTException {
     }
 }
