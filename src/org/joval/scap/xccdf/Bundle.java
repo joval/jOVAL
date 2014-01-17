@@ -245,7 +245,7 @@ public class Bundle implements IDatastream {
 
 	public IScript getSce(String href) throws SceException {
 	    try {
-		return Bundle.this.getSce(new URL(contextBase, href).toString());
+		return new Script(href, new URL(contextBase, href));
 	    } catch (MalformedURLException e) {
 		throw new SceException(e);
 	    }
