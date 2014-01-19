@@ -22,7 +22,7 @@ public interface IOvalEngine extends Runnable {
     /**
      * The version of the OVAL schema supported by the engine.
      */
-    Version SCHEMA_VERSION = new Version("5.11");
+    Version SCHEMA_VERSION = new Version("5.10.1");
 
     enum Message {
 	/**
