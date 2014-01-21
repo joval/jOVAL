@@ -228,7 +228,7 @@ public class FileextendedattributeAdapter extends BaseFileAdapter<Fileextendedat
 		String key = null;
 		StringBuffer value = null;
 		boolean blank = true;
-		for (String line : StringTools.toList(SafeCLI.manyLines("getea '" + f.getPath() + "'", null, us))) {
+		for (String line : SafeCLI.multiLine("getea '" + f.getPath() + "'", us, IUnixSession.Timeout.M)) {
 		    if (line.length() == 0) {
 			if (blank && value != null) {
 			    value.append("\n");

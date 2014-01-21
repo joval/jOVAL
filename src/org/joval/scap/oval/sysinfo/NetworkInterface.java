@@ -149,21 +149,16 @@ public class NetworkInterface {
     public static List<NetworkInterface> getInterfaces(IUnixSession session) throws Exception {
 	ArrayList<NetworkInterface> interfaces = new ArrayList<NetworkInterface>();
 	ArrayList<String> lines = new ArrayList<String>();
-	List<String> rawOutput = null;
+	String cmd = null;
 	switch(session.getFlavor()) {
-	  case AIX: {
-	    rawOutput = new ArrayList<String>();
-	    Iterator<String> iter = SafeCLI.manyLines("/etc/ifconfig -a", null, session);
-	    while(iter.hasNext()) {
-		rawOutput.add(iter.next());
-	    }
+	  case AIX:
+	    cmd = "/etc/ifconfig -a";
 	    break;
-	  }
 	  default:
-	    rawOutput = SafeCLI.multiLine("/sbin/ifconfig -a", session, IUnixSession.Timeout.S);
+	    cmd = "/sbin/ifconfig -a";
 	    break;
 	}
-
+	List<String> rawOutput = SafeCLI.multiLine(cmd, session, IUnixSession.Timeout.S);
 	switch(session.getFlavor()) {
 	  //
 	  // On Mac OS X, new interfaces start at char0 on a line.  Continutaion info starts with a tab after the first line.

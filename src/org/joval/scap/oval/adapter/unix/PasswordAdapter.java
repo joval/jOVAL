@@ -11,8 +11,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
@@ -53,8 +54,8 @@ import org.joval.util.JOVALMsg;
  */
 public class PasswordAdapter implements IAdapter {
     private IUnixSession session;
-    private Hashtable<String, PasswordItem> passwordMap;
-    private Hashtable<String, String> errors;
+    private Map<String, PasswordItem> passwordMap;
+    private Map<String, String> errors;
     private List<String> errorMessages;
     private boolean initialized;
 
@@ -64,8 +65,8 @@ public class PasswordAdapter implements IAdapter {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession) {
 	    this.session = (IUnixSession)session;
-	    passwordMap = new Hashtable<String, PasswordItem>();
-	    errors = new Hashtable<String, String>();
+	    passwordMap = new HashMap<String, PasswordItem>();
+	    errors = new HashMap<String, String>();
 	    errorMessages = new ArrayList<String>();
 	    initialized = false;
 	    classes.add(PasswordObject.class);
@@ -177,6 +178,60 @@ public class PasswordAdapter implements IAdapter {
      */
     private void loadPasswords() {
 	try {
+	    //
+	    // If possible, collect the last login times of all users at once
+	    //
+	    Map<String, EntityItemIntType> lastLogins = new HashMap<String, EntityItemIntType>();
+	    switch(session.getFlavor()) {
+	      case AIX: {
+		String command = "lsuser -a time_last_login ALL";
+		for (String line : SafeCLI.multiLine(command, session, IUnixSession.Timeout.S)) {
+		    String username = new StringTokenizer(line).nextToken();
+		    EntityItemIntType lastLogin = Factories.sc.core.createEntityItemIntType();
+		    lastLogin.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    int ptr = line.indexOf("=");
+		    if (ptr > 0) {
+			lastLogin.setValue(line.substring(ptr+1));
+			lastLogin.setStatus(StatusEnumeration.EXISTS);
+		    } else {
+			lastLogin.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		    }
+		    lastLogins.put(username, lastLogin);
+		}
+		break;
+	      }
+
+	      //
+	      // REMIND (DAS): Lastlog isn't recording GDM (Gnome) logins under the default configuration, but lastlog is
+	      //               easier and faster to use than the 'last' command...
+	      //
+	      case LINUX: {
+		int ptr = -1;
+		SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss Z yyyy");
+		for (String line : SafeCLI.multiLine("lastlog", session, IUnixSession.Timeout.M)) {
+		    if (line.startsWith("Username")) {
+			ptr = line.indexOf("Latest");
+		    } else if (ptr != -1) {
+			String username = line.substring(0, line.indexOf(" "));
+			EntityItemIntType lastLogin = Factories.sc.core.createEntityItemIntType();
+			lastLogin.setDatatype(SimpleDatatypeEnumeration.INT.value());
+			if (line.toLowerCase().indexOf("never logged in") == -1) {
+			    lastLogin.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+			} else {
+			    long secs = sdf.parse(line.substring(ptr)).getTime()/1000L;
+			    lastLogin.setValue(Long.toString(secs));
+			    lastLogin.setStatus(StatusEnumeration.EXISTS);
+			}
+			lastLogins.put(username, lastLogin);
+		    }
+		}
+	      }
+	      break;
+	    }
+
+	    //
+	    // Get the lines of the passwd file or generated equivalent
+	    //
 	    List<String> lines = null;
 	    switch(session.getFlavor()) {
 	      //
@@ -235,7 +290,7 @@ public class PasswordAdapter implements IAdapter {
 	    }
 
 	    //
-	    // Create the basic PasswordItems
+	    // Create the PasswordItems
 	    //
 	    for (String line : lines) {
 		if (line.startsWith("#") || line.trim().length() == 0) {
@@ -276,6 +331,10 @@ public class PasswordAdapter implements IAdapter {
 		    EntityItemStringType loginShell = Factories.sc.core.createEntityItemStringType();
 		    loginShell.setValue(tokens.get(i++));
 		    item.setLoginShell(loginShell);
+
+		    if (lastLogins.containsKey(usernameString)) {
+			item.setLastLogin(lastLogins.get(usernameString));
+		    }
 
 		    passwordMap.put(usernameString, item);
 		} else {
@@ -365,44 +424,6 @@ public class PasswordAdapter implements IAdapter {
 		}
 		break;
  
-	      case LINUX: {
-		SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
-		for (String line : SafeCLI.multiLine("last -n 1 -F " + username, session, IUnixSession.Timeout.M)) {
-		    if (line.startsWith(username)) {
-			StringTokenizer tok = new StringTokenizer(line);
-			if (tok.countTokens() > 4) {
-			    tok.nextToken(); // username
-			    tok.nextToken(); // tty
-			    tok.nextToken(); // host:port
-			    String rest = tok.nextToken("\n").trim();
-			    if (rest.length() > 24) {
-				long secs = sdf.parse(rest.substring(0, 24)).getTime()/1000L;
-				lastLogin.setValue(Long.toString(secs));
-				lastLogin.setStatus(StatusEnumeration.EXISTS);
-				break;
-			    }
-			}
-		    }
-		}
-		break;
-	      }
-
-	      case AIX: {
-		String command = "lsuser -a time_last_login " + username;
-		for (String line : SafeCLI.multiLine(command, session, IUnixSession.Timeout.S)) {
-		    if (line.startsWith(username)) {
-			int ptr = line.indexOf("=");
-			if (ptr > 0) {
-			    String tm = line.substring(ptr+1);
-			    lastLogin.setValue(tm);
-			    lastLogin.setStatus(StatusEnumeration.EXISTS);
-			    break;
-			}
-		    }
-		}
-		break;
-	      }
-
 	      default:
 		lastLogin.setStatus(StatusEnumeration.NOT_COLLECTED);
 		break;

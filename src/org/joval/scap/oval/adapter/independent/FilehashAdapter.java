@@ -280,9 +280,7 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 		    break;
 		}
 		cmd.append(" '{}'");
-		Iterator<String> iter = SafeCLI.manyLines(cmd.toString(), null, us);
-		while(iter.hasNext()) {
-		    String line = iter.next();
+		for (String line : SafeCLI.multiLine(cmd.toString(), us, IUnixSession.Timeout.M)) {
 		    StringTokenizer tok = new StringTokenizer(line);
 		    if (tok.countTokens() == 2) {
 			checksums.add(tok.nextToken());

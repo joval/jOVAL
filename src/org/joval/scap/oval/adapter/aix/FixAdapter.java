@@ -130,7 +130,7 @@ public class FixAdapter implements IAdapter {
 	item.setAparNumber(aparNumber);
 
 	String cmd = "/usr/sbin/instfix -iavk '" + apar + "'";
-	Iterator<String> iter = SafeCLI.manyLines(cmd, null, session);
+	Iterator<String> iter = SafeCLI.multiLine(cmd, session, IUnixSession.Timeout.M).iterator();
 	String line = null;
 	while(iter.hasNext()) {
 	    line = iter.next();

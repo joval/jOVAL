@@ -132,8 +132,9 @@ public class IflistenersAdapter implements IAdapter {
 		}
 
 		Map<Integer, String[]> interfaces = new HashMap<Integer, String[]>();
-		StringBuffer cmd = new StringBuffer("for intf in `find /sys/class/net -type l`; ");
-		cmd.append("do printf `cat $intf/ifindex`=$(basename $intf)/`cat $intf/address`\\\\n; done;");
+		StringBuffer cmd = new StringBuffer("for intf in `ls /sys/class/net | xargs -n 1 echo`; ");
+		cmd.append("do printf `cat /sys/class/net/$intf/ifindex`=$intf/`cat /sys/class/net/$intf/address`\\\\n; ");
+		cmd.append("done;");
 		for (String s : SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.S)) {
 		    int ptr = s.indexOf("=");
 		    interfaces.put(new Integer(s.substring(0,ptr)), s.substring(ptr+1).split("/"));

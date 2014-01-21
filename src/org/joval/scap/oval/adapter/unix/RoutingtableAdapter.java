@@ -269,10 +269,8 @@ public class RoutingtableAdapter implements IAdapter {
     }
 
     private void initAIX() throws Exception {
-	Iterator<String> iter = SafeCLI.manyLines("netstat -nr", null, session);
 	boolean ipv6 = false;
-	while(iter.hasNext()) {
-	    String line = iter.next();
+	for (String line : SafeCLI.multiLine("netstat -nr", session, IUnixSession.Timeout.M)) {
 	    if (line.trim().length() == 0 || line.startsWith("Routing tables") || line.startsWith("Destination")) {
 		continue;
 	    } else if (line.startsWith("Route Tree")) {
