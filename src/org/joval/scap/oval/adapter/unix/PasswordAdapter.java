@@ -216,11 +216,11 @@ public class PasswordAdapter implements IAdapter {
 			EntityItemIntType lastLogin = Factories.sc.core.createEntityItemIntType();
 			lastLogin.setDatatype(SimpleDatatypeEnumeration.INT.value());
 			if (line.toLowerCase().indexOf("never logged in") == -1) {
-			    lastLogin.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-			} else {
 			    long secs = sdf.parse(line.substring(ptr)).getTime()/1000L;
 			    lastLogin.setValue(Long.toString(secs));
 			    lastLogin.setStatus(StatusEnumeration.EXISTS);
+			} else {
+			    lastLogin.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 			}
 			lastLogins.put(username, lastLogin);
 		    }

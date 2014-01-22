@@ -857,6 +857,10 @@ public class Engine implements IOvalEngine, IProvider {
      * @throws Engine.AbortException if processing should cease because the scan is being cancelled
      */
     private Collection<ItemType> scanObject(RequestContext rc) {
+	if (abort) {
+	    throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
+	}
+
 	ObjectType obj = rc.getObject();
 	String objectId = obj.getId();
 	if (sc.containsObject(objectId)) {
