@@ -864,54 +864,51 @@ public class Engine implements IOvalEngine, IProvider {
 	    return result;
 	}
 	producer.sendNotify(Message.OBJECT, objectId);
-	Collection<ItemType> items = null;
+
+	@SuppressWarnings("unchecked")
+	Collection<ItemType> items = (Collection<ItemType>)Collections.EMPTY_LIST;
 	try {
+	    FlagData flags = new FlagData();
+	    List<MessageType> messages = new ArrayList<MessageType>();
 	    Set s = getObjectSet(obj);
 	    if (s == null) {
-		List<MessageType> messages = new ArrayList<MessageType>();
-		FlagData flags = new FlagData();
 		try {
 		    items = new ObjectGroup(rc).getItems(flags);
-		    messages.addAll(rc.getMessages());
-		    sc.setObject(objectId, null, null, null, null);
-		    for (VariableValueType var : rc.getVars()) {
-			sc.storeVariable(var);
-			sc.relateVariable(objectId, var.getVariableId());
-		    }
 		} catch (ResolveException e) {
-		    items = new ArrayList<ItemType>();
 		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(e.getMessage());
 		    messages.add(msg);
 		    flags.add(FlagEnumeration.ERROR);
 		}
-		for (MessageType msg : messages) {
-		    sc.setObject(objectId, null, null, null, msg);
-		    switch(msg.getLevel()) {
-		      case FATAL:
-		      case ERROR:
-			flags.add(FlagEnumeration.INCOMPLETE);
-			break;
-		    }
-		}
-		if (flags.getFlag() == FlagEnumeration.COMPLETE && items.size() == 0) {
-		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, null);
-		} else {
-		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), flags.getFlag(), null);
-		}
 	    } else {
-		FlagData flags = new FlagData();
 		items = getSetItems(s, rc, flags);
-		FlagEnumeration flag = flags.getFlag();
-		MessageType msg = null;
 		if (items.size() == 0) {
-		    flag = FlagEnumeration.DOES_NOT_EXIST;
-		    msg = Factories.common.createMessageType();
+		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
 		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_SET));
+		    messages.add(msg);
 		}
-		sc.setObject(objectId, obj.getComment(), obj.getVersion(), flag, msg);
+	    }
+	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), null, null);
+	    messages.addAll(rc.getMessages());
+	    for (MessageType msg : messages) {
+		sc.setObject(objectId, null, null, null, msg);
+		switch(msg.getLevel()) {
+		  case FATAL:
+		  case ERROR:
+		    flags.add(FlagEnumeration.INCOMPLETE);
+		    break;
+		}
+	    }
+	    if (flags.getFlag() == FlagEnumeration.COMPLETE && items.size() == 0) {
+		sc.setObject(objectId, null, null, FlagEnumeration.DOES_NOT_EXIST, null);
+	    } else {
+		sc.setObject(objectId, null, null, flags.getFlag(), null);
+	    }
+	    for (VariableValueType var : rc.getVars()) {
+		sc.storeVariable(var);
+		sc.relateVariable(objectId, var.getVariableId());
 	    }
 	    for (ItemType item : items) {
 		sc.relateItem(objectId, sc.storeItem(item));
@@ -1976,7 +1973,7 @@ public class Engine implements IOvalEngine, IProvider {
 		for (MessageType m : sc.getObjectMessages(objectId)) {
 		    MessageType message = Factories.common.createMessageType();
 		    message.setLevel(m.getLevel());
-		    message.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_OBJECT_MESSAGE, m.getValue()));
+		    message.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_OBJECT_MESSAGE, objectId, m.getValue()));
 		    rc.addMessage(message);
 		}
 		flags.add(sc.getObjectFlag(objectId));
