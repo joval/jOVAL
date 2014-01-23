@@ -37,7 +37,7 @@ public class Index<T> {
     private int mem_used = 0;
 
     /**
-     * Create an empty SystemCharacteristics.
+     * Create an empty Index.
      */
     public Index() {
 	adlerIndex = new HashMap<String, Entry>();

@@ -48,6 +48,7 @@ CLASSES=\
 	org.joval.scap.oval.Directives				\
 	org.joval.scap.oval.Factories				\
 	org.joval.scap.oval.ItemSet				\
+	org.joval.scap.oval.ItemTools				\
 	org.joval.scap.oval.OvalException			\
 	org.joval.scap.oval.OvalFactory				\
 	org.joval.scap.oval.Results				\

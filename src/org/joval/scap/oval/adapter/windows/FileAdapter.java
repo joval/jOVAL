@@ -48,6 +48,7 @@ import scap.oval.systemcharacteristics.windows.FileItem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
+import org.joval.scap.oval.ItemTools;
 import org.joval.scap.oval.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
 import org.joval.util.Version;
@@ -86,7 +87,7 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 		throws CollectException {
 
 	FileObject fObj = (FileObject)obj;
-	Collection<FileItem> items = new ArrayList<FileItem>();
+	Collection<FileItem> items = ItemTools.safeCollection(10000, session.getWorkspace());
 	for (IFile f : files) {
 	    try {
 		FileItem item = (FileItem)getBaseItem(obj, f);

@@ -246,7 +246,14 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	if (readonly) {
 	    throw new IllegalStateException("read-only");
 	}
-	JAXBElement<? extends ItemType> item = wrapItem(it);
+	JAXBElement<? extends ItemType> item = null;
+	try {
+	    item = ItemTools.wrapItem(it);
+	} catch (Exception e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), it.getId()));
+	}
+
 	if (item.getValue().isSetId()) {
 	    //
 	    // The item has been stored previously someplace else, so make a copy of it here.
@@ -503,32 +510,6 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    }
 	}
 	return out.toByteArray();
-    }
-
-    private Map<Class, Object> wrapperFactories = new HashMap<Class, Object>();
-    private Map<Class, Method> wrapperMethods = new HashMap<Class, Method>();
-
-    private JAXBElement<? extends ItemType> wrapItem(ItemType item) {
-	try {
-	    Class clazz = item.getClass();
-	    Method method = wrapperMethods.get(clazz);
-	    Object factory = wrapperFactories.get(clazz);
-	    if (method == null || factory == null) {
-		String packageName = clazz.getPackage().getName();
-		String unqualClassName = clazz.getName().substring(packageName.length()+1);
-		Class<?> factoryClass = Class.forName(packageName + ".ObjectFactory");
-		factory = factoryClass.newInstance();
-		wrapperFactories.put(clazz, factory);
-		method = factoryClass.getMethod("create" + unqualClassName, item.getClass());
-		wrapperMethods.put(clazz, method);
-	    }
-	    @SuppressWarnings("unchecked")
-	    JAXBElement<ItemType> wrapped = (JAXBElement<ItemType>)method.invoke(factory, item);
-	    return wrapped;
-	} catch (Exception e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), item.getId()));
-	}
     }
 
     static class ObjectData {

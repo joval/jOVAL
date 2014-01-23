@@ -170,6 +170,11 @@ public class Engine implements IOvalEngine, IProvider {
 	COMPLETE_ERR;
     }
 
+    /**
+     * The maximum number of items that can be returned by an object (filtered).
+     */
+    private static int MAX_ITEMS;
+
     private static final String FUNCTIONS_RESOURCE = "functions.txt";
     private static Map<Class<?>, IFunction> FUNCTIONS = new HashMap<Class<?>, IFunction>();
     static {
@@ -206,6 +211,17 @@ public class Engine implements IOvalEngine, IProvider {
 	    }
 	} catch (IOException e) {
 	    JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	String s = System.getProperty(SYSPROP_MAX_ITEMS);
+	if (s == null) {
+	    MAX_ITEMS = DEFAULT_MAX_ITEMS;
+	} else {
+	    try {
+		MAX_ITEMS = Integer.parseInt(s);
+	    } catch (NumberFormatException e) {
+		MAX_ITEMS = DEFAULT_MAX_ITEMS;
+		JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
 	}
     }
 
@@ -280,8 +296,9 @@ public class Engine implements IOvalEngine, IProvider {
 	    return objectItems.get(indexId);
 	}
 
-	Collection<ItemType> items = new ArrayList<ItemType>();
+	Collection<ItemType> items = null;
 	if (obj instanceof VariableObject) {
+	    items = new ArrayList<ItemType>();
 	    VariableObject vObj = (VariableObject)obj;
 	    try {
 		Collection<IType> values = resolveVariable((String)vObj.getVarRef().getValue(), (RequestContext)rc);
@@ -309,7 +326,9 @@ public class Engine implements IOvalEngine, IProvider {
 	} else if (plugin == null) {
 	    throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_MODE_SC), FlagEnumeration.NOT_COLLECTED);
 	} else {
-	    items.addAll(plugin.getOvalProvider().getItems(obj, rc));
+	    @SuppressWarnings("unchecked")
+	    Collection<ItemType> c = (Collection<ItemType>)plugin.getOvalProvider().getItems(obj, rc);
+	    items = c;
 	}
 	objectItems.put(indexId, items);
 	return items;
@@ -532,42 +551,16 @@ public class Engine implements IOvalEngine, IProvider {
 		}
 		producer.sendNotify(Message.OBJECT_PHASE_END, null);
 		producer.sendNotify(Message.SYSTEMCHARACTERISTICS, sc);
-
 		if (doDisconnect) {
 		    plugin.disconnect();
 		    doDisconnect = false;
 		}
-
-		//
-		// For directed-mode scans, we slim down the system characteristics by pruning out items that only
-		// pertain to indirectly-scanned objects. The objects that are directly referenced by tests will
-		// already have variable value notations and item references, so the indirectly-collected item data
-		// can be discarded as superfluous.
-		//
-		// This has been added specifically to prevent jOVAL from running out of memory when processing
-		// RedHat OpenSCAP content, which has an object that refers to all files on disk, which gets filtered
-		// several times by other objects that are directly referenced by tests.
-		//
-		switch(mode) {
-		  case DIRECTED:
-		    allowedObjectIds.clear();
-		    for (DefinitionType def : allowed) {
-			allowedObjectIds.addAll(getObjectReferences(def, false));
-		    }
-		    results = new Results(definitions, sc.prune(allowedObjectIds));
-		    break;
-
-		  case EXHAUSTIVE:
-		  default:
-		    results = new Results(definitions, sc);
-		    break;
-		}
+		results = new Results(definitions, sc);
 	    } else if (sc.unmapped()) {
 		results = new Results(definitions, mapSystemCharacteristics());
 	    } else {
 		results = new Results(definitions, sc);
 	    }
-
 	    results.setLogger(logger);
 	    producer.sendNotify(Message.DEFINITION_PHASE_START, null);
 
@@ -871,7 +864,7 @@ public class Engine implements IOvalEngine, IProvider {
 	    return result;
 	}
 	producer.sendNotify(Message.OBJECT, objectId);
-	Collection<ItemType> items = new ArrayList<ItemType>();
+	Collection<ItemType> items = null;
 	try {
 	    Set s = getObjectSet(obj);
 	    if (s == null) {
@@ -886,6 +879,7 @@ public class Engine implements IOvalEngine, IProvider {
 			sc.relateVariable(objectId, var.getVariableId());
 		    }
 		} catch (ResolveException e) {
+		    items = new ArrayList<ItemType>();
 		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(e.getMessage());
@@ -907,8 +901,9 @@ public class Engine implements IOvalEngine, IProvider {
 		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), flags.getFlag(), null);
 		}
 	    } else {
-		items = getSetItems(s, rc);
-		FlagEnumeration flag = FlagEnumeration.COMPLETE;
+		FlagData flags = new FlagData();
+		items = getSetItems(s, rc, flags);
+		FlagEnumeration flag = flags.getFlag();
 		MessageType msg = null;
 		if (items.size() == 0) {
 		    flag = FlagEnumeration.DOES_NOT_EXIST;
@@ -1178,11 +1173,10 @@ public class Engine implements IOvalEngine, IProvider {
 		//
 		try {
 		    @SuppressWarnings("unchecked")
-		    Collection<ItemType> unfiltered = (Collection<ItemType>)Engine.this.getItems(rc.getObject(), rc);
-		    List<Filter> filters = getObjectFilters(rc.getObject());
-		    Collection<ItemType> filtered = filterItems(filters, unfiltered, rc);
+		    Collection<ItemType> items = (Collection<ItemType>)Engine.this.getItems(rc.getObject(), rc);
+		    filterItems(items, getObjectFilters(rc.getObject()), rc);
 		    flags.add(FlagEnumeration.COMPLETE);
-		    return filtered;
+		    return items;
 		} catch (CollectException e) {
 		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
@@ -1218,10 +1212,9 @@ public class Engine implements IOvalEngine, IProvider {
 		    try {
 			@SuppressWarnings("unchecked")
 			Collection<ItemType> unfiltered = (Collection<ItemType>)Engine.this.getItems(obj, ctx);
-			List<Filter> filters = getObjectFilters(obj);
-			Collection<ItemType> filtered = filterItems(filters, unfiltered, ctx);
 			flags.add(FlagEnumeration.COMPLETE);
-			results.add(new Batch.Result(filtered, ctx));
+			// Note - items will be filtered later, in the combineItems method
+			results.add(new Batch.Result(unfiltered, ctx));
 		    } catch (CollectException e) {
 			results.add(new Batch.Result(e, ctx));
 		    } catch (Exception e) {
@@ -1275,11 +1268,10 @@ public class Engine implements IOvalEngine, IProvider {
 			    sets.put(ctx, new ArrayList<ItemSet<ItemType>>());
 			}
 			@SuppressWarnings("unchecked")
-			Collection<ItemType> unfiltered = (Collection<ItemType>)result.getItems();
-			List<Filter> filters = getObjectFilters(rc.getObject());
-			Collection<ItemType> filtered = filterItems(filters, unfiltered, rc);
+			Collection<ItemType> items = (Collection<ItemType>)result.getItems();
+			filterItems(items, getObjectFilters(rc.getObject()), rc);
 			flags.add(FlagEnumeration.COMPLETE);
-			sets.get(ctx).add(new ItemSet<ItemType>(filtered));
+			sets.get(ctx).add(new ItemSet<ItemType>(items));
 		    }
 		    ItemSet<ItemType> items = new ItemSet<ItemType>();
 		    for (Map.Entry<RequestContext, Collection<ItemSet<ItemType>>> entry : sets.entrySet()) {
@@ -1889,61 +1881,83 @@ public class Engine implements IOvalEngine, IProvider {
     }
 
     /**
-     * Given Collections of items and filters, returns the appropriately filtered collection.
+     * Filter the Collection of items.
      */
-    private Collection<ItemType> filterItems(List<Filter> filters, Collection<ItemType> items, RequestContext rc)
+    private void filterItems(Collection<ItemType> items, List<Filter> filters, RequestContext rc)
 		throws NoSuchElementException, OvalException {
 
-	Collection<ItemType> filtered = new HashSet<ItemType>();
-	filtered.addAll(items);
-	if (filters.size() == 0) {
-	    return filtered;
-	}
-	for (Filter filter : filters) {
-	    StateType state = definitions.getState(filter.getValue()).getValue();
-	    Iterator<ItemType> iter = filtered.iterator();
-	    while (iter.hasNext()) {
-		ItemType item = iter.next();
-		try {
-		    ResultEnumeration result = compare(state, item, rc);
-		    switch(filter.getAction()) {
-		      case INCLUDE:
-			if (result == ResultEnumeration.TRUE) {
-			    logger.debug(JOVALMsg.STATUS_FILTER, filter.getAction().value(),
-					 item.getId() == null ? "(unassigned)" : item.getId(), rc.getObject().getId());
-			} else {
-			    iter.remove();
-			}
-			break;
+	if (filters.size() > 0) {
+	    for (Filter filter : filters) {
+		StateType state = definitions.getState(filter.getValue()).getValue();
+		Iterator<ItemType> iter = items.iterator();
+		while (iter.hasNext()) {
+		    ItemType item = iter.next();
+		    try {
+			ResultEnumeration result = compare(state, item, rc);
+			switch(filter.getAction()) {
+			  case INCLUDE:
+			    if (result == ResultEnumeration.TRUE) {
+				logger.debug(JOVALMsg.STATUS_FILTER, filter.getAction().value(),
+					     item.getId() == null ? "(unassigned)" : item.getId(), rc.getObject().getId());
+			    } else {
+				iter.remove();
+			    }
+			    break;
 
-		      case EXCLUDE:
-			if (result == ResultEnumeration.TRUE) {
-			    iter.remove();
-			    logger.debug(JOVALMsg.STATUS_FILTER, filter.getAction().value(),
-					 item.getId() == null ? "(unassigned)" : item.getId(), rc.getObject().getId());
+			  case EXCLUDE:
+			    if (result == ResultEnumeration.TRUE) {
+				iter.remove();
+				logger.debug(JOVALMsg.STATUS_FILTER, filter.getAction().value(),
+					     item.getId() == null ? "(unassigned)" : item.getId(), rc.getObject().getId());
+			    }
+			    break;
 			}
-			break;
+		    } catch (TestException e) {
+			logger.debug(JOVALMsg.ERROR_COMPONENT_FILTER, e.getMessage());
+			logger.trace(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    }
-		} catch (TestException e) {
-		    logger.debug(JOVALMsg.ERROR_COMPONENT_FILTER, e.getMessage());
-		    logger.trace(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}
-	return filtered;
+	int resultCount = items.size();
+	if (0 < MAX_ITEMS && MAX_ITEMS < resultCount) {
+	    //
+	    // Add an error so the object will be "incomplete"
+	    //
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_OBJECT_OVERFLOW, rc.getObject().getId(), resultCount);
+	    logger.warn(msg);
+	    MessageType message = Factories.common.createMessageType();
+	    message.setLevel(MessageLevelEnumeration.ERROR);
+	    message.setValue(msg);
+	    rc.addMessage(message);
+
+	    //
+	    // Trim the excess items from the result
+	    //
+	    int counter = 0;
+	    Iterator<ItemType> iter = items.iterator();
+	    for (int i=0; iter.hasNext(); i++) {
+		iter.next();
+		if (i >= MAX_ITEMS) {
+		    iter.remove();
+		}
+	    }
+	}
     }
 
     /**
      * Get a list of items belonging to a Set.
      */
-    private Collection<ItemType> getSetItems(Set s, RequestContext rc) throws NoSuchElementException, OvalException {
+    private Collection<ItemType> getSetItems(Set s, RequestContext rc, FlagData flags)
+		throws NoSuchElementException, OvalException {
+
 	//
 	// First, retrieve the filtered list of items in the Set, recursively.
 	//
 	Collection<Collection<ItemType>> lists = new ArrayList<Collection<ItemType>>();
 	if (s.isSetSet()) {
 	    for (Set set : s.getSet()) {
-		lists.add(getSetItems(set, rc));
+		lists.add(getSetItems(set, rc, flags));
 	    }
 	} else {
 	    for (String objectId : s.getObjectReference()) {
@@ -1957,7 +1971,9 @@ public class Engine implements IOvalEngine, IProvider {
 		    items = scanObject(rc);
 		    rc.popObject();
 		}
-		lists.add(filterItems(s.getFilter(), items, rc));
+		filterItems(items, s.getFilter(), rc);
+		flags.add(sc.getObjectFlag(objectId));
+		lists.add(items);
 	    }
 	}
 
