@@ -390,6 +390,13 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	return objectTable.get(id).flag;
     }
 
+    public Collection<MessageType> getObjectMessages(String id) throws NoSuchElementException {
+	if (!objectTable.containsKey(id)) {
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
+	}
+	return objectTable.get(id).messages;
+    }
+
     public boolean containsObject(String objectId) {
 	return objectTable.containsKey(objectId);
     }

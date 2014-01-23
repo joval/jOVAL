@@ -1924,7 +1924,7 @@ public class Engine implements IOvalEngine, IProvider {
 	    //
 	    // Add an error so the object will be "incomplete"
 	    //
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_OBJECT_OVERFLOW, rc.getObject().getId(), resultCount);
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_OBJECT_OVERFLOW, resultCount, MAX_ITEMS);
 	    logger.warn(msg);
 	    MessageType message = Factories.common.createMessageType();
 	    message.setLevel(MessageLevelEnumeration.ERROR);
@@ -1972,8 +1972,14 @@ public class Engine implements IOvalEngine, IProvider {
 		    rc.popObject();
 		}
 		filterItems(items, s.getFilter(), rc);
-		flags.add(sc.getObjectFlag(objectId));
 		lists.add(items);
+		for (MessageType m : sc.getObjectMessages(objectId)) {
+		    MessageType message = Factories.common.createMessageType();
+		    message.setLevel(m.getLevel());
+		    message.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_OBJECT_MESSAGE, m.getValue()));
+		    rc.addMessage(message);
+		}
+		flags.add(sc.getObjectFlag(objectId));
 	    }
 	}
 

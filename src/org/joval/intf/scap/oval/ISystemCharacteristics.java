@@ -75,6 +75,11 @@ public interface ISystemCharacteristics extends ITransformable<OvalSystemCharact
     void relateVariable(String objectId, String variableId) throws NoSuchElementException;
 
     /**
+     * Get the messages for an object, given the specified object ID.
+     */
+    Collection<MessageType> getObjectMessages(String id) throws NoSuchElementException;
+
+    /**
      * Get the flag for an object, given the specified object ID.
      */
     FlagEnumeration getObjectFlag(String id) throws NoSuchElementException;
