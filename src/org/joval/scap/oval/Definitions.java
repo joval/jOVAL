@@ -185,7 +185,7 @@ public class Definitions implements IDefinitions, ILoggable {
 		throw new NoSuchElementException(msg);
 	    }
 	}
-	throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_DEFINITION, id));
+	throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
     }
 
     public Collection<ObjectType> getObjects() {
@@ -233,18 +233,5 @@ public class Definitions implements IDefinitions, ILoggable {
 	    return definitions.get(id);
 	}
 	throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_DEFINITION, id));
-    }
-
-    /**
-     * Sort all DefinitionTypes into two lists according to whether the filter allows/disallows them.
-     */
-    public void filterDefinitions(IDefinitionFilter filter, Collection<DefinitionType>allow, Collection<DefinitionType>nallow) {
-	for (DefinitionType dt : definitions.values()) {
-	    if (filter.accept(dt.getId())) {
-		allow.add(dt);
-	    } else {
-		nallow.add(dt);
-	    }
-	}
     }
 }

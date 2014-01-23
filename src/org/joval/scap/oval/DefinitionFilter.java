@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Collection;
 import javax.xml.bind.JAXBContext;
@@ -15,17 +16,21 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
 
-import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
+import scap.oval.definitions.core.DefinitionType;
 import scap.oval.evaluation.EvaluationDefinitionIds;
 
 import org.joval.intf.scap.oval.IDefinitionFilter;
+import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.util.JOVALMsg;
+import org.joval.xml.DOMTools;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -36,7 +41,7 @@ import org.joval.xml.SchemaRegistry;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class DefinitionFilter implements IDefinitionFilter, ILoggable {
+public class DefinitionFilter implements IDefinitionFilter {
     /**
      * Get a list of Definition ID strings from an Evaluation-IDs file.
      */
@@ -77,9 +82,7 @@ public class DefinitionFilter implements IDefinitionFilter, ILoggable {
 	    definitionIDs = (HashSet<String>)ids;
 	} else {
 	    definitionIDs = new HashSet<String>();
-	    for (String id : ids) {
-		definitionIDs.add(id);
-	    }
+	    definitionIDs.addAll(ids);
 	}
     }
 
@@ -90,52 +93,76 @@ public class DefinitionFilter implements IDefinitionFilter, ILoggable {
 	definitionIDs = null;
     }
 
-    public EvaluationDefinitionIds getEvaluationDefinitionIds() {
+    // Implement ITransformable
+
+    public Source getSource() throws JAXBException {
+	return new JAXBSource(SchemaRegistry.OVAL_EVALUATION_ID.getJAXBContext(), getRootObject());
+    }
+
+    public EvaluationDefinitionIds getRootObject() {
 	EvaluationDefinitionIds ids = Factories.evaluation.createEvaluationDefinitionIds();
 	if (definitionIDs == null) {
 	    ids.unsetDefinition();
 	} else {
-	    for (String id : definitionIDs) {
-		ids.getDefinition().add(id);
-	    }
+	    ids.getDefinition().addAll(definitionIDs);
 	}
 	return ids;
     }
 
-    // Implement IDefinitionFilter
-
-    public int size() {
-	if (definitionIDs == null) {
-	    return 0;
+    public EvaluationDefinitionIds copyRootObject() throws Exception {
+	Unmarshaller unmarshaller = getJAXBContext().createUnmarshaller();
+	Object rootObj = unmarshaller.unmarshal(new DOMSource(DOMTools.toDocument(this).getDocumentElement()));
+	if (rootObj instanceof EvaluationDefinitionIds) {
+	    return (EvaluationDefinitionIds)rootObj;
 	} else {
-	    return definitionIDs.size();
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DEFINITION_FILTER_BAD_SOURCE, toString()));
 	}
     }
 
-    public void writeXML(File f) {
-        OutputStream out = null;
-        try {
-            Marshaller marshaller = SchemaRegistry.OVAL_EVALUATION_ID.createMarshaller();
-            out = new FileOutputStream(f);
-            marshaller.marshal(getEvaluationDefinitionIds(), out);
-        } catch (JAXBException e) {
-            logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-            logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-        } catch (FactoryConfigurationError e) {
-            logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-            logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-        } catch (FileNotFoundException e) {
-            logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-            logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-        } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    logger.warn(JOVALMsg.ERROR_FILE_CLOSE, f.toString());
-                }
-            }
-        }
+    public JAXBContext getJAXBContext() throws JAXBException {
+	return SchemaRegistry.OVAL_EVALUATION_ID.getJAXBContext();
+    }
+
+    // Implement IDefinitionFilter
+
+    public Collection<DefinitionType> filter(IDefinitions definitions, boolean include, LocLogger log) {
+	if (log == null) {
+	    log = logger;
+	}
+	if (definitionIDs == null) {
+	    if (include) {
+		return definitions.getRootObject().getDefinitions().getDefinition();
+	    } else {
+		return new ArrayList<DefinitionType>();
+	    }
+	} else {
+	    Collection<String> allIds = new ArrayList<String>();
+	    for (DefinitionType def : definitions.getRootObject().getDefinitions().getDefinition()) {
+		allIds.add(def.getId());
+	    }
+	    Collection<DefinitionType> result = new ArrayList<DefinitionType>();
+	    HashSet<String> temp = new HashSet<String>();
+	    temp.addAll(definitionIDs);
+	    for (String id : allIds) {
+		if (temp.contains(id)) {
+		    temp.remove(id);
+		    if (include) {
+			result.add(definitions.getDefinition(id));
+		    }
+		} else if (!include) {
+		    result.add(definitions.getDefinition(id));
+		}
+	    }
+	    if (include) {
+		//
+		// Generate warnings about definitions in the filter that are not defined in the document
+		//
+		for (String notFound : temp) {
+		    log.warn(JOVALMsg.ERROR_REF_DEFINITION, notFound);
+		}
+	    }
+	    return result;
+	}
     }
 
     public void addDefinition(String id) {
@@ -145,21 +172,29 @@ public class DefinitionFilter implements IDefinitionFilter, ILoggable {
 	definitionIDs.add(id);
     }
 
-    public boolean accept(String id) {
-	if (definitionIDs == null) {
-	    return true;
-	} else {
-	    return definitionIDs.contains(id);
+    public void writeXML(File f) {
+	OutputStream out = null;
+	try {
+	    Marshaller marshaller = SchemaRegistry.OVAL_EVALUATION_ID.createMarshaller();
+	    out = new FileOutputStream(f);
+	    marshaller.marshal(getRootObject(), out);
+	} catch (JAXBException e) {
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (FactoryConfigurationError e) {
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (FileNotFoundException e) {
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} finally {
+	    if (out != null) {
+		try {
+		    out.close();
+		} catch (IOException e) {
+		    logger.warn(JOVALMsg.ERROR_FILE_CLOSE, f.toString());
+		}
+	    }
 	}
-    }
-
-    // Implement ILoggable
-
-    public void setLogger(LocLogger logger) {
-	this.logger = logger;
-    }
-
-    public LocLogger getLogger() {
-	return logger;
     }
 }

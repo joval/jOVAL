@@ -76,9 +76,4 @@ public interface IDefinitions extends ITransformable<OvalDefinitions> {
      * Get a collection of all the variables.
      */
     Collection<VariableType> getVariables();
-
-    /**
-     * Sort all DefinitionTypes into two lists according to whether or not the filter allows them.
-     */
-    void filterDefinitions(IDefinitionFilter filter, Collection<DefinitionType> allowed, Collection<DefinitionType> disallowed);
 }

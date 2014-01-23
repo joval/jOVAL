@@ -4,6 +4,14 @@
 package org.joval.intf.scap.oval;
 
 import java.io.File;
+import java.util.Collection;
+
+import org.slf4j.cal10n.LocLogger;
+
+import scap.oval.definitions.core.DefinitionType;
+import scap.oval.evaluation.EvaluationDefinitionIds;
+
+import org.joval.intf.xml.ITransformable;
 
 /**
  * Interface defining an OVAL Definition Filter.  The filter lets the engine know which tests it should evaluate, and which
@@ -12,18 +20,23 @@ import java.io.File;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IDefinitionFilter {
+public interface IDefinitionFilter extends ITransformable<EvaluationDefinitionIds> {
     /**
-     * Returns true to indicate that the definition with the corresponding ID should be evaluated.
+     * Return a collection of definitions from the IDefinitions that are allowed by this filter.
+     *
+     * @param definitions The IDefinitions to which you want to apply the filter.
+     * @param include Use true if you want a collection of definitions that should be run, or false for a collection
+     *                of definitions from the IDefinitions that are not specified in the filter.
      */
-    public boolean accept(String id);
+    public Collection<DefinitionType> filter(IDefinitions definitions, boolean include, LocLogger logger);
 
     /**
      * Add a definition to the filter.
      */
     public void addDefinition(String id);
 
-    public int size();
-
+    /**
+     * Serialize to a file.
+     */
     public void writeXML(File f);
 }

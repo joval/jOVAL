@@ -487,9 +487,8 @@ public class Engine implements IOvalEngine, IProvider {
 	    //
 	    // Use the filter to separate the definitions into allowed and disallowed lists.
 	    //
-	    Collection<DefinitionType>allowed = new ArrayList<DefinitionType>();
-	    Collection<DefinitionType>disallowed = new ArrayList<DefinitionType>();
-	    definitions.filterDefinitions(filter, allowed, disallowed);
+	    Collection<DefinitionType>allowed = filter.filter(definitions, true, logger);
+	    Collection<DefinitionType>disallowed = filter.filter(definitions, false, logger);
 
 	    if (scanRequired) {
 		//

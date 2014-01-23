@@ -111,15 +111,6 @@ public class OvalHandler implements ISystem {
 		//
 		if (ref.isSetName()) {
 		    ed.getFilter().addDefinition(ref.getName());
-		} else {
-		    //
-		    // Add all the definitions
-		    //
-		    IDefinitions definitions = ctx.getOval(href);
-		    for (scap.oval.definitions.core.DefinitionType definition :
-			 definitions.getRootObject().getDefinitions().getDefinition()) {
-			ed.getFilter().addDefinition(definition.getId());
-		    }
 		}
 
 		//
@@ -236,13 +227,18 @@ public class OvalHandler implements ISystem {
 
 	CheckData data = new CheckData(check.getNegate());
 	if (ref.isSetName()) {
+	    String definitionId = ref.getName();
 	    try {
-		String definitionId = ref.getName();
 		ClassEnumeration definitionClass = ovalResult.getDefinition(definitionId).getClazz();
 		ResultEnumeration definitionResult = ovalResult.getDefinitionResult(definitionId);
 		data.add(convertResult(definitionClass, definitionResult));
 	    } catch (NoSuchElementException e) {
-		data.add(ResultEnumType.UNKNOWN);
+		CheckResult cr = new CheckResult(ResultEnumType.ERROR, check);
+		MessageType message = ScapFactory.XCCDF.createMessageType();
+		message.setSeverity(MsgSevEnumType.ERROR);
+		message.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_DEFINITION, definitionId));
+		cr.addMessage(message);
+		return cr;
 	    }
 	} else if (check.getMultiCheck()) {
 	    CheckResult cr = new CheckResult();
@@ -355,11 +351,13 @@ public class OvalHandler implements ISystem {
 	EngineData(String uri, IDefinitions definitions) {
 	    this.uri = uri;
 	    this.definitions = definitions;
-	    filter = OvalFactory.createDefinitionFilter();
 	    variables = OvalFactory.createVariables();
 	}
 
 	IDefinitionFilter getFilter() {
+	    if (filter == null) {
+		filter = OvalFactory.createDefinitionFilter();
+	    }
 	    return filter;
 	}
 
@@ -368,15 +366,13 @@ public class OvalHandler implements ISystem {
 	}
 
 	boolean createEngine(IPlugin plugin) {
-	    if (filter.size() > 0 || EMPTY_URI.equals(uri)) {
-		engine = OvalFactory.createEngine(IOvalEngine.Mode.DIRECTED, plugin);
-		engine.setDefinitions(definitions);
-		engine.setExternalVariables(variables);
+	    engine = OvalFactory.createEngine(IOvalEngine.Mode.DIRECTED, plugin);
+	    engine.setDefinitions(definitions);
+	    engine.setExternalVariables(variables);
+	    if (filter != null) {
 		engine.setDefinitionFilter(filter);
-		return true;
-	    } else {
-		return false;
 	    }
+	    return true;
 	}
 
 	IOvalEngine getEngine() {
