@@ -24,6 +24,7 @@ import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
 import jsaf.intf.system.IComputerSystem;
+import jsaf.intf.system.ISession;
 import jsaf.intf.util.ISearchable;
 import jsaf.intf.util.ISearchable.ICondition;
 import jsaf.intf.unix.io.IUnixFilesystem;
@@ -521,21 +522,23 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		String filepath = (String)fObj.getFilepath().getValue();
 		OperationEnumeration op = fObj.getFilepath().getOperation();
 		switch(op) {
+		  case CASE_INSENSITIVE_EQUALS:
+		    if (session.getType() != ISession.Type.WINDOWS) {
+			Pattern p = StringTools.pattern("^(?i)" + Matcher.quoteReplacement(filepath) + "$");
+			from = searcher.guessParent(p, Boolean.TRUE);
+			conditions.add(searcher.condition(FIELD_PATH, TYPE_PATTERN, p));
+			conditions.add(ISearchable.RECURSE);
+			search = true;
+			break;
+		    }
+		    // Windows falls thru to EQUALS
+
 		  case EQUALS:
 		    IFile file = fs.getFile(filepath);
 		    if (file.exists()) {
 			files.add(file);
 		    }
 		    break;
-
-		  case CASE_INSENSITIVE_EQUALS: {
-		    Pattern p = StringTools.pattern("^(?i)" + Matcher.quoteReplacement(filepath) + "$");
-		    from = searcher.guessParent(p, Boolean.TRUE);
-		    conditions.add(searcher.condition(FIELD_PATH, TYPE_PATTERN, p));
-		    conditions.add(ISearchable.RECURSE);
-		    search = true;
-		    break;
-		  }
 
 		  case PATTERN_MATCH: {
 		    Pattern p = StringTools.pattern(filepath);
@@ -594,6 +597,16 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 
 		OperationEnumeration pathOp = fObj.getPath().getOperation();
 		switch(pathOp) {
+		  case CASE_INSENSITIVE_EQUALS:
+		    if (session.getType() != ISession.Type.WINDOWS) {
+			Pattern p = StringTools.pattern("^(?i)" + Matcher.quoteReplacement(path) + "$");
+			from = searcher.guessParent(p);
+			conditions.add(searcher.condition(FIELD_DIRNAME, TYPE_PATTERN, p));
+			search = true;
+			break;
+		    }
+		    // Windows falls thru to EQUALS
+
 		  case EQUALS:
 		    IFile file = fs.getFile(path);
 		    if (file.exists() && file.isDirectory()) {
@@ -624,14 +637,6 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 			}
 		    }
 		    break;
-
-		  case CASE_INSENSITIVE_EQUALS: {
-		    Pattern p = StringTools.pattern("^(?i)" + Matcher.quoteReplacement(path) + "$");
-		    from = searcher.guessParent(p);
-		    conditions.add(searcher.condition(FIELD_DIRNAME, TYPE_PATTERN, p));
-		    search = true;
-		    break;
-		  }
 
 		  case PATTERN_MATCH: {
 		    followLinks = false; // Per the spec, the recurse attribute only applies for path equality operations.
