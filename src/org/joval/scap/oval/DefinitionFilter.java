@@ -25,6 +25,7 @@ import javax.xml.transform.stream.StreamSource;
 import org.slf4j.cal10n.LocLogger;
 
 import scap.oval.definitions.core.DefinitionType;
+import scap.oval.definitions.core.OvalDefinitions;
 import scap.oval.evaluation.EvaluationDefinitionIds;
 
 import org.joval.intf.scap.oval.IDefinitionFilter;
@@ -130,8 +131,9 @@ public class DefinitionFilter implements IDefinitionFilter {
 	    log = logger;
 	}
 	if (definitionIDs == null) {
-	    if (include) {
-		return definitions.getRootObject().getDefinitions().getDefinition();
+	    OvalDefinitions oval = null;
+	    if (include && (oval = definitions.getRootObject()).isSetDefinitions()) {
+		return oval.getDefinitions().getDefinition();
 	    } else {
 		return new ArrayList<DefinitionType>();
 	    }
