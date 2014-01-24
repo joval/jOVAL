@@ -251,7 +251,7 @@ public class MetabaseAdapter implements IAdapter {
 	} else if ("MULTISZ_METADATA".equals(datatype)) {
 	    for (String value : datum.get("VALUE").split("\0")) {
 		EntityItemAnySimpleType dataType = Factories.sc.core.createEntityItemAnySimpleType();
-		dataType.setValue(datum.get("VALUE"));
+		dataType.setValue(value);
 		dataType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 		item.getData().add(dataType);
 	    }
