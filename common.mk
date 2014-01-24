@@ -5,7 +5,7 @@ include $(TOP)/customize.mk
 
 JOVAL_VERSION=5.10.1.2a
 SCAP_VERSION=1.2
-OVAL_VERSION=5.11
+OVAL_VERSION=5.10.1
 SCE_VERSION=1.0
 
 Default: all
