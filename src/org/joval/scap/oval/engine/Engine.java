@@ -2172,10 +2172,11 @@ public class Engine implements IOvalEngine, IProvider {
 	CheckData check = new CheckData();
 	switch(sc.getObjectFlag(objectId)) {
 	  //
-	  // If the object is flagged as incomplete, then at least one item will not have been checked against the
-	  // state. So, we record the fact that we don't know how it would evaluate against the state.
+	  // If the object is flagged as incomplete, then potentially at least one item will not have been collected, and
+	  // if so, it would not have been checked against the state, so we record these facts here.
 	  //
 	  case INCOMPLETE:
+	    existence.addStatus(StatusEnumeration.NOT_COLLECTED);
 	    check.addResult(ResultEnumeration.UNKNOWN);
 	    // fall-thru
 
@@ -3033,7 +3034,8 @@ public class Engine implements IOvalEngine, IProvider {
 	    List<IType> result = extractItemData(objectId, oc, items);
 	    if (result.size() == 0) {
 		//
-		// Per the schema documentation, object components are required to resolve to values or generate an error.
+		// DAS: Per the schema documentation, object components are required to resolve to one or more
+		//      values, or else generate an error.
 		//
 		String msg = null;
 		String itemField = oc.getItemField();
