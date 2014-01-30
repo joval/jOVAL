@@ -403,191 +403,199 @@ public class RpmAdapter implements IAdapter, IBatch {
     private void filterRpms(Collection<RpmData> data, EntityObjectStringType arch, EntityObjectAnySimpleType epoch,
 		EntityObjectAnySimpleType version, EntityObjectAnySimpleType release) throws CollectException {
 
-	Iterator<RpmData> iter = data.iterator();
-	while(iter.hasNext()) {
-	    RpmData datum = iter.next();
-	    switch(arch.getOperation()) {
-	      case EQUALS:
-		if (!((String)arch.getValue()).equals(datum.arch)) {
-		    iter.remove();
-		}
-		break;
-	      case NOT_EQUAL:
-		if (((String)arch.getValue()).equals(datum.arch)) {
-		    iter.remove();
-		}
-		break;
-	      case PATTERN_MATCH:
-		Pattern p = StringTools.pattern((String)arch.getValue());
-		if (!p.matcher(datum.arch).find()) {
-		    iter.remove();
-		}
-		break;
-	      default:
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, arch.getOperation());
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-	    }
-	}
-	iter = data.iterator();
-	while(iter.hasNext()) {
-	    RpmData datum = iter.next();
-	    switch(SimpleDatatypeEnumeration.fromValue(epoch.getDatatype())) {
-	      case INT: {
-		int oe = Integer.parseInt((String)epoch.getValue());
-		int de = Integer.parseInt(datum.epoch);
-		switch(epoch.getOperation()) {
+	if (arch != null) {
+	    Iterator<RpmData> iter = data.iterator();
+	    while(iter.hasNext()) {
+		RpmData datum = iter.next();
+		switch(arch.getOperation()) {
 		  case EQUALS:
-		    if (oe != de) {
+		    if (!((String)arch.getValue()).equals(datum.arch)) {
 			iter.remove();
 		    }
 		    break;
 		  case NOT_EQUAL:
-		    if (oe == de) {
-			iter.remove();
-		    }
-		    break;
-		  case GREATER_THAN:
-		    if (oe >= de) {
-			iter.remove();
-		    }
-		    break;
-		  case GREATER_THAN_OR_EQUAL:
-		    if (oe > de) {
-			iter.remove();
-		    }
-		    break;
-		  case LESS_THAN:
-		    if (oe <= de) {
-			iter.remove();
-		    }
-		    break;
-		  case LESS_THAN_OR_EQUAL:
-		    if (oe < de) {
-			iter.remove();
-		    }
-		    break;
-		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, epoch.getOperation());
-		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-		}
-		break;
-	      }
-	      default:
-		switch(epoch.getOperation()) {
-		  case EQUALS:
-		    if (!((String)epoch.getValue()).equals(datum.epoch)) {
-			iter.remove();
-		    }
-		    break;
-		  case NOT_EQUAL:
-		    if (((String)epoch.getValue()).equals(datum.epoch)) {
+		    if (((String)arch.getValue()).equals(datum.arch)) {
 			iter.remove();
 		    }
 		    break;
 		  case PATTERN_MATCH:
-		    Pattern p = StringTools.pattern((String)epoch.getValue());
-		    if (!p.matcher(datum.epoch).find()) {
+		    Pattern p = StringTools.pattern((String)arch.getValue());
+		    if (!p.matcher(datum.arch).find()) {
 			iter.remove();
 		    }
 		    break;
 		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, epoch.getOperation());
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, arch.getOperation());
 		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
-		break;
 	    }
 	}
-	iter = data.iterator();
-	while(iter.hasNext()) {
-	    RpmData datum = iter.next();
-	    switch(SimpleDatatypeEnumeration.fromValue(version.getDatatype())) {
-	      case VERSION: {
-		VersionType ov = new VersionType((String)version.getValue());
-		VersionType dv = new VersionType(datum.version);
-		switch(epoch.getOperation()) {
-		  case EQUALS:
-		    if (ov.compareTo(dv) != 0) {
-			iter.remove();
+	if (epoch != null) {
+	    Iterator<RpmData> iter = data.iterator();
+	    while(iter.hasNext()) {
+		RpmData datum = iter.next();
+		switch(SimpleDatatypeEnumeration.fromValue(epoch.getDatatype())) {
+		  case INT: {
+		    int oe = Integer.parseInt((String)epoch.getValue());
+		    int de = Integer.parseInt(datum.epoch);
+		    switch(epoch.getOperation()) {
+		      case EQUALS:
+			if (oe != de) {
+			    iter.remove();
+			}
+			break;
+		      case NOT_EQUAL:
+			if (oe == de) {
+			    iter.remove();
+			}
+			break;
+		      case GREATER_THAN:
+			if (oe >= de) {
+			    iter.remove();
+			}
+			break;
+		      case GREATER_THAN_OR_EQUAL:
+			if (oe > de) {
+			    iter.remove();
+			}
+			break;
+		      case LESS_THAN:
+			if (oe <= de) {
+			    iter.remove();
+			}
+			break;
+		      case LESS_THAN_OR_EQUAL:
+			if (oe < de) {
+			    iter.remove();
+			}
+			break;
+		      default:
+			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, epoch.getOperation());
+			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		    }
 		    break;
-		  case NOT_EQUAL:
-		    if (ov.compareTo(dv) == 0) {
-			iter.remove();
-		    }
-		    break;
-		  case GREATER_THAN:
-		    if (ov.compareTo(dv) >= 0) {
-			iter.remove();
-		    }
-		    break;
-		  case GREATER_THAN_OR_EQUAL:
-		    if (ov.compareTo(dv) > 0) {
-			iter.remove();
-		    }
-		    break;
-		  case LESS_THAN:
-		    if (ov.compareTo(dv) <= 0) {
-			iter.remove();
-		    }
-		    break;
-		  case LESS_THAN_OR_EQUAL:
-		    if (ov.compareTo(dv) < 0) {
-			iter.remove();
-		    }
-		    break;
+		  }
 		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, version.getOperation());
-		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		    switch(epoch.getOperation()) {
+		      case EQUALS:
+			if (!((String)epoch.getValue()).equals(datum.epoch)) {
+			    iter.remove();
+			}
+			break;
+		      case NOT_EQUAL:
+			if (((String)epoch.getValue()).equals(datum.epoch)) {
+			    iter.remove();
+			}
+			break;
+		      case PATTERN_MATCH:
+			Pattern p = StringTools.pattern((String)epoch.getValue());
+			if (!p.matcher(datum.epoch).find()) {
+			    iter.remove();
+			}
+			break;
+		      default:
+			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, epoch.getOperation());
+			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		    }
+		    break;
 		}
-		break;
-	      }
-	      default:
-		switch(version.getOperation()) {
+	    }
+	}
+	if (version != null) {
+	    Iterator<RpmData> iter = data.iterator();
+	    while(iter.hasNext()) {
+		RpmData datum = iter.next();
+		switch(SimpleDatatypeEnumeration.fromValue(version.getDatatype())) {
+		  case VERSION: {
+		    VersionType ov = new VersionType((String)version.getValue());
+		    VersionType dv = new VersionType(datum.version);
+		    switch(epoch.getOperation()) {
+		      case EQUALS:
+			if (ov.compareTo(dv) != 0) {
+			    iter.remove();
+			}
+			break;
+		      case NOT_EQUAL:
+			if (ov.compareTo(dv) == 0) {
+			    iter.remove();
+			}
+			break;
+		      case GREATER_THAN:
+			if (ov.compareTo(dv) >= 0) {
+			    iter.remove();
+			}
+			break;
+		      case GREATER_THAN_OR_EQUAL:
+			if (ov.compareTo(dv) > 0) {
+			    iter.remove();
+			}
+			break;
+		      case LESS_THAN:
+			if (ov.compareTo(dv) <= 0) {
+			    iter.remove();
+			}
+			break;
+		      case LESS_THAN_OR_EQUAL:
+			if (ov.compareTo(dv) < 0) {
+			    iter.remove();
+			}
+			break;
+		      default:
+			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, version.getOperation());
+			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		    }
+		    break;
+		  }
+		  default:
+		    switch(version.getOperation()) {
+		      case EQUALS:
+			if (!((String)version.getValue()).equals(datum.version)) {
+			    iter.remove();
+			}
+			break;
+		      case NOT_EQUAL:
+			if (((String)version.getValue()).equals(datum.version)) {
+			    iter.remove();
+			}
+			break;
+		      case PATTERN_MATCH:
+			Pattern p = StringTools.pattern((String)version.getValue());
+			if (!p.matcher(datum.version).find()) {
+			    iter.remove();
+			}
+			break;
+		      default:
+			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, version.getOperation());
+			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		    }
+		}
+	    }
+	}
+	if (release != null) {
+	    Iterator<RpmData> iter = data.iterator();
+	    while(iter.hasNext()) {
+		RpmData datum = iter.next();
+		switch(release.getOperation()) {
 		  case EQUALS:
-		    if (!((String)version.getValue()).equals(datum.version)) {
+		    if (!((String)release.getValue()).equals(datum.release)) {
 			iter.remove();
 		    }
 		    break;
 		  case NOT_EQUAL:
-		    if (((String)version.getValue()).equals(datum.version)) {
+		    if (((String)release.getValue()).equals(datum.release)) {
 			iter.remove();
 		    }
 		    break;
 		  case PATTERN_MATCH:
-		    Pattern p = StringTools.pattern((String)version.getValue());
-		    if (!p.matcher(datum.version).find()) {
+		    Pattern p = StringTools.pattern((String)release.getValue());
+		    if (!p.matcher(datum.release).find()) {
 			iter.remove();
 		    }
 		    break;
 		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, version.getOperation());
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, release.getOperation());
 		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
-	    }
-	}
-	iter = data.iterator();
-	while(iter.hasNext()) {
-	    RpmData datum = iter.next();
-	    switch(release.getOperation()) {
-	      case EQUALS:
-		if (!((String)release.getValue()).equals(datum.release)) {
-		    iter.remove();
-		}
-		break;
-	      case NOT_EQUAL:
-		if (((String)release.getValue()).equals(datum.release)) {
-		    iter.remove();
-		}
-		break;
-	      case PATTERN_MATCH:
-		Pattern p = StringTools.pattern((String)release.getValue());
-		if (!p.matcher(datum.release).find()) {
-		    iter.remove();
-		}
-		break;
-	      default:
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, release.getOperation());
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	}
     }
@@ -601,48 +609,55 @@ public class RpmAdapter implements IAdapter, IBatch {
 
 	Map<RpmData, Collection<String>> filepaths = new HashMap<RpmData, Collection<String>>();
 	Iterator<RpmData> iter = data.iterator();
-	switch(filepathType.getOperation()) {
-	  case EQUALS:
+	if (filepathType == null) {
 	    while(iter.hasNext()) {
 		RpmData datum = iter.next();
-		if (datum.filepaths.contains((String)filepathType.getValue())) {
-		    filepaths.put(datum, Arrays.asList((String)filepathType.getValue()));
-		}
+		filepaths.put(datum, datum.filepaths);
 	    }
-	    break;
-
-	  case PATTERN_MATCH:
-	    Pattern p = StringTools.pattern((String)filepathType.getValue());
-	    while(iter.hasNext()) {
-		RpmData datum = iter.next();
-		for (String filepath : datum.filepaths) {
-		    if (p.matcher(filepath).find()) {
-			if (!filepaths.containsKey(datum)) {
-			    filepaths.put(datum, new ArrayList<String>());
-			}
-			filepaths.get(datum).add(filepath);
+	} else {
+	    switch(filepathType.getOperation()) {
+	      case EQUALS:
+		while(iter.hasNext()) {
+		    RpmData datum = iter.next();
+		    if (datum.filepaths.contains((String)filepathType.getValue())) {
+			filepaths.put(datum, Arrays.asList((String)filepathType.getValue()));
 		    }
 		}
-	    }
-	    break;
+		break;
 
-	  case NOT_EQUAL:
-	    while(iter.hasNext()) {
-		RpmData datum = iter.next();
-		for (String filepath : datum.filepaths) {
-		    if (!filepath.equals((String)filepathType.getValue())) {
-			if (!filepaths.containsKey(datum)) {
-			    filepaths.put(datum, new ArrayList<String>());
+	      case PATTERN_MATCH:
+		Pattern p = StringTools.pattern((String)filepathType.getValue());
+		while(iter.hasNext()) {
+		    RpmData datum = iter.next();
+		    for (String filepath : datum.filepaths) {
+			if (p.matcher(filepath).find()) {
+			    if (!filepaths.containsKey(datum)) {
+				filepaths.put(datum, new ArrayList<String>());
+			    }
+			    filepaths.get(datum).add(filepath);
 			}
-			filepaths.get(datum).add(filepath);
 		    }
 		}
-	    }
-	    break;
+		break;
 
-	  default:
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, filepathType.getOperation());
-	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	      case NOT_EQUAL:
+		while(iter.hasNext()) {
+		    RpmData datum = iter.next();
+		    for (String filepath : datum.filepaths) {
+			if (!filepath.equals((String)filepathType.getValue())) {
+			    if (!filepaths.containsKey(datum)) {
+				filepaths.put(datum, new ArrayList<String>());
+			    }
+			    filepaths.get(datum).add(filepath);
+			}
+		    }
+		}
+		break;
+
+	      default:
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, filepathType.getOperation());
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	    }
 	}
 	return filepaths;
     }
