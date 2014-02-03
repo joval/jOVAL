@@ -8,7 +8,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -59,7 +60,7 @@ public class Variables implements IVariables {
     }
 
     private OcilVariables variables;
-    private Hashtable<String, VariableType> table;
+    private Map<String, VariableType> table;
 
     /**
      * Create Variables from a file.
@@ -92,7 +93,7 @@ public class Variables implements IVariables {
      * Create an empty Variables structure.
      */
     public Variables() throws OcilException {
-	table = new Hashtable<String, VariableType>();
+	table = new HashMap<String, VariableType>();
     }
 
     public void addValue(String id, String value) {
@@ -167,9 +168,7 @@ public class Variables implements IVariables {
 	    variables = Factories.variables.createOcilVariables();
 	    variables.setGenerator(Factories.getGenerator());
 	    VariablesType vars = Factories.variables.createVariablesType();
-	    for (String id : table.keySet()) {
-		vars.getVariable().add(table.get(id));
-	    }
+	    vars.getVariable().addAll(table.values());
 	    variables.setVariables(vars);
 	}
 	return variables;
