@@ -14,22 +14,26 @@
 JAVA_HOME=$(TOP)/../../tools/jdk1.6.0_26
 
 #
-# JSAF_HOME is the location of the jSAF FOSS git repository
-# See http://github.org/joval/jSAF
+# JAXB_HOME is where you've installed JAXB.
+# Note: This is required when specifying a pre-Java7 JDK in JAVA_HOME.
 #
-JSAF_HOME=$(TOP)/../jSAF
+JAXB_HOME=$(TOP)/../../tools/jaxb-ri-2.2.6
 
 #
-# JPE_HOME is the location of the jPE FOSS git repository
-# See http://github.org/joval/jPE
-#
-JPE_HOME=$(TOP)/../jPE
-
-#
-# JRE[ARCH]_HOME is the install path for the JRE that will be bundled with the distribution of
+# JRE[ARCH]_HOME is the install path for the JRE that will be bundled with the distribution for
 # architecture ARCH.
 #
 JRE32_HOME=$(TOP)/../../tools/jre170_21_x86
 JRE64_HOME=$(TOP)/../../tools/jre170_21_x64
 
-JAXB_HOME=$(TOP)/../../tools/jaxb-ri-2.2.6
+#
+# JSAF_HOME is the location of the jSAF FOSS git repository.
+# See http://github.org/joval/jSAF
+#
+JSAF_HOME=$(TOP)/../jSAF
+
+#
+# JPE_HOME is the location of the jPE FOSS git repository.
+# See http://github.org/joval/jPE
+#
+JPE_HOME=$(TOP)/../jPE

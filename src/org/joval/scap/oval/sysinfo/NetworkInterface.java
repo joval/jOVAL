@@ -24,7 +24,7 @@ import jsaf.intf.windows.wmi.IWmiProvider;
 import jsaf.util.SafeCLI;
 
 /**
- * Tool for creating a SystemInfoType from an IUnixSession implementation.
+ * Utility for obtaining network interface information from an IWindowsSession or IUnixSession.
  *
  * @author David A. Solin
  * @version %I% %G%
