@@ -3,9 +3,14 @@
 
 package org.joval.xml;
 
+import java.io.InputStream;
+import java.io.IOException;
 import java.io.StringWriter;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.JAXBIntrospector;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -16,6 +21,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
 
 import org.joval.intf.xml.ITransformable;
 import org.joval.util.JOVALMsg;
@@ -27,6 +33,25 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class DOMTools {
+    private static final DocumentBuilder builder;
+    static {
+	try {
+	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	    factory.setNamespaceAware(false);
+	    builder = factory.newDocumentBuilder();
+	} catch (ParserConfigurationException e) {
+	    throw new RuntimeException(e);
+	}
+    }
+
+    /**
+     * Convenience method, for parsing an InputStream into a DOM Document. Note that the DocumentBuilder for this
+     * class is NOT namespace-aware.
+     */
+    public static synchronized Document parse(InputStream in) throws SAXException, IOException {
+	return builder.parse(in);
+    }
+
     /**
      * Transform a JAXB object into a W3C Node.
      */

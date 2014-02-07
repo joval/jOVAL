@@ -13,9 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 import javax.xml.namespace.QName;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -28,7 +25,6 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 import jsaf.util.StringTools;
 
@@ -39,6 +35,8 @@ import jsaf.util.StringTools;
  * @version %I% %G%
  */
 public class XPathTools {
+    private static final XPath xpath = XPathFactory.newInstance().newXPath();
+
     /**
      * The QName types, in evaluation preference order.
      */
@@ -60,7 +58,7 @@ public class XPathTools {
 	try {
             XPathExpression expr = compile(expression);
             in = new FileInputStream(f);
-            Document doc = parse(in);
+            Document doc = DOMTools.parse(in);
             List<String> values = typesafeEval(expr, doc);
             if (values.size() == 0) {
 		System.out.println("No result");
@@ -79,27 +77,6 @@ public class XPathTools {
 		}
 	    }
 	}
-    }
-
-    private static final DocumentBuilder builder;
-    private static final XPath xpath;
-    static {
-	try {
-	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-	    factory.setNamespaceAware(false);
-	    builder = factory.newDocumentBuilder();
-	    xpath = XPathFactory.newInstance().newXPath();
-	} catch (ParserConfigurationException e) {
-	    throw new RuntimeException(e);
-	}
-    }
-
-    /**
-     * Convenience method, for parsing an InputStream into a DOM Document. Note that the DocumentBuilder for this
-     * class is NOT namespace-aware, as XPATH expressions are generally not themselves namespace-aware.
-     */
-    public static synchronized Document parse(InputStream in) throws SAXException, IOException {
-	return builder.parse(in);
     }
 
     /**

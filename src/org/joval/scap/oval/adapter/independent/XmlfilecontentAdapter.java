@@ -40,6 +40,7 @@ import org.joval.scap.oval.Batch;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
+import org.joval.xml.DOMTools;
 import org.joval.xml.XPathTools;
 
 /**
@@ -101,7 +102,7 @@ public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
 	    for (Map.Entry<String, Collection<IRequest>> entry : requestMap.entrySet()) {
 		IFile f = fileMap.get(entry.getKey());
 		if (f != null && f.isFile() && f.exists()) {
-		    Document doc = XPathTools.parse(f.getInputStream());
+		    Document doc = DOMTools.parse(f.getInputStream());
 		    for (IRequest request : entry.getValue()) {
 			XmlfilecontentObject xObj = (XmlfilecontentObject)request.getObject();
 			XmlfilecontentItem item = (XmlfilecontentItem)getBaseItem(xObj, f);
@@ -178,7 +179,7 @@ public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
 		    try {
 			XPathExpression expr = XPathTools.compile(expression);
 			in = f.getInputStream();
-			Document doc = XPathTools.parse(in);
+			Document doc = DOMTools.parse(in);
 			List<String> values = XPathTools.typesafeEval(expr, doc);
 			if (values.size() == 0) {
 			    EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();

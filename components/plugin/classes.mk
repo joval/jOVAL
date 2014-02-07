@@ -38,6 +38,7 @@ CLASSES=\
 	org.joval.scap.oval.adapter.solaris.SmfAdapter					\
 	org.joval.scap.oval.adapter.unix.FileAdapter					\
 	org.joval.scap.oval.adapter.unix.FileextendedattributeAdapter			\
+	org.joval.scap.oval.adapter.unix.GconfAdapter					\
 	org.joval.scap.oval.adapter.unix.InetdAdapter					\
 	org.joval.scap.oval.adapter.unix.InterfaceAdapter				\
 	org.joval.scap.oval.adapter.unix.PasswordAdapter				\

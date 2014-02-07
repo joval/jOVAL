@@ -17,7 +17,6 @@ import java.util.regex.PatternSyntaxException;
 import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
-import jsaf.intf.io.IReader;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.StringTools;
