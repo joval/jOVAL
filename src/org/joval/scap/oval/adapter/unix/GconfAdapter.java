@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.zip.GZIPInputStream;
@@ -264,7 +265,10 @@ public class GconfAdapter implements IAdapter {
 	    modTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    modTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
 	    item.setModTime(modTimeType);
-
+	
+	    //
+	    // DAS: Check source="xml:readonly:/etc/gconf/gconf.xml.mandatory" for read-only keys?
+	    //
 	    EntityItemBoolType isWritableType = Factories.sc.core.createEntityItemBoolType();
 	    isWritableType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    isWritableType.setStatus(StatusEnumeration.NOT_COLLECTED);
@@ -277,9 +281,9 @@ public class GconfAdapter implements IAdapter {
 		typeType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
 		typeType.setValue(GconfTypeEnumeration.getType(value).toString());
-		item.getValue().addAll(getValues(value));
 	    }
 	    item.setType(typeType);
+	    item.getValue().addAll(getValues(value));
 
 	    Node schema = getChild(entry, "schema_key");
 	    EntityItemBoolType isDefaultType = Factories.sc.core.createEntityItemBoolType();
@@ -287,13 +291,20 @@ public class GconfAdapter implements IAdapter {
 	    if (schema == null) {
 		isDefaultType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
-		List<EntityItemAnySimpleType> defaults = getValues(getChild(schema, "value"));
-		if (defaults.size() == item.getValue().size()) {
+		List<EntityItemAnySimpleType> defaults = getValues(getChild(entries.get(schema.getTextContent()), "value"));
+		if (getRealSize(defaults) == getRealSize(item.getValue())) {
 		    isDefaultType.setValue("1");
 		    for (int i=0; i < defaults.size(); i++) {
-			if (!defaults.get(i).getValue().equals(item.getValue().get(i).getValue())) {
+			EntityItemAnySimpleType defaultValue = defaults.get(i);
+			EntityItemAnySimpleType actualValue = item.getValue().get(i);
+			if (defaultValue.getStatus() != actualValue.getStatus()) {
 			    isDefaultType.setValue("0");
 			    break;
+			} else if (defaultValue.getStatus() == StatusEnumeration.EXISTS) {
+			    if (!defaultValue.getValue().equals(actualValue.getValue())) {
+				isDefaultType.setValue("0");
+				break;
+			    }
 			}
 		    }
 		} else {
@@ -309,7 +320,11 @@ public class GconfAdapter implements IAdapter {
 
 	private List<EntityItemAnySimpleType> getValues(Node value) {
 	    List<EntityItemAnySimpleType> result = new ArrayList<EntityItemAnySimpleType>();
-	    if (value != null) {
+	    if (value == null) {
+		EntityItemAnySimpleType val = Factories.sc.core.createEntityItemAnySimpleType();
+		val.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		result.add(val);
+	    } else {
 		GconfTypeEnumeration gtype = GconfTypeEnumeration.getType(value);
 		switch(gtype) {
 		  case GCONF_VALUE_STRING: {
@@ -370,9 +385,21 @@ public class GconfAdapter implements IAdapter {
 		  }
 		  case GCONF_VALUE_SCHEMA: {
 		    return getValues(
-			getChild(getChild(getChild(getChild(value, "schema"), "locale"), "default_value"), "value")
+			getChild(value, "schema/locale/default_value/value")
 		    );
 		  }
+		}
+	    }
+	    return result;
+	}
+
+	private int getRealSize(List<EntityItemAnySimpleType> list) {
+	    int result = 0;
+	    for (EntityItemAnySimpleType item : list) {
+		switch(item.getStatus()) {
+		  case EXISTS:
+		    result++;
+		    break;
 		}
 	    }
 	    return result;
@@ -416,12 +443,20 @@ public class GconfAdapter implements IAdapter {
 
     private static final Node getChild(Node node, String name) {
 	if (node != null) {
-	    NodeList list = node.getChildNodes();
-	    for (int i=0; i < list.getLength(); i++) {
-		Node child = list.item(i);
-		if (child.getNodeName().equals(name)) {
-		    return child;
+	    if (name.indexOf("/") == -1) {
+	        NodeList list = node.getChildNodes();
+	        for (int i=0; i < list.getLength(); i++) {
+		    Node child = list.item(i);
+		    if (child.getNodeName().equals(name)) {
+		        return child;
+		    }
+	        }
+	    } else {
+		StringTokenizer tok = new StringTokenizer(name, "/");
+		while(tok.hasMoreTokens()) {
+		    node = getChild(node, tok.nextToken());
 		}
+		return node;
 	    }
 	}
 	return null;
