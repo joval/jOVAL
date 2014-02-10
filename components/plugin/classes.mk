@@ -45,6 +45,7 @@ CLASSES=\
 	org.joval.scap.oval.adapter.unix.ProcessAdapter					\
 	org.joval.scap.oval.adapter.unix.RoutingtableAdapter				\
 	org.joval.scap.oval.adapter.unix.RunlevelAdapter				\
+	org.joval.scap.oval.adapter.unix.SccsAdapter					\
 	org.joval.scap.oval.adapter.unix.ShadowAdapter					\
 	org.joval.scap.oval.adapter.unix.SysctlAdapter					\
 	org.joval.scap.oval.adapter.unix.UnameAdapter					\
