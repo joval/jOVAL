@@ -38,7 +38,7 @@ interface ISystem {
      *
      * @return reports, indexed by source document URI
      */
-    Map<String, ? extends ITransformable<?>> exec(IPlugin plugin) throws Exception;
+    Map<String, ? extends ITransformable<?>> exec(IPlugin plugin);
 
     /**
      * Cancel exec.

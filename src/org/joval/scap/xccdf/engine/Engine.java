@@ -3,14 +3,7 @@
 
 package org.joval.scap.xccdf.engine;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.PrintStream;
 import java.math.BigDecimal;
-import java.net.ConnectException;
-import java.net.URL;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -20,16 +13,16 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Properties;
-import java.util.PropertyResourceBundle;
+import java.util.Timer;
+import java.util.TimerTask;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.datatype.DatatypeConfigurationException;
 
 import org.slf4j.cal10n.LocLogger;
+import jsaf.JSAFSystem;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.intf.windows.identity.IGroup;
@@ -133,32 +126,32 @@ public class Engine implements IXccdfEngine {
      * Make a copy of a CheckType, except for check-import content (although the import defs will be copied).
      */
     static CheckType copy(CheckType check) {
-        CheckType result = Engine.FACTORY.createCheckType();
-        result.setId(check.getId());
-        result.setMultiCheck(check.getMultiCheck());
-        result.setNegate(check.getNegate());
-        result.setSelector(check.getSelector());
-        result.setSystem(check.getSystem());
-        result.getCheckExport().addAll(check.getCheckExport());
-        for (CheckExportType exportType : check.getCheckExport()) {
-            CheckExportType copy = FACTORY.createCheckExportType();
-            copy.setExportName(exportType.getExportName());
-            copy.setValueId(exportType.getValueId());
-            result.getCheckExport().add(copy);
-        }
-        for (CheckImportType importType : check.getCheckImport()) {
-            CheckImportType copy = FACTORY.createCheckImportType();
-            copy.setImportName(importType.getImportName());
-            copy.setImportXpath(importType.getImportXpath());
-            result.getCheckImport().add(copy);
-        }
-        for (CheckContentRefType ref : check.getCheckContentRef()) {
-            CheckContentRefType copy = FACTORY.createCheckContentRefType();
-            copy.setHref(ref.getHref());
-            copy.setName(ref.getName());
-            result.getCheckContentRef().add(copy);
-        }
-        return result;
+	CheckType result = Engine.FACTORY.createCheckType();
+	result.setId(check.getId());
+	result.setMultiCheck(check.getMultiCheck());
+	result.setNegate(check.getNegate());
+	result.setSelector(check.getSelector());
+	result.setSystem(check.getSystem());
+	result.getCheckExport().addAll(check.getCheckExport());
+	for (CheckExportType exportType : check.getCheckExport()) {
+	    CheckExportType copy = FACTORY.createCheckExportType();
+	    copy.setExportName(exportType.getExportName());
+	    copy.setValueId(exportType.getValueId());
+	    result.getCheckExport().add(copy);
+	}
+	for (CheckImportType importType : check.getCheckImport()) {
+	    CheckImportType copy = FACTORY.createCheckImportType();
+	    copy.setImportName(importType.getImportName());
+	    copy.setImportXpath(importType.getImportXpath());
+	    result.getCheckImport().add(copy);
+	}
+	for (CheckContentRefType ref : check.getCheckContentRef()) {
+	    CheckContentRefType copy = FACTORY.createCheckContentRefType();
+	    copy.setHref(ref.getHref());
+	    copy.setName(ref.getName());
+	    result.getCheckContentRef().add(copy);
+	}
+	return result;
     }
 
     private enum State {
@@ -171,6 +164,7 @@ public class Engine implements IXccdfEngine {
     private SystemEnumeration[] systems;
     private IScapContext ctx;
     private IPlugin plugin;
+    private Map<String, ISystem> handlers;
     private SystemInfoType sysinfo;
     private Collection<String> applicableCpes;
     private Map<String, IChecklist> checklists;
@@ -186,18 +180,24 @@ public class Engine implements IXccdfEngine {
     private boolean abort = false;
     private Producer<Message> producer;
     private LocLogger logger;
+    private int maxTime;
 
     /**
      * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL plugin.
      */
     protected Engine(IPlugin plugin, SystemEnumeration... systems) {
-	this.plugin = plugin;
 	if (systems.length == 1 && systems[0] == SystemEnumeration.ANY) {
 	    this.systems = new SystemEnumeration[] {SystemEnumeration.OCIL, SystemEnumeration.OVAL, SystemEnumeration.SCE};
 	} else {
 	    this.systems = systems;
 	}
-	logger = plugin.getLogger();
+	if (plugin == null) {
+	    logger = JOVALMsg.getLogger();
+	} else {
+	    this.plugin = plugin;
+	    logger = plugin.getLogger();
+	    maxTime = plugin.getSession().getProperties().getIntProperty(PROP_MAX_TIME);
+	}
 	producer = new Producer<Message>();
 	reset();
     }
@@ -207,6 +207,9 @@ public class Engine implements IXccdfEngine {
     public void destroy() {
 	if (state == State.RUNNING) {
 	    abort = true;
+	    for (ISystem handler : handlers.values()) {
+		handler.destroy();
+	    }
 	}
     }
 
@@ -378,7 +381,13 @@ public class Engine implements IXccdfEngine {
     public void run() {
 	state = State.RUNNING;
 	boolean doDisconnect = false;
+	CancelTask cancelTask = null;
 	try {
+	    if (maxTime > 0) {
+		cancelTask = new CancelTask();
+		JSAFSystem.getTimer().schedule(cancelTask, maxTime);
+	    }
+
 	    List<RuleType> rules = ctx.getSelectedRules();
 	    String profileId = null;
 	    if (ctx.getProfile() == null) {
@@ -393,7 +402,7 @@ public class Engine implements IXccdfEngine {
 		selectedIds.add(rule.getId());
 	    }
 
-	    if (!plugin.isConnected()) {
+	    if (plugin != null && !plugin.isConnected()) {
 		if (plugin.connect()) {
 		    doDisconnect = true;
 		} else {
@@ -435,6 +444,11 @@ public class Engine implements IXccdfEngine {
 		// Run the selected checks (if no platforms are applicable, this will do the right thing).
 		//
 		processXccdf(testResult);
+	    }
+	    if (cancelTask != null) {
+		cancelTask.cancel();
+		JSAFSystem.getTimer().purge();
+		cancelTask = null;
 	    }
 	    if (doDisconnect) {
 		plugin.disconnect();
@@ -484,6 +498,10 @@ public class Engine implements IXccdfEngine {
 	    state = State.COMPLETE_ERR;
 	    error = e;
 	} finally {
+	    if (cancelTask != null) {
+		cancelTask.cancel();
+		JSAFSystem.getTimer().purge();
+	    }
 	    if (doDisconnect) {
 		plugin.disconnect();
 	    }
@@ -501,6 +519,7 @@ public class Engine implements IXccdfEngine {
 	subreports = new HashMap<String, ITransformable>();
 	state = State.CONFIGURE;
 	error = null;
+	handlers = null;
     }
 
     /**
@@ -508,7 +527,7 @@ public class Engine implements IXccdfEngine {
      */
     private void processXccdf(TestResultType testResult) throws Exception {
 	producer.sendNotify(Message.RULES_PHASE_START, null);
-	Map<String, ISystem> handlers = initHandlers(testResult);
+	initHandlers(testResult);
 
 	//
 	// Add all the selected rules to the handlers
@@ -529,7 +548,7 @@ public class Engine implements IXccdfEngine {
 		if (platformCheck) {
 		    if (rule.isSetComplexCheck()) {
 			// Per 7.2.3.5.1, process only the complex check if one exists
-			addAllChecks(rule.getComplexCheck(), handlers);
+			addAllChecks(rule.getComplexCheck());
 		    } else {
 			for (CheckType check : rule.getCheck()) {
 			    if (handlers.containsKey(check.getSystem())) {
@@ -570,7 +589,7 @@ public class Engine implements IXccdfEngine {
 		rrt.setResult(getRuleResult(rule, ResultEnumType.NOTAPPLICABLE));
 		testResult.getRuleResult().add(rrt);
 	    } else {
-		testResult.getRuleResult().addAll(evaluate(rule, handlers));
+		testResult.getRuleResult().addAll(evaluate(rule));
 	    }
 	}
 
@@ -603,8 +622,8 @@ public class Engine implements IXccdfEngine {
 	}
     }
 
-    private Map<String, ISystem> initHandlers(TestResultType testResult) {
-	Map<String, ISystem> handlers = new HashMap<String, ISystem>();
+    private void initHandlers(TestResultType testResult) {
+	handlers = new HashMap<String, ISystem>();
 	for (SystemEnumeration system : systems) {
 	    switch(system) {
 	      case OCIL:
@@ -622,13 +641,12 @@ public class Engine implements IXccdfEngine {
 		break;
 	    }
 	}
-	return handlers;
     }
 
     /**
      * Evaluate the check(s) in the rule, and return the results.
      */
-    private List<RuleResultType> evaluate(RuleType rule, Map<String, ISystem> handlers) throws ScapException {
+    private List<RuleResultType> evaluate(RuleType rule) throws ScapException {
 	//
 	// If the rule specifies fixes, determine which (if any) can apply to the target platform(s).
 	//
@@ -660,7 +678,7 @@ public class Engine implements IXccdfEngine {
 	    rrt.setWeight(rule.getWeight());
 	    rrt.setRole(rule.getRole());
 	    rrt.setComplexCheck(checkResult);
-	    ResultEnumType ret = getRuleResult(rule, evaluate(check, checkResult, handlers));
+	    ResultEnumType ret = getRuleResult(rule, evaluate(check, checkResult));
 	    rrt.setResult(ret);
 	    if (fixes != null && ret == ResultEnumType.FAIL) {
 		rrt.getFix().addAll(fixes);
@@ -719,9 +737,7 @@ public class Engine implements IXccdfEngine {
      * Recursively evaluate the complex check, adding processed check information to the checkResult, and return the
      * overall result.
      */
-    private ResultEnumType evaluate(ComplexCheckType check, ComplexCheckType checkResult, Map<String, ISystem> handlers)
-		throws ScapException {
-
+    private ResultEnumType evaluate(ComplexCheckType check, ComplexCheckType checkResult) throws ScapException {
 	CheckData data = new CheckData(check.getNegate());
 	for (Object obj : check.getCheckOrComplexCheck()) {
 	    if (obj instanceof CheckType) {
@@ -746,7 +762,7 @@ public class Engine implements IXccdfEngine {
 		subCheckResult.setNegate(subCheck.getNegate());
 		subCheckResult.setOperator(subCheck.getOperator());
 		checkResult.getCheckOrComplexCheck().add(subCheckResult);
-		data.add(evaluate(subCheck, subCheckResult, handlers));
+		data.add(evaluate(subCheck, subCheckResult));
 	    }
 	}
 	return data.getResult(check.getOperator());
@@ -770,7 +786,7 @@ public class Engine implements IXccdfEngine {
     /**
      * Recursively add all the checks in the ComplexCheckType to the handlers.
      */
-    private void addAllChecks(ComplexCheckType complex, Map<String, ISystem> handlers) throws Exception {
+    private void addAllChecks(ComplexCheckType complex) throws Exception {
 	for (Object obj : complex.getCheckOrComplexCheck()) {
 	    if (obj instanceof CheckType) {
 		CheckType check = (CheckType)obj;
@@ -778,7 +794,7 @@ public class Engine implements IXccdfEngine {
 		    handlers.get(check.getSystem()).add(check);
 		}
 	    } else if (obj instanceof ComplexCheckType) {
-		addAllChecks((ComplexCheckType)obj, handlers);
+		addAllChecks((ComplexCheckType)obj);
 	    }
 	}
     }
@@ -822,39 +838,41 @@ public class Engine implements IXccdfEngine {
 	    testResult.setProfile(profileRef);
 	}
 
-	ISession session = plugin.getSession();
-	IdentityType identity = FACTORY.createIdentityType();
-	identity.setValue(session.getUsername());
-	identity.setAuthenticated(true);
-	String user = session.getUsername();
-	switch(session.getType()) {
-	  case WINDOWS:
-	    IWindowsSession ws = (IWindowsSession)session;
-	    IRunspace runspace = null;
-	    Iterator<IRunspace> iter = ws.getRunspacePool().enumerate().iterator();
-	    if (iter.hasNext()) {
-		runspace = iter.next();
-	    } else {
-		runspace = ws.getRunspacePool().spawn(ws.getNativeView());
+	if (plugin != null) {
+	    ISession session = plugin.getSession();
+	    IdentityType identity = FACTORY.createIdentityType();
+	    identity.setValue(session.getUsername());
+	    identity.setAuthenticated(true);
+	    String user = session.getUsername();
+	    switch(session.getType()) {
+	      case WINDOWS:
+		IWindowsSession ws = (IWindowsSession)session;
+		IRunspace runspace = null;
+		Iterator<IRunspace> iter = ws.getRunspacePool().enumerate().iterator();
+		if (iter.hasNext()) {
+		    runspace = iter.next();
+		} else {
+		    runspace = ws.getRunspacePool().spawn(ws.getNativeView());
+		}
+		identity.setPrivileged("true".equalsIgnoreCase(runspace.invoke("Check-Privileged")));
+		break;
+	      case UNIX:
+		if (IUnixSession.ROOT.equals(user)) {
+		    identity.setPrivileged(true);
+		}
+		break;
 	    }
-	    identity.setPrivileged("true".equalsIgnoreCase(runspace.invoke("Check-Privileged")));
-	    break;
-	  case UNIX:
-	    if (IUnixSession.ROOT.equals(user)) {
-		identity.setPrivileged(true);
-	    }
-	    break;
-	}
-	testResult.setIdentity(identity);
+	    testResult.setIdentity(identity);
 
-	sysinfo = plugin.getSystemInfo();
-	applicableCpes = new ArrayList<String>();
-	if (!testResult.getTarget().contains(sysinfo.getPrimaryHostName())) {
-	    testResult.getTarget().add(sysinfo.getPrimaryHostName());
-	}
-	for (InterfaceType intf : sysinfo.getInterfaces().getInterface()) {
-	    if (!testResult.getTargetAddress().contains(intf.getIpAddress())) {
-		testResult.getTargetAddress().add(intf.getIpAddress());
+	    sysinfo = plugin.getSystemInfo();
+	    applicableCpes = new ArrayList<String>();
+	    if (!testResult.getTarget().contains(sysinfo.getPrimaryHostName())) {
+		testResult.getTarget().add(sysinfo.getPrimaryHostName());
+	    }
+	    for (InterfaceType intf : sysinfo.getInterfaces().getInterface()) {
+		if (!testResult.getTargetAddress().contains(intf.getIpAddress())) {
+		    testResult.getTargetAddress().add(intf.getIpAddress());
+		}
 	    }
 	}
 
@@ -908,32 +926,34 @@ public class Engine implements IXccdfEngine {
 	// Run an OVAL engine for each href to solve the platform definitions
 	//
 	Map<String, IResults> results = new HashMap<String, IResults>();
-	for (Map.Entry<String, IDefinitionFilter> entry : filters.entrySet()) {
-	    IOvalEngine engine = OvalFactory.createEngine(IOvalEngine.Mode.DIRECTED, plugin);
-	    producer.sendNotify(Message.OVAL_ENGINE, engine);
-	    DefinitionMonitor monitor = new DefinitionMonitor();
-	    engine.getNotificationProducer().addObserver(monitor);
-	    try {
-		engine.setDefinitions(ctx.getOval(entry.getKey()));
-		engine.setDefinitionFilter(entry.getValue());
-		engine.run();
-		switch(engine.getResult()) {
-		  case OK:
-		    IResults ir = engine.getResults();
-		    results.put(entry.getKey(), ir);
-		    //
-		    // NB: Platform checks can make use of OVAL documents are also be leveraged by regular checks.
-		    // In such cases, the platform OVAL subreport will be over-written by the OVAL results used
-		    // to perform the XCCDF checks.
-		    //
-		    subreports.put(entry.getKey(), ir);
-		    break;
+	if (plugin != null) {
+	    for (Map.Entry<String, IDefinitionFilter> entry : filters.entrySet()) {
+		IOvalEngine engine = OvalFactory.createEngine(IOvalEngine.Mode.DIRECTED, plugin);
+		producer.sendNotify(Message.OVAL_ENGINE, engine);
+		DefinitionMonitor monitor = new DefinitionMonitor();
+		engine.getNotificationProducer().addObserver(monitor);
+		try {
+		    engine.setDefinitions(ctx.getOval(entry.getKey()));
+		    engine.setDefinitionFilter(entry.getValue());
+		    engine.run();
+		    switch(engine.getResult()) {
+		      case OK:
+			IResults ir = engine.getResults();
+			results.put(entry.getKey(), ir);
+			//
+			// NB: Platform checks can make use of OVAL documents are also be leveraged by regular checks.
+			// In such cases, the platform OVAL subreport will be over-written by the OVAL results used
+			// to perform the XCCDF checks.
+			//
+			subreports.put(entry.getKey(), ir);
+			break;
 
-		  case ERR:
-		    throw engine.getError();
+		      case ERR:
+			throw engine.getError();
+		    }
+		} finally {
+		    engine.getNotificationProducer().removeObserver(monitor);
 		}
-	    } finally {
-		engine.getNotificationProducer().removeObserver(monitor);
 	    }
 	}
 
@@ -947,7 +967,7 @@ public class Engine implements IXccdfEngine {
 		    cpeRef.setIdref(entry.getKey());
 		    testResult.getPlatform().add(cpeRef);
 		}
-	    } else {
+	    } else if (plugin != null) {
 		if (evaluate(entry.getValue(), results)) {
 		    CPE2IdrefType cpeRef = FACTORY.createCPE2IdrefType();
 		    cpeRef.setIdref(entry.getKey());
@@ -1371,6 +1391,16 @@ public class Engine implements IXccdfEngine {
 	@Override
 	public double getImpact(String ruleId) {
 	    return super.getImpact(ruleId) == 0 ? 0 : 1;
+	}
+    }
+
+    private class CancelTask extends TimerTask {
+	CancelTask() {
+	    super();
+	}
+
+	public void run() {
+	    destroy();
 	}
     }
 

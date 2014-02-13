@@ -170,11 +170,6 @@ public class Engine implements IOvalEngine, IProvider {
 	COMPLETE_ERR;
     }
 
-    /**
-     * The maximum number of items that can be returned by an object (filtered).
-     */
-    private static int MAX_ITEMS;
-
     private static final String FUNCTIONS_RESOURCE = "functions.txt";
     private static Map<Class<?>, IFunction> FUNCTIONS = new HashMap<Class<?>, IFunction>();
     static {
@@ -212,17 +207,6 @@ public class Engine implements IOvalEngine, IProvider {
 	} catch (IOException e) {
 	    JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
-	String s = System.getProperty(SYSPROP_MAX_ITEMS);
-	if (s == null) {
-	    MAX_ITEMS = DEFAULT_MAX_ITEMS;
-	} else {
-	    try {
-		MAX_ITEMS = Integer.parseInt(s);
-	    } catch (NumberFormatException e) {
-		MAX_ITEMS = DEFAULT_MAX_ITEMS;
-		JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-	}
     }
 
     private static Map<Class<? extends ObjectType>, Class<? extends ItemType>> OBJECT_ITEM_MAP
@@ -254,6 +238,7 @@ public class Engine implements IOvalEngine, IProvider {
     private Index<Integer> objectIndex;
     private Map<Integer, Collection<ItemType>> objectItems;
     private int objectCounter = 0;
+    private int maxItems = 0;
 
     /**
      * Create an engine for evaluating OVAL definitions using a plugin.
@@ -264,6 +249,7 @@ public class Engine implements IOvalEngine, IProvider {
 	} else {
 	    logger = plugin.getLogger();
 	    this.plugin = plugin;
+	    maxItems = plugin.getSession().getProperties().getIntProperty(PROP_MAX_ITEMS);
 	}
 	this.mode = mode;
 	producer = new Producer<Message>();
@@ -1916,11 +1902,11 @@ public class Engine implements IOvalEngine, IProvider {
 	    }
 	}
 	int resultCount = items.size();
-	if (0 < MAX_ITEMS && MAX_ITEMS < resultCount) {
+	if (0 < maxItems && maxItems < resultCount) {
 	    //
 	    // Add an error so the object will be "incomplete"
 	    //
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_OBJECT_OVERFLOW, resultCount, MAX_ITEMS);
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_OBJECT_OVERFLOW, resultCount, maxItems);
 	    logger.warn(msg);
 	    MessageType message = Factories.common.createMessageType();
 	    message.setLevel(MessageLevelEnumeration.ERROR);
@@ -1934,7 +1920,7 @@ public class Engine implements IOvalEngine, IProvider {
 	    Iterator<ItemType> iter = items.iterator();
 	    for (int i=0; iter.hasNext(); i++) {
 		iter.next();
-		if (i >= MAX_ITEMS) {
+		if (i >= maxItems) {
 		    iter.remove();
 		}
 	    }

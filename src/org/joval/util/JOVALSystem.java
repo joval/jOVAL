@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
-import java.util.Timer;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -46,10 +45,8 @@ public class JOVALSystem {
 
     private static final String SYSPROPS_RESOURCE = "joval.system.properties";
 
-    private static Timer timer;
     private static Properties sysProps;
     static {
-	timer = new Timer("jOVAL system timer", true);
 	sysProps = new Properties();
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
@@ -63,13 +60,6 @@ public class JOVALSystem {
 	} catch (IOException e) {
 	    JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
-    }
-
-    /**
-     * Retrieve the daemon Timer used for scheduled jOVAL tasks.
-     */
-    public static Timer getTimer() {
-	return timer;
     }
 
     /**

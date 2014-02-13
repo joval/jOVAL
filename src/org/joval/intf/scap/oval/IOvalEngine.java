@@ -25,14 +25,9 @@ public interface IOvalEngine extends Runnable {
     Version SCHEMA_VERSION = new Version("5.10.1");
 
     /**
-     * A Java system property that governs the maximum number of items that may be returned for any object.
+     * A JSAF ISession property that governs the maximum number of items that may be returned for any object.
      */
-    String SYSPROP_MAX_ITEMS = "joval.max.items";
-
-    /**
-     * The default value for the SYSPROP_MAX_ITEMS property.
-     */
-    int DEFAULT_MAX_ITEMS = 10000;
+    String PROP_MAX_ITEMS = "joval.object.maxItems";
 
     enum Message {
 	/**

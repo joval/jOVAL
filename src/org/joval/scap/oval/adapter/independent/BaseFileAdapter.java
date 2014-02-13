@@ -761,10 +761,19 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 
     /**
      * A reflection proxy for:
+     *     scap.oval.definitions.independent.Filehash58Object
+     *     scap.oval.definitions.independent.FilehashObject
      *     scap.oval.definitions.independent.Textfilecontent54Object
      *     scap.oval.definitions.independent.TextfilecontentObject
+     *     scap.oval.definitions.independent.XmlfilecontentObject
+     *     scap.oval.definitions.linux.SelinuxsecuritycontextObject
+     *     scap.oval.definitions.macos.PlistObject
      *     scap.oval.definitions.unix.FileObject
+     *     scap.oval.definitions.unix.FileextendedattributeObject
+     *     scap.oval.definitions.unix.SccsObject
      *     scap.oval.definitions.windows.FileObject
+     *     scap.oval.definitions.windows.FileauditedpermissionsObject
+     *     scap.oval.definitions.windows.FileeffectiverightsObject
      */
     protected class ReflectedFileObject {
 	ObjectType obj;
@@ -890,6 +899,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
     /**
      * A reflection proxy for:
      *     scap.oval.definitions.independent.FileBehaviors
+     *     scap.oval.definitions.linux.FileBehaviors
      *     scap.oval.definitions.unix.FileBehaviors
      *     scap.oval.definitions.windows.FileBehaviors
      */
@@ -967,9 +977,19 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 
     /**
      * A reflection proxy for:
+     *     scap.oval.systemcharacteristics.independent.Filehash58Item
+     *     scap.oval.systemcharacteristics.independent.FilehashItem
+     *     scap.oval.systemcharacteristics.independent.Textfilecontent54Item
      *     scap.oval.systemcharacteristics.independent.TextfilecontentItem
+     *     scap.oval.systemcharacteristics.independent.XmlfilecontentItem
+     *     scap.oval.systemcharacteristics.linux.SelinuxsecuritycontextItem
+     *     scap.oval.systemcharacteristics.macos.PlistItem
      *     scap.oval.systemcharacteristics.unix.FileItem
+     *     scap.oval.systemcharacteristics.unix.FileextendedattributeItem
+     *     scap.oval.systemcharacteristics.unix.SccsItem
      *     scap.oval.systemcharacteristics.windows.FileItem
+     *     scap.oval.systemcharacteristics.windows.FileauditedpermissionsItem
+     *     scap.oval.systemcharacteristics.windows.FileeffectiverightsItem
      */
     class ReflectedFileItem {
 	ItemType it;

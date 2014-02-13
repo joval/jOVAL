@@ -30,6 +30,11 @@ public interface IXccdfEngine extends Runnable {
      */
     Version SCHEMA_VERSION = new Version("1.2");
 
+    /**
+     * A JSAF ISession property that governs the maximum time that is allowed to complete an XCCDF assessment.
+     */
+    String PROP_MAX_TIME = "joval.scan.maxTime";
+
     enum Message {
 	/**
 	 * Message indicating that the engine has begun probing for platform applicability.

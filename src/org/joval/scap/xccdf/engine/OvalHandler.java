@@ -70,6 +70,7 @@ public class OvalHandler implements ISystem {
     private Map<String, IResults> results;
     private IScapContext ctx;
     private Producer<IXccdfEngine.Message> producer;
+    private boolean cancelled = false;
 
     public OvalHandler(IScapContext ctx, Producer<IXccdfEngine.Message> producer, Map<String, IResults> results) {
 	this.ctx = ctx;
@@ -128,12 +129,15 @@ public class OvalHandler implements ISystem {
 	}
     }
 
-    public Map<String, ? extends ITransformable<?>> exec(IPlugin plugin) throws Exception {
+    public Map<String, ? extends ITransformable<?>> exec(IPlugin plugin) {
 	if (engines.size() == 0) {
 	    engines.put(EMPTY_URI, new EngineData(EMPTY_URI, EMPTY_DEFINITIONS));
 	}
 	Iterator<Map.Entry<String, EngineData>> iter = engines.entrySet().iterator();
 	while(iter.hasNext()) {
+	    if (cancelled) {
+		break;
+	    }
 	    Map.Entry<String, EngineData> entry = iter.next();
 	    String href = entry.getKey();
 	    if (entry.getValue().createEngine(plugin)) {
@@ -146,10 +150,11 @@ public class OvalHandler implements ISystem {
 		    results.put(href, engine.getResults());
 		    break;
 		  case ERR:
-		    throw engine.getError();
+		    plugin.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), engine.getError());
+		    break;
 		}
 	    } else {
-		plugin.getLogger().info("No engine created for href " + href);
+		plugin.getLogger().warn("No engine created for href " + href);
 		iter.remove();
 	    }
 	}
@@ -157,9 +162,15 @@ public class OvalHandler implements ISystem {
     }
 
     public void destroy() {
+	cancelled = true;
 	Iterator<EngineData> iter = engines.values().iterator();
 	while(iter.hasNext()) {
-	    iter.next().getEngine().destroy();
+	    EngineData ed = iter.next();
+	    iter.remove();
+	    IOvalEngine engine = ed.getEngine();
+	    if (engine != null) {
+		engine.destroy();
+	    }
 	}
     }
 
@@ -366,13 +377,17 @@ public class OvalHandler implements ISystem {
 	}
 
 	boolean createEngine(IPlugin plugin) {
-	    engine = OvalFactory.createEngine(IOvalEngine.Mode.DIRECTED, plugin);
-	    engine.setDefinitions(definitions);
-	    engine.setExternalVariables(variables);
-	    if (filter != null) {
-		engine.setDefinitionFilter(filter);
+	    if (plugin == null) {
+		return false;
+	    } else {
+		engine = OvalFactory.createEngine(IOvalEngine.Mode.DIRECTED, plugin);
+		engine.setDefinitions(definitions);
+		engine.setExternalVariables(variables);
+		if (filter != null) {
+		    engine.setDefinitionFilter(filter);
+		}
+		return true;
 	    }
-	    return true;
 	}
 
 	IOvalEngine getEngine() {
