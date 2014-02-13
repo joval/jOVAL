@@ -158,11 +158,17 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
     }
 
     public boolean isConnected() {
-	return session.isConnected();
+	if (session == null) {
+	    return false;
+	} else {
+	    return session.isConnected();
+	}
     }
 
     public boolean connect() {
-	if (session.isConnected()) {
+	if (session == null) {
+	    return false;
+	} else if (session.isConnected()) {
 	    loadAdapters();
 	    return true;
 	} else if (session.connect()) {
@@ -173,7 +179,9 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
     }
 
     public void disconnect() {
-	session.disconnect();
+	if (session != null) {
+	    session.disconnect();
+	}
     }
 
     public void dispose() {
@@ -222,7 +230,10 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 		statistics.start(obj);
 		return adapters.get(obj.getClass()).getItems(obj, rc);
 	    } finally {
-		statistics.stop(obj);
+		// check for null in case the plugin was disposed during collection
+		if (statistics != null) {
+		    statistics.stop(obj);
+		}
 	    }
 	} else if (notapplicable.contains(obj.getClass())) {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.STATUS_NOT_APPLICABLE, obj.getClass().getName());
@@ -237,7 +248,7 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 
     public boolean queue(IRequest request) {
 	Class clazz = request.getObject().getClass();
-	if (adapters.containsKey(clazz)) {
+	if (adapters != null && adapters.containsKey(clazz)) {
 	    IAdapter adapter = adapters.get(clazz);
 	    if (!notapplicable.contains(clazz) && adapter instanceof IBatch) {
 		IBatch batch = (IBatch)adapter;

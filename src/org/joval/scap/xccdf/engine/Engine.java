@@ -1402,6 +1402,7 @@ public class Engine implements IXccdfEngine {
 	}
 
 	public void run() {
+	    logger.error(JOVALMsg.ERROR_XCCDF_TIMEOUT, Integer.toString(maxTime));
 	    destroy();
 	}
     }
