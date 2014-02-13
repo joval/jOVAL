@@ -5,8 +5,6 @@ include $(TOP)/customize.mk
 
 JOVAL_VERSION=5.10.1.2b
 SCAP_VERSION=1.2
-OVAL_VERSION=5.10.1
-SCE_VERSION=1.0
 
 Default: all
 
@@ -36,6 +34,9 @@ ifeq (Windows, $(findstring Windows,$(OS)))
   endif
 else
   OS=$(shell uname)
+  ifeq (Linux, $(findstring Linux,$(OS)))
+    PLATFORM=linux
+  endif
   CLN=:
   ifeq (1.7, $(JAVA_VERSION))
     JAVACFLAGS=-Xlint:unchecked -XDignore.symbol.file=true
@@ -47,10 +48,6 @@ else
   else
     ARCH=32
   endif
-endif
-
-ifeq (Linux, $(findstring Linux,$(OS)))
-    PLATFORM=linux
 endif
 
 NULL:=

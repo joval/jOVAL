@@ -43,6 +43,7 @@ import org.joval.scap.sce.SceException;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.Producer;
+import org.joval.xml.DOMTools;
 import org.joval.xml.XPathTools;
 
 /**
@@ -157,7 +158,7 @@ public class SceHandler implements ISystem {
 				try {
 				    String xpath = cit.getImportXpath();
 				    byte[] data = srt.getStdout().getBytes(StringTools.UTF8);
-				    Document doc = XPathTools.parse(new ByteArrayInputStream(data));
+				    Document doc = DOMTools.parse(new ByteArrayInputStream(data));
 				    XPathExpression expr = XPathTools.compile(xpath);
 				    copy.getContent().addAll(XPathTools.typesafeEval(expr, doc));
 				} catch (Exception e) {

@@ -5,7 +5,7 @@ TOP=../..
 
 include $(TOP)/common.mk
 
-SCHDIR=sch-$(OVAL_VERSION)
+SCHDIR=sch-src
 
 API=$(SCAP_LIB)$(CLN)$(JSAF_CORE_DEPS)$(CLN)$(JSAF_CORE_LIB)$(CLN)$(JOVAL_CORE_LIB)
 CLASSPATH="$(CLASSLIB)$(CLN)$(API)$(CLN)$(SVRL)$(CLN)$(SRC)"
