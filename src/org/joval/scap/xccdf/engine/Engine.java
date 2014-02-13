@@ -207,8 +207,10 @@ public class Engine implements IXccdfEngine {
     public void destroy() {
 	if (state == State.RUNNING) {
 	    abort = true;
-	    for (ISystem handler : handlers.values()) {
-		handler.destroy();
+	    if (handlers != null) {
+		for (ISystem handler : handlers.values()) {
+		    handler.destroy();
+		}
 	    }
 	}
     }
