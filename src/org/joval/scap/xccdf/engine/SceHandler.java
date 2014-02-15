@@ -127,7 +127,7 @@ public class SceHandler implements ISystem {
 	return results;
     }
 
-    public void destroy() {
+    public void cancelExec(boolean hard) {
 	cancelled = true;
     }
 

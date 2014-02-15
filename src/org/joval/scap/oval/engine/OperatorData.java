@@ -171,5 +171,9 @@ public class OperatorData {
 	sb.append("na: ").append(Integer.toString(na));
 	return sb.toString();
     }
+
+    public int size() {
+	return t + f + e + u + ne + na;
+    }
 }
 

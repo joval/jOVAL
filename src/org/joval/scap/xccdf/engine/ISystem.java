@@ -41,9 +41,13 @@ interface ISystem {
     Map<String, ? extends ITransformable<?>> exec(IPlugin plugin);
 
     /**
-     * Cancel exec.
+     * Cancel execution.
+     *
+     * @param hard If true, abort all processing, leaving the underlying engines in an error state. If false, abort
+     *             gracefully by stopping further scanning, but permitting the underlying engines to compute results
+     *             based on data gathered up until that point.
      */
-    void destroy();
+    void cancelExec(boolean hard);
 
     /**
      * Get the result for a rule.

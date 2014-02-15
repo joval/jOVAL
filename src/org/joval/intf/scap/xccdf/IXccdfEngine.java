@@ -31,9 +31,9 @@ public interface IXccdfEngine extends Runnable {
     Version SCHEMA_VERSION = new Version("1.2");
 
     /**
-     * A JSAF ISession property that governs the maximum time that is allowed to complete an XCCDF assessment.
+     * A JSAF ISession property that governs the maximum time that is allowed to complete an XCCDF Benchmark assessment.
      */
-    String PROP_MAX_TIME = "joval.scan.maxTime";
+    String PROP_MAX_TIME = "joval.benchmark.maxTime";
 
     enum Message {
 	/**
@@ -115,9 +115,16 @@ public interface IXccdfEngine extends Runnable {
     }
 
     /**
-     * Stop the engine's processing and close all open resources.  This will leave the engine in an error state.
+     * Stops all further scanning activity.  This can leave the plugin in an unstable state, so this should be followed
+     * by calling the IPlugin's dispose() method.
+     *
+     * @param cancelEval If true, rule evaluation will also be cancelled, leaving the engine in an error state. If false,
+     *                   any remaining scanning is skipped, but evaluation will be performed using information gathered
+     *                   prior to this call.
+     *
+     * @throws IllegalThreadStateException if the engine has not started.
      */
-    void destroy();
+    void cancelScan(boolean cancelEval) throws IllegalThreadStateException;
 
     /**
      * Set the SCAP context (e.g., the selected profile of a benchmark in a datastream collection) that will be processed

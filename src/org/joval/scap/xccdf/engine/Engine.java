@@ -177,9 +177,9 @@ public class Engine implements IXccdfEngine {
     private Map<String, ITransformable> subreports;
     private Exception error;
     private State state = State.CONFIGURE;
-    private boolean abort = false;
     private Producer<Message> producer;
     private LocLogger logger;
+    private boolean abortScan = false, abortEval = false;
     private int maxTime;
 
     /**
@@ -204,14 +204,23 @@ public class Engine implements IXccdfEngine {
 
     // Implement IXccdfEngine
 
-    public void destroy() {
-	if (state == State.RUNNING) {
-	    abort = true;
+    public void cancelScan(boolean cancelEval) throws IllegalThreadStateException {
+	switch(state) {
+	  case RUNNING:
+	    abortScan = true;
+	    logger.warn(JOVALMsg.ERROR_ENGINE_SCAN_CANCELLED);
+	    if (abortEval = cancelEval) {
+		logger.warn(JOVALMsg.ERROR_ENGINE_EVAL_CANCELLED);
+	    }
 	    if (handlers != null) {
 		for (ISystem handler : handlers.values()) {
-		    handler.destroy();
+		    handler.cancelExec(abortEval);
 		}
 	    }
+	    break;
+
+	  case CONFIGURE:
+	    throw new IllegalThreadStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
 	}
     }
 
@@ -569,13 +578,14 @@ public class Engine implements IXccdfEngine {
 	// Have all the handlers run their checks
 	//
 	for (ISystem handler : handlers.values()) {
-	    if (abort) {
-		throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
-	    }
-	    try {
-		subreports.putAll(handler.exec(plugin));
-	    } catch (Exception e) {
-		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    if (abortScan) {
+		continue;
+	    } else {
+		try {
+		    subreports.putAll(handler.exec(plugin));
+		} catch (Exception e) {
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
 	    }
 	}
 
@@ -583,7 +593,9 @@ public class Engine implements IXccdfEngine {
 	// Integrate check results from the handlers
 	//
 	for (RuleType rule : ctx.getSelectedRules()) {
-	    if (notApplicable.contains(rule.getId())) {
+	    if (abortEval) {
+		throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_EVAL_CANCELLED));
+	    } else if (notApplicable.contains(rule.getId())) {
 		RuleResultType rrt = Engine.FACTORY.createRuleResultType();
 		rrt.setIdref(rule.getId());
 		rrt.setWeight(rule.getWeight());
@@ -610,17 +622,21 @@ public class Engine implements IXccdfEngine {
 	scores = new HashMap<ScoringModel, ScoreKeeper>();
 	XccdfBenchmark xb = ctx.getBenchmark().getRootObject();
 	for (ScoringModel model : ScoringModel.values()) {
-	    ScoreKeeper sk = computeScore(resultMap, xb, model);
-	    scores.put(model, sk);
+	    if (abortEval) {
+		throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_EVAL_CANCELLED));
+	    } else {
+		ScoreKeeper sk = computeScore(resultMap, xb, model);
+		scores.put(model, sk);
 
-	    String score = Double.toString(sk.getScore());
-	    logger.info(JOVALMsg.STATUS_XCCDF_SCORE, model.uri(), score);
+		String score = Double.toString(sk.getScore());
+		logger.info(JOVALMsg.STATUS_XCCDF_SCORE, model.uri(), score);
 
-	    ScoreType scoreType = FACTORY.createScoreType();
-	    scoreType.setSystem(model.uri());
-	    scoreType.setValue(new BigDecimal(score));
-	    scoreType.setMaximum(new BigDecimal(Double.toString(sk.getMaxScore())));
-	    testResult.getScore().add(scoreType);
+		ScoreType scoreType = FACTORY.createScoreType();
+		scoreType.setSystem(model.uri());
+		scoreType.setValue(new BigDecimal(score));
+		scoreType.setMaximum(new BigDecimal(Double.toString(sk.getMaxScore())));
+		testResult.getScore().add(scoreType);
+	    }
 	}
     }
 
@@ -1403,7 +1419,10 @@ public class Engine implements IXccdfEngine {
 
 	public void run() {
 	    logger.error(JOVALMsg.ERROR_XCCDF_TIMEOUT, Integer.toString(maxTime));
-	    destroy();
+	    cancelScan(false);
+	    if (plugin != null) {
+		plugin.dispose();
+	    }
 	}
     }
 

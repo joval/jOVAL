@@ -230,7 +230,8 @@ public class Engine implements IOvalEngine, IProvider {
     private Exception error;
     private Results results;
     private State state;
-    private boolean evalEnabled = true, abort = false;
+    private Thread thread;
+    private boolean evalEnabled = true, abortScan = false, abortEval = false;
     private Producer<Message> producer;
     private LocLogger logger;
     private Marshaller marshaller;
@@ -268,10 +269,6 @@ public class Engine implements IOvalEngine, IProvider {
     // Implement IProvider
 
     public Collection<? extends ItemType> getItems(ObjectType obj, IProvider.IRequestContext rc) throws CollectException {
-	if (abort) {
-	    throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
-	}
-
 	//
 	// If the exact same object has been scanned before (without error), then return the previously-gathered results.
 	//
@@ -311,6 +308,9 @@ public class Engine implements IOvalEngine, IProvider {
 	    }
 	} else if (plugin == null) {
 	    throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_MODE_SC), FlagEnumeration.NOT_COLLECTED);
+	} else if (abortScan) {
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_SCAN_CANCELLED);
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	} else {
 	    @SuppressWarnings("unchecked")
 	    Collection<ItemType> c = (Collection<ItemType>)plugin.getOvalProvider().getItems(obj, rc);
@@ -402,9 +402,17 @@ public class Engine implements IOvalEngine, IProvider {
 	return error;
     }
 
-    public void destroy() {
-	if (state == State.RUNNING) {
-	    abort = true;
+    public void cancelScan(boolean cancelEval) throws IllegalThreadStateException {
+	switch(state) {
+	  case RUNNING:
+	    abortScan = true;
+	    abortEval = cancelEval;
+	    if (thread != null && thread.isAlive()) {
+		thread.interrupt();
+	    }
+	    break;
+	  case CONFIGURE:
+	    throw new IllegalThreadStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
 	}
     }
 
@@ -412,9 +420,6 @@ public class Engine implements IOvalEngine, IProvider {
 		throws IllegalStateException, NoSuchElementException, OvalException {
 
 	try {
-	    if (definitions == null) {
-		throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_DEFINITIONS_NONE));
-	    }
 	    state = State.RUNNING;
 	    if (sc == null) {
 		sc = new SystemCharacteristics(plugin.getSystemInfo());
@@ -448,8 +453,8 @@ public class Engine implements IOvalEngine, IProvider {
      */
     public void run() {
 	state = State.RUNNING;
-
 	boolean doDisconnect = false;
+	thread = Thread.currentThread();
 	try {
 	    //
 	    // Connect if necessary
@@ -482,27 +487,32 @@ public class Engine implements IOvalEngine, IProvider {
 		//  - Determine which objects will be scanned (depending on the mode)
 		//  - Determine which of those objects relate to variables (so they can be scanned first)
 		//
-		HashSet<String> allowedObjectIds = new HashSet<String>();
-		HashSet<String> variableObjectIds = new HashSet<String>();
+		HashSet<ObjectType> allowedObjects = new HashSet<ObjectType>();
+		HashSet<ObjectType> variableObjects = new HashSet<ObjectType>();
 		switch(mode) {
 		  case EXHAUSTIVE:
 		    for (ObjectType obj : definitions.getObjects()) {
-			allowedObjectIds.add(obj.getId());
+			allowedObjects.add(obj);
 		    }
 		    for (VariableType var : definitions.getVariables()) {
-			variableObjectIds.addAll(getObjectReferences(var, true));
+			for (String objectId : getObjectReferences(var, true)) {
+			    variableObjects.add(definitions.getObject(objectId).getValue());
+			}
 		    }
 		    break;
 
 		  case DIRECTED:
 		  default:
 		    for (DefinitionType def : allowed) {
-			allowedObjectIds.addAll(getObjectReferences(def, true));
+			for (String objectId : getObjectReferences(def, true)) {
+			    allowedObjects.add(definitions.getObject(objectId).getValue());
+			}
 		    }
 		    for (VariableType var : definitions.getVariables()) {
-			for (String id : getObjectReferences(var, true)) {
-			    if (allowedObjectIds.contains(id)) {
-				variableObjectIds.add(id);
+			for (String objectId : getObjectReferences(var, true)) {
+			    ObjectType obj = definitions.getObject(objectId).getValue();
+			    if (allowedObjects.contains(obj)) {
+				variableObjects.add(obj);
 			    }
 			}
 		    }
@@ -518,23 +528,29 @@ public class Engine implements IOvalEngine, IProvider {
 		// resolved when they're encountered, but proceeding methodically should be faster.
 		//
 		producer.sendNotify(Message.OBJECT_PHASE_START, null);
-		for (String id : variableObjectIds) {
-		    scanObject(new RequestContext(definitions.getObject(id).getValue()));
+		for (ObjectType obj : variableObjects) {
+		    if (abortEval) {
+			throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_EVAL_CANCELLED));
+		    }
+		    scanObject(new RequestContext(obj));
 		}
 		HashSet<ObjectType> deferred = new HashSet<ObjectType>();
-		for (String id : allowedObjectIds) {
-		    ObjectType obj = definitions.getObject(id).getValue();
+		for (ObjectType obj : allowedObjects) {
 		    if (getObjectSet(obj) == null) {
-			queueObject(new RequestContext(definitions.getObject(id).getValue()));
+			queueObject(new RequestContext(obj));
 		    } else {
 			deferred.add(obj);
 		    }
 		}
 		scanQueue();
 		for (ObjectType obj : deferred) {
+		    if (abortEval) {
+			throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_EVAL_CANCELLED));
+		    }
 		    scanObject(new RequestContext(obj));
 		}
 		producer.sendNotify(Message.OBJECT_PHASE_END, null);
+
 		producer.sendNotify(Message.SYSTEMCHARACTERISTICS, sc);
 		if (doDisconnect) {
 		    plugin.disconnect();
@@ -580,6 +596,7 @@ public class Engine implements IOvalEngine, IProvider {
     private void reset() {
 	sc = null;
 	state = State.CONFIGURE;
+	thread = null;
 	variableMap = new Hashtable<String, Collection<IType>>();
 	scanQueue = null;
 	error = null;
@@ -831,14 +848,8 @@ public class Engine implements IOvalEngine, IProvider {
      *
      * If for some reason (like an error) no items can be obtained, this method just returns an empty list so processing
      * can continue.
-     *
-     * @throws Engine.AbortException if processing should cease because the scan is being cancelled
      */
     private Collection<ItemType> scanObject(RequestContext rc) {
-	if (abort) {
-	    throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
-	}
-
 	ObjectType obj = rc.getObject();
 	String objectId = obj.getId();
 	if (sc.containsObject(objectId)) {
@@ -848,63 +859,70 @@ public class Engine implements IOvalEngine, IProvider {
 	    }
 	    return result;
 	}
-	producer.sendNotify(Message.OBJECT, objectId);
 
 	@SuppressWarnings("unchecked")
 	Collection<ItemType> items = (Collection<ItemType>)Collections.EMPTY_LIST;
-	try {
-	    FlagData flags = new FlagData();
-	    List<MessageType> messages = new ArrayList<MessageType>();
-	    Set s = getObjectSet(obj);
-	    if (s == null) {
-		try {
-		    items = new ObjectGroup(rc).getItems(flags);
-		} catch (ResolveException e) {
-		    MessageType msg = Factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.ERROR);
-		    msg.setValue(e.getMessage());
-		    messages.add(msg);
-		    flags.add(FlagEnumeration.ERROR);
-		}
-	    } else {
-		items = getSetItems(s, rc, flags);
-		if (items.size() == 0) {
-		    MessageType msg = Factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.INFO);
-		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_SET));
-		    messages.add(msg);
-		}
-	    }
-	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), null, null);
-	    messages.addAll(rc.getMessages());
-	    for (MessageType msg : messages) {
-		sc.setObject(objectId, null, null, null, msg);
-		switch(msg.getLevel()) {
-		  case FATAL:
-		  case ERROR:
-		    flags.add(FlagEnumeration.INCOMPLETE);
-		    break;
-		}
-	    }
-	    if (flags.getFlag() == FlagEnumeration.COMPLETE && items.size() == 0) {
-		sc.setObject(objectId, null, null, FlagEnumeration.DOES_NOT_EXIST, null);
-	    } else {
-		sc.setObject(objectId, null, null, flags.getFlag(), null);
-	    }
-	    for (VariableValueType var : rc.getVars()) {
-		sc.storeVariable(var);
-		sc.relateVariable(objectId, var.getVariableId());
-	    }
-	    for (ItemType item : items) {
-		sc.relateItem(objectId, sc.storeItem(item));
-	    }
-	} catch (OvalException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	if (abortScan) {
 	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    String err = JOVALMsg.getMessage(JOVALMsg.ERROR_OVAL, e.getMessage());
-	    msg.setValue(err);
-	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.ERROR, msg);
+	    msg.setLevel(MessageLevelEnumeration.WARNING);
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_SCAN_CANCELLED));
+	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, msg);
+	} else {
+	    try {
+		producer.sendNotify(Message.OBJECT, objectId);
+		FlagData flags = new FlagData();
+		List<MessageType> messages = new ArrayList<MessageType>();
+		Set s = getObjectSet(obj);
+		if (s == null) {
+		    try {
+			items = new ObjectGroup(rc).getItems(flags);
+		    } catch (ResolveException e) {
+			MessageType msg = Factories.common.createMessageType();
+			msg.setLevel(MessageLevelEnumeration.ERROR);
+			msg.setValue(e.getMessage());
+			messages.add(msg);
+			flags.add(FlagEnumeration.ERROR);
+		    }
+		} else {
+		    items = getSetItems(s, rc, flags);
+		    if (items.size() == 0) {
+			MessageType msg = Factories.common.createMessageType();
+			msg.setLevel(MessageLevelEnumeration.INFO);
+			msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_SET));
+			messages.add(msg);
+		    }
+		}
+		sc.setObject(objectId, obj.getComment(), obj.getVersion(), null, null);
+		messages.addAll(rc.getMessages());
+		for (MessageType msg : messages) {
+		    sc.setObject(objectId, null, null, null, msg);
+		    switch(msg.getLevel()) {
+		      case FATAL:
+		      case ERROR:
+			flags.add(FlagEnumeration.INCOMPLETE);
+			break;
+		    }
+		}
+		if (flags.getFlag() == FlagEnumeration.COMPLETE && items.size() == 0) {
+		    sc.setObject(objectId, null, null, FlagEnumeration.DOES_NOT_EXIST, null);
+		} else {
+		    sc.setObject(objectId, null, null, flags.getFlag(), null);
+		}
+		for (VariableValueType var : rc.getVars()) {
+		    sc.storeVariable(var);
+		    sc.relateVariable(objectId, var.getVariableId());
+		}
+		for (ItemType item : items) {
+		    sc.relateItem(objectId, sc.storeItem(item));
+		}
+	    } catch (OvalException e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		String err = JOVALMsg.getMessage(JOVALMsg.ERROR_OVAL, e.getMessage());
+		msg.setValue(err);
+		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.ERROR, msg);
+	    }
 	}
 	return items;
     }
@@ -920,7 +938,7 @@ public class Engine implements IOvalEngine, IProvider {
 	    // object has already been scanned
 	} else if (obj instanceof VariableObject) {
 	    scanObject(rc);
-	} else if (getObjectSet(obj) == null) {
+	} else if (!abortScan && getObjectSet(obj) == null) {
 	    if (scanQueue == null) {
 		scanQueue = new HashMap<String, ObjectGroup>();
 	    }
@@ -968,6 +986,17 @@ public class Engine implements IOvalEngine, IProvider {
      */
     private synchronized void scanQueue() throws OvalException {
 	if (scanQueue != null && scanQueue.size() > 0) {
+	    if (abortScan) {
+		for (String objectId : scanQueue.keySet()) {
+		    ObjectType obj = definitions.getObject(objectId).getValue();
+		    MessageType msg = Factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.WARNING);
+		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_SCAN_CANCELLED));
+		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, msg);
+		}
+		return;
+	    }
+
 	    //
 	    // Organize results by object ID
 	    //
@@ -978,11 +1007,12 @@ public class Engine implements IOvalEngine, IProvider {
 	    producer.sendNotify(Message.OBJECTS, ids.toArray(new String[ids.size()]));
 
 	    for (IBatch.IResult result : ((IBatch)plugin.getOvalProvider()).exec()) {
-		String id = ((RequestContext)result.getContext()).getObject().getId();
-		if (!results.containsKey(id)) {
-		    results.put(id, new ArrayList<IBatch.IResult>());
+		ObjectType obj = ((RequestContext)result.getContext()).getObject();
+		String objectId = obj.getId();
+		if (!results.containsKey(objectId)) {
+		    results.put(objectId, new ArrayList<IBatch.IResult>());
 		}
-		results.get(id).add(result);
+		results.get(objectId).add(result);
 	    }
 
 	    //
@@ -1166,8 +1196,6 @@ public class Engine implements IOvalEngine, IProvider {
 		    msg.setValue(err);
 		    rc.addMessage(msg);
 		    flags.add(e.getFlag());
-		} catch (AbortException e) {
-		    throw e;
 		} catch (Exception e) {
 		    //
 		    // Handle an uncaught, unexpected exception emanating from the adapter
@@ -1563,12 +1591,6 @@ public class Engine implements IOvalEngine, IProvider {
 
 	CheckEnumeration getCheck() {
 	    return check;
-	}
-    }
-
-    private class AbortException extends RuntimeException {
-	AbortException(String message) {
-	    super(message);
 	}
     }
 
@@ -2012,6 +2034,9 @@ public class Engine implements IOvalEngine, IProvider {
      * Evaluate a DefinitionType.
      */
     private scap.oval.results.DefinitionType evaluateDefinition(DefinitionType definition) throws OvalException {
+	if (abortEval) {
+	    throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_EVAL_CANCELLED));
+	}
 	String id = definition.getId();
 	try {
 	    return results.getDefinition(id);
@@ -2045,6 +2070,9 @@ public class Engine implements IOvalEngine, IProvider {
     private scap.oval.results.CriteriaType evaluateCriteria(CriteriaType criteriaDefinition)
 		throws NoSuchElementException, OvalException {
 
+	if (abortEval) {
+	    throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_EVAL_CANCELLED));
+	}
 	scap.oval.results.CriteriaType criteriaResult = Factories.results.createCriteriaType();
 	criteriaResult.setOperator(criteriaDefinition.getOperator());
 	criteriaResult.setNegate(criteriaDefinition.getNegate());
@@ -2104,6 +2132,9 @@ public class Engine implements IOvalEngine, IProvider {
     private scap.oval.results.CriterionType evaluateCriterion(CriterionType criterionDefinition)
 		throws NoSuchElementException, OvalException {
 
+	if (abortEval) {
+	    throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_EVAL_CANCELLED));
+	}
 	String testId = criterionDefinition.getTestRef();
 	TestType testResult = results.getTest(testId);
 	if (testResult == null) {
@@ -2144,6 +2175,9 @@ public class Engine implements IOvalEngine, IProvider {
     }
 
     private void evaluateTest(TestType testResult) throws NoSuchElementException, OvalException {
+	if (abortEval) {
+	    throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_EVAL_CANCELLED));
+	}
 	String testId = testResult.getTestId();
 	logger.debug(JOVALMsg.STATUS_TEST, testId);
 	scap.oval.definitions.core.TestType testDefinition = definitions.getTest(testId).getValue();
@@ -2233,6 +2267,7 @@ public class Engine implements IOvalEngine, IProvider {
 	    break;
 	  case NOT_COLLECTED:
 	    existence.addStatus(StatusEnumeration.NOT_COLLECTED);
+	    check.addResult(ResultEnumeration.UNKNOWN);
 	    break;
 	}
 
@@ -2261,14 +2296,14 @@ public class Engine implements IOvalEngine, IProvider {
 	    testResult.setResult(ResultEnumeration.NOT_APPLICABLE);
 
 	//
-	// If there are no items, or there is no state, then the result of the test is simply the result of the existence
-	// check.
+	// If there is no state (or nothing in the check counters -- meaning no items and no "virtual" items), then the
+	// result of the test is simply the result of the existence check.
 	//
-	} else if (sc.getItemsByObjectId(objectId).size() == 0 || stateIds.size() == 0) {
+	} else if (stateIds.size() == 0 || check.size() == 0) {
 	    testResult.setResult(existence.getResult(testDefinition.getCheckExistence()));
 
 	//
-	// If there are items matching the object, then check the existence check, then (if successful) the check.
+	// If there is at least one state, then check the existence check, then (if successful) the check.
 	//
 	} else {
 	    ResultEnumeration existenceResult = existence.getResult(testDefinition.getCheckExistence());
@@ -2644,15 +2679,18 @@ public class Engine implements IOvalEngine, IProvider {
 	}
     }
 
+    private class AbortException extends RuntimeException {
+       AbortException(String message) {
+           super(message);
+       }
+    }
+
     /**
      * Perform the the OVAL test by comparing the state/object (AKA base) and item.
      */
     private ResultEnumeration testImpl(EntitySimpleBaseType base, EntityItemSimpleBaseType item) throws TestException {
-	//
-	// This is a good place to check if the engine is being destroyed
-	//
-	if (abort) {
-	    throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
+	if (abortEval) {
+	    throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_EVAL_CANCELLED));
 	}
 
 	if (!item.isSetValue() || !base.isSetValue()) {
@@ -2881,14 +2919,6 @@ public class Engine implements IOvalEngine, IProvider {
      */
     private Collection<IType> resolveComponent(Object object, RequestContext rc) throws NoSuchElementException,
 		UnsupportedOperationException, IllegalArgumentException, ResolveException, OvalException {
-
-	//
-	// This is a good place to check if the engine is being destroyed
-	//
-	if (abort) {
-	    throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
-	}
-
 	//
 	// Resolve a local variable
 	//

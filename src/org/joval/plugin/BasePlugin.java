@@ -230,8 +230,12 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 		statistics.start(obj);
 		return adapters.get(obj.getClass()).getItems(obj, rc);
 	    } finally {
-		// check for null in case the plugin was disposed during collection
-		if (statistics != null) {
+		if (statistics == null) {
+		    //
+		    // The plugin was disposed during collection of the object
+		    //
+		    logger.warn(JOVALMsg.WARNING_OBJECT_INTERRUPTED, obj.getId());
+		} else {
 		    statistics.stop(obj);
 		}
 	    }
@@ -280,7 +284,15 @@ public abstract class BasePlugin implements IPlugin, IProvider, IBatch {
 		statistics.start(batch);
 		results.addAll(batch.exec());
 	    } finally {
-		statistics.stop(batch);
+		if (statistics == null) {
+		    //
+		    // The plugin was disposed during collection of the batch
+		    //
+		    logger.warn(JOVALMsg.WARNING_BATCH_INTERRUPTED);
+		    break;
+		} else {
+		    statistics.stop(batch);
+		}
 	    }
 	}
 	pending = null;

@@ -161,7 +161,7 @@ public class OvalHandler implements ISystem {
 	return results;
     }
 
-    public void destroy() {
+    public void cancelExec(boolean hard) {
 	cancelled = true;
 	Iterator<EngineData> iter = engines.values().iterator();
 	while(iter.hasNext()) {
@@ -169,7 +169,7 @@ public class OvalHandler implements ISystem {
 	    iter.remove();
 	    IOvalEngine engine = ed.getEngine();
 	    if (engine != null) {
-		engine.destroy();
+		engine.cancelScan(hard);
 	    }
 	}
     }

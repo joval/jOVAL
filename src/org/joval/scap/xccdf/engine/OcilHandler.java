@@ -119,7 +119,7 @@ public class OcilHandler implements ISystem {
 	return reports;
     }
 
-    public void destroy() {
+    public void cancelExec(boolean hard) {
 	// no-op
     }
 
