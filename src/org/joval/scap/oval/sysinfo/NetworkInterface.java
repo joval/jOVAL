@@ -78,8 +78,14 @@ public class NetworkInterface {
 			String mask = subnets[i];
 			String broadcast = null;
 			if (version == IPAddress.Version.V4) {
+			    boolean useZeros = false;
 			    ISWbemProperty zProp = props.getItem("IPUseZeroBroadcast");
-			    boolean useZeros = zProp == null ? false : zProp.getValueAsBoolean().booleanValue();
+			    if (zProp != null) {
+				Boolean zBool = zProp.getValueAsBoolean();
+				if (zBool != null) {
+				    useZeros = zBool.booleanValue();
+				}
+			    }
 			    broadcast = getBroadcastAddress(addr, mask, useZeros);
 			}
 			addressMap.get(index).add(new IPAddress(version, addr, broadcast, mask));
@@ -96,7 +102,7 @@ public class NetworkInterface {
 
 	    Type type = null;
 	    ISWbemProperty prop = props.getItem("AdapterTypeId");
-	    if (prop != null) {
+	    if (prop != null && prop.getValue() != null) {
 		switch(prop.getValueAsInteger().intValue()) {
 		  case 0x0:
 		    type = Type.ETHER;
