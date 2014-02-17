@@ -471,9 +471,7 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 	    }
 	    return keys;
 	} else {
-	    @SuppressWarnings("unchecked")
-	    Collection<String> empty = (Collection<String>)Collections.EMPTY_LIST;
-	    return empty;
+	    return Collections.<String>emptyList();
 	}
     }
 

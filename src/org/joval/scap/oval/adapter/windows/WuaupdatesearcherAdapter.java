@@ -9,7 +9,8 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import jsaf.intf.system.ISession;
@@ -44,9 +45,9 @@ import org.joval.util.JOVALMsg;
  */
 public class WuaupdatesearcherAdapter implements IAdapter {
     private IWindowsSession session;
-    private IRunspace runspace;
-    private Hashtable<String, WuaupdatesearcherItem> itemCache;
-    private Hashtable<String, MessageType> errors;
+    private HashSet<String> runspaceIds;
+    private Map<String, WuaupdatesearcherItem> itemCache;
+    private Map<String, MessageType> errors;
 
     // Implement IAdapter
 
@@ -54,9 +55,10 @@ public class WuaupdatesearcherAdapter implements IAdapter {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
+	    runspaceIds = new HashSet<String>();
 	    classes.add(WuaupdatesearcherObject.class);
-	    itemCache = new Hashtable<String, WuaupdatesearcherItem>();
-	    errors = new Hashtable<String, MessageType>();
+	    itemCache = new HashMap<String, WuaupdatesearcherItem>();
+	    errors = new HashMap<String, MessageType>();
 	} else {
 	    notapplicable.add(WuaupdatesearcherObject.class);
 	}
@@ -131,25 +133,11 @@ public class WuaupdatesearcherAdapter implements IAdapter {
      * Get or create a runspace with the searcher interface module
      */
     private IRunspace getRunspace() throws Exception {
-	if (runspace != null && runspace.isAlive()) {
-	    return runspace;
+	IRunspace runspace = session.getRunspacePool().getRunspace();
+	if (!runspaceIds.contains(runspace.getId())) {
+	    runspace.loadModule(getClass().getResourceAsStream("Wuaupdatesearcher.psm1"));
+	    runspaceIds.add(runspace.getId());
 	}
-
-	//
-	// Get a runspace if there are any in the pool, or create a new one, and load the Get-AccessTokens
-	// Powershell module code.
-	//
-	IWindowsSession.View view = session.getNativeView();
-	for (IRunspace rs : session.getRunspacePool().enumerate()) {
-	    if (rs.getView() == view) {
-		runspace = rs;
-		break;
-	    }
-	}
-	if (runspace == null) {
-	    runspace = session.getRunspacePool().spawn(view);
-	}
-	runspace.loadModule(getClass().getResourceAsStream("Wuaupdatesearcher.psm1"));
 	return runspace;
     }
 }

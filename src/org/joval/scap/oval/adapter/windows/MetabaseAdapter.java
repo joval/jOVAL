@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -56,7 +57,7 @@ import org.joval.xml.XSITools;
 public class MetabaseAdapter implements IAdapter {
     private IWindowsSession session;
     private CollectException error = null;
-    private IRunspace runspace = null;
+    private HashSet<String> runspaceIds = null;
     private Properties idNames;
 
     // Implement IAdapter
@@ -70,6 +71,7 @@ public class MetabaseAdapter implements IAdapter {
 	    // analysis of the machine's applicability.
 	    //
 	    this.session = (IWindowsSession)session;
+	    runspaceIds = new HashSet<String>();
 	    classes.add(MetabaseObject.class);
 	} else {
 	    notapplicable.add(MetabaseObject.class);
@@ -93,7 +95,7 @@ public class MetabaseAdapter implements IAdapter {
 	      case EQUALS: {
 		StringBuffer sb = new StringBuffer("[jOVAL.Metabase.Probe]::TestKey(");
 		sb.append("\"").append(SafeCLI.checkArgument(s, session)).append("\")");
-		if ("true".equalsIgnoreCase(runspace.invoke(sb.toString()))) {
+		if ("true".equalsIgnoreCase(getRunspace().invoke(sb.toString()))) {
 		    keys.add(s);
 		}
 		break;
@@ -103,7 +105,7 @@ public class MetabaseAdapter implements IAdapter {
 		StringBuffer sb = new StringBuffer("Find-MetabaseKeys");
 		sb.append(" -Path \"").append("/").append("\"");
 		sb.append(" | Transfer-Encode");
-		String data = new String(Base64.decode(runspace.invoke(sb.toString())), StringTools.UTF8);
+		String data = new String(Base64.decode(getRunspace().invoke(sb.toString())), StringTools.UTF8);
 		for (String subkey : data.split("\r\n")) {
 		    if (!s.equals(subkey)) {
 			keys.add(subkey);
@@ -116,7 +118,7 @@ public class MetabaseAdapter implements IAdapter {
 		StringBuffer sb = new StringBuffer("Find-MetabaseKeys");
 		sb.append(" -Path \"").append("/").append("\"");
 		sb.append(" | Transfer-Encode");
-		String data = new String(Base64.decode(runspace.invoke(sb.toString())), StringTools.UTF8);
+		String data = new String(Base64.decode(getRunspace().invoke(sb.toString())), StringTools.UTF8);
 		for (String subkey : data.split("\r\n")) {
 		    if (!s.equalsIgnoreCase(subkey)) {
 			keys.add(subkey);
@@ -133,7 +135,7 @@ public class MetabaseAdapter implements IAdapter {
 		    sb.append(" -Path \"").append(path).append("\"");
 		    sb.append(" -Pattern \"").append(StringTools.regexPosix2Powershell(safe)).append("\"");
 		    sb.append(" | Transfer-Encode");
-		    String data = new String(Base64.decode(runspace.invoke(sb.toString())), StringTools.UTF8);
+		    String data = new String(Base64.decode(getRunspace().invoke(sb.toString())), StringTools.UTF8);
 		    for (String subkey : data.split("\r\n")) {
 			keys.add(subkey);
 		    }
@@ -184,11 +186,9 @@ public class MetabaseAdapter implements IAdapter {
 		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
 	    }
-	} catch (PatternSyntaxException e) {
-	    throw new CollectException(e, FlagEnumeration.ERROR);
-	} catch (IOException e) {
-	    throw new CollectException(e, FlagEnumeration.ERROR);
-	} catch (PowershellException e) {
+	} catch (CollectException e) {
+	    throw e;
+	} catch (Exception e) {
 	    throw new CollectException(e, FlagEnumeration.ERROR);
 	}
 
@@ -263,7 +263,7 @@ public class MetabaseAdapter implements IAdapter {
     /**
      * Get the specified datum (ID) for all the specified keys.
      */
-    private Map<String, Map<String, String>> getData(List<String> keys, String id) throws IOException, PowershellException {
+    private Map<String, Map<String, String>> getData(List<String> keys, String id) throws Exception {
 	StringBuffer sb = new StringBuffer();
 	for (String key : keys) {
 	    if (sb.length() > 0) {
@@ -273,7 +273,7 @@ public class MetabaseAdapter implements IAdapter {
 	}
 	sb.append(" | Get-MetabaseData -ID ").append(id);
 	sb.append(" | Transfer-Encode");
-	String s = runspace.invoke(sb.toString(), session.getTimeout(IWindowsSession.Timeout.L));
+	String s = getRunspace().invoke(sb.toString(), session.getTimeout(IWindowsSession.Timeout.L));
 	Map<String, Map<String, String>> result = new HashMap<String, Map<String, String>>();
 	String key = null;
 	for (String line : new String(Base64.decode(s), StringTools.UTF8).split("\r\n")) {
@@ -300,7 +300,7 @@ public class MetabaseAdapter implements IAdapter {
     /**
      * Get all data for all the specified keys.
      */
-    private Map<String, List<Map<String, String>>> getData(List<String> keys) throws IOException, PowershellException {
+    private Map<String, List<Map<String, String>>> getData(List<String> keys) throws Exception {
 	StringBuffer sb = new StringBuffer();
 	for (String key : keys) {
 	    if (sb.length() > 0) {
@@ -309,7 +309,7 @@ public class MetabaseAdapter implements IAdapter {
 	    sb.append("\"").append(SafeCLI.checkArgument(key, session)).append("\"");
 	}
 	sb.append(" | Get-MetabaseData | Transfer-Encode");
-	String s = runspace.invoke(sb.toString(), session.getTimeout(IWindowsSession.Timeout.L));
+	String s = getRunspace().invoke(sb.toString(), session.getTimeout(IWindowsSession.Timeout.L));
 	Map<String, List<Map<String, String>>> result = new HashMap<String, List<Map<String, String>>>();
 	String key = null;
 	Map<String, String> current = null;
@@ -376,18 +376,17 @@ public class MetabaseAdapter implements IAdapter {
     private void init() throws CollectException {
 	if (error != null) {
 	    throw error;
-	} else if (runspace == null) {
+	} else if (idNames == null) {
 	    try {
 		idNames = new Properties();
 		idNames.load(getClass().getResourceAsStream("Metabase.properties"));
-		runspace = getRunspace();
 
 		//
 		// Deep applicability check
 		//
 		try {
 		    IWmiProvider wmi = this.session.getWmiProvider();
-		    boolean privileged = "true".equalsIgnoreCase(runspace.invoke("Check-Privileged"));
+		    boolean privileged = "true".equalsIgnoreCase(getRunspace().invoke("Check-Privileged"));
 		    if (privileged) {
 			wmi.execQuery("root\\MicrosoftIISv2", "Select Name from IISComputer");
 		    } else {
@@ -416,21 +415,12 @@ public class MetabaseAdapter implements IAdapter {
     }
 
     private IRunspace getRunspace() throws Exception {
-	if (runspace != null && runspace.isAlive()) {
-	    return runspace;
+	IRunspace runspace = session.getRunspacePool().getRunspace();
+	if (!runspaceIds.contains(runspace.getId())) {
+	    runspace.loadAssembly(getClass().getResourceAsStream("Metabase.dll"));
+	    runspace.loadModule(getClass().getResourceAsStream("Metabase.psm1"));
+	    runspaceIds.add(runspace.getId());
 	}
-	IWindowsSession.View view = session.getNativeView();
-	for (IRunspace rs : session.getRunspacePool().enumerate()) {
-	    if (rs.getView() == view) {
-		runspace = rs;
-		break;
-	    }
-	}
-	if (runspace == null) {
-	    runspace = session.getRunspacePool().spawn(view);
-	}
-	runspace.loadAssembly(getClass().getResourceAsStream("Metabase.dll"));
-	runspace.loadModule(getClass().getResourceAsStream("Metabase.psm1"));
 	return runspace;
     }
 }

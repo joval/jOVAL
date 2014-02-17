@@ -47,7 +47,7 @@ import org.joval.xml.XSITools;
  * @version %I% %G%
  */
 public abstract class BaseServiceAdapter<T extends ItemType> implements IAdapter {
-    private IRunspace runspace;
+    private HashSet<String> runspaceIds;
     private Collection<String> serviceNames;
 
     protected IWindowsSession session;
@@ -58,6 +58,7 @@ public abstract class BaseServiceAdapter<T extends ItemType> implements IAdapter
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
+	    runspaceIds = new HashSet<String>();
 	    classes.add(getObjectClass());
 	} else {
 	    notapplicable.add(getObjectClass());
@@ -181,9 +182,7 @@ public abstract class BaseServiceAdapter<T extends ItemType> implements IAdapter
      * the getRunspace method (such as those required by modules), below.
      */
     protected List<InputStream> getPowershellAssemblies() {
-	@SuppressWarnings("unchecked")
-	List<InputStream> empty = (List<InputStream>)Collections.EMPTY_LIST;
-	return empty;
+	return Collections.<InputStream>emptyList();
     }
 
     /**
@@ -191,32 +190,22 @@ public abstract class BaseServiceAdapter<T extends ItemType> implements IAdapter
      * the getRunspace method, below.
      */
     protected List<InputStream> getPowershellModules() {
-	@SuppressWarnings("unchecked")
-	List<InputStream> empty = (List<InputStream>)Collections.EMPTY_LIST;
-	return empty;
+	return Collections.<InputStream>emptyList();
     }
 
     /**
      * Get (or create) a runspace that includes the modules and assemblies specified by the subclass.
      */
     protected IRunspace getRunspace() throws Exception {
-	if (runspace != null && runspace.isAlive()) {
-	    return runspace;
-	}
-	for (IRunspace rs : session.getRunspacePool().enumerate()) {
-	    if (session.getNativeView() == rs.getView()) {
-		runspace = rs;
-		break;
+	IRunspace runspace = session.getRunspacePool().getRunspace();
+	if (!runspaceIds.contains(runspace.getId())) {
+	    for (InputStream in : getPowershellAssemblies()) {
+		runspace.loadAssembly(in);
 	    }
-	}
-	if (runspace == null) {
-	    runspace = session.getRunspacePool().spawn();
-	}
-	for (InputStream in : getPowershellAssemblies()) {
-	    runspace.loadAssembly(in);
-	}
-	for (InputStream in : getPowershellModules()) {
-	    runspace.loadModule(in);
+	    for (InputStream in : getPowershellModules()) {
+		runspace.loadModule(in);
+	    }
+	    runspaceIds.add(runspace.getId());
 	}
 	return runspace;
     }

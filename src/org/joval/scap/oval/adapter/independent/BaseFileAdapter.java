@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -74,7 +75,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
     protected static final int FIELD_FROM		= ISearchable.FIELD_FROM;
     protected static final int FIELD_DEPTH		= ISearchable.FIELD_DEPTH;
 
-    private IRunspace rs, rs32;
+    private HashSet<String> runspaceIds;
     private String localFsType;
 
     protected IComputerSystem session;
@@ -86,6 +87,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
      */
     protected void baseInit(IComputerSystem session) throws UnsupportedOperationException {
 	this.session = session;
+	runspaceIds = new HashSet<String>();
 	switch(session.getType()) {
 	  case WINDOWS:
 	    localFsType = IWindowsFilesystem.FsType.FIXED.value();
@@ -140,10 +142,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 		msg.setLevel(MessageLevelEnumeration.INFO);
 		msg.setValue(JOVALMsg.getMessage(JOVALMsg.WARNING_WINDOWS_VIEW, view.toString()));
 		rc.addMessage(msg);
-
-		@SuppressWarnings("unchecked")
-		List<T> empty = (List<T>)Collections.EMPTY_LIST;
-		return empty;
+		return Collections.<T>emptyList();
 	    }
 	}
 	Collection<IFile> files = getFiles(fObj, behaviors, rc, fs);
@@ -282,9 +281,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
      * objects vastly more efficient.
      */
     protected List<ISearchable.ICondition> getConditions(ObjectType obj) throws PatternSyntaxException, CollectException {
-	@SuppressWarnings("unchecked")
-	List<ISearchable.ICondition> empty = (List<ISearchable.ICondition>)Collections.EMPTY_LIST;
-	return empty;
+	return Collections.<ISearchable.ICondition>emptyList();
     }
 
     /**
@@ -298,9 +295,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
      * loaded into requested runspaces (i.e., for modules) using the getRunspace convenience method, below.
      */
     protected List<InputStream> getPowershellAssemblies() {
-	@SuppressWarnings("unchecked")
-	List<InputStream> empty = (List<InputStream>)Collections.EMPTY_LIST;
-	return empty;
+	return Collections.<InputStream>emptyList();
     }
 
     /**
@@ -308,30 +303,27 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
      * loaded into requested runspaces using the getRunspace convenience method, below.
      */
     protected List<InputStream> getPowershellModules() {
-	@SuppressWarnings("unchecked")
-	List<InputStream> empty = (List<InputStream>)Collections.EMPTY_LIST;
-	return empty;
+	return Collections.<InputStream>emptyList();
     }
 
     /**
      * Get a runspace with the specified view, or create it if there isn't one yet.
      */
     protected IRunspace getRunspace(IWindowsSession.View view) throws Exception {
-	switch(view) {
-	  case _32BIT:
-	    if (rs32 != null && rs32.isAlive()) {
-		return rs32;
-	    } else {
-		return rs32 = createRunspace(view);
-	    }
-
-	  default:
-	    if (rs != null && rs.isAlive()) {
-		return rs;
-	    } else {
-		return rs = createRunspace(view);
+	IRunspace runspace = null;
+	if (session instanceof IWindowsSession) {
+	    runspace = ((IWindowsSession)session).getRunspacePool().getRunspace(view);
+	    if (!runspaceIds.contains(runspace.getId())) {
+		for (InputStream in : getPowershellAssemblies()) {
+		    runspace.loadAssembly(in);
+		}
+		for (InputStream in : getPowershellModules()) {
+		    runspace.loadModule(in);
+		}
+		runspaceIds.add(runspace.getId());
 	    }
 	}
+	return runspace;
     }
 
     /**
@@ -468,33 +460,6 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
 	    return false;
 	}
 	return true;
-    }
-
-    /**
-     * Create a runspace with the specified view. Modules supplied by getPowershellModules() will be auto-loaded before
-     * the runspace is returned.  Returns null for non-Windows sessions.
-     */
-    private IRunspace createRunspace(IWindowsSession.View view) throws Exception {
-	IRunspace result = null;
-	if (session instanceof IWindowsSession) {
-	    IWindowsSession ws = (IWindowsSession)session;
-	    for (IRunspace runspace : ws.getRunspacePool().enumerate()) {
-		if (view == runspace.getView()) {
-		    result = runspace;
-		    break;
-		} 
-	    }
-	    if (result == null) {
-		result = ws.getRunspacePool().spawn(view);
-	    }
-	    for (InputStream in : getPowershellAssemblies()) {
-		result.loadAssembly(in);
-	    }
-	    for (InputStream in : getPowershellModules()) {
-		result.loadModule(in);
-	    }
-	}
-	return result;
     }
 
     /**

@@ -132,16 +132,7 @@ public class SharedresourceAdapter implements IAdapter {
 	    throw error;
 	} else if (shares == null) {
 	    try {
-		IRunspace rs = null;
-		for (IRunspace runspace : session.getRunspacePool().enumerate()) {
-		    if (session.getNativeView() == runspace.getView()) {
-			rs = runspace;
-			break;
-		    }
-		}
-		if (rs == null) {
-		    rs = session.getRunspacePool().spawn();
-		}
+		IRunspace rs = session.getRunspacePool().getRunspace();
 		rs.loadAssembly(getClass().getResourceAsStream("Sharedresource.dll"));
 		rs.loadModule(getClass().getResourceAsStream("Sharedresource.psm1"));
 

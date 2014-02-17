@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.NoSuchElementException;
 
 import jsaf.Message;
@@ -44,7 +45,8 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class AuditeventpolicyAdapter implements IAdapter {
-    protected IWindowsSession session;
+    private IWindowsSession session;
+    private HashSet<String> runspaceIds;
     private Collection<AuditeventpolicyItem> items = null;
     private CollectException error = null;
 
@@ -54,6 +56,7 @@ public class AuditeventpolicyAdapter implements IAdapter {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
+	    runspaceIds = new HashSet<String>();
 	    classes.add(AuditeventpolicyObject.class);
 	} else {
 	    notapplicable.add(AuditeventpolicyObject.class);
@@ -74,26 +77,12 @@ public class AuditeventpolicyAdapter implements IAdapter {
 
     private Collection<AuditeventpolicyItem> makeItems() throws CollectException {
 	try {
-	    //
-	    // Get a runspace if there are any in the pool, or create a new one, and load the Get-AuditEventPolicies
-	    // Powershell module code.
-	    //
-	    IWindowsSession.View view = session.getNativeView();
-	    IRunspace runspace = null;
-	    for (IRunspace rs : session.getRunspacePool().enumerate()) {
-		if (rs.getView() == view) {
-		    runspace = rs;
-		    break;
-		}
-	    }
-	    if (runspace == null) {
-		runspace = session.getRunspacePool().spawn(view);
-	    }
-	    if (runspace != null) {
+	    IRunspace runspace = session.getRunspacePool().getRunspace();
+	    if (!runspaceIds.contains(runspace.getId())) {
 		runspace.loadAssembly(getClass().getResourceAsStream("Auditeventpolicy.dll"));
 		runspace.loadModule(getClass().getResourceAsStream("Auditeventpolicy.psm1"));
+		runspaceIds.add(runspace.getId());
 	    }
-
 	    AuditeventpolicyItem item = Factories.sc.windows.createAuditeventpolicyItem();
 	    for (String line : runspace.invoke("Get-AuditEventPolicies").split("\r\n")) {
 		int ptr = line.indexOf(":");

@@ -122,8 +122,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 			}
 		    }
 		} else {
-		    @SuppressWarnings("unchecked")
-		    Collection<TextfilecontentItem> empty = (Collection<TextfilecontentItem>)Collections.EMPTY_LIST;
+		    Collection<TextfilecontentItem> empty = Collections.<TextfilecontentItem>emptyList();
 		    for (IRequest request : entry.getValue()) {
 			resultMap.put(request, new Batch.Result(empty, request.getContext()));
 		    }

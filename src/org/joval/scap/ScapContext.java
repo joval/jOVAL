@@ -405,9 +405,7 @@ public abstract class ScapContext implements IScapContext {
 		return sel.getItem();
 	    }
 	}
-	@SuppressWarnings("unchecked")
-	List<String> empty = (List<String>)Collections.EMPTY_LIST;
-	return empty;
+	return Collections.<String>emptyList();
     }
 
     /**

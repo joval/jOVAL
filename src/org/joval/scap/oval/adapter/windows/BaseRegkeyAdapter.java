@@ -7,11 +7,12 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.ArrayList;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
@@ -66,19 +67,25 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter,
 
     protected IWindowsSession session;
 
-    private IRunspace rs, rs32;
+    private HashSet<String> runspaceIds;
 
     /**
      * Subclasses can call this method to initialize the session variable.
      */
     protected void init(IWindowsSession session) {
 	this.session = session;
+	runspaceIds = new HashSet<String>();
     }
 
     // Implement IAdapter
 
     public final Collection<T> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
-	return getItems(obj, getKeys(obj, rc), rc);
+	Collection<IKey> keys = getKeys(obj, rc);
+	if (keys.size() > 0) {
+	    return getItems(obj, getKeys(obj, rc), rc);
+	} else {
+	    return Collections.<T>emptyList();
+	}
     }
 
     // Implement IBatch
@@ -94,9 +101,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter,
      * Subclasses that wish to implement batching must override.
      */
     public Collection<IResult> exec() {
-	@SuppressWarnings("unchecked")
-	Collection<IResult> empty = (Collection<IResult>)Collections.EMPTY_LIST;
-	return empty;
+	return Collections.<IResult>emptyList();
     }
 
     // Protected
@@ -239,9 +244,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter,
      * to keys (so, for instance, it doesn't create any FIELD_VALUE conditions).
      */
     protected List<ISearchable.ICondition> getConditions(ObjectType obj) throws PatternSyntaxException, CollectException {
-	@SuppressWarnings("unchecked")
-	List<ISearchable.ICondition> empty = (List<ISearchable.ICondition>)Collections.EMPTY_LIST;
-	return empty;
+	return Collections.<ISearchable.ICondition>emptyList();
     }
 
     /**
@@ -257,9 +260,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter,
      * the getRunspace method (such as those required by modules), below.
      */
     protected List<InputStream> getPowershellAssemblies() {
-	@SuppressWarnings("unchecked")
-	List<InputStream> empty = (List<InputStream>)Collections.EMPTY_LIST;
-	return empty;
+	return Collections.<InputStream>emptyList();
     }
 
     /**
@@ -267,9 +268,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter,
      * the getRunspace method, below.
      */
     protected List<InputStream> getPowershellModules() {
-	@SuppressWarnings("unchecked")
-	List<InputStream> empty = (List<InputStream>)Collections.EMPTY_LIST;
-	return empty;
+	return Collections.<InputStream>emptyList();
     }
 
     /**
@@ -288,49 +287,20 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter,
     }
 
     /**
-     * Get a runspace with the specified view, or create it if there isn't one yet (or if the previous instance died).
+     * Get a runspace with the specified view, loaded with the requisite assemblies and modules.
      */
     protected IRunspace getRunspace(IWindowsSession.View view) throws Exception {
-	switch(view) {
-	  case _32BIT:
-	    if (rs32 != null && rs32.isAlive()) {
-		return rs32;
-	    } else {
-		return rs32 = createRunspace(view);
+	IRunspace runspace = session.getRunspacePool().getRunspace(view);
+	if (!runspaceIds.contains(runspace.getId())) {
+	    for (InputStream in : getPowershellAssemblies()) {
+		runspace.loadAssembly(in);
 	    }
-	  default:
-	    if (rs != null && rs.isAlive()) {
-		return rs;
-	    } else {
-		return rs = createRunspace(view);
+	    for (InputStream in : getPowershellModules()) {
+		runspace.loadModule(in);
 	    }
+	    runspaceIds.add(runspace.getId());
 	}
-    }
-
-    // Private
-
-    /**
-     * Create a runspace with the specified view. Modules supplied by getPowershellModules() will be auto-loaded before
-     * the runspace is returned.
-     */
-    private IRunspace createRunspace(IWindowsSession.View view) throws Exception {
-	IRunspace result = null;
-	for (IRunspace runspace : session.getRunspacePool().enumerate()) {
-	    if (view == runspace.getView()) {
-		result = runspace;
-		break;
-	    }
-	}
-	if (result == null) {
-	    result = session.getRunspacePool().spawn(view);
-	}
-	for (InputStream in : getPowershellAssemblies()) {
-	    result.loadAssembly(in);
-	}
-	for (InputStream in : getPowershellModules()) {
-	    result.loadModule(in);
-	}
-	return result;
+	return runspace;
     }
 
     /**

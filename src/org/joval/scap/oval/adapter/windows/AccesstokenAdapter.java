@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
@@ -57,7 +58,7 @@ import org.joval.util.JOVALMsg;
  */
 public class AccesstokenAdapter implements IAdapter {
     private IWindowsSession session;
-    private IRunspace runspace;
+    private HashSet<String> runspaceIds;
     private IDirectory directory;
     private Map<String, AccesstokenItem> itemCache;
 
@@ -67,6 +68,7 @@ public class AccesstokenAdapter implements IAdapter {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
+	    runspaceIds = new HashSet<String>();
 	    classes.add(AccesstokenObject.class);
 	    itemCache = new HashMap<String, AccesstokenItem>();
 	} else {
@@ -373,26 +375,12 @@ public class AccesstokenAdapter implements IAdapter {
      * Initialize the adapter and install the probe on the target host.
      */
     private IRunspace getRunspace() throws CollectException {
-	if (runspace != null && runspace.isAlive()) return runspace;
-
-	//
-	// Get a runspace if there are any in the pool, or create a new one, and load the Get-AccessTokens
-	// Powershell module code.
-	//
-	IWindowsSession.View view = session.getNativeView();
-	for (IRunspace rs : session.getRunspacePool().enumerate()) {
-	    if (rs.getView() == view) {
-		runspace = rs;
-		break;
-	    }
-	}
 	try {
-	    if (runspace == null) {
-		runspace = session.getRunspacePool().spawn(view);
-	    }
-	    if (runspace != null) {
+	    IRunspace runspace = session.getRunspacePool().getRunspace();
+	    if (!runspaceIds.contains(runspace.getId())) {
 		runspace.loadAssembly(getClass().getResourceAsStream("Accesstoken.dll"));
 		runspace.loadModule(getClass().getResourceAsStream("Accesstoken.psm1"));
+		runspaceIds.add(runspace.getId());
 	    }
 	    return runspace;
 	} catch (Exception e) {

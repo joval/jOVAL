@@ -864,14 +864,7 @@ public class Engine implements IXccdfEngine {
 	    String user = session.getUsername();
 	    switch(session.getType()) {
 	      case WINDOWS:
-		IWindowsSession ws = (IWindowsSession)session;
-		IRunspace runspace = null;
-		Iterator<IRunspace> iter = ws.getRunspacePool().enumerate().iterator();
-		if (iter.hasNext()) {
-		    runspace = iter.next();
-		} else {
-		    runspace = ws.getRunspacePool().spawn(ws.getNativeView());
-		}
+		IRunspace runspace = ((IWindowsSession)session).getRunspacePool().getRunspace();
 		identity.setPrivileged("true".equalsIgnoreCase(runspace.invoke("Check-Privileged")));
 		break;
 	      case UNIX:

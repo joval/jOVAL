@@ -253,47 +253,21 @@ public class ProcessAdapter implements IAdapter {
     private void init() throws CollectException {
 	if (processes == null) {
 	    processes = new IniFile();
-	} else {
-	    return;
-	}
-
-	//
-	// Get a runspace if there are any in the pool, or create a new one, and load the Get-ProcessInfo
-	// Powershell module code.
-	//
-	IRunspace runspace = null;
-	IWindowsSession.View view = session.getNativeView();
-	for (IRunspace rs : session.getRunspacePool().enumerate()) {
-	    if (rs.getView() == view) {
-		runspace = rs;
-		break;
-	    }
-	}
-	try {
-	    if (runspace == null) {
-		runspace = session.getRunspacePool().spawn(view);
-	    }
-	    if (runspace != null) {
+	    try {
+		IRunspace runspace = session.getRunspacePool().getRunspace();
 		runspace.loadAssembly(getClass().getResourceAsStream("Process.dll"));
 		runspace.loadModule(getClass().getResourceAsStream("Process.psm1"));
+		String data = runspace.invoke("Get-ProcessInfo | Transfer-Encode");
+		if (data != null) {
+		    ByteArrayInputStream in = new ByteArrayInputStream(Base64.decode(data));
+		    processes.load(in, StringTools.UTF8);
+		}
+	    } catch (Exception e) {
+		error = Factories.common.createMessageType();
+		error.setLevel(MessageLevelEnumeration.ERROR);
+		error.setValue(e.getMessage());
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
-	} catch (Exception e) {
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	if (runspace == null) {
-	    throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_POWERSHELL), FlagEnumeration.NOT_COLLECTED);
-	}
-	try {
-	    String data = runspace.invoke("Get-ProcessInfo | Transfer-Encode");
-	    if (data != null) {
-		ByteArrayInputStream in = new ByteArrayInputStream(Base64.decode(data));
-		processes.load(in, StringTools.UTF8);
-	    }
-	} catch (Exception e) {
-	    error = Factories.common.createMessageType();
-	    error.setLevel(MessageLevelEnumeration.ERROR);
-	    error.setValue(e.getMessage());
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 }

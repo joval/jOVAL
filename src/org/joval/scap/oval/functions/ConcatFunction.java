@@ -39,9 +39,7 @@ public class ConcatFunction implements IFunction {
 	    for (Object child : function.getObjectComponentOrVariableComponentOrLiteralComponent()) {
 		Collection<IType> next = fc.resolveComponent(child);
 		if (next.size() == 0) {
-		    @SuppressWarnings("unchecked")
-		    Collection<IType> empty = (Collection<IType>)Collections.EMPTY_LIST;
-		    return empty;
+		    return Collections.<IType>emptyList();
 		} else if (values.size() == 0) {
 		    values.addAll(next);
 		} else {

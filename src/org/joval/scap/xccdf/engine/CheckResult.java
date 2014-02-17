@@ -51,9 +51,7 @@ public class CheckResult implements ISystem.IResult {
 
     public Collection<MessageType> getMessages() {
 	if (messages == null) {
-	    @SuppressWarnings("unchecked")
-	    Collection<MessageType> empty = (Collection<MessageType>)Collections.EMPTY_LIST;
-	    return empty;
+	    return Collections.<MessageType>emptyList();
 	} else {
 	    return messages;
 	}

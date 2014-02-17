@@ -77,7 +77,7 @@ public class CmdletAdapter implements IAdapter {
 
     private IWindowsSession session;
     private HashMap<String, ModuleInfo> modules;
-    private IRunspace runspace;
+    private HashSet<String> runspaceIds;
 
     // Implement IAdapter
 
@@ -85,6 +85,7 @@ public class CmdletAdapter implements IAdapter {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
+	    runspaceIds = new HashSet<String>();
 	    classes.add(CmdletObject.class);
 	} else {
 	    notapplicable.add(CmdletObject.class);
@@ -282,20 +283,11 @@ public class CmdletAdapter implements IAdapter {
     }
 
     private IRunspace getRunspace() throws Exception {
-	if (runspace != null && runspace.isAlive()) {
-	    return runspace;
+	IRunspace runspace = session.getRunspacePool().getRunspace();
+	if (!runspaceIds.contains(runspace.getId())) {
+	    runspace.loadModule(getClass().getResourceAsStream("Cmdlet.psm1"));
+	    runspaceIds.add(runspace.getId());
 	}
-	IWindowsSession.View view = session.getNativeView();
-	for (IRunspace rs : session.getRunspacePool().enumerate()) {
-	    if (rs.getView() == view) {
-		runspace = rs;
-		break;
-	    }
-	}
-	if (runspace == null) {
-	    runspace = session.getRunspacePool().spawn(view);
-	}
-	runspace.loadModule(getClass().getResourceAsStream("Cmdlet.psm1"));
 	return runspace;
     }
 

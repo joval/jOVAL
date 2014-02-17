@@ -104,21 +104,7 @@ public class SystemmetricAdapter implements IAdapter {
 
     private void init() throws CollectException {
 	try {
-	    //
-	    // Get a runspace if there are any in the pool, or create a new one, and load the Get-SystemMetrics
-	    // Powershell module code.
-	    //
-	    IRunspace runspace = null;
-	    IWindowsSession.View view = session.getNativeView();
-	    for (IRunspace rs : session.getRunspacePool().enumerate()) {
-		if (rs.getView() == view) {
-		    runspace = rs;
-		    break;
-		}
-	    }
-	    if (runspace == null) {
-		runspace = session.getRunspacePool().spawn(view);
-	    }
+	    IRunspace runspace = session.getRunspacePool().getRunspace();
 	    runspace.loadAssembly(getClass().getResourceAsStream("Systemmetric.dll"));
 	    runspace.loadModule(getClass().getResourceAsStream("Systemmetric.psm1"));
 

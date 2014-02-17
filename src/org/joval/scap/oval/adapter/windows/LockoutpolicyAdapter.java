@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 
 import jsaf.intf.system.ISession;
 import jsaf.intf.windows.powershell.IRunspace;
@@ -38,6 +39,7 @@ import org.joval.util.JOVALMsg;
  */
 public class LockoutpolicyAdapter implements IAdapter {
     private IWindowsSession session;
+    private HashSet<String> runspaceIds;
     private Collection<LockoutpolicyItem> items = null;
     private CollectException error = null;
 
@@ -47,6 +49,7 @@ public class LockoutpolicyAdapter implements IAdapter {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
+	    runspaceIds = new HashSet<String>();
 	    classes.add(LockoutpolicyObject.class);
 	} else {
 	    notapplicable.add(LockoutpolicyObject.class);
@@ -67,23 +70,12 @@ public class LockoutpolicyAdapter implements IAdapter {
 
     private void makeItem() throws CollectException {
 	try {
-	    //
-	    // Get a runspace if there are any in the pool, or create a new one, and load the Get-LockoutPolicy
-	    // Powershell module code.
-	    //
-	    IRunspace runspace = null;
-	    IWindowsSession.View view = session.getNativeView();
-	    for (IRunspace rs : session.getRunspacePool().enumerate()) {
-		if (rs.getView() == view) {
-		    runspace = rs;
-		    break;
-		}
+	    IRunspace runspace = session.getRunspacePool().getRunspace();
+	    if (!runspaceIds.contains(runspace.getId())) {
+		runspace.loadAssembly(getClass().getResourceAsStream("Lockoutpolicy.dll"));
+		runspace.loadModule(getClass().getResourceAsStream("Lockoutpolicy.psm1"));
+		runspaceIds.add(runspace.getId());
 	    }
-	    if (runspace == null) {
-		runspace = session.getRunspacePool().spawn(view);
-	    }
-	    runspace.loadAssembly(getClass().getResourceAsStream("Lockoutpolicy.dll"));
-	    runspace.loadModule(getClass().getResourceAsStream("Lockoutpolicy.psm1"));
 
 	    //
 	    // Run the Get-LockoutPolicy module and parse the output

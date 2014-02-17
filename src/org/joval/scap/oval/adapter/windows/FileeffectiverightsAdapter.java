@@ -99,9 +99,7 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 		ReflectedFileObject fObj = new ReflectedFileObject(obj);
 		IFile f = files[i];
 		if (f == null) {
-		    @SuppressWarnings("unchecked")
-		    Collection<FileeffectiverightsItem> empty = (Collection<FileeffectiverightsItem>)Collections.EMPTY_LIST;
-		    resultMap.put(request, new Batch.Result(empty, rc));
+		    resultMap.put(request, new Batch.Result(Collections.<FileeffectiverightsItem>emptyList(), rc));
 		} else {
 		    try {
 			baseItems.put(identifier, (FileeffectiverightsItem)getBaseItem(obj, f));

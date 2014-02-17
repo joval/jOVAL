@@ -61,7 +61,7 @@ public class PrintereffectiverightsAdapter implements IAdapter {
     public static final int PRINTER_ACCESS_USE		= 0x00000008;
 
     private IWindowsSession session;
-    private IRunspace runspace;
+    private HashSet<String> runspaceIds;
     private HashSet<String> printers;
     private CollectException error;
 
@@ -71,6 +71,7 @@ public class PrintereffectiverightsAdapter implements IAdapter {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
+	    runspaceIds = new HashSet<String>();
 	    classes.add(PrintereffectiverightsObject.class);
 	} else {
 	    notapplicable.add(PrintereffectiverightsObject.class);
@@ -318,21 +319,13 @@ public class PrintereffectiverightsAdapter implements IAdapter {
     }
 
     private IRunspace getRunspace() throws Exception {
-	if (runspace != null && runspace.isAlive()) {
-	    return runspace;
+	IRunspace runspace = session.getRunspacePool().getRunspace();
+	if (!runspaceIds.contains(runspace.getId())) {
+	    runspace.loadAssembly(getClass().getResourceAsStream("Printer.dll"));
+	    runspace.loadAssembly(getClass().getResourceAsStream("Effectiverights.dll"));
+	    runspace.loadModule(getClass().getResourceAsStream("Effectiverights.psm1"));
+	    runspaceIds.add(runspace.getId());
 	}
-	for (IRunspace rs : session.getRunspacePool().enumerate()) {
-	    if (session.getNativeView() == rs.getView()) {
-		runspace = rs;
-		break;
-	    }
-	}
-	if (runspace == null) {
-	    runspace = session.getRunspacePool().spawn();
-	}
-	runspace.loadAssembly(getClass().getResourceAsStream("Printer.dll"));
-	runspace.loadAssembly(getClass().getResourceAsStream("Effectiverights.dll"));
-	runspace.loadModule(getClass().getResourceAsStream("Effectiverights.psm1"));
 	return runspace;
     }
 }

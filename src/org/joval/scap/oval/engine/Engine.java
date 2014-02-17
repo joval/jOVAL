@@ -861,7 +861,7 @@ public class Engine implements IOvalEngine, IProvider {
 	}
 
 	@SuppressWarnings("unchecked")
-	Collection<ItemType> items = (Collection<ItemType>)Collections.EMPTY_LIST;
+	Collection<ItemType> items = Collections.<ItemType>emptyList();
 	if (abortScan) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.WARNING);
@@ -1233,9 +1233,7 @@ public class Engine implements IOvalEngine, IProvider {
 		}
 		return combineItems(results, flags);
 	    }
-	    @SuppressWarnings("unchecked")
-	    Collection<ItemType> empty = (Collection<ItemType>)Collections.EMPTY_LIST;
-	    return empty;
+	    return Collections.<ItemType>emptyList();
 	}
 
 	/**
@@ -1258,9 +1256,7 @@ public class Engine implements IOvalEngine, IProvider {
 		}
 		return requests;
 	    } else {
-		@SuppressWarnings("unchecked")
-		Collection<IBatch.IRequest> empty = (Collection<IBatch.IRequest>)Collections.EMPTY_LIST;
-		return empty;
+		return Collections.<IBatch.IRequest>emptyList();
 	    }
 	}
 
@@ -1333,9 +1329,7 @@ public class Engine implements IOvalEngine, IProvider {
 		rc.addMessage(msg);
 		flags.add(FlagEnumeration.ERROR);
 	    }
-	    @SuppressWarnings("unchecked")
-	    Collection<ItemType> empty = (Collection<ItemType>)Collections.EMPTY_LIST;
-	    return empty;
+	    return Collections.<ItemType>emptyList();
 	}
 
 	// Private
@@ -1347,8 +1341,7 @@ public class Engine implements IOvalEngine, IProvider {
 	    if (!entities.get(getter).contains(value)) {
 		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_OBJECT_PERMUTATION, getter, value.toString()));
 	    } else if (size == 0) {
-		@SuppressWarnings("unchecked")
-		Collection<ObjectType> empty = (Collection<ObjectType>)Collections.EMPTY_LIST;
+		return Collections.<ObjectType>emptyList();
 	    }
 	    int numPermutations = size / entities.get(getter).size();
 	    ArrayList<Hashtable<String, Object>> valList = new ArrayList<Hashtable<String, Object>>(numPermutations);

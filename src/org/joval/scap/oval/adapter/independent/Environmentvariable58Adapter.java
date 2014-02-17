@@ -186,9 +186,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 	// If no environments were found, then just quit now.
 	//
 	if (environments.size() == 0) {
-	    @SuppressWarnings("unchecked")
-	    Collection<Environmentvariable58Item> empty = (Collection<Environmentvariable58Item>)Collections.EMPTY_LIST;
-	    return empty;
+	    return Collections.<Environmentvariable58Item>emptyList();
 	}
 
 	//
@@ -447,12 +445,13 @@ public class Environmentvariable58Adapter implements IAdapter {
 
     class WindowsEnvironmentBuilder implements IEnvironmentBuilder {
 	private HashSet<Integer> process32, process64, inaccessible;
-	private IRunspace rs, rs32;
+	private HashSet<String> runspaceIds;
 
 	WindowsEnvironmentBuilder(IWindowsSession session) throws Exception {
 	    process32 = new HashSet<Integer>();
 	    process64 = new HashSet<Integer>();
 	    inaccessible = new HashSet<Integer>();
+	    runspaceIds = new HashSet<String>();
 	    String cmd = "List-Processes | Transfer-Encode";
 	    String data = new String(Base64.decode(getRunspace(session.getNativeView()).invoke(cmd)), StringTools.UTF8);
 	    for (String line : data.split("\r\n")) {
@@ -522,35 +521,12 @@ public class Environmentvariable58Adapter implements IAdapter {
 	}
 
 	private IRunspace getRunspace(IWindowsSession.View view) throws Exception {
-	    switch(view) {
-	      case _32BIT:
-		if (rs32 != null && rs32.isAlive()) {
-		    return rs32;
-		} else {
-		    return rs32 = createRunspace(view);
-		}
-	      default:
-		if (rs != null && rs.isAlive()) {
-		    return rs;
-		} else {
-		    return rs = createRunspace(view);
-		}
+	    IRunspace runspace = ((IWindowsSession)session).getRunspacePool().getRunspace(view);
+	    if (!runspaceIds.contains(runspace.getId())) {
+		runspace.loadAssembly(getClass().getResourceAsStream("Environmentvariable58.dll"));
+		runspace.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
+		runspaceIds.add(runspace.getId());
 	    }
-	}
-
-	private IRunspace createRunspace(IWindowsSession.View view) throws Exception {
-	    IRunspace runspace = null;
-	    for (IRunspace rs : ((IWindowsSession)session).getRunspacePool().enumerate()) {
-		if (rs.getView() == view) {
-		    runspace = rs;
-		    break;
-		}
-	    }
-	    if (runspace == null) {
-		runspace = ((IWindowsSession)session).getRunspacePool().spawn(view);
-	    }
-	    runspace.loadAssembly(getClass().getResourceAsStream("Environmentvariable58.dll"));
-	    runspace.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
 	    return runspace;
 	}
     }

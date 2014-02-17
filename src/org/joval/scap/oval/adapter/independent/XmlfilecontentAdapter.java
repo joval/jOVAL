@@ -134,8 +134,7 @@ public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
 			}
 		    }
 		} else {
-		    @SuppressWarnings("unchecked")
-		    Collection<XmlfilecontentItem> empty = (Collection<XmlfilecontentItem>)Collections.EMPTY_LIST;
+		    Collection<XmlfilecontentItem> empty = Collections.<XmlfilecontentItem>emptyList();
 		    for (IRequest request : entry.getValue()) {
 			resultMap.put(request, new Batch.Result(empty, request.getContext()));
 		    }
