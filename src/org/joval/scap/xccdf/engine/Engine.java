@@ -47,6 +47,7 @@ import scap.xccdf.CheckImportType;
 import scap.xccdf.CheckType;
 import scap.xccdf.ComplexCheckType;
 import scap.xccdf.CPE2IdrefType;
+import scap.xccdf.FactType;
 import scap.xccdf.FixType;
 import scap.xccdf.GroupType;
 import scap.xccdf.IdrefType;
@@ -64,7 +65,9 @@ import scap.xccdf.RuleType;
 import scap.xccdf.ResultEnumType;
 import scap.xccdf.ScoreType;
 import scap.xccdf.SelectableItemType;
+import scap.xccdf.TargetFactsType;
 import scap.xccdf.TestResultType;
+import scap.xccdf.ValueTypeType;
 import scap.xccdf.XccdfBenchmark;
 
 import org.joval.intf.scap.IScapContext;
@@ -885,6 +888,17 @@ public class Engine implements IXccdfEngine {
 		    testResult.getTargetAddress().add(intf.getIpAddress());
 		}
 	    }
+	    TargetFactsType facts = FACTORY.createTargetFactsType();
+	    for (String key : session.getProperties()) {
+		if (key.startsWith(PROP_FACT_PREFIX)) {
+		    FactType fact = FACTORY.createFactType();
+		    fact.setName(key.substring(PROP_FACT_PREFIX.length()));
+		    fact.setType(ValueTypeType.STRING);
+		    fact.setValue(session.getProperties().getProperty(key));
+		    facts.getFact().add(fact);
+		}
+	    }
+	    testResult.setTargetFacts(facts);
 	}
 
 	//

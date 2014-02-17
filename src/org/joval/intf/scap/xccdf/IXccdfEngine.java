@@ -35,6 +35,12 @@ public interface IXccdfEngine extends Runnable {
      */
     String PROP_MAX_TIME = "joval.benchmark.maxTime";
 
+    /**
+     * A JSAF ISession property prefix indicating property data that should be exported as an XCCDF fact. The fact
+     * name will be the property name, with the prefix removed, and the value will be the String value of the property.
+     */
+    String PROP_FACT_PREFIX = "xccdf.fact.";
+
     enum Message {
 	/**
 	 * Message indicating that the engine has begun probing for platform applicability.
