@@ -235,18 +235,23 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter, I
      */
     protected boolean batchable(IRequest request) {
 	ReflectedFileObject fObj = new ReflectedFileObject(request.getObject());
-	return  (
-		    fObj.isSetFilepath() &&
-		    fObj.getFilepath().getOperation() == OperationEnumeration.EQUALS
-		)
-		||
-		(
-		    batchable(fObj.getBehaviors()) &&
-		    fObj.isSetFilename() &&
-		    !fObj.isFilenameNil() &&
-		    fObj.getFilename().getOperation() == OperationEnumeration.EQUALS &&
-		    fObj.getPath().getOperation() == OperationEnumeration.EQUALS
-		);
+	try {
+	    if (fObj.isSetFilepath() && fObj.getFilepath().getOperation() == OperationEnumeration.EQUALS) {
+		SafeCLI.checkArgument((String)fObj.getFilepath().getValue(), session);
+		return true;
+
+	    } else if (batchable(fObj.getBehaviors()) &&
+		fObj.isSetFilename() && !fObj.isFilenameNil() &&
+		fObj.getFilename().getOperation() == OperationEnumeration.EQUALS &&
+		fObj.getPath().getOperation() == OperationEnumeration.EQUALS) {
+
+		SafeCLI.checkArgument((String)fObj.getPath().getValue(), session);
+		SafeCLI.checkArgument((String)fObj.getFilename().getValue(), session);
+		return true;
+	    }
+	} catch (IllegalArgumentException e) {
+	}
+	return false;
     }
 
     /**
