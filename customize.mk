@@ -28,6 +28,8 @@ JRE64_HOME=$(TOP)/../../tools/jre170_21_x64
 
 #
 # JSAF_HOME is the location of the jSAF FOSS git repository.
+# NOTE: Use the 1.1.2 branch
+#
 # See http://github.org/joval/jSAF
 #
 JSAF_HOME=$(TOP)/../jSAF
