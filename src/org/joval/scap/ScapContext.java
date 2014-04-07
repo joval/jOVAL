@@ -192,7 +192,8 @@ public abstract class ScapContext implements IScapContext {
 	// Set all the selected values
 	//
 	for (ValueType val : vals) {
-	    if (values.containsKey(val.getId())) {
+	    String valId = val.getId();
+	    if (values.containsKey(val.getId()) && valueSelectors.containsKey(valId)) {
 		StringBuffer sb = new StringBuffer();
 		for (String s : values.get(val.getId())) {
 		    if (sb.length() > 0) {
