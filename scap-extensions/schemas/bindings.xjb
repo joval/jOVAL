@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-  Copyright (C) 2013 jOVAL.org.  All rights reserved.
+  Copyright (C) 2013-2015 jOVAL.org.  All rights reserved.
   This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
 -->
@@ -40,6 +40,42 @@
       <jxb:package name="scap.oval.systemcharacteristics.junos"/>
     </jxb:schemaBindings>
   </jxb:bindings>
+  <jxb:bindings schemaLocation="x-linux-definitions-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.definitions.linux.extended"/>
+    </jxb:schemaBindings>
+    <!-- avoid overloading the operation attribute -->
+    <jxb:bindings node="xs:element[@name='apt_state']//xs:element[@name='operation']">
+        <jxb:property name="dpkg_operation" />
+    </jxb:bindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="x-linux-system-characteristics-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.systemcharacteristics.linux.extended"/>
+    </jxb:schemaBindings>
+    <!-- avoid overloading the operation attribute -->
+    <jxb:bindings node="xs:element[@name='apt_item']//xs:element[@name='operation']">
+        <jxb:property name="dpkg_operation" />
+    </jxb:bindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="x-macos-definitions-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.definitions.macos.extended"/>
+    </jxb:schemaBindings>
+    <!-- avoid overloading the status attribute -->
+    <jxb:bindings node="xs:element[@name='launchd_state']//xs:element[@name='status']">
+        <jxb:property name="launchd_status" />
+    </jxb:bindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="x-macos-system-characteristics-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.systemcharacteristics.macos.extended"/>
+    </jxb:schemaBindings>
+    <!-- avoid overloading the status attribute -->
+    <jxb:bindings node="xs:element[@name='launchd_item']//xs:element[@name='status']">
+        <jxb:property name="launchd_status" />
+    </jxb:bindings>
+  </jxb:bindings>
   <jxb:bindings schemaLocation="x-netconf-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.definitions.netconf"/>
@@ -50,15 +86,24 @@
       <jxb:package name="scap.oval.systemcharacteristics.netconf"/>
     </jxb:schemaBindings>
   </jxb:bindings>
+  <jxb:bindings schemaLocation="x-unix-definitions-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.definitions.unix.extended"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="x-unix-system-characteristics-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.systemcharacteristics.unix.extended"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
   <jxb:bindings schemaLocation="x-windows-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.windowsx"/>
+      <jxb:package name="scap.oval.definitions.windows.extended"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="x-windows-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.windowsx"/>
+      <jxb:package name="scap.oval.systemcharacteristics.windows.extended"/>
     </jxb:schemaBindings>
   </jxb:bindings>
-
 </jxb:bindings>

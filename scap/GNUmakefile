@@ -1,7 +1,7 @@
 # Copyright (C) 2012 jOVAL.org.  All rights reserved.
 # This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-TOP=../..
+TOP=$(realpath ../..)
 
 include $(TOP)/common.mk
 
@@ -33,7 +33,7 @@ $(SCAP_LIB): $(GEN) classes resources $(DOCS)
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 $(DOCS): $(GEN)
-	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d $(DOCS) -sourcepath $(GEN) -subpackages org:scap
+	$(JAVADOC) -J-Xmx512m -d $(DOCS) -sourcepath $(GEN) -subpackages org:scap
 
 clean:
 	rm -f $(EPISODE)
@@ -63,4 +63,5 @@ $(BUILD)/%.class: $(GEN)/%.java
 	$(JAVAC) $(JAVACFLAGS) -d $(BUILD) -classpath $(CLASSPATH) $<
 
 $(BUILD)/%/:
-	mkdir -p $(subst PKG,,$@)
+	mkdir -p $@
+

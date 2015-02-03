@@ -2,6 +2,7 @@ SCHEMAS=\
 	ai-1.1/asset-identification_1.1.0.xsd	\
 	arf-1.1/asset-reporting-format_1.1.0.xsd	\
 	arf-1.1/reporting-core_1.1.0.xsd	\
+	constructs-1.2/scap-constructs_1.2.xsd	\
 	cpe-2.3/cpe-dictionary-extension_2.3.xsd	\
 	cpe-2.3/cpe-dictionary_2.3.xsd	\
 	cpe-2.3/cpe-language_2.3.xsd	\
@@ -57,3 +58,4 @@ SCHEMAS=\
 	xccdf-1.2/xccdf_1.2.xsd	\
 	xml/xlink.xsd	\
 	xml/xmldsig-core-schema.xsd
+

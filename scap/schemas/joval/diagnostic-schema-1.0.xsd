@@ -5,60 +5,55 @@
   This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
 -->
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-            xmlns:diag="http://www.joval.org/schemas/scap/1.2/diagnostic"
-            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
-            xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5"
-            xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
-            xmlns:oval-res="http://oval.mitre.org/XMLSchema/oval-results-5"
-            xmlns:ocil="http://scap.nist.gov/schema/ocil/2.0"
-            xmlns:ocil-diag="http://www.gocil.org/schemas/ocil/2.0/diagnostic"
-            xmlns:sce="http://open-scap.org/page/SCE_result_file"
-            xmlns:cdf="http://checklists.nist.gov/xccdf/1.2"
-            targetNamespace="http://www.joval.org/schemas/scap/1.2/diagnostic"
-            elementFormDefault="qualified"
-            version="1.0">
-   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
-   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
-   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
-   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-results-5"/>
-   <xsd:import namespace="http://scap.nist.gov/schema/ocil/2.0"/>
-   <xsd:import namespace="http://www.gocil.org/schemas/ocil/2.0/diagnostic"/>
-   <xsd:import namespace="http://open-scap.org/page/SCE_result_file"/>
-   <xsd:import namespace="http://checklists.nist.gov/xccdf/1.2"/>
-   <xsd:element name="rule_diagnostics">
-      <xsd:complexType>
-         <xsd:sequence>
-            <xsd:element name="rule_result" type="cdf:ruleResultType" minOccurs="0" maxOccurs="1"/>
-            <xsd:element ref="diag:check_diagnostics" minOccurs="0" maxOccurs="unbounded"/>
-         </xsd:sequence>
-         <xsd:attribute name="rule_id" type="xsd:NCName" use="required"/>
-      </xsd:complexType>
-   </xsd:element>
-   <xsd:element name="check_diagnostics">
-      <xsd:complexType>
-         <xsd:sequence>
-            <xsd:element name="check" type="cdf:checkType" minOccurs="1" maxOccurs="1"/>
-            <xsd:choice minOccurs="1" maxOccurs="1">
-               <xsd:sequence>
-                  <xsd:element name="definitions" type="oval-def:DefinitionsType" minOccurs="1" maxOccurs="1"/>
-                  <xsd:element name="definition_results" type="oval-res:DefinitionsType" minOccurs="1" maxOccurs="1"/>
-                  <xsd:element name="tests" type="oval-def:TestsType" minOccurs="1" maxOccurs="1"/>
-                  <xsd:element name="test_results" type="oval-res:TestsType" minOccurs="1" maxOccurs="1"/>
-                  <xsd:element name="objects" type="oval-def:ObjectsType" minOccurs="1" maxOccurs="1"/>
-                  <xsd:element name="collected_objects" type="oval-sc:CollectedObjectsType" minOccurs="1" maxOccurs="1"/>
-                  <xsd:element name="states" type="oval-def:StatesType" minOccurs="1" maxOccurs="1"/>
-                  <xsd:element name="items" type="oval-sc:SystemDataType" minOccurs="1" maxOccurs="1"/>
-               </xsd:sequence>
-               <xsd:sequence>
-                  <xsd:element name="targets" type="ocil:TargetsType" minOccurs="1" maxOccurs="1"/>
-                  <xsd:element ref="ocil-diag:ocil_result_diagnostics" minOccurs="1" maxOccurs="1"/>
-               </xsd:sequence>
-               <xsd:sequence>
-                  <xsd:element ref="sce:sce_results" minOccurs="1" maxOccurs="1"/>
-               </xsd:sequence>
-            </xsd:choice>
-         </xsd:sequence>
-      </xsd:complexType>
-   </xsd:element>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:diag="http://www.joval.org/schemas/scap/1.2/diagnostic" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" xmlns:oval-res="http://oval.mitre.org/XMLSchema/oval-results-5" xmlns:ocil="http://scap.nist.gov/schema/ocil/2.0" xmlns:ocil-diag="http://www.gocil.org/schemas/ocil/2.0/diagnostic" xmlns:sce="http://open-scap.org/page/SCE_result_file" xmlns:cdf="http://checklists.nist.gov/xccdf/1.2" targetNamespace="http://www.joval.org/schemas/scap/1.2/diagnostic" elementFormDefault="qualified" version="1.0">
+    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
+    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
+    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
+    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-results-5"/>
+    <xsd:import namespace="http://scap.nist.gov/schema/ocil/2.0"/>
+    <xsd:import namespace="http://www.gocil.org/schemas/ocil/2.0/diagnostic"/>
+    <xsd:import namespace="http://open-scap.org/page/SCE_result_file"/>
+    <xsd:import namespace="http://checklists.nist.gov/xccdf/1.2"/>
+    <xsd:element name="rule_diagnostics">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="rule_result" type="cdf:ruleResultType" minOccurs="0" maxOccurs="1"/>
+                <xsd:element ref="diag:check_diagnostics" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:sequence>
+            <xsd:attribute name="rule_id" type="xsd:NCName" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="check_diagnostics">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="check" type="cdf:checkType" minOccurs="1" maxOccurs="1"/>
+                <xsd:choice minOccurs="1" maxOccurs="1">
+                    <xsd:sequence>
+                        <xsd:element name="definitions" type="oval-def:DefinitionsType" minOccurs="1" maxOccurs="1"/>
+                        <xsd:element name="definition_results" type="oval-res:DefinitionsType" minOccurs="1" maxOccurs="1"/>
+                        <xsd:element name="tests" type="oval-def:TestsType" minOccurs="1" maxOccurs="1"/>
+                        <xsd:element name="test_results" type="oval-res:TestsType" minOccurs="1" maxOccurs="1"/>
+                        <xsd:element name="objects" type="oval-def:ObjectsType" minOccurs="1" maxOccurs="1"/>
+                        <xsd:element name="collected_objects" type="oval-sc:CollectedObjectsType" minOccurs="1" maxOccurs="1"/>
+                        <xsd:element name="states" type="oval-def:StatesType" minOccurs="1" maxOccurs="1"/>
+                        <xsd:element name="items" type="oval-sc:SystemDataType" minOccurs="1" maxOccurs="1"/>
+                    </xsd:sequence>
+                    <xsd:sequence>
+                        <xsd:element name="targets" type="ocil:TargetsType" minOccurs="1" maxOccurs="1"/>
+                        <xsd:element ref="ocil-diag:ocil_result_diagnostics" minOccurs="1" maxOccurs="1"/>
+                    </xsd:sequence>
+                    <xsd:sequence>
+                        <xsd:element ref="sce:sce_results" minOccurs="1" maxOccurs="1"/>
+                    </xsd:sequence>
+                </xsd:choice>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="error">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="trace" type="xsd:string"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
 </xsd:schema>

@@ -68,21 +68,63 @@ CLASSES=\
 	scap.oval.definitions.junos.XmlShowObject	\
 	scap.oval.definitions.junos.XmlShowState	\
 	scap.oval.definitions.junos.XmlShowTest	\
+	scap.oval.definitions.linux.extended.AptBehaviors	\
+	scap.oval.definitions.linux.extended.AptObject	\
+	scap.oval.definitions.linux.extended.AptState	\
+	scap.oval.definitions.linux.extended.AptTest	\
+	scap.oval.definitions.linux.extended.ObjectFactory	\
+	scap.oval.definitions.linux.extended.package-info	\
+	scap.oval.definitions.macos.extended.AuthorizationdbObject	\
+	scap.oval.definitions.macos.extended.AuthorizationdbState	\
+	scap.oval.definitions.macos.extended.AuthorizationdbTest	\
+	scap.oval.definitions.macos.extended.CorestorageObject	\
+	scap.oval.definitions.macos.extended.CorestorageState	\
+	scap.oval.definitions.macos.extended.CorestorageTest	\
+	scap.oval.definitions.macos.extended.EntityObjectDataTypeType	\
+	scap.oval.definitions.macos.extended.EntityStateDataTypeType	\
+	scap.oval.definitions.macos.extended.GatekeeperObject	\
+	scap.oval.definitions.macos.extended.GatekeeperState	\
+	scap.oval.definitions.macos.extended.GatekeeperTest	\
+	scap.oval.definitions.macos.extended.KeychainObject	\
+	scap.oval.definitions.macos.extended.KeychainState	\
+	scap.oval.definitions.macos.extended.KeychainTest	\
+	scap.oval.definitions.macos.extended.LaunchdObject	\
+	scap.oval.definitions.macos.extended.LaunchdState	\
+	scap.oval.definitions.macos.extended.LaunchdTest	\
+	scap.oval.definitions.macos.extended.ObjectFactory	\
+	scap.oval.definitions.macos.extended.package-info	\
+	scap.oval.definitions.macos.extended.RlimitObject	\
+	scap.oval.definitions.macos.extended.RlimitState	\
+	scap.oval.definitions.macos.extended.RlimitTest	\
+	scap.oval.definitions.macos.extended.SoftwareupdateObject	\
+	scap.oval.definitions.macos.extended.SoftwareupdateState	\
+	scap.oval.definitions.macos.extended.SoftwareupdateTest	\
+	scap.oval.definitions.macos.extended.SystemprofilerObject	\
+	scap.oval.definitions.macos.extended.SystemprofilerState	\
+	scap.oval.definitions.macos.extended.SystemprofilerTest	\
+	scap.oval.definitions.macos.extended.SystemsetupObject	\
+	scap.oval.definitions.macos.extended.SystemsetupState	\
+	scap.oval.definitions.macos.extended.SystemsetupTest	\
 	scap.oval.definitions.netconf.ConfigObject	\
 	scap.oval.definitions.netconf.ConfigState	\
 	scap.oval.definitions.netconf.ConfigTest	\
 	scap.oval.definitions.netconf.ObjectFactory	\
 	scap.oval.definitions.netconf.package-info	\
-	scap.oval.definitions.windowsx.EntityObjectSystemMetricIndexType	\
-	scap.oval.definitions.windowsx.EntityStateSystemMetricIndexType	\
-	scap.oval.definitions.windowsx.LicenseObject	\
-	scap.oval.definitions.windowsx.LicenseState	\
-	scap.oval.definitions.windowsx.LicenseTest	\
-	scap.oval.definitions.windowsx.ObjectFactory	\
-	scap.oval.definitions.windowsx.package-info	\
-	scap.oval.definitions.windowsx.SystemmetricObject	\
-	scap.oval.definitions.windowsx.SystemmetricState	\
-	scap.oval.definitions.windowsx.SystemmetricTest	\
+	scap.oval.definitions.unix.extended.ObjectFactory	\
+	scap.oval.definitions.unix.extended.package-info	\
+	scap.oval.definitions.unix.extended.SymlinkObject	\
+	scap.oval.definitions.unix.extended.SymlinkState	\
+	scap.oval.definitions.unix.extended.SymlinkTest	\
+	scap.oval.definitions.windows.extended.EntityObjectSystemMetricIndexType	\
+	scap.oval.definitions.windows.extended.EntityStateSystemMetricIndexType	\
+	scap.oval.definitions.windows.extended.LicenseObject	\
+	scap.oval.definitions.windows.extended.LicenseState	\
+	scap.oval.definitions.windows.extended.LicenseTest	\
+	scap.oval.definitions.windows.extended.ObjectFactory	\
+	scap.oval.definitions.windows.extended.package-info	\
+	scap.oval.definitions.windows.extended.SystemmetricObject	\
+	scap.oval.definitions.windows.extended.SystemmetricState	\
+	scap.oval.definitions.windows.extended.SystemmetricTest	\
 	scap.oval.systemcharacteristics.android.AppManagerItem	\
 	scap.oval.systemcharacteristics.android.BluetoothItem	\
 	scap.oval.systemcharacteristics.android.CameraItem	\
@@ -116,11 +158,29 @@ CLASSES=\
 	scap.oval.systemcharacteristics.junos.VersionItem	\
 	scap.oval.systemcharacteristics.junos.XmlConfigItem	\
 	scap.oval.systemcharacteristics.junos.XmlShowItem	\
+	scap.oval.systemcharacteristics.linux.extended.AptItem	\
+	scap.oval.systemcharacteristics.linux.extended.ObjectFactory	\
+	scap.oval.systemcharacteristics.linux.extended.package-info	\
+	scap.oval.systemcharacteristics.macos.extended.AuthorizationdbItem	\
+	scap.oval.systemcharacteristics.macos.extended.CorestorageItem	\
+	scap.oval.systemcharacteristics.macos.extended.EntityItemDataTypeType	\
+	scap.oval.systemcharacteristics.macos.extended.GatekeeperItem	\
+	scap.oval.systemcharacteristics.macos.extended.KeychainItem	\
+	scap.oval.systemcharacteristics.macos.extended.LaunchdItem	\
+	scap.oval.systemcharacteristics.macos.extended.ObjectFactory	\
+	scap.oval.systemcharacteristics.macos.extended.package-info	\
+	scap.oval.systemcharacteristics.macos.extended.RlimitItem	\
+	scap.oval.systemcharacteristics.macos.extended.SoftwareupdateItem	\
+	scap.oval.systemcharacteristics.macos.extended.SystemprofilerItem	\
+	scap.oval.systemcharacteristics.macos.extended.SystemsetupItem	\
 	scap.oval.systemcharacteristics.netconf.ConfigItem	\
 	scap.oval.systemcharacteristics.netconf.ObjectFactory	\
 	scap.oval.systemcharacteristics.netconf.package-info	\
-	scap.oval.systemcharacteristics.windowsx.EntityItemSystemMetricIndexType	\
-	scap.oval.systemcharacteristics.windowsx.LicenseItem	\
-	scap.oval.systemcharacteristics.windowsx.ObjectFactory	\
-	scap.oval.systemcharacteristics.windowsx.package-info	\
-	scap.oval.systemcharacteristics.windowsx.SystemmetricItem
+	scap.oval.systemcharacteristics.unix.extended.ObjectFactory	\
+	scap.oval.systemcharacteristics.unix.extended.package-info	\
+	scap.oval.systemcharacteristics.unix.extended.SymlinkItem	\
+	scap.oval.systemcharacteristics.windows.extended.EntityItemSystemMetricIndexType	\
+	scap.oval.systemcharacteristics.windows.extended.LicenseItem	\
+	scap.oval.systemcharacteristics.windows.extended.ObjectFactory	\
+	scap.oval.systemcharacteristics.windows.extended.package-info	\
+	scap.oval.systemcharacteristics.windows.extended.SystemmetricItem

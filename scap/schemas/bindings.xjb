@@ -87,6 +87,11 @@
       <jxb:package name="scap.arf.reporting"/>
     </jxb:schemaBindings>
   </jxb:bindings>
+  <jxb:bindings schemaLocation="constructs-1.2/scap-constructs_1.2.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.constructs"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
 
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
   <!-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>                 AI Bindings                   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< -->
@@ -293,7 +298,7 @@
     </jxb:schemaBindings>
     <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='portinfo_state']//xs:element[@name='version']">
-        <jxb:property name="portinfo_version" />
+        <jxb:property name="pkg_version" />
     </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.10.1/freebsd-system-characteristics-schema.xsd" node="/xs:schema">
@@ -302,7 +307,7 @@
     </jxb:schemaBindings>
     <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='portinfo_item']//xs:element[@name='version']">
-        <jxb:property name="portinfo_version" />
+        <jxb:property name="pkg_version" />
     </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.10.1/hpux-definitions-schema.xsd" node="/xs:schema">

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://scap.nist.gov/schema/scap/constructs/1.2"
+  elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.2"
+  xmlns:arf="http://scap.nist.gov/schema/asset-reporting-format/1.1"
+  xmlns:ai="http://scap.nist.gov/schema/asset-identification/1.1">
+  <xs:annotation>
+    <xs:appinfo>
+      <schema>SCAP 1.2 Constructs</schema>
+      <author>Adam Halbardier, David Waltermire</author>
+      <version>1.2</version>
+      <date>2011-10-10</date>
+    </xs:appinfo>
+  </xs:annotation>
+  <xs:import namespace="http://scap.nist.gov/schema/asset-reporting-format/1.1"/>
+  <xs:import namespace="http://scap.nist.gov/schema/asset-identification/1.1"/>
+  <xs:element name="asset-identification">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="arf:object-ref"/>
+        <xs:element ref="ai:asset-related"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:attribute name="negate" type="xs:boolean"/>
+</xs:schema>

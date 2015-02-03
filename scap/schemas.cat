@@ -18,6 +18,7 @@ This software is licensed under the AGPL 3.0 license available at http://www.jov
 PUBLIC "http://scap.nist.gov/schema/asset-identification/1.1" "schemas/ai-1.1/asset-identification_1.1.0.xsd"
 PUBLIC "http://scap.nist.gov/schema/asset-reporting-format/1.1" "schemas/arf-1.1/asset-reporting-format_1.1.0.xsd"
 PUBLIC "http://scap.nist.gov/schema/reporting-core/1.1" "schemas/arf-1.1/reporting-core_1.1.0.xsd"
+PUBLIC "http://scap.nist.gov/schema/scap/constructs/1.2" "schemas/constructs-1.2/scap-constructs_1.2.xsd"
 PUBLIC "http://cpe.mitre.org/dictionary/2.0" "schemas/cpe-2.3/cpe-dictionary_2.3.xsd"
 PUBLIC "http://scap.nist.gov/schema/cpe-extension/2.3" "schemas/cpe-2.3/cpe-dictionary-extension_2.3.xsd"
 PUBLIC "http://cpe.mitre.org/language/2.0" "schemas/cpe-2.3/cpe-language_2.3.xsd"

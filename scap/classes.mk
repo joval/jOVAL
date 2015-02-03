@@ -9,6 +9,7 @@ CLASSES=\
 	org.gocil.diagnostics.QuestionnaireType	\
 	org.gocil.diagnostics.QuestionRef	\
 	org.joval.scap.diagnostics.CheckDiagnostics	\
+	org.joval.scap.diagnostics.Error	\
 	org.joval.scap.diagnostics.ObjectFactory	\
 	org.joval.scap.diagnostics.package-info	\
 	org.joval.scap.diagnostics.RuleDiagnostics	\
@@ -156,6 +157,9 @@ CLASSES=\
 	scap.arf.reporting.package-info	\
 	scap.arf.reporting.RelationshipsContainerType	\
 	scap.arf.reporting.RelationshipType	\
+	scap.constructs.AssetIdentification	\
+	scap.constructs.ObjectFactory	\
+	scap.constructs.package-info	\
 	scap.cpe.dictionary.CheckType	\
 	scap.cpe.dictionary.ext.ChangeDescriptionType	\
 	scap.cpe.dictionary.ext.ChangeTypeType	\
@@ -1287,3 +1291,4 @@ CLASSES=\
 	scap.xccdf.WarningCategoryEnumType	\
 	scap.xccdf.WarningType	\
 	scap.xccdf.XccdfBenchmark
+

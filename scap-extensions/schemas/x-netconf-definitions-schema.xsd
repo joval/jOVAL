@@ -32,10 +32,10 @@
             <xsd:appinfo>
                 <sch:pattern id="netconf-def_configtst">
                     <sch:rule context="netconf-def:config_test/netconf-def:object">
-                        <sch:assert test="@object_ref=ancestor::oval-def:oval_definitions/oval-def:objects/netconf-def:line_object/@id"><sch:value-of select="../@id"/> - the object child element of a config_test must reference a config_object</sch:assert>
+                        <sch:assert test="@object_ref=ancestor::oval-def:oval_definitions/oval-def:objects/netconf-def:config_object/@id"><sch:value-of select="../@id"/> - the object child element of a config_test must reference a config_object</sch:assert>
                     </sch:rule>
                     <sch:rule context="netconf-def:config_test/netconf-def:state">
-                        <sch:assert test="@state_ref=ancestor::oval-def:oval_definitions/oval-def:states/netconf-def:line_state/@id"><sch:value-of select="../@id"/> - the state child element of a config_test must reference a config_state</sch:assert>
+                        <sch:assert test="@state_ref=ancestor::oval-def:oval_definitions/oval-def:states/netconf-def:config_state/@id"><sch:value-of select="../@id"/> - the state child element of a config_test must reference a config_state</sch:assert>
                     </sch:rule>
                 </sch:pattern>
             </xsd:appinfo>

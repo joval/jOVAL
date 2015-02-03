@@ -1,5 +1,5 @@
 -- 
-Copyright (C) 2013 jOVAL.org.  All rights reserved.
+Copyright (C) 2013-2015 jOVAL.org.  All rights reserved.
 This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
 
@@ -10,8 +10,10 @@ This software is licensed under the AGPL 3.0 license available at http://www.jov
 
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-common-5" "../scap/schemas/oval-5.10.1/oval-common-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5" "../scap/schemas/oval-5.10.1/oval-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#macos" "../scap/schemas/oval-5.10.1/macos-definitions-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" "../scap/schemas/oval-5.10.1/windows-definitions-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" "../scap/schemas/oval-5.10.1/oval-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#macos" "../scap/schemas/oval-5.10.1/macos-system-characteristics-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#windows" "../scap/schemas/oval-5.10.1/windows-system-characteristics-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#android" "schemas/x-android-definitions-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#android" "schemas/x-android-system-characteristics-schema.xsd"
@@ -19,6 +21,12 @@ PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#junos" "schemas/x-jun
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#junos" "schemas/x-junos-system-characteristics-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#netconf" "schemas/x-netconf-definitions-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#netconf" "schemas/x-netconf-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#x-linux" "schemas/x-linux-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-linux" "schemas/x-linux-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#x-macos" "schemas/x-macos-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-macos" "schemas/x-macos-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#x-unix" "schemas/x-unix-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-unix" "schemas/x-unix-system-characteristics-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#x-windows" "schemas/x-windows-definitions-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-windows" "schemas/x-windows-system-characteristics-schema.xsd"
 PUBLIC "http://www.w3.org/2000/09/xmldsig#" "../scap/schemas/xml/xmldsig-core-schema.xsd"

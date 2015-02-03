@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:linux-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" xmlns:x-linux-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#x-linux" xmlns:sch="http://purl.oclc.org/dsdl/schematron" targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#x-linux" elementFormDefault="qualified" version="5.10.1">
+    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
+    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
+    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux"/>
+    <xsd:annotation>
+        <xsd:documentation>The following is a description of the elements, types, and attributes that compose extensions to the standard Linux OVAL schema, found in Open Vulnerability and Assessment Language (OVAL). Each test is an extension of the standard test element defined in the Core Definition Schema. Through extension, each test inherits a set of elements and attributes that are shared amongst all OVAL tests. Each test is described in detail and should provide the information necessary to understand what each element and attribute represents. This document is intended for developers and assumes some familiarity with XML. A high level description of the interaction between the different tests and their relationship to the Core Definition Schema is not outlined here</xsd:documentation>
+        <xsd:documentation>This schema was originally developed by David Solin at jOVAL.org. The OVAL Schema is maintained by The MITRE Corporation and developed by the public OVAL Community. For more information, including how to get involved in the project and how to submit change requests, please visit the OVAL website at http://oval.mitre.org.</xsd:documentation>
+        <xsd:appinfo>
+            <schema>X-Linux Definition</schema>
+            <version>5.10.1</version>
+            <date>1/28/2015 02:01:48 PM</date>
+            <terms_of_use>Copyright (c) 2015, jOVAL.org.  All rights reserved.  The contents of this file are subject to the terms of the OVAL License located at http://oval.mitre.org/oval/about/termsofuse.html. See the OVAL License for the specific language governing permissions and limitations for use of this schema.  When distributing copies of the OVAL Schema, this license header must be included.</terms_of_use>
+            <sch:ns prefix="oval-def" uri="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
+            <sch:ns prefix="x-linux-def" uri="http://oval.mitre.org/XMLSchema/oval-definitions-5#x-linux"/>
+            <sch:ns prefix="xsi" uri="http://www.w3.org/2001/XMLSchema-instance"/>
+        </xsd:appinfo>
+    </xsd:annotation>
+    <!-- =============================================================================== -->
+    <!-- =================================  APT TEST  ================================= -->
+    <!-- =============================================================================== -->
+    <xsd:element name="apt_test" substitutionGroup="oval-def:test">
+        <xsd:annotation>
+            <xsd:documentation>The apt_test is used to obtain canonical path information for symbolic links.</xsd:documentation>
+            <xsd:appinfo>
+                <oval:element_mapping>
+                    <oval:test>apt_test</oval:test>
+                    <oval:object>apt_object</oval:object>
+                    <oval:state>apt_state</oval:state>
+                    <oval:item target_namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-linux">apt_item</oval:item>
+                </oval:element_mapping>
+            </xsd:appinfo>
+            <xsd:appinfo>
+                <sch:pattern id="x-linux-def_apttst">
+                    <sch:rule context="x-linux-def:apt_test/x-linux-def:object">
+                        <sch:assert test="@object_ref=ancestor::oval-def:oval_definitions/oval-def:objects/x-linux-def:apt_object/@id"><sch:value-of select="../@id"/> - the object child element of a apt_test must reference a apt_object</sch:assert>
+                    </sch:rule>
+                    <sch:rule context="x-linux-def:apt_test/x-linux-def:state">
+                        <sch:assert test="@state_ref=ancestor::oval-def:oval_definitions/oval-def:states/x-linux-def:apt_state/@id"><sch:value-of select="../@id"/> - the state child element of a apt_test must reference a apt_state</sch:assert>
+                    </sch:rule>
+                </sch:pattern>
+            </xsd:appinfo>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="oval-def:TestType">
+                    <xsd:sequence>
+                        <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                        <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+                    </xsd:sequence>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="apt_object" substitutionGroup="oval-def:object">
+        <xsd:annotation>
+            <xsd:documentation>The apt_object element is used by a apt_test to define the object to be evaluated. Each object extends the standard ObjectType as defined in the oval-definitions-schema and one should refer to the ObjectType description for more information. The common set element allows complex objects to be created using filters and set logic. Again, please refer to the description of the set element in the oval-definitions-schema.</xsd:documentation>
+            <xsd:documentation>An apt_object defines one or more packages that can be checked for updates using Advanced Packaging Tool (APT), as configured on the target system.  A number of behaviors may be provided to guide the collection of objects. Please refer to the AptBehaviors complex type for more information about specific behaviors.</xsd:documentation>
+            <xsd:documentation>The resulting items identify packages that must be installed to bring the system up-to-date with respect to its configured repositories.</xsd:documentation>
+            <xsd:appinfo>
+                <sch:pattern id="x-linux-def_apt_object_verify_filter_state">
+                    <sch:rule context="x-linux-def:apt_object//oval-def:filter">
+                        <sch:let name="parent_object" value="ancestor::x-linux-def:apt_object"/>
+                        <sch:let name="parent_object_id" value="$parent_object/@id"/>
+                        <sch:let name="state_ref" value="."/>
+                        <sch:let name="reffed_state" value="ancestor::oval-def:oval_definitions/oval-def:states/*[@id=$state_ref]"/>
+                        <sch:let name="state_name" value="local-name($reffed_state)"/>
+                        <sch:let name="state_namespace" value="namespace-uri($reffed_state)"/>
+                        <sch:assert test="(($state_namespace='http://oval.mitre.org/XMLSchema/oval-definitions-5#x-linux') and ($state_name='apt_state'))">State referenced in filter for <sch:value-of select="name($parent_object)"/> '<sch:value-of select="$parent_object_id"/>' is of the wrong type. </sch:assert>
+                    </sch:rule>
+                </sch:pattern>
+            </xsd:appinfo>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="oval-def:ObjectType">
+                    <xsd:sequence>
+                        <xsd:choice>
+                            <xsd:element ref="oval-def:set"/>
+                            <xsd:sequence>
+                                <xsd:element name="behaviors" type="x-linux-def:AptBehaviors" minOccurs="0" maxOccurs="1"/>
+                                <xsd:element name="name" type="oval-def:EntityObjectStringType">
+                                    <xsd:annotation>
+                                        <xsd:documentation>Specifies the package name to check.</xsd:documentation>
+                                    </xsd:annotation>
+                                </xsd:element>
+                                <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                            </xsd:sequence>
+                        </xsd:choice>
+                    </xsd:sequence>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="apt_state" substitutionGroup="oval-def:state">
+        <xsd:annotation>
+            <xsd:documentation>The apt_state element defines a value used to evaluate the result of a specific apt_object item.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="oval-def:StateType">
+                    <xsd:sequence>
+                        <xsd:element name="name" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>Specifies the package name.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="operation" type="x-linux-def:EntityStateDpkgOperationType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>Specifies the package operation that would be performed by an upgrade.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="current_version" type="oval-def:EntityStateEVRStringType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>Specifies the current version of the package.  If the package is not currently installed, the corresponding item entity will have a status of "does not exist".</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="available_version" type="oval-def:EntityStateEVRStringType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>Specifies the available (upgrade) version of the package.  If the package would not be upgraded, the entity will have a status of "does not exist".</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+   <xsd:complexType name="AptBehaviors">
+      <xsd:annotation>
+         <xsd:documentation>The AptBehaviors complex type defines behaviors that allow a more detailed definition of the apt_object being specified.</xsd:documentation>
+      </xsd:annotation>
+      <xsd:attribute name="mode" use="optional" default="dist-upgrade">
+         <xsd:annotation>
+            <xsd:documentation>The upgrade mode considers only installed packages, whereas the dist-upgrade mode intelligently handles changing dependencies with new versions of packages.</xsd:documentation>
+         </xsd:annotation>
+         <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+               <xsd:enumeration value="dist-upgrade"/>
+               <xsd:enumeration value="upgrade"/>
+            </xsd:restriction>
+         </xsd:simpleType>
+      </xsd:attribute>
+   </xsd:complexType>
+    <xsd:complexType name="EntityStateDpkgOperationType">
+        <xsd:annotation>
+            <xsd:documentation>The EntityStateDpkgOperationType complex type defines the different values that are valid for the operation entity of an apt_state. The empty string is also allowed as a valid value to support an empty element that is found when a variable reference is used within the index entity. Note that when using pattern matches and variables care must be taken to ensure that the regular expression and variable values align with the enumerated values.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleContent>
+            <xsd:restriction base="oval-def:EntityObjectStringType">
+                <xsd:enumeration value="Inst"/>
+                <xsd:enumeration value="Conf"/>
+                <xsd:enumeration value="Remv"/>
+                <xsd:enumeration value="">
+                    <xsd:annotation>
+                        <xsd:documentation>The empty string value is permitted here to allow for empty elements associated with variable references.</xsd:documentation>
+                    </xsd:annotation>
+                </xsd:enumeration>
+            </xsd:restriction>
+        </xsd:simpleContent>
+    </xsd:complexType>
+</xsd:schema>
