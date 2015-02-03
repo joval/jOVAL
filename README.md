@@ -10,11 +10,11 @@ jOVAL is an open-source JAXB data model for the SCAP specification languages, in
 * CPE
 * CVE
 
-Having an open-source JAXB data model for the SCAP specifications makes it possible for multiple parties to write Java programs that are compatible with one-another without requiring the XML formats to be marshalled and unmarshalled. Additionally, jOVAL also includes schema registration resources and a data-model extension mechanism that makes it possible for jOVAL customers to implement their own OVAL test types and use them with jOVAL's OVAL processing engine. For more information on the extension mechanism, see <a href="scap-extensions">scap-extensions</a>.
+Having an open-source JAXB data model for the SCAP specifications makes it possible for multiple parties to write Java programs that are compatible with one-another without requiring the XML formats to be marshalled and unmarshalled. Additionally, jOVAL also includes schema registration resources and a data-model extension mechanism that makes it possible for jOVAL customers to implement their own OVAL test types and use them with jOVAL's OVAL processing engine. For more information on the extension mechanism, see <scap-extensions>.
 
 To encourage adoption by third-parties, the jOVAL project is now licensed using the LGPL.
 
-For more information, visit http://joval.org.
+For more information, visit <http://joval.org>.
 
 Building jOVAL
 =============

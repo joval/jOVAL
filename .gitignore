@@ -1,3 +1,4 @@
+.DS_Store
 gen-src/
 build/
 scap/docs/api/
