@@ -1,7 +1,7 @@
 Copyright (C) 2013 jOVAL.org.  All rights reserved.
 
 About the scap-extensions component
---------------------------------------------------------------------------------
+=============
 
 The purpose of the scap-extensions component is to illustrate how you can extend
 jOVAL's OVAL data model. To extend the model, you must first create XSD files

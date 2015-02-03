@@ -1,9 +1,0 @@
-BUILD INSTRUCTIONS FOR jOVAL:
-
-The jOVAL data models can be built using GNU make, but you must first modify
-the "customize.mk" file to tailor the build to your environment. Simply
-follow the instructions documented in the file.
-
-After editing the customization file you can make the default target from the
-project root directory. This will create the distributable JAR files containing
-the data model classes resource files.
