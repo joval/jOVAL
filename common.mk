@@ -79,4 +79,4 @@ DOCS=docs/api
 SCAP=$(TOP)/scap
 SCAP_LIB=$(SCAP)/scap-schema-$(SCAP_VERSION).jar
 SCAP_EXT=$(TOP)/scap-extensions
-SCAP_EXT_LIB=$(SCAP)/scap-schema-extensions.jar
+SCAP_EXT_LIB=$(SCAP_EXT)/scap-schema-extensions.jar
