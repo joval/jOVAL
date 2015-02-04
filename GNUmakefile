@@ -5,10 +5,17 @@ TOP=$(realpath .)
 
 include $(TOP)/common.mk
 
-all:
-	@$(MAKE) --directory=scap all
-	@$(MAKE) --directory=scap-extensions all
+all: $(DOCS)
+
+$(DOCS): libs
+	mkdir -p $(DOCS)
+	$(JAVADOC) -J-Xmx512m -d $(DOCS) -sourcepath scap/gen-src$(CLN)scap-extensions/gen-src -subpackages org:scap
+
+libs:
+	@$(MAKE) --directory=scap
+	@$(MAKE) --directory=scap-extensions
 
 clean:
+	rm -rf $(DOCS)
 	@$(MAKE) --directory=scap clean
 	@$(MAKE) --directory=scap-extensions clean

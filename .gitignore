@@ -1,9 +1,8 @@
 .DS_Store
 gen-src/
 build/
-scap/docs/api/
+docs/
 scap/schemas.episode
 scap/scap-schema-*.jar
-scap-extensions/docs/api/
 scap-extensions/schemas.episode
 scap-extensions/scap-schema-extensions.jar

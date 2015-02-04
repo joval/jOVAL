@@ -67,6 +67,7 @@ CWD=$(shell pwd)
 
 JAVAC=$(JAVA_HOME)/bin/javac
 JAR=$(JAVA_HOME)/bin/jar
+JAVADOC=$(JAVA_HOME)/bin/javadoc
 CLASSLIB=$(JAVA_HOME)/jre/lib/rt.jar
 
 JRE=$(JRE_HOME)/bin/java
@@ -74,7 +75,7 @@ XJCFLAGS=-enableIntrospection
 
 BUILD=build
 RSRC=rsrc
-DOCS=docs/api
+DOCS=docs
 
 SCAP=$(TOP)/scap
 SCAP_LIB=$(SCAP)/scap-schema-$(SCAP_VERSION).jar

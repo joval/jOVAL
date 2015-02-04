@@ -29,11 +29,8 @@ FIXED=<bindings scd=\"x-schema::tns\" if-exists=\"true\"
 
 all: $(SCAP_LIB)
 
-$(SCAP_LIB): $(GEN) classes resources $(DOCS)
+$(SCAP_LIB): $(GEN) classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
-
-$(DOCS): $(GEN)
-	$(JAVADOC) -J-Xmx512m -d $(DOCS) -sourcepath $(GEN) -subpackages org:scap
 
 clean:
 	rm -f $(EPISODE)
