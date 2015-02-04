@@ -1,7 +1,7 @@
 # Copyright (C) 2015 jOVAL.org.  All rights reserved.
 # This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
 
-TOP=$(realpath ..)
+TOP=..
 
 include $(TOP)/common.mk
 
