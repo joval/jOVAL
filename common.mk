@@ -21,7 +21,7 @@ else ifeq (1.6, $(findstring 1.6, $(RAW_JAVA_VERSION)))
     ifeq (x, x$(JAXB_HOME))
         $(error "You must set the JAXB_HOME environment variable when using Java 6.")
     else
-        XJC=$(JAVA) -jar $(JAXB_HOME)/lib/jaxb-xjc.jar
+        XJC=$(JAVA) -jar '$(JAXB_HOME)/lib/jaxb-xjc.jar'
     endif
 else
     $(error "Unsupported Java version: $(RAW_JAVA_VERSION)")
@@ -30,34 +30,12 @@ PLATFORM=unknown
 ifeq (Windows, $(findstring Windows,$(OS)))
   PLATFORM=win
   CLN=;
-  JAVACFLAGS=-Xlint:unchecked
-  ifeq (x, x$(ARCH))
-    ifeq (x, x$(PROCESSOR_ARCHITEW6432))
-      ifeq (x86, $(findstring x86,$(PROCESSOR_ARCHITECTURE)))
-        ARCH=32
-      else
-        ARCH=64
-      endif
-    else
-      ARCH=64
-    endif
-  endif
 else
   OS=$(shell uname)
   ifeq (Linux, $(findstring Linux,$(OS)))
     PLATFORM=linux
   endif
   CLN=:
-  ifeq (1.7, $(JAVA_VERSION))
-    JAVACFLAGS=-Xlint:unchecked -XDignore.symbol.file=true
-  else
-    JAVACFLAGS=-Xlint:unchecked -XDignore.symbol.file=true -Xbootclasspath/p:$(JAXB_HOME)/lib/jaxb-api.jar:$(JAXB_HOME)/lib/jaxb-impl.jar
-  endif
-  ifeq (64, $(findstring 64,$(shell uname -p)))
-    ARCH=64
-  else
-    ARCH=32
-  endif
 endif
 
 NULL:=
