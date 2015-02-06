@@ -5,11 +5,6 @@ TOP=..
 
 include $(TOP)/common.mk
 
-GEN=gen-src
-SCHEMADIR=schemas
-BINDINGS=$(SCHEMADIR)/bindings.xjb
-CATALOG=schemas.cat
-EPISODE=schemas.episode
 XJCFLAGS_EXT=-catalog $(CATALOG) -episode $(EPISODE)
 CLASSPATH="$(CLASSLIB)$(CLN)$(GEN)"
 
@@ -37,7 +32,6 @@ clean:
 	rm -f $(SCAP_LIB)
 	rm -rf $(BUILD)
 	rm -rf $(GEN)
-	rm -rf $(DOCS)
 
 resources:
 	mkdir -p $(BUILD)/META-INF

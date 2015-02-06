@@ -63,6 +63,11 @@ XJCFLAGS=-enableIntrospection
 BUILD=build
 RSRC=rsrc
 DOCS=docs
+GEN=gen-src
+SCHEMADIR=schemas
+BINDINGS=$(SCHEMADIR)/bindings.xjb
+CATALOG=schemas.cat
+EPISODE=schemas.episode
 
 SCAP=$(TOP)/scap
 SCAP_LIB=$(SCAP)/scap-schema-$(SCAP_VERSION).jar

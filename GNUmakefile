@@ -5,14 +5,22 @@ TOP=$(realpath .)
 
 include $(TOP)/common.mk
 
-all: $(DOCS)
+ifeq (win, $(PLATFORM))
+  SOURCEPATH="$(shell cygpath -w $(SCAP)/$(GEN))$(CLN)$(shell cygpath -w $(SCAP_EXT)/$(GEN))"
+else
+  SOURCEPATH=$(SCAP)/$(GEN)$(CLN)$(SCAP_EXT)/$(GEN)
+endif
 
-$(DOCS): libs
+all: $(SCAP_LIB) $(SCAP_EXT_LIB) $(DOCS)/index.html
+
+$(DOCS)/index.html: $(SCAP_LIB) $(SCAP_EXT_LIB)
 	mkdir -p $(DOCS)
-	$(JAVADOC) -J-Xmx512m -d $(DOCS) -sourcepath scap/gen-src$(CLN)scap-extensions/gen-src -subpackages org:scap
+	$(JAVADOC) -J-Xmx512m -d $(DOCS) -sourcepath $(SOURCEPATH) -subpackages org:scap
 
-libs:
+$(SCAP_LIB): $(SCAP)/$(BINDINGS)
 	@$(MAKE) --directory=scap
+
+$(SCAP_EXT_LIB): $(SCAP_EXT)/$(BINDINGS)
 	@$(MAKE) --directory=scap-extensions
 
 clean:
