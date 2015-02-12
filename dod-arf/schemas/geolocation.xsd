@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+== Model: ARF 0.41
+== Package: geolocation
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:geoloc="http://metadata.dod.mil/mdr/ns/netops/shared_data/geolocation/0.41" targetNamespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/geolocation/0.41" attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:cndc="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41" xmlns:replication="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41" xmlns:global-enum="http://metadata.dod.mil/mdr/ns/netops/shared_data/global-enumerations/0.41">
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/global-enumerations/0.41"/>
+  <!-- ================================================== -->
+  <!-- =====  Element Declarations  -->
+  <!-- ================================================== -->
+  <xsd:element name="GeoLocation" type="geoloc:GeoLocationType"/>
+  <xsd:element name="GeolocationID" type="geoloc:GeolocationIDType"/>
+  <!-- ================================================== -->
+  <!-- =====  Simple Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  LatitudeBase  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="LatitudeBase">
+    <xsd:annotation>
+      <xsd:documentation>Limits latitude degree values to plus or minus 90 degrees</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:decimal">
+      <xsd:minInclusive value="-90"/>
+      <xsd:maxInclusive value="90"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  LongitudeBase  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="LongitudeBase">
+    <xsd:annotation>
+      <xsd:documentation>Limits longitude degree values to plus or minus 180 degrees</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:decimal">
+      <xsd:minInclusive value="-180"/>
+      <xsd:maxInclusive value="180"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="StateBase">
+    <xsd:annotation>
+      <xsd:documentation>ISO 3166-2 code for State or equivalent subdivision of a country.  Restricted to 1 to 3 alphanumeric characters.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[A-Z0-9]{1,3}"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ================================================== -->
+  <!-- =====  Complex Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Country  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="CountryType">
+    <xsd:simpleContent>
+      <xsd:extension base="global-enum:Country">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  GeoLocation  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="GeoLocationType">
+    <xsd:sequence>
+      <xsd:element name="geolocation_ID" type="geoloc:GeolocationIDType"/>
+      <xsd:element minOccurs="0" name="room_identifier" type="replication:stringType"/>
+      <xsd:element minOccurs="0" name="building_number" type="replication:stringType"/>
+      <xsd:element minOccurs="0" name="street_address" type="replication:stringType"/>
+      <xsd:element minOccurs="0" name="city" type="replication:stringType"/>
+      <xsd:element minOccurs="0" name="state" type="geoloc:StateType"/>
+      <xsd:element minOccurs="0" name="postal_code" type="replication:stringType"/>
+      <xsd:element minOccurs="0" name="country" type="geoloc:CountryType"/>
+      <xsd:element minOccurs="0" name="latitude" type="geoloc:LatitudeType"/>
+      <xsd:element minOccurs="0" name="longitude" type="geoloc:LongitudeType"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:ActionAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  GeolocationID  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="GeolocationIDType">
+    <xsd:complexContent>
+      <xsd:extension base="cndc:EntityIdentifierType">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Latitude  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="LatitudeType">
+    <xsd:simpleContent>
+      <xsd:extension base="geoloc:LatitudeBase">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Longitude  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="LongitudeType">
+    <xsd:simpleContent>
+      <xsd:extension base="geoloc:LongitudeBase">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  State  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="StateType">
+    <xsd:simpleContent>
+      <xsd:extension base="geoloc:StateBase">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+</xsd:schema>

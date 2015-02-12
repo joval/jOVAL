@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+== Model: ARF 0.41.1
+== Package: cpe-record_0.1
+-->
+<xsd:schema xmlns:cve="http://scap.nist.gov/schema/cve/0.1" xmlns:cndc="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41" xmlns:cpe-record_0.1="http://scap.nist.gov/schema/cpe-record/0.1" xmlns:cpe_dict="http://cpe.mitre.org/dictionary/2.0" xmlns:cpe-name="http://cpe.mitre.org/naming/2.0" xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" xmlns:replication="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41" xmlns:scan_data="http://metadata.dod.mil/mdr/ns/netops/shared_data/scan_data/0.41" xmlns:tagged_value="http://metadata.dod.mil/mdr/ns/netops/shared_data/tagged_value/0.41" xmlns:x509_cert="http://metadata.dod.mil/mdr/ns/ia_cnd/pki/x509_cert/3" xmlns:xsd="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://scap.nist.gov/schema/cpe-record/0.1">
+  <xsd:import namespace="http://cpe.mitre.org/dictionary/2.0"/>
+  <xsd:import namespace="http://cpe.mitre.org/naming/2.0"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41"/>
+  <xsd:import namespace="http://scap.nist.gov/schema/cve/0.1"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/tagged_value/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/ia_cnd/pki/x509_cert/3"/>
+  <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/scan_data/0.41"/>
+  <!-- ================================================== -->
+  <!-- =====  Element Declarations  -->
+  <!-- ================================================== -->
+  <xsd:element name="AssessedName" type="cpe-record_0.1:AssessedNameType"/>
+  <xsd:element name="Family" type="cpe-record_0.1:FamilyType"/>
+  <xsd:element name="Function" type="cpe-record_0.1:FunctionType"/>
+  <xsd:element name="Patch" type="cpe-record_0.1:PatchType"/>
+  <xsd:element name="PlatformName" type="cpe-record_0.1:PlatformNameType"/>
+  <xsd:element name="PortRange" type="cpe-record_0.1:PortRangeType"/>
+  <xsd:element name="ProtocolAndPortRange" type="cpe-record_0.1:ProtocolAndPortRangeType"/>
+  <xsd:element name="Role" type="cpe-record_0.1:RoleType"/>
+  <xsd:element name="Service" type="cpe-record_0.1:ServiceType"/>
+  <xsd:element name="Setting" type="cpe-record_0.1:SettingType"/>
+  <xsd:element name="Vulnerability" type="cpe-record_0.1:VulnerabilityType"/>
+  <xsd:element name="cpeRecord" type="cpe-record_0.1:cpeRecordType"/>
+  <!-- ================================================== -->
+  <!-- =====  Simple Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  cceNamePatternType  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="cceNamePatternType">
+    <xsd:annotation>
+      <xsd:documentation>The format for a CCE name is CCE-NNNNNNNNNNN-N</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:token">
+      <xsd:pattern value="[cC]{2}[eE]-[1-9]\d{0,9}(-\d){0,1}"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  ProtocolNumberType  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="ProtocolNumberType">
+    <xsd:restriction base="xsd:integer">
+      <xsd:minInclusive value="0"/>
+      <xsd:maxInclusive value="255"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ================================================== -->
+  <!-- =====  Complex Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  AssessedName  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="AssessedNameType">
+    <!-- jOVAL: To make this schema compatible with CPE dictionary version 2.3 (which we use within the
+                SCAP 1.2 data model, and which shares its namespace with CPE dictionary version 2.0),
+                we changed the name attribute from cpe-dict:nameType to cpe-name:cpe22Type.  This has
+                the identical definition, and also maintains backwards-compatibility. -->
+    <xsd:attribute name="name" type="cpe-name:cpe22Type" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Family  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="FamilyType">
+    <xsd:attribute name="family" type="xsd:string" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Function  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="FunctionType">
+    <xsd:attribute name="function" type="xsd:string" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Instance  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="InstanceType">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="setting" type="cpe-record_0.1:SettingType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="vulnerability" type="cpe-record_0.1:VulnerabilityType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="service" type="cpe-record_0.1:ServiceType"/>
+    </xsd:sequence>
+    <xsd:attribute name="instanceID" type="xsd:string" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Parameter  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="ParameterType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="name" type="xsd:string"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Patch  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="PatchType">
+    <xsd:attribute name="name" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>The vendor name of the patch assessed</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="id" type="xsd:string" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Unique identifier assigned to the patch - may be the same as the vendor assigned name</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  PlatformName  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="PlatformNameType">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="assessedName" type="cpe-record_0.1:AssessedNameType"/>
+    </xsd:sequence>
+    <xsd:attribute default="false" name="unknown" type="xsd:boolean"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  PortRange  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="PortRangeType">
+    <xsd:sequence>
+      <xsd:element default="false" minOccurs="0" name="portIsARange" type="xsd:boolean"/>
+      <xsd:element minOccurs="0" name="portStart" type="cndc:PortAddressType">
+        <xsd:annotation>
+          <xsd:documentation>Lowest numbered IP address in a contiguous block specified by the least significant digit.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="portStop" type="cndc:PortAddressType">
+        <xsd:annotation>
+          <xsd:documentation>If the portIsARange property is set to false or is not specified, this value should be the same as the port_start value.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  ProtocolAndPortRange  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="ProtocolAndPortRangeType">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="portRange" type="cpe-record_0.1:PortRangeType">
+        <xsd:annotation>
+          <xsd:documentation>The lowest open port in a port range.  If only a single port is open, provide the same number in the MinRange and the MaxRange</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+    <xsd:attribute name="protocol" type="cpe-record_0.1:ProtocolNumberType">
+      <xsd:annotation>
+        <xsd:documentation>TCP-IP layer 3 protocol number</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Role  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="RoleType">
+    <xsd:attribute name="role" type="xsd:string" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Service  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="ServiceType">
+    <xsd:annotation>
+      <xsd:documentation>The Service class addresses services that are discovered on a device.  This includes both services designed to run in memory that are not externally exposed and those that are exposed for external network access.  Each IP protocol that is exposed by a running service will receive a running service record for each unique set consisting of a protocol and a contiguous port range (where applicable).  Installed services should be attributed to the most specific CPE the assessment tool is capable of attributing them to.  If a service can be attributed to an application, the application cpe should be used.  If a service can be attributed to an operating system, the operating system cpe should be used.  If a service can be attributed only to an IP address, a blank cpe should be used.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="protocolAndPortRange" type="cpe-record_0.1:ProtocolAndPortRangeType">
+        <xsd:annotation>
+          <xsd:documentation>A protocol and port range should be given for each open contiguous set of ports on each protocol</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+    <xsd:attribute name="name" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Name of the service</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="active" type="xsd:boolean" use="required">
+      <xsd:annotation>
+        <xsd:documentation>True if the service is running on an open port or in memory at the time of the assessment</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="ipV4Address" type="cndc:IPv4AddressType">
+      <xsd:annotation>
+        <xsd:documentation>IP version 4 address of a discovered service</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="ipV6Address" type="cndc:IPv6AddressType">
+      <xsd:annotation>
+        <xsd:documentation>IP version 6 address of a discovered service</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="macAddress" type="cndc:MACAddressType">
+      <xsd:annotation>
+        <xsd:documentation>Media Access Control address of a discovered service</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Setting  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="SettingType">
+    <xsd:sequence>
+      <xsd:element name="parameter" type="cpe-record_0.1:ParameterType" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="detailed_results" type="oval-sc:SystemDataType" minOccurs="0"/>
+    </xsd:sequence>
+    <xsd:attribute name="cceID" type="cpe-record_0.1:cceNamePatternType">
+      <xsd:annotation>
+        <xsd:documentation>CCE identifier of the setting if one has been assigned</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="setting_ID" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Identifier for a given setting unique within the assessment tool that can't be identified by a CCE ID</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="settingValue" type="xsd:string"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Vulnerability  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="VulnerabilityType">
+    <xsd:attribute name="cveID" type="cve:cveNamePatternType" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  cpeRecord  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="cpeRecordType">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="platformName" type="cpe-record_0.1:PlatformNameType"/>
+      <xsd:element minOccurs="0" name="installationID" type="xsd:string"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="role" type="cpe-record_0.1:RoleType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="function" type="cpe-record_0.1:FunctionType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="family" type="cpe-record_0.1:FamilyType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="patch" type="cpe-record_0.1:PatchType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="setting" type="cpe-record_0.1:SettingType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="vulnerability" type="cpe-record_0.1:VulnerabilityType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="service" type="cpe-record_0.1:ServiceType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="tagged_value:taggedString"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="tagged_value:taggedDecimal"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="tagged_value:taggeddateTime"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="tagged_value:taggedInt"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="tagged_value:taggedBoolean"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="tagged_value:taggedURI"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="tagged_value:taggedToken"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="tagged_value:taggedHEX"/>
+      <xsd:element minOccurs="0" name="deviceCertificate" type="x509_cert:x509CertType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="personCertificate" type="x509_cert:x509CertType">
+        <xsd:annotation>
+          <xsd:documentation>Certificates issued to persons that have been installed on a software platform assessed on a device.  Associate the certificate with the most specific CPE possible.  If the same certificate has been installed on multiple software instances on a device, report the certificate with each.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="instance" type="cpe-record_0.1:InstanceType"/>
+      <xsd:element minOccurs="0" name="scan_data" type="scan_data:ScanDataIDType"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>  
+</xsd:schema>

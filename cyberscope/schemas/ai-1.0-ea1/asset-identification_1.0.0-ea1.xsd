@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:tns="http://scap.nist.gov/schema/asset-identification/1.0"
+	xmlns:gml="http://www.opengis.net/gml/3.2"
+	xmlns:xal="urn:oasis:names:tc:ciq:xal:3"
+	xmlns:xnl="urn:oasis:names:tc:ciq:xnl:3"
+	targetNamespace="http://scap.nist.gov/schema/asset-identification/1.0"
+	elementFormDefault="qualified" attributeFormDefault="unqualified"
+	version="1.0.0-ea1">
+	<xs:annotation>
+		<xs:appinfo>
+			<schema>Asset Identification</schema>
+			<author>David Waltermire, Adam Halbardier</author>
+			<version>1.0.0-ea1 (Early Access Release 1)</version>
+			<date>2010-07-23</date>
+		</xs:appinfo>
+	</xs:annotation>
+<!-- Commented out by jOVAL, to avoid having to inclide schemas for ISO_19136 and ISO_19139.
+	<xs:import namespace="http://www.opengis.net/gml/3.2" schemaLocation="../ISO_19136/gml/gml.xsd"/>
+-->
+	<xs:import namespace="urn:oasis:names:tc:ciq:xal:3"/>
+	<xs:import namespace="urn:oasis:names:tc:ciq:xnl:3"/>
+	<!--The following elements are first-order citizens of this model-->
+	<xs:element name="Asset" type="tns:AssetType" abstract="true">
+		<xs:annotation>
+			<xs:documentation>Holds identifying attributes that are common to all assets.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ITAsset" type="tns:ITAssetType" abstract="true" substitutionGroup="tns:Asset">
+		<xs:annotation>
+			<xs:documentation>Holds identifying attributes that are common to all IT assets</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Circuit" type="tns:CircuitType" substitutionGroup="tns:ITAsset">
+		<xs:annotation>
+			<xs:documentation>Holds identifying attributes for a circuit.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ComputingDevice" type="tns:ComputingDeviceType" substitutionGroup="tns:ITAsset">
+		<xs:annotation>
+			<xs:documentation>Holds identifying attributes for a computing device.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Network" type="tns:NetworkType" substitutionGroup="tns:ITAsset">
+		<xs:annotation>
+			<xs:documentation>Holds identifying attributes for a network.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Organization" type="tns:OrganizationType" substitutionGroup="tns:Asset">
+		<xs:annotation>
+			<xs:documentation>Holds identifying attributes for an organization.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Person" type="tns:PersonType" substitutionGroup="tns:Asset">
+		<xs:annotation>
+			<xs:documentation>Holds identifying attributes for a person.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Software" type="tns:SoftwareType" substitutionGroup="tns:ITAsset">
+		<xs:annotation>
+			<xs:documentation>Holds identifying attributes for a software installation</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="System" type="tns:SystemType" substitutionGroup="tns:ITAsset">
+		<xs:annotation>
+			<xs:documentation>Holds identifying attributes for a system.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<!--The following types correspond directly to the elements above-->
+	<xs:complexType name="AssetType" abstract="true">
+		<xs:sequence>
+			<xs:element ref="tns:CanonicalID" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="tns:Locations" minOccurs="0"/>
+			<xs:element name="ExtendedInformation" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>This is a container to hold any addtional identifying information for an asset, as specified by the content creator.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="tns:BaseExtendedInformationSubstituationGroup"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ITAssetType" abstract="true">
+		<xs:complexContent>
+			<xs:extension base="tns:AssetType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="CircuitType">
+		<xs:complexContent>
+			<xs:extension base="tns:ITAssetType">
+				<xs:sequence>
+					<xs:element name="CircuitName" type="xs:token" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>The common name for the circult.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="TerminationDevices" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>Holds identifying information for computing assets that terminate this circuit.</xs:documentation>
+						</xs:annotation>
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element ref="tns:ComputingDevice" maxOccurs="unbounded"/>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="ServiceProvider" type="tns:OrganizationType" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>Holds identifying information for the organization that owns/operates this circuit.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="NetworkTerminationPoints" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>Holds identifying information for the networks that exist at the ends of this circuit.</xs:documentation>
+						</xs:annotation>
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element ref="tns:Network" maxOccurs="unbounded"/>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ComputingDeviceType">
+		<xs:complexContent>
+			<xs:extension base="tns:ITAssetType">
+				<xs:sequence>
+					<xs:element name="DistinguishedName" type="xs:token" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>The full X.500 distinguished name for the device.</xs:documentation>
+						</xs:annotation>
+						<!-- TODO: pattern? -->
+					</xs:element>
+					<xs:element ref="tns:CPE" minOccurs="0" maxOccurs="unbounded">
+						<xs:annotation>
+							<xs:documentation>The hardware CPE name for the device.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Connections" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>The IP network interface connections that exist for the device (regardless of if the network interface is connected to a network or not).</xs:documentation>
+						</xs:annotation>
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="Connection" type="tns:NetworkInterfaceType" maxOccurs="unbounded">
+									<xs:annotation>
+										<xs:documentation>An IP network interface connection.</xs:documentation>
+									</xs:annotation>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="FQDN" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>The fully qualified domain name for the device.</xs:documentation>
+						</xs:annotation>
+						<xs:simpleType>
+							<xs:restriction base="xs:token">
+								<xs:enumeration value="(?=^.{1,254}$)(^(?:(?!\d|-)[a-zA-Z0-9\-]{1,63}(?&gt;!-)\.?)+(?:[a-zA-Z]{2,})$)"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="NetworkType">
+		<xs:complexContent>
+			<xs:extension base="tns:ITAssetType">
+				<xs:sequence>
+					<xs:element name="NetworkName" type="xs:normalizedString" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>The name of the network as commonly referred to.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:choice minOccurs="0">
+						<xs:element name="IPNetRange">
+							<xs:annotation>
+								<xs:documentation>The start and end IP addresses to indicate the range of IP addresses covered by this network.</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="IPNetRangeStart" type="tns:IPAddressType">
+										<xs:annotation>
+											<xs:documentation>The starting IP address in the network.</xs:documentation>
+										</xs:annotation>
+									</xs:element>
+									<xs:element name="IPNetRangeEnd" type="tns:IPAddressType">
+										<xs:annotation>
+											<xs:documentation>The ending IP address in the network.</xs:documentation>
+										</xs:annotation>
+									</xs:element>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="CIDR">
+							<xs:annotation>
+								<xs:documentation>The classless inter-domain routing notation for the network.</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:token">
+									<xs:pattern value="([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))/([0-9]|[1-2][0-9]|3[0-2])"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+					</xs:choice>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="OrganizationType">
+		<xs:complexContent>
+			<xs:extension base="tns:AssetType">
+				<xs:sequence>
+					<xs:element ref="xnl:OrganisationName" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element ref="tns:EmailAddress" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element ref="tns:TelephoneNumber" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element ref="tns:Website" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PersonType">
+		<xs:complexContent>
+			<xs:extension base="tns:AssetType">
+				<xs:sequence>
+					<xs:element ref="xnl:PersonName" minOccurs="0"/>
+					<xs:element ref="tns:EmailAddress" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element ref="tns:TelephoneNumber" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="Birthdate" type="xs:date" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>The birthdate of the person.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="SoftwareType">
+		<xs:complexContent>
+			<xs:extension base="tns:ITAssetType">
+				<xs:sequence>
+					<xs:element name="InstallationID" type="xs:token" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>Any identifier for the software instance (installation)</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element ref="tns:CPE" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>The CPE name for the software.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="License" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+						<xs:annotation>
+							<xs:documentation>The license key for the software.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="InstalledOnDevice" type="tns:ComputingDeviceType" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>Identifying information for the device upon which this software is installed.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="SystemType">
+		<xs:complexContent>
+			<xs:extension base="tns:ITAssetType">
+				<xs:sequence>
+					<xs:element name="SystemName" type="xs:token" minOccurs="0" maxOccurs="unbounded">
+						<xs:annotation>
+							<xs:documentation>The name of the system.  It is possible that a system have multiple names, or even abbreviated names.  Each one of those names may be captured here.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Version" type="xs:token" minOccurs="0">
+						<xs:annotation>
+							<!-- TODO: better definition needed -->
+							<xs:documentation>The version of the system.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="ConnectedToNetwork" type="tns:NetworkType" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>The network to which this system is connected.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!--The follow elements support the first-order citizen elements defined above-->
+	<xs:element name="BaseExtendedInformationSubstituationGroup" abstract="true">
+		<xs:annotation>
+			<xs:documentation>This element is the base for a substitution group.  Any additional informational attributes that a user desires to capture to identify an asset should be made part of this substitution group.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="CPE">
+		<xs:simpleType>
+			<xs:restriction base="xs:token">
+				<xs:pattern value="[c][pP][eE]:/[AHOaho]?(:[A-Za-z0-9\._\-~%]*){0,6}"/>
+			</xs:restriction>
+		</xs:simpleType>
+	</xs:element>
+	<xs:element name="CanonicalID">
+		<xs:annotation>
+			<xs:documentation>Holds the canonical ID for the asset</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:attribute name="Resource" type="xs:anyURI" use="required">
+				<xs:annotation>
+					<xs:documentation>Contains a URI namespace for which this ID is valid.</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="ID" type="xs:token" use="required">
+				<xs:annotation>
+					<xs:documentation>The unique identifier for this asset within the indicated resource.</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="EmailAddress" type="xs:token">
+		<xs:annotation>
+			<xs:documentation>An email address</xs:documentation>
+		</xs:annotation>
+		<!-- TO-DO: add pattern -->
+	</xs:element>
+	<xs:element name="IPAddress" type="tns:IPAddressType">
+		<xs:annotation>
+			<xs:documentation>An IP address</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Location" abstract="true"/>
+	<xs:element name="LocationAddress" type="xal:AddressType" substitutionGroup="tns:Location">
+		<xs:annotation>
+			<xs:documentation>The address where an asset is located.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+<!-- Commented out by jOVAL, to avoid having to include schemas for ISO_19136 and ISO_19139.
+	<xs:element name="LocationPoint" type="gml:PointType" substitutionGroup="tns:Location">
+		<xs:annotation>
+			<xs:documentation>The geographic point where an asset is located.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+-->
+	<xs:element name="LocationRegion" type="xs:normalizedString" substitutionGroup="tns:Location">
+		<xs:annotation>
+			<xs:documentation>The region where an asset is located.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Locations">
+		<xs:annotation>
+			<xs:documentation>One or more locations where this asset resides</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="tns:Location" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>The base for a subtitution group for elements that contain location information.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="TelephoneNumber">
+		<xs:annotation>
+			<xs:documentation>The telephone number.  For a North American number, the number must be valid and the format must be XXX-XXX-XXXX where X is a digit.  For an international number, the number must begin with a '+' symbol, followed by 7 to 15 digits.  A space may be used between digits, as appropriate.  For example: +88 888 888 8 (this is following the ITU-T E.123 notation).</xs:documentation>
+		</xs:annotation>
+		<xs:simpleType>
+			<xs:restriction base="xs:token">
+				<xs:pattern value="(([2-9][0-8]\d-[2-9]\d{2}-[0-9]{4})|(\+([0-9] ?){6,14}[0-9]))"/>
+			</xs:restriction>
+		</xs:simpleType>
+	</xs:element>
+	<xs:element name="Website" type="xs:anyURI">
+		<xs:annotation>
+			<xs:documentation>The URL to the website.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<!--The following types support the supporting elements above-->
+	<xs:complexType name="IPAddressType">
+		<xs:choice>
+			<xs:element name="IPv4">
+				<xs:simpleType>
+					<xs:restriction base="xs:token">
+						<xs:pattern value="([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="IPv6">
+				<xs:simpleType>
+					<xs:restriction base="xs:token">
+						<xs:pattern value="([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="NetworkInterfaceType">
+		<xs:sequence>
+			<xs:element ref="tns:IPAddress" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The IP address for this network interface.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MACAddress" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The MAC address associated with this network interface.</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:token">
+						<xs:pattern value="([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="URL" type="xs:anyURI" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>A URL in a relevant DNS server for this IP address.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SubnetMask" type="tns:IPAddressType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The subnet mask address for this network interface.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DefaultRoute" type="tns:IPAddressType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The IP address for the default gateway of this connection.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--
+		Change log:
+		
+		1.0.0-ea1
+		- Early access public release of the schema
+	-->
+</xs:schema>

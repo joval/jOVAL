@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+== Model: ARF 0.41
+== Package: replication
+-->
+<xsd:schema xmlns:replication="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41" xmlns:xsd="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41">
+  <!-- ================================================== -->
+  <!-- =====  Attribute Group Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  ActionAttributes  <<attributeGroup>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:attributeGroup name="ActionAttributes">
+    <xsd:attribute name="timestamp" type="xsd:dateTime"/>
+    <xsd:attribute name="action" type="replication:ActionType"/>
+  </xsd:attributeGroup>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  StatusAttributes  <<attributeGroup>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:attributeGroup name="StatusAttributes">
+    <xsd:attribute name="timestamp" type="xsd:dateTime"/>
+    <xsd:attribute default="true" name="status" type="replication:StatusEnum"/>
+    <xsd:attribute default="1" name="confidence" type="replication:ConfidenceBase">
+      <xsd:annotation>
+        <xsd:documentation>Confidence is a representation of the subjective probability that the assessed value is correct.  If no confidence value is given it is assumed that the confidence is 1.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="source" type="xsd:anyURI">
+      <xsd:annotation>
+        <xsd:documentation>The sensor or data source that provided the record</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="version" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>The version of the sensor or data source that provided the record</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="checkRef" type="xsd:anyURI">
+      <xsd:annotation>
+        <xsd:documentation>Link to a reference that explains the signature or definition used to discover a piece of data</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="checkSource" type="xsd:anyURI">
+      <xsd:annotation>
+        <xsd:documentation>Link to location where the signature or definition referenced by checkRef can be found</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+  </xsd:attributeGroup>
+  <!-- ================================================== -->
+  <!-- =====  Simple Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  ActionType  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="ActionType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="add"/>
+      <xsd:enumeration value="delete"/>
+      <xsd:enumeration value="update"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  ConfidenceBase  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="ConfidenceBase">
+    <xsd:annotation>
+      <xsd:documentation>Limits confidence values to the range between zero and one</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:decimal">
+      <xsd:minInclusive value="0"/>
+      <xsd:maxInclusive value="1"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  StatusEnum  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="StatusEnum">
+    <xsd:annotation>
+      <xsd:documentation>The ResultEnum defines the set of possible result values for a finding.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="true">
+        <xsd:annotation>
+          <xsd:documentation>The meaning of a "true" result varies depending on the type of Finding. See the documentation of the Finding class for a table that defines the meaning of a "true" result for each type of Finding.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="false">
+        <xsd:annotation>
+          <xsd:documentation>The meaning of a "false" result varies depending on the type of Finding. See the documentation of the Finding class for a table that defines the meaning of a "false" result for each type of Finding.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="error">
+        <xsd:annotation>
+          <xsd:documentation>A result value of 'error' means that the assessor encountered an error while assessing the asset.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="unknown">
+        <xsd:annotation>
+          <xsd:documentation>A result value of 'unknown' means that the Assessor was unable to determine a "true" or "false" result.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="not applicable">
+        <xsd:annotation>
+          <xsd:documentation>The Assessor determined that the specified item is not valid on the Asset.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="not evaluated">
+        <xsd:annotation>
+          <xsd:documentation>A choice was made not to check the asset for the identified item. The actual result is in essence unknown since if evaluation had occurred it could have been either true or false.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ================================================== -->
+  <!-- =====  Complex Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  anyURI  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="anyURIType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:anyURI">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  boolean  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="booleanType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:boolean">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  string  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="stringType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+</xsd:schema>

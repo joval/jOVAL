@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+== Model: ARF 0.41
+== Package: tagged_value
+-->
+<xsd:schema xmlns:replication="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41" xmlns:tagged_value="http://metadata.dod.mil/mdr/ns/netops/shared_data/tagged_value/0.41" xmlns:xsd="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/tagged_value/0.41">
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41"/>
+  <!-- ================================================== -->
+  <!-- =====  Element Declarations  -->
+  <!-- ================================================== -->
+  <xsd:element name="taggedBoolean" type="tagged_value:taggedBooleanType"/>
+  <xsd:element name="taggedDecimal" type="tagged_value:taggedDecimalType"/>
+  <xsd:element name="taggedHEX" type="tagged_value:taggedHEXType"/>
+  <xsd:element name="taggedInt" type="tagged_value:taggedIntType"/>
+  <xsd:element name="taggedString" type="tagged_value:taggedStringType"/>
+  <xsd:element name="taggedToken" type="tagged_value:taggedTokenType"/>
+  <xsd:element name="taggedURI" type="tagged_value:taggedURIType"/>
+  <xsd:element name="taggeddateTime" type="tagged_value:taggeddateTimeType"/>
+  <!-- ================================================== -->
+  <!-- =====  Simple Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  ExpandedHEX  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="ExpandedHEX">
+    <xsd:annotation>
+      <xsd:documentation>Provides for 256 bytes of HEX-encoded characters plus 127 bytes of spaces or dashes between HEX tuples.  Intended for use in carrying HEX-encoded values such as GUIDs, keys, or small chunks of HEX-encoded binary data.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[0-9a-fA-F: \-]*"/>
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="383"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ================================================== -->
+  <!-- =====  Complex Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  taggedBoolean  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="taggedBooleanType">
+    <xsd:attribute name="name" type="xsd:string" use="required"/>
+    <xsd:attribute name="value" type="xsd:boolean" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  taggedDecimal  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="taggedDecimalType">
+    <xsd:attribute name="name" type="xsd:string" use="required"/>
+    <xsd:attribute name="value" type="xsd:decimal" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  taggedHEX  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="taggedHEXType">
+    <xsd:attribute name="name" type="xsd:string" use="required"/>
+    <xsd:attribute name="value" type="tagged_value:ExpandedHEX" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  taggedInt  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="taggedIntType">
+    <xsd:attribute name="name" type="xsd:string" use="required"/>
+    <xsd:attribute name="value" type="xsd:int" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  taggedString  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="taggedStringType">
+    <xsd:attribute name="name" type="xsd:string" use="required"/>
+    <xsd:attribute name="value" type="xsd:string" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  taggedToken  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="taggedTokenType">
+    <xsd:attribute name="name" type="xsd:NCName" use="required"/>
+    <xsd:attribute name="value" type="xsd:token" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  taggedURI  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="taggedURIType">
+    <xsd:attribute name="name" type="xsd:string" use="required"/>
+    <xsd:attribute name="value" type="xsd:anyURI" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  taggeddateTime  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="taggeddateTimeType">
+    <xsd:attribute name="name" type="xsd:string" use="required"/>
+    <xsd:attribute name="value" type="xsd:dateTime" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+</xsd:schema>

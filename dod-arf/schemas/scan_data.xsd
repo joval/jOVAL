@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+== Model: ARF 0.41
+== Package: scan_data
+-->
+<xsd:schema xmlns:cndc="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41" xmlns:scan_data="http://metadata.dod.mil/mdr/ns/netops/shared_data/scan_data/0.41" xmlns:xsd="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/scan_data/0.41">
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41"/>
+  <!-- ================================================== -->
+  <!-- =====  Element Declarations  -->
+  <!-- ================================================== -->
+  <xsd:element name="Content" type="scan_data:ContentType"/>
+  <xsd:element name="ScanData" type="scan_data:ScanDataType"/>
+  <xsd:element name="ScanDataID" type="scan_data:ScanDataIDType"/>
+  <xsd:element name="Scanner" type="scan_data:ScannerType"/>
+  <!-- ================================================== -->
+  <!-- =====  Simple Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  ScanLocationList <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="ScanLocationList">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="host"/>
+      <xsd:enumeration value="network_local"/>
+      <xsd:enumeration value="network_remote"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ================================================== -->
+  <!-- =====  Complex Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Content  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="ContentType">
+    <xsd:sequence>
+      <xsd:element name="system" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="systemVersion" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="version" type="xsd:string" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  ScanDataID  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="ScanDataIDType">
+    <xsd:complexContent>
+      <xsd:extension base="cndc:EntityIdentifierType"/>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  ScanData  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="ScanDataType">
+    <xsd:sequence>
+      <xsd:element name="scanDataID" type="scan_data:ScanDataIDType"/>
+      <xsd:element minOccurs="0" name="authenticated" type="xsd:boolean" default="false"/>
+      <xsd:element minOccurs="0" name="execution_location" type="scan_data:ScanLocationList"/>
+      <xsd:element minOccurs="0" name="start" type="xsd:dateTime"/>
+      <xsd:element minOccurs="0" name="end" type="xsd:dateTime"/>
+      <xsd:element minOccurs="0" name="scanner" type="scan_data:ScannerType"/>
+      <xsd:element minOccurs="0" name="content" type="scan_data:ContentType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Scanner  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="ScannerType">
+    <xsd:sequence>
+      <xsd:element name="product_name" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="product_version" type="xsd:string" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+</xsd:schema>

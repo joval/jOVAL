@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+== Model: ARF 0.41
+== Package: assessment_report
+-->
+<xsd:schema xmlns:device="http://metadata.dod.mil/mdr/ns/netops/shared_data/device/0.41" xmlns:geoloc="http://metadata.dod.mil/mdr/ns/netops/shared_data/geolocation/0.41" xmlns:person="http://metadata.dod.mil/mdr/ns/netops/shared_data/person/0.41" xmlns:assessment_report="http://metadata.dod.mil/mdr/ns/netops/shared_data/assessment_report/0.41" xmlns:ops_attributes="http://metadata.dod.mil/mdr/ns/netops/shared_data/ops_attributes/0.41" xmlns:organization="http://metadata.dod.mil/mdr/ns/netops/shared_data/organization/0.41" xmlns:ext_net_data="http://metadata.dod.mil/mdr/ns/netops/shared_data/ext_net_data/0.41" xmlns:scan_data="http://metadata.dod.mil/mdr/ns/netops/shared_data/scan_data/0.41" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/assessment_report/0.41" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/geolocation/0.41" />
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/organization/0.41" />
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/ext_net_data/0.41" />
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/person/0.41" />
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/ops_attributes/0.41" />
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/device/0.41" />
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/scan_data/0.41"/>
+  <!-- ================================================== -->
+  <!-- =====  Element Declarations  -->
+  <!-- ================================================== -->
+  <xsd:element name="AssessmentReport" type="assessment_report:AssessmentReportType" />
+  <xsd:element name="ReportObject" type="assessment_report:ReportObjectType" />
+  <!-- ================================================== -->
+  <!-- =====  Complex Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  AssessmentReport  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="AssessmentReportType">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" name="reportObject" type="assessment_report:ReportObjectType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  ReportObject  <<choice>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="ReportObjectType">
+    <xsd:choice>
+      <xsd:element name="geolocation" type="geoloc:GeoLocationType" />
+      <xsd:element name="organization_info" type="organization:OrganizationType" />
+      <xsd:element name="external_network_data" type="ext_net_data:ExternalNetworkDataType" />
+      <xsd:element name="person" type="person:PersonType" />
+      <xsd:element name="operational_attributes" type="ops_attributes:OperationalAttributesType" />
+      <xsd:element name="device" type="device:DeviceType" />
+      <xsd:element name="scan_data" type="scan_data:ScanDataType" />
+    </xsd:choice>
+  </xsd:complexType>
+</xsd:schema>

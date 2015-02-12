@@ -2,10 +2,8 @@
 # This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
 
 TOP=..
-
 include $(TOP)/common.mk
 
-XJCFLAGS_EXT=-catalog $(CATALOG) -episode $(EPISODE)
 CLASSPATH="$(CLASSLIB)$(CLN)$(GEN)"
 
 include classes.mk
@@ -48,7 +46,7 @@ classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
 
 $(GEN): $(SCHEMA_FILES)
 	mkdir -p $@
-	$(XJC) $(XJCFLAGS) $(XJCFLAGS_EXT) $(SCHEMA_FILES) -b $(BINDINGS) -d $(GEN)
+	$(XJC) $(XJCFLAGS) $(SCHEMA_FILES) -b $(BINDINGS) -d $(GEN)
 
 $(BUILD)/%.class: $(GEN)/%.java
 	$(JAVAC) $(JAVACFLAGS) -d $(BUILD) -classpath $(CLASSPATH) $<

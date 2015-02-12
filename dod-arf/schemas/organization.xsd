@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+== Model: ARF 0.41.1
+== Package: organization
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:organization="http://metadata.dod.mil/mdr/ns/netops/shared_data/organization/0.41" targetNamespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/organization/0.41" attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:cndc="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41" xmlns:replication="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41" xmlns:geoloc="http://metadata.dod.mil/mdr/ns/netops/shared_data/geolocation/0.41">
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/geolocation/0.41"/>
+  <!-- ================================================== -->
+  <!-- =====  Element Declarations  -->
+  <!-- ================================================== -->
+  <xsd:element name="OrganizationID" type="organization:OrganizationIDType"/>
+  <xsd:element name="Organization" type="organization:OrganizationType"/>
+  <!-- ================================================== -->
+  <!-- =====  Complex Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  OrganizationID  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="OrganizationIDType">
+    <xsd:complexContent>
+      <xsd:extension base="cndc:EntityIdentifierType">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Organization  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="OrganizationType">
+    <xsd:sequence>
+      <xsd:element name="organization_ID" type="organization:OrganizationIDType"/>
+      <xsd:element minOccurs="0" name="name" type="replication:stringType"/>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="location" type="geoloc:GeolocationIDType"/>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="e-mail" type="replication:stringType"/>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="telephone" type="replication:stringType"/>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="phone" type="organization:PhoneType"/>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="web_site" type="replication:anyURIType"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:ActionAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  PhoneNumber  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="PhoneType">
+    <xsd:simpleContent>
+      <xsd:extension base="cndc:PhoneNumberType">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+</xsd:schema>

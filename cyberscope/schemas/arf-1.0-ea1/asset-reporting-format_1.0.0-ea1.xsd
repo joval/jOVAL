@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:tns="http://scap.nist.gov/schema/asset-reporting-format/1.0"
+	xmlns:ai="http://scap.nist.gov/schema/asset-identification/1.0"
+	targetNamespace="http://scap.nist.gov/schema/asset-reporting-format/1.0"
+	elementFormDefault="qualified" attributeFormDefault="unqualified"
+	version="1.0.0-ea1">
+	<xs:annotation>
+		<xs:appinfo>
+			<schema>Asset Reporting Format</schema>
+			<author>David Waltermire, Adam Halbardier</author>
+			<version>1.0.0-ea1 (Early Access Release 1)</version>
+			<date>2010-07-23</date>
+		</xs:appinfo>
+	</xs:annotation>
+	<xs:import namespace="http://scap.nist.gov/schema/asset-identification/1.0"/>
+	<xs:element name="AssetReport">
+		<xs:annotation>
+			<xs:documentation>The top-level report element</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="tns:ReportRequest" minOccurs="0"/>
+				<xs:element ref="tns:Subject"/>
+				<xs:element ref="tns:ReportInformation"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="ReportRequest">
+		<xs:annotation>
+			<xs:documentation>Contains the request for this report.  The request can be of any form as long as it is valid XML and is a member of the substitution group "BaseReportRequestSubstitutionGroup"</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="tns:BaseReportRequestSubstitutionGroup"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="Subject" type="tns:AssetIdentificationReferenceType">
+	    <xs:annotation>
+		    <xs:documentation>This contains the canonical ID or identifying information for the asset about which this report is generated.  Use the appropriate element in the IdentifyingInformation substitution group that correspondes to the asset type to be represented.</xs:documentation>
+		</xs:annotation>
+    </xs:element>
+	<xs:element name="ReportInformation">
+	    <xs:annotation>
+			<xs:documentation>The content for this report, such as the report results, when the report was run, what tool(s) generated the report, and what asset provided the responses.</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Report" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>Container to hold data about a report.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="ReportMetadata">
+								<xs:annotation>
+									<xs:documentation>Information about the report payload(s).</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="DateTime" type="xs:dateTime">
+											<xs:annotation>
+												<xs:documentation>When the report payload(s) was generated.</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Tool" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>The tool(s) used to generate the report payload(s).</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element ref="ai:Software" maxOccurs="unbounded"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="Source" type="tns:AssetIdentificationReferenceType" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>This contains the canonical ID or identifying information for the asset that answered the request about the subject.</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="ReportPayloads">
+								<xs:annotation>
+									<xs:documentation>Holds one or more reports</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="ReportPayload" maxOccurs="unbounded">
+											<xs:annotation>
+												<xs:documentation>A container to hold the contents of the report.</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:any namespace="##other"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="BaseReportRequestSubstitutionGroup" abstract="true">
+		<xs:annotation>
+			<xs:documentation>The root of the substitution group used as a placeholder for report request information. </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="AssetIdentificationReferenceType">
+		<xs:sequence>
+			<xs:element ref="ai:Asset" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--
+		Change log:
+		
+		1.0.0-ea1
+		- Early access public release of the schema
+	-->
+</xs:schema>

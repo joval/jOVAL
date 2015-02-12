@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+== Model: ARF 0.41
+== Package: security_marking
+-->
+<xsd:schema xmlns:icism="urn:us:gov:ic:ism:v2" xmlns:security-marking="http://metadata.dod.mil/mdr/ns/netops/shared_data/security-marking/0.41" xmlns:xsd="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/security-marking/0.41">
+  <xsd:import namespace="urn:us:gov:ic:ism:v2"/>
+  <!-- ================================================== -->
+  <!-- =====  Element Declarations  -->
+  <!-- ================================================== -->
+  <xsd:element name="Security_Marking" type="security-marking:Security_MarkingType"/>
+  <!-- ================================================== -->
+  <!-- =====  Simple Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  FOIA_Exemption_List  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="FOIA_Exemption_List">
+    <xsd:restriction base="xsd:NMTOKENS">
+      <xsd:enumeration value="1"/>
+      <xsd:enumeration value="2"/>
+      <xsd:enumeration value="3"/>
+      <xsd:enumeration value="4"/>
+      <xsd:enumeration value="5"/>
+      <xsd:enumeration value="6"/>
+      <xsd:enumeration value="7a"/>
+      <xsd:enumeration value="7b"/>
+      <xsd:enumeration value="7c"/>
+      <xsd:enumeration value="7d"/>
+      <xsd:enumeration value="7e"/>
+      <xsd:enumeration value="7f"/>
+      <xsd:enumeration value="8"/>
+      <xsd:enumeration value="9"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ================================================== -->
+  <!-- =====  Complex Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Security_Marking  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="Security_MarkingType">
+    <xsd:attributeGroup ref="icism:SecurityAttributesOptionGroup"/>
+    <xsd:attribute name="foiaExemption" type="security-marking:FOIA_Exemption_List"/>
+  </xsd:complexType>
+</xsd:schema>

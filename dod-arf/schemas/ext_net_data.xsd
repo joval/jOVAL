@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+== Model: ARF 0.41
+== Package: ext_net_data
+-->
+<xsd:schema xmlns:cndc="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41" xmlns:ext_net_data="http://metadata.dod.mil/mdr/ns/netops/shared_data/ext_net_data/0.41" xmlns:replication="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41" xmlns:xsd="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/ext_net_data/0.41">
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41"/>
+  <!-- ================================================== -->
+  <!-- =====  Element Declarations  -->
+  <!-- ================================================== -->
+  <xsd:element name="ExternalNetworkData" type="ext_net_data:ExternalNetworkDataType"/>
+  <xsd:element name="ExternalNetworkDataID" type="ext_net_data:ExternalNetworkDataIDType"/>
+  <!-- ================================================== -->
+  <!-- =====  Complex Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  ExternalNetworkDataID  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="ExternalNetworkDataIDType">
+    <xsd:complexContent>
+      <xsd:extension base="cndc:EntityIdentifierType"/>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  ExternalNetworkData  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="ExternalNetworkDataType">
+    <xsd:sequence>
+      <xsd:element name="external_network_data_ID" type="ext_net_data:ExternalNetworkDataIDType"/>
+      <xsd:element minOccurs="0" name="dns_suffix" type="xsd:string"/>
+      <xsd:element name="default_gateway_ip_address" type="cndc:IPAddressType"/>
+      <xsd:element minOccurs="0" name="default_gateway_mac_address" type="cndc:MACAddressType"/>
+      <xsd:element minOccurs="0" name="dhcp_server_ip_address" type="cndc:IPAddressType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="dns_server_ip_address" type="cndc:IPAddressType"/>
+      <xsd:element minOccurs="0" name="primary_wins_server_ip_address" type="cndc:IPAddressType"/>
+      <xsd:element minOccurs="0" name="secondary_wins_server_ip_address" type="cndc:IPAddressType"/>
+      <xsd:element minOccurs="0" name="web_proxy_ip_address" type="cndc:IPAddressType"/>
+      <xsd:element minOccurs="0" name="web_proxy_uri" type="xsd:anyURI"/>
+      <xsd:element minOccurs="0" name="smtp_gateway_ip_address" type="cndc:IPAddressType"/>
+      <xsd:element minOccurs="0" name="smtp_gateway_uri" type="xsd:anyURI"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+</xsd:schema>

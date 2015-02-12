@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+== Model: ARF 0.41.1
+== Package: person
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:person="http://metadata.dod.mil/mdr/ns/netops/shared_data/person/0.41" targetNamespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/person/0.41" attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:replication="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41" xmlns:cndc="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41" xmlns:organization="http://metadata.dod.mil/mdr/ns/netops/shared_data/organization/0.41" xmlns:geoloc="http://metadata.dod.mil/mdr/ns/netops/shared_data/geolocation/0.41">
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/organization/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/geolocation/0.41"/>
+  <!-- ================================================== -->
+  <!-- =====  Element Declarations  -->
+  <!-- ================================================== -->
+  <xsd:element name="Person" type="person:PersonType"/>
+  <!-- ================================================== -->
+  <!-- =====  Simple Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  GenerationalQualifierList  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="GenerationalQualifierList">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="Junior"/>
+      <xsd:enumeration value="Senior"/>
+      <xsd:enumeration value="I"/>
+      <xsd:enumeration value="II"/>
+      <xsd:enumeration value="III"/>
+      <xsd:enumeration value="IV"/>
+      <xsd:enumeration value="V"/>
+    </xsd:restriction>
+  </xsd:simpleType>  
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  PhoneNumberBase  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="PhoneNumberBase">
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="(\(\d{3}\) )?\d{3}-\d{4}"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ================================================== -->
+  <!-- =====  Complex Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  GenerationalQualifier  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="GenerationalQualifierType">
+    <xsd:simpleContent>
+      <xsd:extension base="person:GenerationalQualifierList">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Name  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="NameType">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="first_name" type="replication:stringType"/>
+      <xsd:element minOccurs="0" name="last_name" type="replication:stringType"/>
+      <xsd:element minOccurs="0" name="middle_initial" type="replication:stringType"/>
+      <xsd:element minOccurs="0" name="generational_qualifier" type="person:GenerationalQualifierType"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:ActionAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  PersonID  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="PersonIDType">
+    <xsd:complexContent>
+      <xsd:extension base="cndc:EntityIdentifierType">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Person  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="PersonType">
+    <xsd:sequence>
+      <xsd:element name="person_ID" type="person:PersonIDType"/>
+      <xsd:element minOccurs="0" name="full_name" type="person:NameType"/>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="rank_or_title" type="replication:stringType"/>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="e-mail" type="replication:stringType"/>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="organization" type="organization:OrganizationIDType"/>
+      <xsd:element minOccurs="0" name="position" type="replication:stringType"/>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="commercial_telephone" type="person:PhoneNumberType"/>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="DSN_telephone" type="person:PhoneNumberType"/>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="phone" type="person:PhoneType"/>
+      <xsd:element minOccurs="0" name="location" type="geoloc:GeolocationIDType"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:ActionAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  PhoneNumberType  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="PhoneNumberType">
+    <xsd:simpleContent>
+      <xsd:extension base="person:PhoneNumberBase">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  PhoneType  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="PhoneType">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        Data type for the new Phone element, which was developed
+        out of a need to store multiple phone number types (fax,
+        cell, work, home, etc) without needing to add new elements
+        each time.  This new type contains an attribute defining
+        the type of phone number
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:simpleContent>
+      <xsd:extension base="cndc:PhoneNumberType">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+</xsd:schema>

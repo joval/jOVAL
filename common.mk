@@ -58,8 +58,6 @@ SPACE:=$(NULL) # end of the line
 SHELL=/bin/sh
 CWD=$(shell pwd)
 
-XJCFLAGS=-enableIntrospection
-
 BUILD=build
 RSRC=rsrc
 DOCS=docs
@@ -68,8 +66,20 @@ SCHEMADIR=schemas
 BINDINGS=$(SCHEMADIR)/bindings.xjb
 CATALOG=schemas.cat
 EPISODE=schemas.episode
+XJCFLAGS=-enableIntrospection -catalog $(CATALOG) -episode $(EPISODE)
+XJCFLAGS_EXT=$(XJCFLAGS) -extension
+
+#
+# Make namespaces optional in the episode bindings
+#
+BROKEN=<bindings scd=\"x-schema::tns\"
+FIXED=<bindings scd=\"x-schema::tns\" if-exists=\"true\"
 
 SCAP=$(TOP)/scap
 SCAP_LIB=$(SCAP)/scap-schema-$(SCAP_VERSION).jar
 SCAP_EXT=$(TOP)/scap-extensions
 SCAP_EXT_LIB=$(SCAP_EXT)/scap-schema-extensions.jar
+CYBERSCOPE=$(TOP)/cyberscope
+CYBERSCOPE_LIB=$(CYBERSCOPE)/cyberscope-schema.jar
+DODARF=$(TOP)/dod-arf
+DODARF_LIB=$(DODARF)/DoD-ARF-schema.jar

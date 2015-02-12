@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+== Model: ARF 0.41.1
+== Package: device_record
+-->
+<xsd:schema xmlns:assessment="http://metadata.dod.mil/mdr/ns/netops/shared_data/assessment/0.41" xmlns:cndc="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41" xmlns:cpe-record_0.1="http://scap.nist.gov/schema/cpe-record/0.1" xmlns:device="http://metadata.dod.mil/mdr/ns/netops/shared_data/device/0.41" xmlns:ext_net_data="http://metadata.dod.mil/mdr/ns/netops/shared_data/ext_net_data/0.41" xmlns:ops_attributes="http://metadata.dod.mil/mdr/ns/netops/shared_data/ops_attributes/0.41" xmlns:replication="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41" xmlns:scan_data="http://metadata.dod.mil/mdr/ns/netops/shared_data/scan_data/0.41" xmlns:tagged_value="http://metadata.dod.mil/mdr/ns/netops/shared_data/tagged_value/0.41" xmlns:xsd="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/device/0.41">
+  <xsd:import namespace="http://scap.nist.gov/schema/cpe-record/0.1"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/ext_net_data/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/ops_attributes/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/tagged_value/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/assessment/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/scan_data/0.41"/>
+  <!-- ================================================== -->
+  <!-- =====  Element Declarations  -->
+  <!-- ================================================== -->
+  <xsd:element name="CPEInventory" type="device:CPEInventoryType"/>
+  <xsd:element name="Configuration" type="device:ConfigurationType"/>
+  <xsd:element name="Device" type="device:DeviceType"/>
+  <xsd:element name="DeviceID" type="device:DeviceIDType"/>
+  <xsd:element name="DeviceIdentifiers" type="device:DeviceIdentifiersType"/>
+  <xsd:element name="DomainName" type="device:DomainNameType"/>
+  <xsd:element name="HostNetworkData" type="device:HostNetworkDataType"/>
+  <xsd:element name="NetworkConfiguration" type="device:NetworkConfigurationType"/>
+  <!-- ================================================== -->
+  <!-- =====  Complex Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  CPEInventory  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="CPEInventoryType">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="cpe_record" type="cpe-record_0.1:cpeRecordType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Configuration  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="ConfigurationType">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="network_configuration" type="device:NetworkConfigurationType">
+        <xsd:annotation>
+          <xsd:documentation>If multiple network port connections are recorded (e.g. ethernet plus wireless), multiple network configurations will be reported, one data set for each port.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="cpe_inventory" type="device:CPEInventoryType"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  DeviceID  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="DeviceIDType">
+    <xsd:complexContent>
+      <xsd:extension base="cndc:EntityIdentifierType">
+        <xsd:attributeGroup ref="replication:StatusAttributes"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  DeviceIdentifiers  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="DeviceIdentifiersType">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="GUID" type="device:GUIDType">
+        <xsd:annotation>
+          <xsd:documentation>The GUID of the OS in active memory at the time of the assessment</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="FQDN" type="device:DomainNameType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Device  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="DeviceType">
+    <xsd:sequence>
+      <xsd:element name="device_ID" type="device:DeviceIDType"/>
+      <xsd:element minOccurs="0" name="identifiers" type="device:DeviceIdentifiersType"/>
+      <xsd:element minOccurs="0" name="operational_attributes" type="ops_attributes:OperationalAttributeIDType"/>
+      <xsd:element minOccurs="0" name="configuration" type="device:ConfigurationType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="composed_of" type="device:DeviceIDType"/>
+      <xsd:element minOccurs="0" name="composes" type="device:DeviceIDType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="role" type="device:roleType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="function" type="device:functionType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="tagged_value:taggedString"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="tagged_value:taggedDecimal"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="tagged_value:taggeddateTime"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="tagged_value:taggedInt"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="tagged_value:taggedBoolean"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="tagged_value:taggedURI"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="tagged_value:taggedToken"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="tagged_value:taggedHEX"/>
+      <xsd:element minOccurs="0" name="scap_results" type="assessment:SCAPResultsType"/>
+      <xsd:element minOccurs="0" name="tpm" type="xsd:boolean"/>
+      <xsd:element minOccurs="0" name="scan_data" type="scan_data:ScanDataIDType"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  DomainName  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="DomainNameType">
+    <xsd:sequence>
+      <xsd:element name="realm" type="xsd:anyURI"/>
+      <xsd:element name="host_name" type="xsd:string"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  GUID  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="GUIDType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attributeGroup ref="replication:StatusAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  HostNetworkData  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="HostNetworkDataType">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="connection_mac_address" type="cndc:MACAddressType"/>
+      <xsd:element minOccurs="0" name="connection_ip" type="cndc:IPAddressType"/>
+      <xsd:element minOccurs="0" name="subnet_mask" type="cndc:IPAddressType"/>
+      <xsd:element minOccurs="0" name="dhcp_enabled" type="xsd:boolean"/>
+      <xsd:element minOccurs="0" name="autoconfiguration_enabled" type="xsd:boolean"/>
+      <xsd:element minOccurs="0" name="dhcp_lease_obtained" type="xsd:dateTime"/>
+      <xsd:element minOccurs="0" name="dhcp_lease_expires" type="xsd:dateTime"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  NetworkConfiguration  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="NetworkConfigurationType">
+    <xsd:sequence>
+      <xsd:element name="network_interface_ID" type="xsd:string"/>
+      <xsd:element minOccurs="0" name="external_network_data" type="ext_net_data:ExternalNetworkDataIDType"/>
+      <xsd:element minOccurs="0" name="host_network_data" type="device:HostNetworkDataType"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  function  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="functionType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attributeGroup ref="replication:StatusAttributes"/>
+        <xsd:attribute name="action" type="replication:ActionType"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  role  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="roleType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attributeGroup ref="replication:StatusAttributes"/>
+        <xsd:attribute name="action" type="replication:ActionType"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+</xsd:schema>

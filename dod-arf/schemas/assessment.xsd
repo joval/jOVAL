@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+== Model: ARF 0.41
+== Package: assessment
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:assessment="http://metadata.dod.mil/mdr/ns/netops/shared_data/assessment/0.41" targetNamespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/assessment/0.41" attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:oval-res="http://oval.mitre.org/XMLSchema/oval-results-5" xmlns:cdf="http://checklists.nist.gov/xccdf/1.1">
+  <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-results-5"/>
+  <xsd:import namespace="http://checklists.nist.gov/xccdf/1.1"/>
+  <!-- ================================================== -->
+  <!-- =====  Element Declarations  -->
+  <!-- ================================================== -->
+  <xsd:element name="OVALResults" type="assessment:OVALResultsType"/>
+  <xsd:element name="SCAPResults" type="assessment:SCAPResultsType"/>
+  <xsd:element name="XCCDFResults" type="assessment:XCCDFResultsType"/>
+  <!-- ================================================== -->
+  <!-- =====  Complex Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  OVALResults  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="OVALResultsType">
+    <xsd:sequence>
+      <xsd:element ref="oval-res:oval_results"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  SCAPResults  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="SCAPResultsType">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="oval_results" type="assessment:OVALResultsType"/>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="xccdf_results" type="assessment:XCCDFResultsType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  XCCDFResults  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="XCCDFResultsType">
+    <xsd:sequence>
+      <xsd:element name="TestResult" type="cdf:testResultType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>

@@ -1,4 +1,4 @@
-# Copyright (C) 2015 jOVAL.org.  All rights reserved.
+# Copyright (C) 2013 jOVAL.org.  All rights reserved.
 # This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
 
 TOP=..
@@ -14,25 +14,29 @@ CLASS_FILES:=$(foreach class, $(CLASSES), $(BUILD)/$(subst .,/,$(class)).class)
 PACKAGES=$(sort $(basename $(CLASSES)))
 PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
-all: $(SCAP_EXT_LIB)
+all: $(DODARF_LIB)
 
-$(SCAP_EXT_LIB): $(GEN) classes resources
+$(DODARF_LIB): $(GEN) classes resources $(DOCS)
 	$(JAR) cvf $@ -C $(BUILD)/ .
+
+$(DOCS): $(GEN)
+	$(JAVADOC) -J-Xmx512m -d $(DOCS) -sourcepath $(GEN) -subpackages org:mil.disa
 
 clean:
 	rm -f $(EPISODE)
-	rm -f $(SCAP_EXT_LIB)
+	rm -f $(DODARF_LIB)
 	rm -rf $(BUILD)
 	rm -rf $(GEN)
+	rm -rf $(DOCS)
 
 resources:
 	mkdir -p $(BUILD)/META-INF
 	sed 's/$(BROKEN)/$(FIXED)/' $(EPISODE) > $(BUILD)/META-INF/sun-jaxb.episode
-	mkdir -p $(BUILD)/scapx/schemas
-	cp $(CATALOG) $(BUILD)/scapx
-	cp $(RSRC)/registry.ini $(BUILD)/scapx
-	cp -R $(SCHEMADIR)/* $(BUILD)/scapx/schemas
-	rm $(BUILD)/scapx/schemas/bindings.xjb
+	mkdir -p $(BUILD)/dodarf/schemas
+	cp $(CATALOG) $(BUILD)/dodarf
+	cp $(RSRC)/registry.ini $(BUILD)/dodarf
+	cp -R $(SCHEMADIR)/* $(BUILD)/dodarf/schemas
+	rm $(BUILD)/dodarf/schemas/bindings.xjb
 
 classes: classdirs $(CLASS_FILES)
 
@@ -40,8 +44,7 @@ classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
 
 $(GEN): $(SCHEMA_FILES)
 	mkdir -p $@
-	$(XJC) $(XJCFLAGS_EXT) $(SCHEMA_FILES) $(SCAP_LIB) -b $(BINDINGS) -d $(GEN)
-	find $(GEN) -name ObjectFactory.java | grep core | xargs rm
+	$(XJC) -verbose $(XJCFLAGS_EXT) $(SCHEMA_FILES) $(SCAP_LIB) -b $(BINDINGS) -d $(GEN)
 
 $(BUILD)/%.class: $(GEN)/%.java
 	$(JAVAC) $(JAVACFLAGS) -d $(BUILD) -classpath $(CLASSPATH) $<

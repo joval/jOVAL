@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+== Model: ARF 0.41.1
+== Package: ops_attributes
+-->
+<xsd:schema 
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+  xmlns:ops_attributes="http://metadata.dod.mil/mdr/ns/netops/shared_data/ops_attributes/0.41" 
+  targetNamespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/ops_attributes/0.41"
+  attributeFormDefault="unqualified" 
+  elementFormDefault="qualified" 
+  xmlns:cndc="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41" 
+  xmlns:replication="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41"
+  xmlns:organization="http://metadata.dod.mil/mdr/ns/netops/shared_data/organization/0.41"
+  xmlns:person="http://metadata.dod.mil/mdr/ns/netops/shared_data/person/0.41" 
+  xmlns:geoloc="http://metadata.dod.mil/mdr/ns/netops/shared_data/geolocation/0.41"
+  xmlns:security-marking="http://metadata.dod.mil/mdr/ns/netops/shared_data/security-marking/0.41">
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/organization/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/person/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/geolocation/0.41"/>
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/security-marking/0.41"/>
+  <!-- ================================================== -->
+  <!-- =====  Element Declarations  -->
+  <!-- ================================================== -->
+  <xsd:element name="OperationalAttributeID" type="ops_attributes:OperationalAttributeIDType"/>
+  <xsd:element name="OperationalAttributes" type="ops_attributes:OperationalAttributesType"/>
+  <!-- ================================================== -->
+  <!-- =====  Simple Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  ConfidentialityLevelList  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="ConfidentialityLevelList">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="Public"/>
+      <xsd:enumeration value="Sensitive"/>
+      <xsd:enumeration value="Classified"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  FIPS199ImpactLevelList <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="FIPS199ImpactLevelList">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="low"/>
+      <xsd:enumeration value="moderate"/>
+      <xsd:enumeration value="high"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  MACLevelList  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="MACLevelList">
+    <xsd:restriction base="xsd:integer">
+      <xsd:enumeration value="1"/>
+      <xsd:enumeration value="2"/>
+      <xsd:enumeration value="3"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ================================================== -->
+  <!-- =====  Complex Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  ConfidentialityLevel  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="ConfidentialityLevelType">
+    <xsd:simpleContent>
+      <xsd:extension base="ops_attributes:ConfidentialityLevelList">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  FIPS199ImpactLevel  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="FIPS199ImpactLevelType">
+    <xsd:simpleContent>
+      <xsd:extension base="ops_attributes:FIPS199ImpactLevelList">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Function  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="FunctionType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  MACLevel  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="MACLevelType">
+    <xsd:simpleContent>
+      <xsd:extension base="ops_attributes:MACLevelList">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  OperationalAttributeID  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="OperationalAttributeIDType">
+    <xsd:complexContent>
+      <xsd:extension base="cndc:EntityIdentifierType">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  OperationalAttributes  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="OperationalAttributesType">
+    <xsd:sequence>
+      <xsd:element name="operational_attribute_ID" type="ops_attributes:OperationalAttributeIDType"/>
+      <xsd:element minOccurs="0" name="security_marking" type="security-marking:Security_MarkingType"/>
+      <xsd:element minOccurs="0" name="owning_unit" type="organization:OrganizationIDType"/>
+      <xsd:element minOccurs="0" name="owning_service" type="organization:OrganizationIDType"/>
+      <xsd:element minOccurs="0" name="current_aor" type="replication:stringType"/>
+      <xsd:element minOccurs="0" name="region" type="replication:stringType"/>
+      <xsd:element minOccurs="0" name="administration_unit" type="organization:OrganizationIDType"/>
+      <xsd:element minOccurs="0" name="administration_poc" type="person:PersonIDType"/>
+      <xsd:element minOccurs="0" name="cnd_service_provider" type="organization:OrganizationIDType"/>
+      <xsd:element minOccurs="0" name="mac_level" type="ops_attributes:MACLevelType"/>
+      <xsd:element minOccurs="0" name="confidentiality_level" type="ops_attributes:ConfidentialityLevelType"/>
+      <xsd:element minOccurs="0" name="fips199_confidentiality" type="ops_attributes:FIPS199ImpactLevelType"/>
+      <xsd:element minOccurs="0" name="fips199_integrity" type="ops_attributes:FIPS199ImpactLevelType"/>
+      <xsd:element minOccurs="0" name="fips199_availability" type="ops_attributes:FIPS199ImpactLevelType"/>
+      <xsd:element minOccurs="0" name="por_managed" default="false" type="replication:booleanType"/>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="system_affiliation" type="replication:stringType"/>
+      <xsd:element minOccurs="0" name="DoD_network" type="replication:stringType"/>
+      <xsd:element minOccurs="0" name="network" type="replication:stringType"/>
+      <xsd:element minOccurs="0" name="ccsd" type="replication:stringType"/>
+      <xsd:element minOccurs="0" name="circuit_id" type="replication:stringType"/>
+      <xsd:element minOccurs="0" name="Location" type="geoloc:GeolocationIDType"/>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="role" type="ops_attributes:RoleType"/>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="function" type="ops_attributes:FunctionType"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:ActionAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Role  <<complexType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="RoleType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attributeGroup ref="replication:ActionAttributes"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+</xsd:schema>

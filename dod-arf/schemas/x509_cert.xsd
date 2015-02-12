@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+== Model: ARF 0.41
+== Package: x509_cert
+-->
+<xsd:schema xmlns:replication="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41" xmlns:x509_cert="http://metadata.dod.mil/mdr/ns/ia_cnd/pki/x509_cert/3" xmlns:xsd="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://metadata.dod.mil/mdr/ns/ia_cnd/pki/x509_cert/3">
+  <xsd:import namespace="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41"/>
+  <!-- ================================================== -->
+  <!-- =====  Element Declarations  -->
+  <!-- ================================================== -->
+  <xsd:element name="AuthorityInformationAccess" type="x509_cert:AuthorityInformationAccessType"/>
+  <xsd:element name="AuthorityKeyIdentifier" type="x509_cert:AuthorityKeyIdentifierType"/>
+  <xsd:element name="CRLDistributionPoint" type="x509_cert:CRLDistributionPointType"/>
+  <xsd:element name="CertificatePolicy" type="x509_cert:CertificatePolicyType"/>
+  <xsd:element name="Extensions" type="x509_cert:ExtensionsType"/>
+  <xsd:element name="KeyUsage" type="x509_cert:KeyUsageType"/>
+  <xsd:element name="Name" type="x509_cert:NameType"/>
+  <xsd:element name="SubjectKeyIdentifier" type="x509_cert:SubjectKeyIdentifierType"/>
+  <xsd:element name="SubjectPublicKeyInfo" type="x509_cert:SubjectPublicKeyInfoType"/>
+  <xsd:element name="Validity" type="x509_cert:ValidityType"/>
+  <xsd:element name="x509Cert" type="x509_cert:x509CertType"/>
+  <!-- ================================================== -->
+  <!-- =====  Simple Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  ExpandedHEX  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="ExpandedHEX">
+    <xsd:annotation>
+      <xsd:documentation>Provides for 256 bytes of HEX-encoded characters plus 127 bytes of spaces or dashes between HEX tuples.  Intended for use in carrying HEX-encoded values such as GUIDs, keys, or small chunks of HEX-encoded binary data.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[0-9a-fA-F \-]*"/>
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="383"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  RestrictedSafeString2  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="RestrictedSafeString2">
+    <xsd:restriction base="x509_cert:SafeASCII">
+      <xsd:minLength value="2"/>
+      <xsd:maxLength value="2"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  RestrictedSafeString64  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="RestrictedSafeString64">
+    <xsd:restriction base="x509_cert:SafeASCII">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="64"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  SafeASCII  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="SafeASCII">
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[ ,-~\()]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  StateType  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="StateType">
+    <xsd:annotation>
+      <xsd:documentation>ISO 3166-2 code for State or equivalent subdivision of a country.  Restricted to 1 to 3 alphanumeric characters.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[A-Z0-9]{1,3}"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  pkiCertVersionList  <<simpleType>>  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:simpleType name="pkiCertVersionList">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="v1"/>
+      <xsd:enumeration value="v2"/>
+      <xsd:enumeration value="v3"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!-- ================================================== -->
+  <!-- =====  Complex Type Definitions  -->
+  <!-- ================================================== -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  AuthorityInformationAccess  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="AuthorityInformationAccessType">
+    <xsd:attribute name="AccessMethod" type="x509_cert:RestrictedSafeString64"/>
+    <xsd:attribute name="AlternativeName" type="xsd:anyURI" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  AuthorityKeyIdentifier  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="AuthorityKeyIdentifierType">
+    <xsd:attribute name="identifier" type="x509_cert:ExpandedHEX" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  CRLDistributionPoint  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="CRLDistributionPointType">
+    <xsd:attribute name="DistributionPointName" type="x509_cert:RestrictedSafeString64"/>
+    <xsd:attribute name="URL" type="xsd:anyURI" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  CertificatePolicy  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="CertificatePolicyType">
+    <xsd:attribute name="CertificatePolicy" type="x509_cert:RestrictedSafeString64"/>
+    <xsd:attribute name="policyIdentifier" type="x509_cert:RestrictedSafeString64" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Extensions  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="ExtensionsType">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="authorityKeyIdentifier" type="x509_cert:AuthorityKeyIdentifierType"/>
+      <xsd:element minOccurs="0" name="subjectKeyIdentifier" type="x509_cert:SubjectKeyIdentifierType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="crlDistributionPoints" type="x509_cert:CRLDistributionPointType"/>
+      <xsd:element minOccurs="0" name="authorityInformationAccess" type="x509_cert:AuthorityInformationAccessType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="certificatePolicies" type="x509_cert:CertificatePolicyType"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" ref="x509_cert:KeyUsage"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  KeyUsage  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="KeyUsageType">
+    <xsd:attribute name="usage" type="x509_cert:RestrictedSafeString64" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Name  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="NameType">
+    <xsd:sequence>
+      <xsd:element name="commonName" type="x509_cert:RestrictedSafeString64"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="organizationalUnit" type="x509_cert:RestrictedSafeString64"/>
+      <xsd:element name="organization" type="x509_cert:RestrictedSafeString64"/>
+      <xsd:element minOccurs="0" name="localityName" type="x509_cert:RestrictedSafeString64"/>
+      <xsd:element minOccurs="0" name="stateOrProvinceName" type="x509_cert:StateType"/>
+      <xsd:element name="countryName" type="x509_cert:RestrictedSafeString2"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  SubjectKeyIdentifier  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="SubjectKeyIdentifierType">
+    <xsd:attribute name="identifier" type="x509_cert:ExpandedHEX" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  SubjectPublicKeyInfo  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="SubjectPublicKeyInfoType">
+    <xsd:sequence>
+      <xsd:element name="publicKeyAlgorithm" type="x509_cert:RestrictedSafeString64"/>
+      <xsd:element name="subjectPublicKey" type="x509_cert:ExpandedHEX">
+        <xsd:annotation>
+          <xsd:documentation>Hexidecimal key value up to 2048 bits</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  Validity  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="ValidityType">
+    <xsd:attribute name="notBefore" type="xsd:dateTime" use="required"/>
+    <xsd:attribute name="notAfter" type="xsd:dateTime" use="required"/>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--  x509Cert  -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <xsd:complexType name="x509CertType">
+    <xsd:sequence>
+      <xsd:element name="version" type="x509_cert:pkiCertVersionList"/>
+      <xsd:element name="serialNumber" type="x509_cert:ExpandedHEX"/>
+      <xsd:element name="signatureAlgorithm" type="x509_cert:RestrictedSafeString64"/>
+      <xsd:element name="issuer" type="x509_cert:NameType"/>
+      <xsd:element name="validity" type="x509_cert:ValidityType"/>
+      <xsd:element name="subject" type="x509_cert:NameType"/>
+      <xsd:element name="subjectPublicKeyInfo" type="x509_cert:SubjectPublicKeyInfoType"/>
+      <xsd:element minOccurs="0" name="issuerUniqueIdentifier" type="x509_cert:ExpandedHEX">
+        <xsd:annotation>
+          <xsd:documentation>DoD PKI uses a 40 character hex key with spaces between each hex pair</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="subjectUniqueIdentifier" type="x509_cert:ExpandedHEX">
+        <xsd:annotation>
+          <xsd:documentation>DoD PKI uses a 40 character hex key with spaces between each hex pair</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="extensions" type="x509_cert:ExtensionsType"/>
+      <xsd:element name="certificateSignatureAlgorithm" type="x509_cert:RestrictedSafeString64"/>
+      <xsd:element name="certificateSignature" type="x509_cert:ExpandedHEX"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="replication:StatusAttributes"/>
+  </xsd:complexType>
+</xsd:schema>
