@@ -2,6 +2,10 @@
 gen-src/
 build/
 docs/
+cyberscope/schemas.episode
+cyberscope/cyberscope-schema.jar
+dod-arf/schemas.episode
+dod-arf/DoD-ARF-schema.jar
 scap/schemas.episode
 scap/scap-schema-*.jar
 scap-extensions/schemas.episode
