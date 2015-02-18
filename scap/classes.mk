@@ -301,6 +301,7 @@ CLASSES=\
 	scap.oval.common.GeneratorType	\
 	scap.oval.common.MessageLevelEnumeration	\
 	scap.oval.common.MessageType	\
+	scap.oval.common.NotesType	\
 	scap.oval.common.ObjectFactory	\
 	scap.oval.common.OperationEnumeration	\
 	scap.oval.common.OperatorEnumeration	\
@@ -326,11 +327,120 @@ CLASSES=\
 	scap.oval.definitions.aix.OslevelState	\
 	scap.oval.definitions.aix.OslevelTest	\
 	scap.oval.definitions.aix.package-info	\
+	scap.oval.definitions.android.AppmanagerObject	\
+	scap.oval.definitions.android.AppmanagerState	\
+	scap.oval.definitions.android.AppmanagerTest	\
+	scap.oval.definitions.android.BluetoothObject	\
+	scap.oval.definitions.android.BluetoothState	\
+	scap.oval.definitions.android.BluetoothTest	\
+	scap.oval.definitions.android.CameraObject	\
+	scap.oval.definitions.android.CameraState	\
+	scap.oval.definitions.android.CameraTest	\
+	scap.oval.definitions.android.CertificateObject	\
+	scap.oval.definitions.android.CertificateState	\
+	scap.oval.definitions.android.CertificateTest	\
+	scap.oval.definitions.android.DevicesettingsObject	\
+	scap.oval.definitions.android.DevicesettingsState	\
+	scap.oval.definitions.android.DevicesettingsTest	\
+	scap.oval.definitions.android.EncryptionObject	\
+	scap.oval.definitions.android.EncryptionState	\
+	scap.oval.definitions.android.EncryptionTest	\
+	scap.oval.definitions.android.EntityStateEncryptionStatusType	\
+	scap.oval.definitions.android.EntityStateKeyguardDisabledFeaturesType	\
+	scap.oval.definitions.android.EntityStateNetworkType	\
+	scap.oval.definitions.android.EntityStatePasswordQualityType	\
+	scap.oval.definitions.android.EntityStateWifiAuthAlgorithmType	\
+	scap.oval.definitions.android.EntityStateWifiCurrentStatusType	\
+	scap.oval.definitions.android.EntityStateWifiGroupCipherType	\
+	scap.oval.definitions.android.EntityStateWifiKeyMgmtType	\
+	scap.oval.definitions.android.EntityStateWifiPairwiseCipherType	\
+	scap.oval.definitions.android.EntityStateWifiProtocolType	\
+	scap.oval.definitions.android.LocationserviceObject	\
+	scap.oval.definitions.android.LocationserviceState	\
+	scap.oval.definitions.android.LocationserviceTest	\
+	scap.oval.definitions.android.NetworkObject	\
+	scap.oval.definitions.android.NetworkState	\
+	scap.oval.definitions.android.NetworkTest	\
+	scap.oval.definitions.android.ObjectFactory	\
+	scap.oval.definitions.android.package-info	\
+	scap.oval.definitions.android.PasswordObject	\
+	scap.oval.definitions.android.PasswordState	\
+	scap.oval.definitions.android.PasswordTest	\
+	scap.oval.definitions.android.SystemdetailsObject	\
+	scap.oval.definitions.android.SystemdetailsState	\
+	scap.oval.definitions.android.SystemdetailsTest	\
+	scap.oval.definitions.android.TelephonyObject	\
+	scap.oval.definitions.android.TelephonyState	\
+	scap.oval.definitions.android.TelephonyTest	\
+	scap.oval.definitions.android.WifinetworkObject	\
+	scap.oval.definitions.android.WifinetworkState	\
+	scap.oval.definitions.android.WifinetworkTest	\
+	scap.oval.definitions.android.WifiObject	\
+	scap.oval.definitions.android.WifiState	\
+	scap.oval.definitions.android.WifiTest	\
 	scap.oval.definitions.apache.HttpdObject	\
 	scap.oval.definitions.apache.HttpdState	\
 	scap.oval.definitions.apache.HttpdTest	\
 	scap.oval.definitions.apache.ObjectFactory	\
 	scap.oval.definitions.apache.package-info	\
+	scap.oval.definitions.appleios.GlobalrestrictionsObject	\
+	scap.oval.definitions.appleios.GlobalrestrictionsState	\
+	scap.oval.definitions.appleios.GlobalrestrictionsTest	\
+	scap.oval.definitions.appleios.ObjectFactory	\
+	scap.oval.definitions.appleios.package-info	\
+	scap.oval.definitions.appleios.PasscodepolicyObject	\
+	scap.oval.definitions.appleios.PasscodepolicyState	\
+	scap.oval.definitions.appleios.PasscodepolicyTest	\
+	scap.oval.definitions.appleios.ProfileObject	\
+	scap.oval.definitions.appleios.ProfileState	\
+	scap.oval.definitions.appleios.ProfileTest	\
+	scap.oval.definitions.asa.AclObject	\
+	scap.oval.definitions.asa.AclState	\
+	scap.oval.definitions.asa.AclTest	\
+	scap.oval.definitions.asa.ClassMapObject	\
+	scap.oval.definitions.asa.ClassMapState	\
+	scap.oval.definitions.asa.ClassMapTest	\
+	scap.oval.definitions.asa.EntityObjectAccessListIPVersionType	\
+	scap.oval.definitions.asa.EntityStateAccessListInterfaceDirectionType	\
+	scap.oval.definitions.asa.EntityStateAccessListIPVersionType	\
+	scap.oval.definitions.asa.EntityStateAccessListUseType	\
+	scap.oval.definitions.asa.EntityStateApplyServicePolicyType	\
+	scap.oval.definitions.asa.EntityStateClassMapType	\
+	scap.oval.definitions.asa.EntityStateInpsectionType	\
+	scap.oval.definitions.asa.EntityStateMatchType	\
+	scap.oval.definitions.asa.EntityStateSNMPAuthStringType	\
+	scap.oval.definitions.asa.EntityStateSNMPPrivStringType	\
+	scap.oval.definitions.asa.EntityStateSNMPSecLevelStringType	\
+	scap.oval.definitions.asa.EntityStateSNMPVersionStringType	\
+	scap.oval.definitions.asa.InterfaceObject	\
+	scap.oval.definitions.asa.InterfaceState	\
+	scap.oval.definitions.asa.InterfaceTest	\
+	scap.oval.definitions.asa.LineObject	\
+	scap.oval.definitions.asa.LineState	\
+	scap.oval.definitions.asa.LineTest	\
+	scap.oval.definitions.asa.ObjectFactory	\
+	scap.oval.definitions.asa.package-info	\
+	scap.oval.definitions.asa.PolicyMapObject	\
+	scap.oval.definitions.asa.PolicyMapState	\
+	scap.oval.definitions.asa.PolicyMapTest	\
+	scap.oval.definitions.asa.ServicePolicyObject	\
+	scap.oval.definitions.asa.ServicePolicyState	\
+	scap.oval.definitions.asa.ServicePolicyTest	\
+	scap.oval.definitions.asa.SnmpGroupObject	\
+	scap.oval.definitions.asa.SnmpGroupState	\
+	scap.oval.definitions.asa.SnmpGroupTest	\
+	scap.oval.definitions.asa.SnmpHostObject	\
+	scap.oval.definitions.asa.SnmpHostState	\
+	scap.oval.definitions.asa.SnmpHostTest	\
+	scap.oval.definitions.asa.SnmpUserObject	\
+	scap.oval.definitions.asa.SnmpUserState	\
+	scap.oval.definitions.asa.SnmpUserTest	\
+	scap.oval.definitions.asa.TcpMapObject	\
+	scap.oval.definitions.asa.TcpMapState	\
+	scap.oval.definitions.asa.TcpMapTest	\
+	scap.oval.definitions.asa.VersionObject	\
+	scap.oval.definitions.asa.VersionState	\
+	scap.oval.definitions.asa.VersionTest	\
 	scap.oval.definitions.catos.LineObject	\
 	scap.oval.definitions.catos.LineState	\
 	scap.oval.definitions.catos.LineTest	\
@@ -392,10 +502,10 @@ CLASSES=\
 	scap.oval.definitions.core.ExternalVariable	\
 	scap.oval.definitions.core.Filter	\
 	scap.oval.definitions.core.FilterActionEnumeration	\
+	scap.oval.definitions.core.GlobToRegexFunctionType	\
 	scap.oval.definitions.core.LiteralComponentType	\
 	scap.oval.definitions.core.LocalVariable	\
 	scap.oval.definitions.core.MetadataType	\
-	scap.oval.definitions.core.NotesType	\
 	scap.oval.definitions.core.ObjectComponentType	\
 	scap.oval.definitions.core.ObjectFactory	\
 	scap.oval.definitions.core.ObjectRefType	\
@@ -522,7 +632,27 @@ CLASSES=\
 	scap.oval.definitions.independent.XmlfilecontentObject	\
 	scap.oval.definitions.independent.XmlfilecontentState	\
 	scap.oval.definitions.independent.XmlfilecontentTest	\
+	scap.oval.definitions.ios.AclObject	\
+	scap.oval.definitions.ios.AclState	\
+	scap.oval.definitions.ios.AclTest	\
+	scap.oval.definitions.ios.BgpneighborObject	\
+	scap.oval.definitions.ios.BgpneighborState	\
+	scap.oval.definitions.ios.BgpneighborTest	\
+	scap.oval.definitions.ios.EntityObjectAccessListIPVersionType	\
+	scap.oval.definitions.ios.EntityObjectRoutingProtocolType	\
+	scap.oval.definitions.ios.EntityStateAccessListInterfaceDirectionType	\
+	scap.oval.definitions.ios.EntityStateAccessListIPVersionType	\
+	scap.oval.definitions.ios.EntityStateAccessListUseType	\
+	scap.oval.definitions.ios.EntityStateRoutingAuthTypeStringType	\
+	scap.oval.definitions.ios.EntityStateRoutingProtocolType	\
+	scap.oval.definitions.ios.EntityStateSNMPAuthStringType	\
+	scap.oval.definitions.ios.EntityStateSNMPModeStringType	\
+	scap.oval.definitions.ios.EntityStateSNMPPrivStringType	\
+	scap.oval.definitions.ios.EntityStateSNMPSecLevelStringType	\
+	scap.oval.definitions.ios.EntityStateSNMPVersionStringType	\
+	scap.oval.definitions.ios.EntityStateSwitchportModeType	\
 	scap.oval.definitions.ios.EntityStateTrainIdentifierType	\
+	scap.oval.definitions.ios.EntityStateTrunkEncapType	\
 	scap.oval.definitions.ios.GlobalObject	\
 	scap.oval.definitions.ios.GlobalState	\
 	scap.oval.definitions.ios.GlobalTest	\
@@ -534,9 +664,33 @@ CLASSES=\
 	scap.oval.definitions.ios.LineTest	\
 	scap.oval.definitions.ios.ObjectFactory	\
 	scap.oval.definitions.ios.package-info	\
+	scap.oval.definitions.ios.RouterObject	\
+	scap.oval.definitions.ios.RouterState	\
+	scap.oval.definitions.ios.RouterTest	\
+	scap.oval.definitions.ios.RoutingprotocolauthintfObject	\
+	scap.oval.definitions.ios.RoutingprotocolauthintfState	\
+	scap.oval.definitions.ios.RoutingprotocolauthintfTest	\
+	scap.oval.definitions.ios.SectionObject	\
+	scap.oval.definitions.ios.SectionState	\
+	scap.oval.definitions.ios.SectionTest	\
+	scap.oval.definitions.ios.SnmpcommunityObject	\
+	scap.oval.definitions.ios.SnmpcommunityState	\
+	scap.oval.definitions.ios.SnmpcommunityTest	\
+	scap.oval.definitions.ios.SnmpgroupObject	\
+	scap.oval.definitions.ios.SnmpgroupState	\
+	scap.oval.definitions.ios.SnmpgroupTest	\
+	scap.oval.definitions.ios.SnmphostObject	\
+	scap.oval.definitions.ios.SnmphostState	\
+	scap.oval.definitions.ios.SnmphostTest	\
 	scap.oval.definitions.ios.SnmpObject	\
 	scap.oval.definitions.ios.SnmpState	\
 	scap.oval.definitions.ios.SnmpTest	\
+	scap.oval.definitions.ios.SnmpuserObject	\
+	scap.oval.definitions.ios.SnmpuserState	\
+	scap.oval.definitions.ios.SnmpuserTest	\
+	scap.oval.definitions.ios.SnmpviewObject	\
+	scap.oval.definitions.ios.SnmpviewState	\
+	scap.oval.definitions.ios.SnmpviewTest	\
 	scap.oval.definitions.ios.TclshObject	\
 	scap.oval.definitions.ios.TclshState	\
 	scap.oval.definitions.ios.TclshTest	\
@@ -546,6 +700,79 @@ CLASSES=\
 	scap.oval.definitions.ios.VersionObject	\
 	scap.oval.definitions.ios.VersionState	\
 	scap.oval.definitions.ios.VersionTest	\
+	scap.oval.definitions.iosxe.AclObject	\
+	scap.oval.definitions.iosxe.AclState	\
+	scap.oval.definitions.iosxe.AclTest	\
+	scap.oval.definitions.iosxe.BgpneighborObject	\
+	scap.oval.definitions.iosxe.BgpneighborState	\
+	scap.oval.definitions.iosxe.BgpneighborTest	\
+	scap.oval.definitions.iosxe.EntityObjectAccessListIPVersionType	\
+	scap.oval.definitions.iosxe.EntityObjectRoutingProtocolType	\
+	scap.oval.definitions.iosxe.EntityStateAccessListInterfaceDirectionType	\
+	scap.oval.definitions.iosxe.EntityStateAccessListIPVersionType	\
+	scap.oval.definitions.iosxe.EntityStateAccessListUseType	\
+	scap.oval.definitions.iosxe.EntityStateRoutingAuthTypeStringType	\
+	scap.oval.definitions.iosxe.EntityStateRoutingProtocolType	\
+	scap.oval.definitions.iosxe.EntityStateSNMPAuthStringType	\
+	scap.oval.definitions.iosxe.EntityStateSNMPModeStringType	\
+	scap.oval.definitions.iosxe.EntityStateSNMPPrivStringType	\
+	scap.oval.definitions.iosxe.EntityStateSNMPSecLevelStringType	\
+	scap.oval.definitions.iosxe.EntityStateSNMPVersionStringType	\
+	scap.oval.definitions.iosxe.EntityStateSwitchportModeType	\
+	scap.oval.definitions.iosxe.EntityStateTrunkEncapType	\
+	scap.oval.definitions.iosxe.GlobalObject	\
+	scap.oval.definitions.iosxe.GlobalState	\
+	scap.oval.definitions.iosxe.GlobalTest	\
+	scap.oval.definitions.iosxe.InterfaceObject	\
+	scap.oval.definitions.iosxe.InterfaceState	\
+	scap.oval.definitions.iosxe.InterfaceTest	\
+	scap.oval.definitions.iosxe.LineObject	\
+	scap.oval.definitions.iosxe.LineState	\
+	scap.oval.definitions.iosxe.LineTest	\
+	scap.oval.definitions.iosxe.ObjectFactory	\
+	scap.oval.definitions.iosxe.package-info	\
+	scap.oval.definitions.iosxe.RouterObject	\
+	scap.oval.definitions.iosxe.RouterState	\
+	scap.oval.definitions.iosxe.RouterTest	\
+	scap.oval.definitions.iosxe.RoutingprotocolauthintfObject	\
+	scap.oval.definitions.iosxe.RoutingprotocolauthintfState	\
+	scap.oval.definitions.iosxe.RoutingprotocolauthintfTest	\
+	scap.oval.definitions.iosxe.SectionObject	\
+	scap.oval.definitions.iosxe.SectionState	\
+	scap.oval.definitions.iosxe.SectionTest	\
+	scap.oval.definitions.iosxe.SnmpcommunityObject	\
+	scap.oval.definitions.iosxe.SnmpcommunityState	\
+	scap.oval.definitions.iosxe.SnmpcommunityTest	\
+	scap.oval.definitions.iosxe.SnmpgroupObject	\
+	scap.oval.definitions.iosxe.SnmpgroupState	\
+	scap.oval.definitions.iosxe.SnmpgroupTest	\
+	scap.oval.definitions.iosxe.SnmphostObject	\
+	scap.oval.definitions.iosxe.SnmphostState	\
+	scap.oval.definitions.iosxe.SnmphostTest	\
+	scap.oval.definitions.iosxe.SnmpuserObject	\
+	scap.oval.definitions.iosxe.SnmpuserState	\
+	scap.oval.definitions.iosxe.SnmpuserTest	\
+	scap.oval.definitions.iosxe.SnmpviewObject	\
+	scap.oval.definitions.iosxe.SnmpviewState	\
+	scap.oval.definitions.iosxe.SnmpviewTest	\
+	scap.oval.definitions.iosxe.VersionObject	\
+	scap.oval.definitions.iosxe.VersionState	\
+	scap.oval.definitions.iosxe.VersionTest	\
+	scap.oval.definitions.junos.EntityStateJunosReleaseTypeType	\
+	scap.oval.definitions.junos.ObjectFactory	\
+	scap.oval.definitions.junos.package-info	\
+	scap.oval.definitions.junos.ShowObject	\
+	scap.oval.definitions.junos.ShowState	\
+	scap.oval.definitions.junos.ShowTest	\
+	scap.oval.definitions.junos.VersionObject	\
+	scap.oval.definitions.junos.VersionState	\
+	scap.oval.definitions.junos.VersionTest	\
+	scap.oval.definitions.junos.XmlConfigObject	\
+	scap.oval.definitions.junos.XmlConfigState	\
+	scap.oval.definitions.junos.XmlConfigTest	\
+	scap.oval.definitions.junos.XmlShowObject	\
+	scap.oval.definitions.junos.XmlShowState	\
+	scap.oval.definitions.junos.XmlShowTest	\
 	scap.oval.definitions.linux.DpkginfoObject	\
 	scap.oval.definitions.linux.DpkginfoState	\
 	scap.oval.definitions.linux.DpkginfoTest	\
@@ -588,20 +815,43 @@ CLASSES=\
 	scap.oval.definitions.linux.SlackwarepkginfoObject	\
 	scap.oval.definitions.linux.SlackwarepkginfoState	\
 	scap.oval.definitions.linux.SlackwarepkginfoTest	\
+	scap.oval.definitions.linux.SystemdunitdependencyObject	\
+	scap.oval.definitions.linux.SystemdunitdependencyState	\
+	scap.oval.definitions.linux.SystemdunitdependencyTest	\
+	scap.oval.definitions.linux.SystemdunitpropertyObject	\
+	scap.oval.definitions.linux.SystemdunitpropertyState	\
+	scap.oval.definitions.linux.SystemdunitpropertyTest	\
 	scap.oval.definitions.macos.AccountinfoObject	\
 	scap.oval.definitions.macos.AccountinfoState	\
 	scap.oval.definitions.macos.AccountinfoTest	\
+	scap.oval.definitions.macos.AuthorizationdbObject	\
+	scap.oval.definitions.macos.AuthorizationdbState	\
+	scap.oval.definitions.macos.AuthorizationdbTest	\
+	scap.oval.definitions.macos.CorestorageObject	\
+	scap.oval.definitions.macos.CorestorageState	\
+	scap.oval.definitions.macos.CorestorageTest	\
 	scap.oval.definitions.macos.DiskutilObject	\
 	scap.oval.definitions.macos.DiskutilState	\
 	scap.oval.definitions.macos.DiskutilTest	\
+	scap.oval.definitions.macos.EntityObjectDataTypeType	\
+	scap.oval.definitions.macos.EntityStateDataTypeType	\
 	scap.oval.definitions.macos.EntityStatePermissionCompareType	\
 	scap.oval.definitions.macos.EntityStatePlistTypeType	\
+	scap.oval.definitions.macos.GatekeeperObject	\
+	scap.oval.definitions.macos.GatekeeperState	\
+	scap.oval.definitions.macos.GatekeeperTest	\
 	scap.oval.definitions.macos.Inetlisteningserver510Object	\
 	scap.oval.definitions.macos.Inetlisteningserver510State	\
 	scap.oval.definitions.macos.Inetlisteningserver510Test	\
 	scap.oval.definitions.macos.InetlisteningserversObject	\
 	scap.oval.definitions.macos.InetlisteningserversState	\
 	scap.oval.definitions.macos.InetlisteningserversTest	\
+	scap.oval.definitions.macos.KeychainObject	\
+	scap.oval.definitions.macos.KeychainState	\
+	scap.oval.definitions.macos.KeychainTest	\
+	scap.oval.definitions.macos.LaunchdObject	\
+	scap.oval.definitions.macos.LaunchdState	\
+	scap.oval.definitions.macos.LaunchdTest	\
 	scap.oval.definitions.macos.NvramObject	\
 	scap.oval.definitions.macos.NvramState	\
 	scap.oval.definitions.macos.NvramTest	\
@@ -619,6 +869,23 @@ CLASSES=\
 	scap.oval.definitions.macos.PwpolicyObject	\
 	scap.oval.definitions.macos.PwpolicyState	\
 	scap.oval.definitions.macos.PwpolicyTest	\
+	scap.oval.definitions.macos.RlimitObject	\
+	scap.oval.definitions.macos.RlimitState	\
+	scap.oval.definitions.macos.RlimitTest	\
+	scap.oval.definitions.macos.SoftwareupdateObject	\
+	scap.oval.definitions.macos.SoftwareupdateState	\
+	scap.oval.definitions.macos.SoftwareupdateTest	\
+	scap.oval.definitions.macos.SystemprofilerObject	\
+	scap.oval.definitions.macos.SystemprofilerState	\
+	scap.oval.definitions.macos.SystemprofilerTest	\
+	scap.oval.definitions.macos.SystemsetupObject	\
+	scap.oval.definitions.macos.SystemsetupState	\
+	scap.oval.definitions.macos.SystemsetupTest	\
+	scap.oval.definitions.netconf.ConfigObject	\
+	scap.oval.definitions.netconf.ConfigState	\
+	scap.oval.definitions.netconf.ConfigTest	\
+	scap.oval.definitions.netconf.ObjectFactory	\
+	scap.oval.definitions.netconf.package-info	\
 	scap.oval.definitions.pixos.LineObject	\
 	scap.oval.definitions.pixos.LineState	\
 	scap.oval.definitions.pixos.LineTest	\
@@ -683,9 +950,19 @@ CLASSES=\
 	scap.oval.definitions.sharepoint.SpwebObject	\
 	scap.oval.definitions.sharepoint.SpwebState	\
 	scap.oval.definitions.sharepoint.SpwebTest	\
+	scap.oval.definitions.solaris.EntityObjectPublisherTypeType	\
+	scap.oval.definitions.solaris.EntityStateClientUUIDType	\
+	scap.oval.definitions.solaris.EntityStateLDOMRoleType	\
 	scap.oval.definitions.solaris.EntityStatePermissionCompareType	\
-	scap.oval.definitions.solaris.EntityStateSmfProtocolType	\
+	scap.oval.definitions.solaris.EntityStatePublisherTypeType	\
 	scap.oval.definitions.solaris.EntityStateSmfServiceStateType	\
+	scap.oval.definitions.solaris.EntityStateV12NEnvType	\
+	scap.oval.definitions.solaris.FacetObject	\
+	scap.oval.definitions.solaris.FacetState	\
+	scap.oval.definitions.solaris.FacetTest	\
+	scap.oval.definitions.solaris.ImageObject	\
+	scap.oval.definitions.solaris.ImageState	\
+	scap.oval.definitions.solaris.ImageTest	\
 	scap.oval.definitions.solaris.IsainfoObject	\
 	scap.oval.definitions.solaris.IsainfoState	\
 	scap.oval.definitions.solaris.IsainfoTest	\
@@ -694,11 +971,23 @@ CLASSES=\
 	scap.oval.definitions.solaris.NddTest	\
 	scap.oval.definitions.solaris.ObjectFactory	\
 	scap.oval.definitions.solaris.package-info	\
+	scap.oval.definitions.solaris.Package511Object	\
+	scap.oval.definitions.solaris.Package511State	\
+	scap.oval.definitions.solaris.Package511Test	\
+	scap.oval.definitions.solaris.PackageavoidlistObject	\
+	scap.oval.definitions.solaris.PackageavoidlistState	\
+	scap.oval.definitions.solaris.PackageavoidlistTest	\
 	scap.oval.definitions.solaris.PackageCheckBehaviors	\
 	scap.oval.definitions.solaris.PackagecheckObject	\
 	scap.oval.definitions.solaris.PackagecheckState	\
 	scap.oval.definitions.solaris.PackagecheckTest	\
+	scap.oval.definitions.solaris.PackagefreezelistObject	\
+	scap.oval.definitions.solaris.PackagefreezelistState	\
+	scap.oval.definitions.solaris.PackagefreezelistTest	\
 	scap.oval.definitions.solaris.PackageObject	\
+	scap.oval.definitions.solaris.PackagepublisherObject	\
+	scap.oval.definitions.solaris.PackagepublisherState	\
+	scap.oval.definitions.solaris.PackagepublisherTest	\
 	scap.oval.definitions.solaris.PackageState	\
 	scap.oval.definitions.solaris.PackageTest	\
 	scap.oval.definitions.solaris.Patch54Object	\
@@ -708,8 +997,17 @@ CLASSES=\
 	scap.oval.definitions.solaris.PatchState	\
 	scap.oval.definitions.solaris.PatchTest	\
 	scap.oval.definitions.solaris.SmfObject	\
+	scap.oval.definitions.solaris.SmfpropertyObject	\
+	scap.oval.definitions.solaris.SmfpropertyState	\
+	scap.oval.definitions.solaris.SmfpropertyTest	\
 	scap.oval.definitions.solaris.SmfState	\
 	scap.oval.definitions.solaris.SmfTest	\
+	scap.oval.definitions.solaris.VariantObject	\
+	scap.oval.definitions.solaris.VariantState	\
+	scap.oval.definitions.solaris.VariantTest	\
+	scap.oval.definitions.solaris.VirtualizationinfoObject	\
+	scap.oval.definitions.solaris.VirtualizationinfoState	\
+	scap.oval.definitions.solaris.VirtualizationinfoTest	\
 	scap.oval.definitions.unix.DnscacheObject	\
 	scap.oval.definitions.unix.DnscacheState	\
 	scap.oval.definitions.unix.DnscacheTest	\
@@ -760,6 +1058,9 @@ CLASSES=\
 	scap.oval.definitions.unix.ShadowObject	\
 	scap.oval.definitions.unix.ShadowState	\
 	scap.oval.definitions.unix.ShadowTest	\
+	scap.oval.definitions.unix.SymlinkObject	\
+	scap.oval.definitions.unix.SymlinkState	\
+	scap.oval.definitions.unix.SymlinkTest	\
 	scap.oval.definitions.unix.SysctlObject	\
 	scap.oval.definitions.unix.SysctlState	\
 	scap.oval.definitions.unix.SysctlTest	\
@@ -796,6 +1097,8 @@ CLASSES=\
 	scap.oval.definitions.windows.EntityObjectNamingContextType	\
 	scap.oval.definitions.windows.EntityObjectProtocolType	\
 	scap.oval.definitions.windows.EntityObjectRegistryHiveType	\
+	scap.oval.definitions.windows.EntityObjectSystemMetricIndexType	\
+	scap.oval.definitions.windows.EntityObjectUserRightType	\
 	scap.oval.definitions.windows.EntityStateAddrTypeType	\
 	scap.oval.definitions.windows.EntityStateAdstypeType	\
 	scap.oval.definitions.windows.EntityStateAuditType	\
@@ -805,6 +1108,7 @@ CLASSES=\
 	scap.oval.definitions.windows.EntityStateGUIDType	\
 	scap.oval.definitions.windows.EntityStateInterfaceTypeType	\
 	scap.oval.definitions.windows.EntityStateNamingContextType	\
+	scap.oval.definitions.windows.EntityStateNTUserAccountTypeType	\
 	scap.oval.definitions.windows.EntityStatePeSubsystemType	\
 	scap.oval.definitions.windows.EntityStatePeTargetMachineType	\
 	scap.oval.definitions.windows.EntityStateProtocolType	\
@@ -815,6 +1119,8 @@ CLASSES=\
 	scap.oval.definitions.windows.EntityStateServiceStartTypeType	\
 	scap.oval.definitions.windows.EntityStateServiceTypeType	\
 	scap.oval.definitions.windows.EntityStateSharedResourceTypeType	\
+	scap.oval.definitions.windows.EntityStateSystemMetricIndexType	\
+	scap.oval.definitions.windows.EntityStateUserRightType	\
 	scap.oval.definitions.windows.EntityStateWindowsViewType	\
 	scap.oval.definitions.windows.Fileauditedpermissions53Object	\
 	scap.oval.definitions.windows.Fileauditedpermissions53State	\
@@ -845,12 +1151,19 @@ CLASSES=\
 	scap.oval.definitions.windows.InterfaceObject	\
 	scap.oval.definitions.windows.InterfaceState	\
 	scap.oval.definitions.windows.InterfaceTest	\
+	scap.oval.definitions.windows.LicenseObject	\
+	scap.oval.definitions.windows.LicenseState	\
+	scap.oval.definitions.windows.LicenseTest	\
 	scap.oval.definitions.windows.LockoutpolicyObject	\
 	scap.oval.definitions.windows.LockoutpolicyState	\
 	scap.oval.definitions.windows.LockoutpolicyTest	\
 	scap.oval.definitions.windows.MetabaseObject	\
 	scap.oval.definitions.windows.MetabaseState	\
 	scap.oval.definitions.windows.MetabaseTest	\
+	scap.oval.definitions.windows.NTUserBehaviors	\
+	scap.oval.definitions.windows.NtuserObject	\
+	scap.oval.definitions.windows.NtuserState	\
+	scap.oval.definitions.windows.NtuserTest	\
 	scap.oval.definitions.windows.ObjectFactory	\
 	scap.oval.definitions.windows.package-info	\
 	scap.oval.definitions.windows.PasswordpolicyObject	\
@@ -917,10 +1230,16 @@ CLASSES=\
 	scap.oval.definitions.windows.SidSidTest	\
 	scap.oval.definitions.windows.SidState	\
 	scap.oval.definitions.windows.SidTest	\
+	scap.oval.definitions.windows.SystemmetricObject	\
+	scap.oval.definitions.windows.SystemmetricState	\
+	scap.oval.definitions.windows.SystemmetricTest	\
 	scap.oval.definitions.windows.UacObject	\
 	scap.oval.definitions.windows.UacState	\
 	scap.oval.definitions.windows.UacTest	\
 	scap.oval.definitions.windows.UserObject	\
+	scap.oval.definitions.windows.UserrightObject	\
+	scap.oval.definitions.windows.UserrightState	\
+	scap.oval.definitions.windows.UserrightTest	\
 	scap.oval.definitions.windows.UserSid55Object	\
 	scap.oval.definitions.windows.UserSid55State	\
 	scap.oval.definitions.windows.UserSid55Test	\
@@ -978,9 +1297,63 @@ CLASSES=\
 	scap.oval.systemcharacteristics.aix.ObjectFactory	\
 	scap.oval.systemcharacteristics.aix.OslevelItem	\
 	scap.oval.systemcharacteristics.aix.package-info	\
+	scap.oval.systemcharacteristics.android.AppmanagerItem	\
+	scap.oval.systemcharacteristics.android.BluetoothItem	\
+	scap.oval.systemcharacteristics.android.CameraItem	\
+	scap.oval.systemcharacteristics.android.CertificateItem	\
+	scap.oval.systemcharacteristics.android.DevicesettingsItem	\
+	scap.oval.systemcharacteristics.android.EncryptionItem	\
+	scap.oval.systemcharacteristics.android.EntityItemEncryptionStatusType	\
+	scap.oval.systemcharacteristics.android.EntityItemKeyguardDisabledFeaturesType	\
+	scap.oval.systemcharacteristics.android.EntityItemNetworkType	\
+	scap.oval.systemcharacteristics.android.EntityItemPasswordQualityType	\
+	scap.oval.systemcharacteristics.android.EntityItemWifiAuthAlgorithmType	\
+	scap.oval.systemcharacteristics.android.EntityItemWifiCurrentStatusType	\
+	scap.oval.systemcharacteristics.android.EntityItemWifiGroupCipherType	\
+	scap.oval.systemcharacteristics.android.EntityItemWifiKeyMgmtType	\
+	scap.oval.systemcharacteristics.android.EntityItemWifiPairwiseCipherType	\
+	scap.oval.systemcharacteristics.android.EntityItemWifiProtocolType	\
+	scap.oval.systemcharacteristics.android.LocationserviceItem	\
+	scap.oval.systemcharacteristics.android.NetworkItem	\
+	scap.oval.systemcharacteristics.android.ObjectFactory	\
+	scap.oval.systemcharacteristics.android.package-info	\
+	scap.oval.systemcharacteristics.android.PasswordItem	\
+	scap.oval.systemcharacteristics.android.SystemdetailsItem	\
+	scap.oval.systemcharacteristics.android.TelephonyItem	\
+	scap.oval.systemcharacteristics.android.WifiItem	\
+	scap.oval.systemcharacteristics.android.WifinetworkItem	\
 	scap.oval.systemcharacteristics.apache.HttpdItem	\
 	scap.oval.systemcharacteristics.apache.ObjectFactory	\
 	scap.oval.systemcharacteristics.apache.package-info	\
+	scap.oval.systemcharacteristics.appleios.GlobalrestrictionsItem	\
+	scap.oval.systemcharacteristics.appleios.ObjectFactory	\
+	scap.oval.systemcharacteristics.appleios.package-info	\
+	scap.oval.systemcharacteristics.appleios.PasscodepolicyItem	\
+	scap.oval.systemcharacteristics.appleios.ProfileItem	\
+	scap.oval.systemcharacteristics.asa.AclItem	\
+	scap.oval.systemcharacteristics.asa.ClassMapItem	\
+	scap.oval.systemcharacteristics.asa.EntityItemAccessListInterfaceDirectionType	\
+	scap.oval.systemcharacteristics.asa.EntityItemAccessListIPVersionType	\
+	scap.oval.systemcharacteristics.asa.EntityItemAccessListUseType	\
+	scap.oval.systemcharacteristics.asa.EntityItemApplyServicePolicyType	\
+	scap.oval.systemcharacteristics.asa.EntityItemClassMapType	\
+	scap.oval.systemcharacteristics.asa.EntityItemInpsectionType	\
+	scap.oval.systemcharacteristics.asa.EntityItemMatchType	\
+	scap.oval.systemcharacteristics.asa.EntityItemSNMPAuthStringType	\
+	scap.oval.systemcharacteristics.asa.EntityItemSNMPPrivStringType	\
+	scap.oval.systemcharacteristics.asa.EntityItemSNMPSecLevelStringType	\
+	scap.oval.systemcharacteristics.asa.EntityItemSNMPVersionStringType	\
+	scap.oval.systemcharacteristics.asa.InterfaceItem	\
+	scap.oval.systemcharacteristics.asa.LineItem	\
+	scap.oval.systemcharacteristics.asa.ObjectFactory	\
+	scap.oval.systemcharacteristics.asa.package-info	\
+	scap.oval.systemcharacteristics.asa.PolicyMapItem	\
+	scap.oval.systemcharacteristics.asa.ServicePolicyItem	\
+	scap.oval.systemcharacteristics.asa.SnmpGroupItem	\
+	scap.oval.systemcharacteristics.asa.SnmpHostItem	\
+	scap.oval.systemcharacteristics.asa.SnmpUserItem	\
+	scap.oval.systemcharacteristics.asa.TcpMapItem	\
+	scap.oval.systemcharacteristics.asa.VersionItem	\
 	scap.oval.systemcharacteristics.catos.LineItem	\
 	scap.oval.systemcharacteristics.catos.ModuleItem	\
 	scap.oval.systemcharacteristics.catos.ObjectFactory	\
@@ -1053,14 +1426,71 @@ CLASSES=\
 	scap.oval.systemcharacteristics.independent.TextfilecontentItem	\
 	scap.oval.systemcharacteristics.independent.VariableItem	\
 	scap.oval.systemcharacteristics.independent.XmlfilecontentItem	\
+	scap.oval.systemcharacteristics.ios.AclItem	\
+	scap.oval.systemcharacteristics.ios.BgpneighborItem	\
+	scap.oval.systemcharacteristics.ios.EntityItemAccessListInterfaceDirectionType	\
+	scap.oval.systemcharacteristics.ios.EntityItemAccessListIPVersionType	\
+	scap.oval.systemcharacteristics.ios.EntityItemAccessListUseType	\
+	scap.oval.systemcharacteristics.ios.EntityItemRoutingAuthTypeStringType	\
+	scap.oval.systemcharacteristics.ios.EntityItemRoutingProtocolType	\
+	scap.oval.systemcharacteristics.ios.EntityItemSNMPAuthStringType	\
+	scap.oval.systemcharacteristics.ios.EntityItemSNMPModeStringType	\
+	scap.oval.systemcharacteristics.ios.EntityItemSNMPPrivStringType	\
+	scap.oval.systemcharacteristics.ios.EntityItemSNMPSecLevelStringType	\
+	scap.oval.systemcharacteristics.ios.EntityItemSNMPVersionStringType	\
+	scap.oval.systemcharacteristics.ios.EntityItemSwitchportModeType	\
+	scap.oval.systemcharacteristics.ios.EntityItemTrunkEncapType	\
 	scap.oval.systemcharacteristics.ios.GlobalItem	\
 	scap.oval.systemcharacteristics.ios.InterfaceItem	\
 	scap.oval.systemcharacteristics.ios.LineItem	\
 	scap.oval.systemcharacteristics.ios.ObjectFactory	\
 	scap.oval.systemcharacteristics.ios.package-info	\
+	scap.oval.systemcharacteristics.ios.RouterItem	\
+	scap.oval.systemcharacteristics.ios.RoutingprotocolauthintfItem	\
+	scap.oval.systemcharacteristics.ios.SectionItem	\
+	scap.oval.systemcharacteristics.ios.SnmpcommunityItem	\
+	scap.oval.systemcharacteristics.ios.SnmpgroupItem	\
+	scap.oval.systemcharacteristics.ios.SnmphostItem	\
 	scap.oval.systemcharacteristics.ios.SnmpItem	\
+	scap.oval.systemcharacteristics.ios.SnmpuserItem	\
+	scap.oval.systemcharacteristics.ios.SnmpviewItem	\
 	scap.oval.systemcharacteristics.ios.TclshItem	\
 	scap.oval.systemcharacteristics.ios.VersionItem	\
+	scap.oval.systemcharacteristics.iosxe.AclItem	\
+	scap.oval.systemcharacteristics.iosxe.BgpneighborItem	\
+	scap.oval.systemcharacteristics.iosxe.EntityItemAccessListInterfaceDirectionType	\
+	scap.oval.systemcharacteristics.iosxe.EntityItemAccessListIPVersionType	\
+	scap.oval.systemcharacteristics.iosxe.EntityItemAccessListUseType	\
+	scap.oval.systemcharacteristics.iosxe.EntityItemRoutingAuthTypeStringType	\
+	scap.oval.systemcharacteristics.iosxe.EntityItemRoutingProtocolType	\
+	scap.oval.systemcharacteristics.iosxe.EntityItemSNMPAuthStringType	\
+	scap.oval.systemcharacteristics.iosxe.EntityItemSNMPModeStringType	\
+	scap.oval.systemcharacteristics.iosxe.EntityItemSNMPPrivStringType	\
+	scap.oval.systemcharacteristics.iosxe.EntityItemSNMPSecLevelStringType	\
+	scap.oval.systemcharacteristics.iosxe.EntityItemSNMPVersionStringType	\
+	scap.oval.systemcharacteristics.iosxe.EntityItemSwitchportModeType	\
+	scap.oval.systemcharacteristics.iosxe.EntityItemTrunkEncapType	\
+	scap.oval.systemcharacteristics.iosxe.GlobalItem	\
+	scap.oval.systemcharacteristics.iosxe.InterfaceItem	\
+	scap.oval.systemcharacteristics.iosxe.LineItem	\
+	scap.oval.systemcharacteristics.iosxe.ObjectFactory	\
+	scap.oval.systemcharacteristics.iosxe.package-info	\
+	scap.oval.systemcharacteristics.iosxe.RouterItem	\
+	scap.oval.systemcharacteristics.iosxe.RoutingprotocolauthintfItem	\
+	scap.oval.systemcharacteristics.iosxe.SectionItem	\
+	scap.oval.systemcharacteristics.iosxe.SnmpcommunityItem	\
+	scap.oval.systemcharacteristics.iosxe.SnmpgroupItem	\
+	scap.oval.systemcharacteristics.iosxe.SnmphostItem	\
+	scap.oval.systemcharacteristics.iosxe.SnmpuserItem	\
+	scap.oval.systemcharacteristics.iosxe.SnmpviewItem	\
+	scap.oval.systemcharacteristics.iosxe.VersionItem	\
+	scap.oval.systemcharacteristics.junos.EntityItemJunosReleaseTypeType	\
+	scap.oval.systemcharacteristics.junos.ObjectFactory	\
+	scap.oval.systemcharacteristics.junos.package-info	\
+	scap.oval.systemcharacteristics.junos.ShowItem	\
+	scap.oval.systemcharacteristics.junos.VersionItem	\
+	scap.oval.systemcharacteristics.junos.XmlConfigItem	\
+	scap.oval.systemcharacteristics.junos.XmlShowItem	\
 	scap.oval.systemcharacteristics.linux.DpkginfoItem	\
 	scap.oval.systemcharacteristics.linux.EntityItemProtocolType	\
 	scap.oval.systemcharacteristics.linux.EntityItemRpmVerifyResultType	\
@@ -1076,18 +1506,33 @@ CLASSES=\
 	scap.oval.systemcharacteristics.linux.SelinuxbooleanItem	\
 	scap.oval.systemcharacteristics.linux.SelinuxsecuritycontextItem	\
 	scap.oval.systemcharacteristics.linux.SlackwarepkginfoItem	\
+	scap.oval.systemcharacteristics.linux.SystemdunitdependencyItem	\
+	scap.oval.systemcharacteristics.linux.SystemdunitpropertyItem	\
 	scap.oval.systemcharacteristics.macos.AccountinfoItem	\
+	scap.oval.systemcharacteristics.macos.AuthorizationdbItem	\
+	scap.oval.systemcharacteristics.macos.CorestorageItem	\
 	scap.oval.systemcharacteristics.macos.DiskutilItem	\
+	scap.oval.systemcharacteristics.macos.EntityItemDataTypeType	\
 	scap.oval.systemcharacteristics.macos.EntityItemPermissionCompareType	\
 	scap.oval.systemcharacteristics.macos.EntityItemPlistTypeType	\
+	scap.oval.systemcharacteristics.macos.GatekeeperItem	\
 	scap.oval.systemcharacteristics.macos.Inetlisteningserver510Item	\
 	scap.oval.systemcharacteristics.macos.InetlisteningserversItem	\
+	scap.oval.systemcharacteristics.macos.KeychainItem	\
+	scap.oval.systemcharacteristics.macos.LaunchdItem	\
 	scap.oval.systemcharacteristics.macos.NvramItem	\
 	scap.oval.systemcharacteristics.macos.ObjectFactory	\
 	scap.oval.systemcharacteristics.macos.package-info	\
 	scap.oval.systemcharacteristics.macos.PlistItem	\
 	scap.oval.systemcharacteristics.macos.Pwpolicy59Item	\
 	scap.oval.systemcharacteristics.macos.PwpolicyItem	\
+	scap.oval.systemcharacteristics.macos.RlimitItem	\
+	scap.oval.systemcharacteristics.macos.SoftwareupdateItem	\
+	scap.oval.systemcharacteristics.macos.SystemprofilerItem	\
+	scap.oval.systemcharacteristics.macos.SystemsetupItem	\
+	scap.oval.systemcharacteristics.netconf.ConfigItem	\
+	scap.oval.systemcharacteristics.netconf.ObjectFactory	\
+	scap.oval.systemcharacteristics.netconf.package-info	\
 	scap.oval.systemcharacteristics.pixos.LineItem	\
 	scap.oval.systemcharacteristics.pixos.ObjectFactory	\
 	scap.oval.systemcharacteristics.pixos.package-info	\
@@ -1115,17 +1560,29 @@ CLASSES=\
 	scap.oval.systemcharacteristics.sharepoint.SpsiteItem	\
 	scap.oval.systemcharacteristics.sharepoint.SpwebapplicationItem	\
 	scap.oval.systemcharacteristics.sharepoint.SpwebItem	\
+	scap.oval.systemcharacteristics.solaris.EntityItemClientUUIDType	\
+	scap.oval.systemcharacteristics.solaris.EntityItemLDOMRoleType	\
 	scap.oval.systemcharacteristics.solaris.EntityItemPermissionCompareType	\
-	scap.oval.systemcharacteristics.solaris.EntityItemSmfProtocolType	\
+	scap.oval.systemcharacteristics.solaris.EntityItemPublisherTypeType	\
 	scap.oval.systemcharacteristics.solaris.EntityItemSmfServiceStateType	\
+	scap.oval.systemcharacteristics.solaris.EntityItemV12NEnvType	\
+	scap.oval.systemcharacteristics.solaris.FacetItem	\
+	scap.oval.systemcharacteristics.solaris.ImageItem	\
 	scap.oval.systemcharacteristics.solaris.IsainfoItem	\
 	scap.oval.systemcharacteristics.solaris.NddItem	\
 	scap.oval.systemcharacteristics.solaris.ObjectFactory	\
 	scap.oval.systemcharacteristics.solaris.package-info	\
+	scap.oval.systemcharacteristics.solaris.Package511Item	\
+	scap.oval.systemcharacteristics.solaris.PackageavoidlistItem	\
 	scap.oval.systemcharacteristics.solaris.PackagecheckItem	\
+	scap.oval.systemcharacteristics.solaris.PackagefreezelistItem	\
 	scap.oval.systemcharacteristics.solaris.PackageItem	\
+	scap.oval.systemcharacteristics.solaris.PackagepublisherItem	\
 	scap.oval.systemcharacteristics.solaris.PatchItem	\
 	scap.oval.systemcharacteristics.solaris.SmfItem	\
+	scap.oval.systemcharacteristics.solaris.SmfpropertyItem	\
+	scap.oval.systemcharacteristics.solaris.VariantItem	\
+	scap.oval.systemcharacteristics.solaris.VirtualizationinfoItem	\
 	scap.oval.systemcharacteristics.unix.DnscacheItem	\
 	scap.oval.systemcharacteristics.unix.EntityItemCapabilityType	\
 	scap.oval.systemcharacteristics.unix.EntityItemEncryptMethodType	\
@@ -1149,6 +1606,7 @@ CLASSES=\
 	scap.oval.systemcharacteristics.unix.RunlevelItem	\
 	scap.oval.systemcharacteristics.unix.SccsItem	\
 	scap.oval.systemcharacteristics.unix.ShadowItem	\
+	scap.oval.systemcharacteristics.unix.SymlinkItem	\
 	scap.oval.systemcharacteristics.unix.SysctlItem	\
 	scap.oval.systemcharacteristics.unix.UnameItem	\
 	scap.oval.systemcharacteristics.unix.XinetdItem	\
@@ -1168,6 +1626,7 @@ CLASSES=\
 	scap.oval.systemcharacteristics.windows.EntityItemGUIDType	\
 	scap.oval.systemcharacteristics.windows.EntityItemInterfaceTypeType	\
 	scap.oval.systemcharacteristics.windows.EntityItemNamingContextType	\
+	scap.oval.systemcharacteristics.windows.EntityItemNTUserAccountTypeType	\
 	scap.oval.systemcharacteristics.windows.EntityItemPeSubsystemType	\
 	scap.oval.systemcharacteristics.windows.EntityItemPeTargetMachineType	\
 	scap.oval.systemcharacteristics.windows.EntityItemProtocolType	\
@@ -1178,6 +1637,8 @@ CLASSES=\
 	scap.oval.systemcharacteristics.windows.EntityItemServiceStartTypeType	\
 	scap.oval.systemcharacteristics.windows.EntityItemServiceTypeType	\
 	scap.oval.systemcharacteristics.windows.EntityItemSharedResourceTypeType	\
+	scap.oval.systemcharacteristics.windows.EntityItemSystemMetricIndexType	\
+	scap.oval.systemcharacteristics.windows.EntityItemUserRightType	\
 	scap.oval.systemcharacteristics.windows.EntityItemWindowsViewType	\
 	scap.oval.systemcharacteristics.windows.FileauditedpermissionsItem	\
 	scap.oval.systemcharacteristics.windows.FileeffectiverightsItem	\
@@ -1185,8 +1646,10 @@ CLASSES=\
 	scap.oval.systemcharacteristics.windows.GroupItem	\
 	scap.oval.systemcharacteristics.windows.GroupSidItem	\
 	scap.oval.systemcharacteristics.windows.InterfaceItem	\
+	scap.oval.systemcharacteristics.windows.LicenseItem	\
 	scap.oval.systemcharacteristics.windows.LockoutpolicyItem	\
 	scap.oval.systemcharacteristics.windows.MetabaseItem	\
+	scap.oval.systemcharacteristics.windows.NtuserItem	\
 	scap.oval.systemcharacteristics.windows.ObjectFactory	\
 	scap.oval.systemcharacteristics.windows.package-info	\
 	scap.oval.systemcharacteristics.windows.PasswordpolicyItem	\
@@ -1204,8 +1667,10 @@ CLASSES=\
 	scap.oval.systemcharacteristics.windows.SharedresourceItem	\
 	scap.oval.systemcharacteristics.windows.SidItem	\
 	scap.oval.systemcharacteristics.windows.SidSidItem	\
+	scap.oval.systemcharacteristics.windows.SystemmetricItem	\
 	scap.oval.systemcharacteristics.windows.UacItem	\
 	scap.oval.systemcharacteristics.windows.UserItem	\
+	scap.oval.systemcharacteristics.windows.UserrightItem	\
 	scap.oval.systemcharacteristics.windows.UserSidItem	\
 	scap.oval.systemcharacteristics.windows.VolumeItem	\
 	scap.oval.systemcharacteristics.windows.Wmi57Item	\
@@ -1291,4 +1756,3 @@ CLASSES=\
 	scap.xccdf.WarningCategoryEnumType	\
 	scap.xccdf.WarningType	\
 	scap.xccdf.XccdfBenchmark
-
