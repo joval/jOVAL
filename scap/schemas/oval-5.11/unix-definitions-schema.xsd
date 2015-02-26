@@ -263,27 +263,32 @@
                                                 <xsd:documentation>This is the file's type: regular file (regular), directory, named pipe (fifo), symbolic link, socket or block special.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="group_id" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                    <xsd:element name="group_id" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
+                                          <!-- JovalCM changed type from EntityStateIntType -->
                                           <xsd:annotation>
                                                 <xsd:documentation>The group_id entity represents the group owner of a file, by group number.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="user_id" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                    <xsd:element name="user_id" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
+                                          <!-- JovalCM changed type from EntityStateIntType -->
                                           <xsd:annotation>
                                                 <xsd:documentation>The numeric user id, or uid, is the third column of each user's entry in /etc/passwd. This element represents the owner of the file.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="a_time" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                    <xsd:element name="a_time" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
+                                          <!-- JovalCM changed type from EntityStateIntType -->
                                           <xsd:annotation>
                                                 <xsd:documentation>This is the time that the file was last accessed, in seconds since the Unix epoch. The Unix epoch is the time 00:00:00 UTC on January 1, 1970.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="c_time" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                    <xsd:element name="c_time" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
+                                          <!-- JovalCM changed type from EntityStateIntType -->
                                           <xsd:annotation>
                                                 <xsd:documentation>This is the time of the last change to the file's inode, in seconds since the Unix epoch. The Unix epoch is the time 00:00:00 UTC on January 1, 1970. An inode is a Unix data structure that stores all of the information about a particular file.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="m_time" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                    <xsd:element name="m_time" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
+                                          <!-- JovalCM changed type from EntityStateIntType -->
                                           <xsd:annotation>
                                                 <xsd:documentation>This is the time of the last change to the file's contents, in seconds since the Unix epoch. The Unix epoch is the time 00:00:00 UTC on January 1, 1970.</xsd:documentation>
                                           </xsd:annotation>
@@ -1110,12 +1115,14 @@
                                                 <xsd:documentation>This is the encrypted version of the user's password.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="user_id" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                    <xsd:element name="user_id" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
+                                          <!-- JovalCM changed type from EntityStateIntType -->
                                           <xsd:annotation>
                                                 <xsd:documentation>The numeric user id, or uid, is the third column of each user's entry in /etc/passwd.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="group_id" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                    <xsd:element name="group_id" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
+                                          <!-- JovalCM changed type from EntityStateIntType -->
                                           <xsd:annotation>
                                                 <xsd:documentation>The id of the primary UNIX group the user belongs to.</xsd:documentation>
                                           </xsd:annotation>
@@ -1989,32 +1996,38 @@
                                                 <xsd:documentation>This is the encrypted version of the user's password.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="chg_lst" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                    <xsd:element name="chg_lst" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
+                                          <!-- JovalCM changed type from EntityStateIntType -->
                                           <xsd:annotation>
                                                 <xsd:documentation>This is the date of the last password change in days since 1/1/1970.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="chg_allow" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                    <xsd:element name="chg_allow" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
+                                          <!-- JovalCM changed type from EntityStateIntType -->
                                           <xsd:annotation>
                                                 <xsd:documentation>This specifies how often in days a user may change their password. It can also be thought of as the minimum age of a password.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="chg_req" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                    <xsd:element name="chg_req" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
+                                          <!-- JovalCM changed type from EntityStateIntType -->
                                           <xsd:annotation>
                                                 <xsd:documentation>This describes how long a user can keep a password before the system forces her to change it.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="exp_warn" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                    <xsd:element name="exp_warn" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
+                                          <!-- JovalCM changed type from EntityStateIntType -->
                                           <xsd:annotation>
                                                 <xsd:documentation>This describes how long before password expiration the system begins warning the user. The system will warn the user at each login.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="exp_inact" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                    <xsd:element name="exp_inact" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
+                                          <!-- JovalCM changed type from EntityStateIntType -->
                                           <xsd:annotation>
                                                 <xsd:documentation>The exp_inact entity describes how many days of account inactivity the system will wait after a password expires before locking the account. Unix systems are generally configured to only allow a given password to last for a fixed period of time. When this time, the chg_req parameter, is near running out, the system begins warning the user at each login. How soon before the expiration the user receives these warnings is specified in exp_warn. The only hiccup in this design is that a user may not login in time to ever receive a warning before account expiration. The exp_inact parameter gives the sysadmin flexibility so that a user who reaches the end of their expiration time gains exp_inact more days to login and change their password manually.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="exp_date" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                    <xsd:element name="exp_date" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
+                                          <!-- JovalCM changed type from EntityStateIntType -->
                                           <xsd:annotation>
                                                 <xsd:documentation>This specifies when will the account's password expire, in days since 1/1/1970.</xsd:documentation>
                                           </xsd:annotation>
