@@ -2066,7 +2066,7 @@
                               <sch:rule context="unix-def:symlink_test/unix-def:object">
                                     <sch:assert test="@object_ref=ancestor::oval-def:oval_definitions/oval-def:objects/unix-def:symlink_object/@id"><sch:value-of select="../@id"/> - the object child element of a symlink_test must reference a symlink_object</sch:assert>
                               </sch:rule>
-                              <sch:rule context="x-macos-def:authorizationdb_test/x-macos-def:state">
+                              <sch:rule context="x-unix-def:symlink_test/x-unix-def:state">
                                     <sch:assert test="@state_ref=ancestor::oval-def:oval_definitions/oval-def:states/unix-def:symlink_state/@id"><sch:value-of select="../@id"/> - the state child element of a symlink_test must reference a symlink_state</sch:assert>
                               </sch:rule>
                         </sch:pattern>
