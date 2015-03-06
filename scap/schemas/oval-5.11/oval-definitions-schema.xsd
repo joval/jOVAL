@@ -1094,19 +1094,6 @@
         </xsd:restriction>
     </xsd:simpleType>
 
-    <!-- JovalCM added check_existence attribute and documentation -->
-    <xsd:simpleType name="EntityStateExistenceEnumeration">
-        <xsd:annotation>
-            <xsd:documentation>The EntityStateExistenceEnumeration enumeration is a restriction of the ExistenceEnumeration, that removes any_exist from the range of permissible values. It is used in the EntityStateSimpleBaseType and EntityStateComplexBaseType to specify the existence requirements for item entities.</xsd:documentation>
-        </xsd:annotation>
-         <xsd:restriction base="oval:ExistenceEnumeration">
-             <xsd:enumeration value="all_exist"/>
-             <xsd:enumeration value="at_least_one_exists"/>
-             <xsd:enumeration value="none_exist"/>
-             <xsd:enumeration value="only_one_exists"/>
-         </xsd:restriction>
-    </xsd:simpleType>
-
     <!-- =============================================================================== -->
     <!-- ===============================  ENTITY TYPES  ================================ -->
     <!-- =============================================================================== -->
@@ -1437,7 +1424,7 @@
         <xsd:simpleContent>
             <xsd:extension base="oval-def:EntitySimpleBaseType">
                 <xsd:attribute name="entity_check" type="oval:CheckEnumeration" use="optional" default="all"/>
-                <xsd:attribute name="check_existence" type="oval-def:EntityStateExistenceEnumeration" use="optional" default="at_least_one_exists"/>
+                <xsd:attribute name="check_existence" type="oval:ExistenceEnumeration" use="optional" default="at_least_one_exists"/>
             </xsd:extension>
         </xsd:simpleContent>
     </xsd:complexType>
@@ -1452,7 +1439,7 @@
         <xsd:complexContent>
             <xsd:extension base="oval-def:EntityComplexBaseType">
                 <xsd:attribute name="entity_check" type="oval:CheckEnumeration" use="optional" default="all"/>
-                <xsd:attribute name="check_existence" type="oval-def:EntityStateExistenceEnumeration" use="optional" default="at_least_one_exists"/>
+                <xsd:attribute name="check_existence" type="oval:ExistenceEnumeration" use="optional" default="at_least_one_exists"/>
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>
