@@ -9391,6 +9391,7 @@
                   <xsd:documentation>The EntityStateRegistryTypeType complex type defines the different values that are valid for the type entity of a registry state. These values describe the possible types of data stored in a registry key. The empty string is also allowed as a valid value to support an empty element that is found when a variable reference is used within the type entity. Note that when using pattern matches and variables care must be taken to ensure that the regular expression and variable values align with the enumerated values. Please note that the values identified are for the type entity and are not valid values for the datatype attribute. For information about how to encode registry data in OVAL for each of the different types, please visit the registry_state documentation.</xsd:documentation>
             </xsd:annotation>
             <xsd:simpleContent>
+                  <!-- JovalCM removed reg_dword_little_endian and reg_qword_little_endian, added reg_resource_list, reg_full_resource_descriptor and reg_resource_requirements_list -->
                   <xsd:restriction base="oval-def:EntityStateStringType">
                         <xsd:enumeration value="reg_binary">
                               <xsd:annotation>
@@ -9400,11 +9401,6 @@
                         <xsd:enumeration value="reg_dword">
                               <xsd:annotation>
                                     <xsd:documentation>The reg_dword type is used by registry keys that specify an unsigned 32-bit integer.</xsd:documentation>
-                              </xsd:annotation>
-                        </xsd:enumeration>
-                        <xsd:enumeration value="reg_dword_little_endian">
-                              <xsd:annotation>
-                                    <xsd:documentation>The reg_dword_little_endian type is used by registry keys that specify an unsigned 32-bit little-endian integer. It is designed to run on little-endian computer architectures.</xsd:documentation>
                               </xsd:annotation>
                         </xsd:enumeration>
                         <xsd:enumeration value="reg_dword_big_endian">
@@ -9437,14 +9433,24 @@
                                     <xsd:documentation>The reg_qword type is used by registry keys that specify an unsigned 64-bit integer.</xsd:documentation>
                               </xsd:annotation>
                         </xsd:enumeration>
-                        <xsd:enumeration value="reg_qword_little_endian">
-                              <xsd:annotation>
-                                    <xsd:documentation>The reg_qword_little_endian type is used by registry keys that specify an unsigned 64-bit integer in little-endian computer architectures.</xsd:documentation>
-                              </xsd:annotation>
-                        </xsd:enumeration>
                         <xsd:enumeration value="reg_sz">
                               <xsd:annotation>
                                     <xsd:documentation>The reg_sz type is used by registry keys that specify a single null-terminated string.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="reg_resource_list">
+                              <xsd:annotation>
+                                    <xsd:documentation>The reg_resource_list type is used by registry keys that specify a resource list.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="reg_full_resource_descriptor">
+                              <xsd:annotation>
+                                    <xsd:documentation>The reg_full_resource_descriptor type is used by registry keys that specify a full resource descriptor.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="reg_resource_requirements_list">
+                              <xsd:annotation>
+                                    <xsd:documentation>The reg_resource_requirements_list type is used by registry keys that specify a resource requirements list.</xsd:documentation>
                               </xsd:annotation>
                         </xsd:enumeration>
                         <xsd:enumeration value="">
