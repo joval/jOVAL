@@ -56,7 +56,7 @@
                                         <xsd:documentation>Element with the value returned with all config lines of the ACL.</xsd:documentation>
                                    </xsd:annotation>
                               </xsd:element>
-                              <xsd:element name="config_line" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                              <xsd:element name="config_line" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
                                    <xsd:annotation>
                                         <xsd:documentation>Element with the value returned with one ACL config line at a time.</xsd:documentation>
                                    </xsd:annotation>
@@ -130,24 +130,11 @@
                                         <xsd:documentation>Element with the interface name.</xsd:documentation>
                                    </xsd:annotation>
                               </xsd:element>
-                              <xsd:element name="ip_directed_broadcast_command" minOccurs="0" maxOccurs="1">
+                              <!-- JovalCM changed type to EntityItemBoolType -->
+                              <xsd:element name="ip_directed_broadcast_command" type="oval-sc:EntityItemBoolType" minOccurs="0" maxOccurs="1">
                                    <xsd:annotation>
                                         <xsd:documentation>Element that is true if the directed broadcast command is enabled on the interface. The default is false.</xsd:documentation>
                                    </xsd:annotation>
-                                   <xsd:complexType>
-                                        <xsd:simpleContent>
-                                             <xsd:restriction base="oval-sc:EntityItemAnySimpleType">
-                                                  <xsd:attribute name="datatype" use="optional" default="string">
-                                                       <xsd:simpleType>
-                                                            <xsd:restriction base="oval:SimpleDatatypeEnumeration">
-                                                                 <xsd:enumeration value="string"/>
-                                                                 <xsd:enumeration value="boolean"/>
-                                                            </xsd:restriction>
-                                                       </xsd:simpleType>
-                                                  </xsd:attribute>
-                                             </xsd:restriction>
-                                        </xsd:simpleContent>
-                                   </xsd:complexType>
                               </xsd:element>
                               <xsd:element name="no_ip_directed_broadcast_command" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                                    <xsd:annotation>
@@ -165,43 +152,17 @@
                                         </xsd:appinfo>
                                    </xsd:annotation>
                               </xsd:element>
-                              <xsd:element name="proxy_arp_command" minOccurs="0" maxOccurs="1">
+                              <!-- JovalCM changed type to EntityItemBoolType -->
+                              <xsd:element name="proxy_arp_command" type="oval-sc:EntityItemBoolType" minOccurs="0" maxOccurs="1">
                                    <xsd:annotation>
                                         <xsd:documentation>Element that is true if the proxy_arp command is enabled on the interface. The default is true.</xsd:documentation>
                                    </xsd:annotation>
-                                   <xsd:complexType>
-                                        <xsd:simpleContent>
-                                             <xsd:restriction base="oval-sc:EntityItemAnySimpleType">
-                                                  <xsd:attribute name="datatype" use="optional" default="string">
-                                                       <xsd:simpleType>
-                                                            <xsd:restriction base="oval:SimpleDatatypeEnumeration">
-                                                                 <xsd:enumeration value="string"/>
-                                                                 <xsd:enumeration value="boolean"/>
-                                                            </xsd:restriction>
-                                                       </xsd:simpleType>
-                                                  </xsd:attribute>
-                                             </xsd:restriction>
-                                        </xsd:simpleContent>
-                                   </xsd:complexType>
                               </xsd:element>
-                              <xsd:element name="shutdown_command" minOccurs="0" maxOccurs="1">
+                              <!-- JovalCM changed type to EntityItemBoolType -->
+                              <xsd:element name="shutdown_command" type="oval-sc:EntityItemBoolType" minOccurs="0" maxOccurs="1">
                                    <xsd:annotation>
                                         <xsd:documentation>Element that is true if the interface is shut down. The default is false.</xsd:documentation>
                                    </xsd:annotation>
-                                   <xsd:complexType>
-                                        <xsd:simpleContent>
-                                             <xsd:restriction base="oval-sc:EntityItemAnySimpleType">
-                                                  <xsd:attribute name="datatype" use="optional" default="string">
-                                                       <xsd:simpleType>
-                                                            <xsd:restriction base="oval:SimpleDatatypeEnumeration">
-                                                                 <xsd:enumeration value="string"/>
-                                                                 <xsd:enumeration value="boolean"/>
-                                                            </xsd:restriction>
-                                                       </xsd:simpleType>
-                                                  </xsd:attribute>
-                                             </xsd:restriction>
-                                        </xsd:simpleContent>
-                                   </xsd:complexType>
                               </xsd:element>
                               <xsd:element name="hardware_addr" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                                    <xsd:annotation>
