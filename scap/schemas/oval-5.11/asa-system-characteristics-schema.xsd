@@ -154,7 +154,8 @@
                                                 <xsd:documentation>Element with the interface hardware (MAC) address.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="ipv4_address" type="oval-sc:EntityItemIPAddressStringType" minOccurs="0" maxOccurs="unbounded">
+                                    <!-- JovalCM changed maxOccurs to 1 -->
+                                    <xsd:element name="ipv4_address" type="oval-sc:EntityItemIPAddressStringType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>Element with the interface IPv4 address and mask. This element should only allow 'ipv4_address' of the oval:SimpleDatatypeEnumeration.</xsd:documentation>
                                           </xsd:annotation>
