@@ -191,14 +191,38 @@
                                         <xsd:documentation>Element with the ingress or egress IPv6 ACL name applied on the interface.</xsd:documentation>
                                    </xsd:annotation>
                               </xsd:element>
+                              <!-- JovalCM added ipv4_urpf_command -->
+                              <xsd:element name="ipv4_urpf_command" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                                   <xsd:annotation>
+                                        <xsd:documentation>Element with the uRPF command for IPv4 under the interface.</xsd:documentation>
+                                   </xsd:annotation>
+                              </xsd:element>
+                              <!-- JovalCM added ipv6_urpf_command -->
+                              <xsd:element name="ipv6_urpf_command" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                                   <xsd:annotation>
+                                        <xsd:documentation>Element with the uRPF command for IPv6 under the interface.</xsd:documentation>
+                                   </xsd:annotation>
+                              </xsd:element>
                               <xsd:element name="crypto_map" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                                    <xsd:annotation>
                                         <xsd:documentation>Element with the crypto map name applied to the interface.</xsd:documentation>
                                    </xsd:annotation>
                               </xsd:element>
+                              <!-- JovalCM deprecated urpf_command -->
                               <xsd:element name="urpf_command" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                                    <xsd:annotation>
                                         <xsd:documentation>Element with the uRPF command under the interface.</xsd:documentation>
+                                        <xsd:appinfo>
+                                             <oval:deprecated_info>
+                                                  <oval:version>5.11.1</oval:version>
+                                                  <oval:reason>This entity has been deprecated because it has been replaced with the ipv4_urpf_command.</oval:reason>
+                                             </oval:deprecated_info>
+                                             <sch:pattern id="ios-sc_interfaceitemnoipdbc">
+                                                  <sch:rule context="ios-sc:interface_item/ios-sc:no_ip_directed_broadcast_command">
+                                                       <sch:report test="true()">DEPRECATED ELEMENT: <sch:value-of select="name()"/> ID: <sch:value-of select="@id"/></sch:report>
+                                                  </sch:rule>
+                                             </sch:pattern>
+                                        </xsd:appinfo>
                                    </xsd:annotation>
                               </xsd:element>
                               <xsd:element name="switchport_trunk_encapsulation" type="ios-sc:EntityItemTrunkEncapType" minOccurs="0" maxOccurs="1">

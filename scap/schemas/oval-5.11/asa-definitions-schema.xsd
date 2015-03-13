@@ -398,14 +398,38 @@
                                                 <xsd:documentation>The ingress or egress UACL name applied on the interface.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
+                                    <!-- JovalCM added ipv4_urpf_command -->
+                                    <xsd:element name="ipv4_urpf_command" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The IPv4 uRPF command under the interface.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <!-- JovalCM added ipv6_urpf_command -->
+                                    <xsd:element name="ipv6_urpf_command" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The IPv6 uRPF command under the interface.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
                                     <xsd:element name="crypto_map" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>The crypto map name applied to the interface.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
+                                    <!-- JovalCM deprecated urpf_command -->
                                     <xsd:element name="urpf_command" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>The uRPF command under the interface.</xsd:documentation>
+                                                <xsd:appinfo>
+                                                      <oval:deprecated_info>
+                                                            <oval:version>5.11.1</oval:version>
+                                                            <oval:reason>This entity has been deprecated because it was replaced by the ipv4_urpf_command.</oval:reason>
+                                                      </oval:deprecated_info>
+                                                      <sch:pattern id="ios-def_interfacestenoipdbc">
+                                                            <sch:rule context="ios-def:interface_state/ios-def:no_ip_directed_broadcast_command">
+                                                                  <sch:report test="true()">DEPRECATED ELEMENT: <sch:value-of select="name()"/> ID: <sch:value-of select="@id"/></sch:report>
+                                                            </sch:rule>
+                                                      </sch:pattern>
+                                                </xsd:appinfo>
                                           </xsd:annotation>
                                     </xsd:element>
                               </xsd:sequence>
@@ -1246,7 +1270,7 @@
                   </xsd:restriction>
             </xsd:simpleContent>
       </xsd:complexType>
-      
+
       <xsd:complexType name="EntityStateAccessListIPVersionType">
             <xsd:annotation>
                   <xsd:documentation>The EntityStateAccessListIPVersionType complex type restricts a string value to a specific set of values: IPV4, IPV6 or IPV4_V6 (both). These values describe if an ACL is for IPv4 or IPv6 or both for UACLs in a Cisco ASA configuration. The empty string is also allowed to support empty element associated with variable references. Note that when using pattern matches and variables care must be taken to ensure that the regular expression and variable values align with the enumerated values.</xsd:documentation>
