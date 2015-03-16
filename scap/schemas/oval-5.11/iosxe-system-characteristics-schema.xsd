@@ -250,12 +250,14 @@
                                 <xsd:documentation>Element with the switchport mode option configured on the interface (if applicable).</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
-                        <xsd:element name="switchport_native_vlan" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                        <!-- JovalCM changed type to EntityItemIntType -->
+                        <xsd:element name="switchport_native_vlan" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
                                 <xsd:documentation>Element with the trunk native vlan configured on the interface (if applicable).</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
-                        <xsd:element name="switchport_access_vlan" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
+                        <!-- JovalCM changed type to EntityItemStringType -->
+                        <xsd:element name="switchport_access_vlan" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
                                 <xsd:documentation>Element with the access vlan configured on the interface (if applicable).</xsd:documentation>
                             </xsd:annotation>
