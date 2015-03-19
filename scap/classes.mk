@@ -506,6 +506,7 @@ CLASSES=\
 	scap.oval.definitions.core.LiteralComponentType	\
 	scap.oval.definitions.core.LocalVariable	\
 	scap.oval.definitions.core.MetadataType	\
+	scap.oval.definitions.core.Notes	\
 	scap.oval.definitions.core.ObjectComponentType	\
 	scap.oval.definitions.core.ObjectFactory	\
 	scap.oval.definitions.core.ObjectRefType	\

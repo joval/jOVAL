@@ -207,6 +207,9 @@
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.definitions.core"/>
     </jxb:schemaBindings>
+    <jxb:bindings node="xs:element[@name='notes']//xs:element[@name='note']">
+        <jxb:property name="legacyNote" />
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11/oval-directives-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
