@@ -2281,15 +2281,27 @@
             </xsd:annotation>
             <xsd:simpleContent>
                   <xsd:restriction base="oval-def:EntityStateStringType">
-                        <xsd:enumeration value="catos">
+                        <!-- JovalCM added Android -->
+                        <xsd:enumeration value="android">
                               <xsd:annotation>
-                                    <xsd:documentation>The catos value describes the Cisco CatOS operating system.</xsd:documentation>
+                                    <xsd:documentation>The android value describes the Android mobile operating system.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <!-- JovalCM added Apple iOS -->
+                        <xsd:enumeration value="apple_ios">
+                              <xsd:annotation>
+                                    <xsd:documentation>The apple_ios value describes the Apple iOS mobile operating system.</xsd:documentation>
                               </xsd:annotation>
                         </xsd:enumeration>
                         <!-- JovalCM added ASA -->
                         <xsd:enumeration value="asa">
                               <xsd:annotation>
                                     <xsd:documentation>The asa value describes the Cisco ASA operating system.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="catos">
+                              <xsd:annotation>
+                                    <xsd:documentation>The catos value describes the Cisco CatOS operating system.</xsd:documentation>
                               </xsd:annotation>
                         </xsd:enumeration>
                         <xsd:enumeration value="ios">
@@ -2300,7 +2312,7 @@
                         <!-- JovalCM added IOS-XE -->
                         <xsd:enumeration value="iosxe">
                               <xsd:annotation>
-                                    <xsd:documentation>The ios value describes the Cisco IOS-XE operating system.</xsd:documentation>
+                                    <xsd:documentation>The iosxe value describes the Cisco IOS-XE operating system.</xsd:documentation>
                               </xsd:annotation>
                         </xsd:enumeration>
                         <xsd:enumeration value="macos">
