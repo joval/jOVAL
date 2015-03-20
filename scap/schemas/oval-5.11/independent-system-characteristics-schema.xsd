@@ -692,9 +692,21 @@
                               <xsd:documentation>The catos value describes the Cisco CatOS operating system.</xsd:documentation>
                          </xsd:annotation>
                     </xsd:enumeration>
+                    <!-- JovalCM added ASA -->
+                    <xsd:enumeration value="asa">
+                         <xsd:annotation>
+                              <xsd:documentation>The asa value describes the Cisco ASA operating system.</xsd:documentation>
+                         </xsd:annotation>
+                    </xsd:enumeration>
                     <xsd:enumeration value="ios">
                          <xsd:annotation>
                               <xsd:documentation>The ios value describes the Cisco IOS operating system.</xsd:documentation>
+                         </xsd:annotation>
+                    </xsd:enumeration>
+                    <!-- JovalCM added IOS-XE -->
+                    <xsd:enumeration value="iosxe">
+                         <xsd:annotation>
+                              <xsd:documentation>The asa value describes the Cisco IOS-XE operating system.</xsd:documentation>
                          </xsd:annotation>
                     </xsd:enumeration>
                     <xsd:enumeration value="macos">
