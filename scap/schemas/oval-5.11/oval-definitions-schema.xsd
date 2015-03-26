@@ -173,7 +173,7 @@
             <xsd:complexContent>
                 <xsd:extension base="oval:NotesType">
                     <xsd:sequence>
-                        <xsd:element name="note" type="xsd:string" minOccurs="1" maxOccurs="unbounded"/>
+                        <xsd:element name="note" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
                     </xsd:sequence>
                 </xsd:extension>
             </xsd:complexContent>

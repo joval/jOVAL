@@ -303,11 +303,19 @@
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.definitions.asa"/>
     </jxb:schemaBindings>
+    <!-- Compensate for the misspelling in the XSD file -->
+    <jxb:bindings node="xs:complexType[@name='EntityStateInpsectionType']">
+      <jxb:class name="EntityStateInspectionType" />
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11/asa-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.systemcharacteristics.asa"/>
     </jxb:schemaBindings>
+    <!-- Compensate for the misspelling in the XSD file -->
+    <jxb:bindings node="xs:complexType[@name='EntityItemInpsectionType']">
+      <jxb:class name="EntityItemInspectionType" />
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11/catos-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
