@@ -415,21 +415,43 @@
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.definitions.ios"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the id property -->
+    <jxb:bindings node="xs:element[@name='router_object']//xs:element[@name='id']">
+        <jxb:property name="router_id" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:element[@name='router_state']//xs:element[@name='id']">
+        <jxb:property name="router_id" />
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/ios-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.systemcharacteristics.ios"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the id property -->
+    <jxb:bindings node="xs:element[@name='router_item']//xs:element[@name='id']">
+        <jxb:property name="router_id" />
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/iosxe-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.definitions.iosxe"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the id property -->
+    <jxb:bindings node="xs:element[@name='router_object']//xs:element[@name='id']">
+        <jxb:property name="router_id" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:element[@name='router_state']//xs:element[@name='id']">
+        <jxb:property name="router_id" />
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/iosxe-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.systemcharacteristics.iosxe"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the id property -->
+    <jxb:bindings node="xs:element[@name='router_item']//xs:element[@name='id']">
+        <jxb:property name="router_id" />
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/junos-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
