@@ -68,5 +68,4 @@
       <jxb:package name="cyberscope.lasr"/>
     </jxb:schemaBindings>
   </jxb:bindings>
-
 </jxb:bindings>

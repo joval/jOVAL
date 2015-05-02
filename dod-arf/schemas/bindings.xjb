@@ -171,5 +171,4 @@
       <jxb:package name="mil.disa.scap"/>
     </jxb:schemaBindings>
   </jxb:bindings>
-
 </jxb:bindings>

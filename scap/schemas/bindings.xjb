@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-  Copyright (C) 2015 jOVAL.org.  All rights reserved.
+  Copyright (C) 2015 JovalCM.com.  All rights reserved.
   This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
 
 -->
@@ -205,10 +205,22 @@
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/oval-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.core"/>
+      <jxb:package name="scap.oval.def.core"/>
     </jxb:schemaBindings>
     <jxb:bindings node="xs:element[@name='notes']//xs:element[@name='note']">
         <jxb:property name="legacyNote" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:complexType[@name='ObjectType']//xs:attribute[@name='id']">
+        <jxb:property name="object_id" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:complexType[@name='ObjectType']//xs:attribute[@name='version']">
+        <jxb:property name="object_version" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:complexType[@name='StateType']//xs:attribute[@name='id']">
+        <jxb:property name="state_id" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:complexType[@name='StateType']//xs:attribute[@name='version']">
+        <jxb:property name="state_version" />
     </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/oval-directives-schema.xsd" node="/xs:schema">
@@ -218,8 +230,11 @@
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/oval-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.core"/>
+      <jxb:package name="scap.oval.sc.core"/>
     </jxb:schemaBindings>
+    <jxb:bindings node="xs:complexType[@name='ItemType']//xs:attribute[@name='id']">
+        <jxb:property name="item_id" />
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/oval-results-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
@@ -245,63 +260,47 @@
 
   <jxb:bindings schemaLocation="oval-5.11.1/aix-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.aix"/>
+      <jxb:package name="scap.oval.def.aix"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/aix-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.aix"/>
+      <jxb:package name="scap.oval.sc.aix"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/android-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.android"/>
+      <jxb:package name="scap.oval.def.android"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='appmanager_state']//xs:element[@name='version']">
-        <jxb:property name="appmanager_version" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/android-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.android"/>
+      <jxb:package name="scap.oval.sc.android"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='appmanager_item']//xs:element[@name='version']">
-        <jxb:property name="appmanager_version" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/apache-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.apache"/>
+      <jxb:package name="scap.oval.def.apache"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='httpd_state']//xs:element[@name='version']">
-        <jxb:property name="httpd_version" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/apache-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.apache"/>
+      <jxb:package name="scap.oval.sc.apache"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='httpd_item']//xs:element[@name='version']">
-        <jxb:property name="httpd_version" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/apple-ios-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.appleios"/>
+      <jxb:package name="scap.oval.def.appleios"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/apple-ios-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.appleios"/>
+      <jxb:package name="scap.oval.sc.appleios"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/asa-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.asa"/>
+      <jxb:package name="scap.oval.def.asa"/>
     </jxb:schemaBindings>
     <!-- Compensate for the misspelling in the XSD file -->
     <jxb:bindings node="xs:complexType[@name='EntityStateInpsectionType']">
@@ -310,7 +309,7 @@
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/asa-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.asa"/>
+      <jxb:package name="scap.oval.sc.asa"/>
     </jxb:schemaBindings>
     <!-- Compensate for the misspelling in the XSD file -->
     <jxb:bindings node="xs:complexType[@name='EntityItemInpsectionType']">
@@ -319,22 +318,22 @@
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/catos-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.catos"/>
+      <jxb:package name="scap.oval.def.catos"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/catos-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.catos"/>
+      <jxb:package name="scap.oval.sc.catos"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/esx-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.esx"/>
+      <jxb:package name="scap.oval.def.esx"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/esx-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.esx"/>
+      <jxb:package name="scap.oval.sc.esx"/>
     </jxb:schemaBindings>
     <!-- avoid overloading the status property -->
     <jxb:bindings node="xs:element[@name='patch_item']//xs:element[@name='status']">
@@ -343,195 +342,73 @@
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/freebsd-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.freebsd"/>
+      <jxb:package name="scap.oval.def.freebsd"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='portinfo_state']//xs:element[@name='version']">
-        <jxb:property name="pkg_version" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/freebsd-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.freebsd"/>
+      <jxb:package name="scap.oval.sc.freebsd"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='portinfo_item']//xs:element[@name='version']">
-        <jxb:property name="pkg_version" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/hpux-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.hpux"/>
+      <jxb:package name="scap.oval.def.hpux"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='swlist_state']//xs:element[@name='version']">
-        <jxb:property name="swlist_version" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/hpux-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.hpux"/>
+      <jxb:package name="scap.oval.sc.hpux"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='swlist_item']//xs:element[@name='version']">
-        <jxb:property name="swlist_version" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/independent-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.independent"/>
+      <jxb:package name="scap.oval.def.independent"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='sql_object']//xs:element[@name='version']">
-        <jxb:property name="sql_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='sql57_object']//xs:element[@name='version']">
-        <jxb:property name="sql_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='sql_state']//xs:element[@name='version']">
-        <jxb:property name="sql_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='sql57_state']//xs:element[@name='version']">
-        <jxb:property name="sql_version" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/independent-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.independent"/>
+      <jxb:package name="scap.oval.sc.independent"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='sql_item']//xs:element[@name='version']">
-        <jxb:property name="sql_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='sql57_item']//xs:element[@name='version']">
-        <jxb:property name="sql_version" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/ios-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.ios"/>
+      <jxb:package name="scap.oval.def.ios"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the id property -->
-    <jxb:bindings node="xs:element[@name='router_object']//xs:element[@name='id']">
-        <jxb:property name="router_id" />
-    </jxb:bindings>
-    <jxb:bindings node="xs:element[@name='router_state']//xs:element[@name='id']">
-        <jxb:property name="router_id" />
-    </jxb:bindings>
-    <jxb:bindings node="xs:element[@name='routingprotocolauthintf_state']//xs:element[@name='id']">
-        <jxb:property name="protocol_id" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/ios-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.ios"/>
+      <jxb:package name="scap.oval.sc.ios"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the id property -->
-    <jxb:bindings node="xs:element[@name='router_item']//xs:element[@name='id']">
-        <jxb:property name="router_id" />
-    </jxb:bindings>
-    <jxb:bindings node="xs:element[@name='routingprotocolauthintf_item']//xs:element[@name='id']">
-        <jxb:property name="protocol_id" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/iosxe-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.iosxe"/>
+      <jxb:package name="scap.oval.def.iosxe"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the id property -->
-    <jxb:bindings node="xs:element[@name='router_object']//xs:element[@name='id']">
-        <jxb:property name="router_id" />
-    </jxb:bindings>
-    <jxb:bindings node="xs:element[@name='router_state']//xs:element[@name='id']">
-        <jxb:property name="router_id" />
-    </jxb:bindings>
-    <jxb:bindings node="xs:element[@name='routingprotocolauthintf_state']//xs:element[@name='id']">
-        <jxb:property name="protocol_id" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/iosxe-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.iosxe"/>
+      <jxb:package name="scap.oval.sc.iosxe"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the id property -->
-    <jxb:bindings node="xs:element[@name='router_item']//xs:element[@name='id']">
-        <jxb:property name="router_id" />
-    </jxb:bindings>
-    <jxb:bindings node="xs:element[@name='routingprotocolauthintf_item']//xs:element[@name='id']">
-        <jxb:property name="protocol_id" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/junos-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.junos"/>
+      <jxb:package name="scap.oval.def.junos"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/junos-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.junos"/>
+      <jxb:package name="scap.oval.sc.junos"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/linux-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.linux"/>
+      <jxb:package name="scap.oval.def.linux"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='dpkginfo_state']//xs:element[@name='version']">
-        <jxb:property name="dpkginfo_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='rpminfo_state']//xs:element[@name='version']">
-        <jxb:property name="rpm_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='rpmverifyfile_object']//xs:element[@name='version']">
-        <jxb:property name="rpm_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='rpmverifyfile_state']//xs:element[@name='version']">
-        <jxb:property name="rpm_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='rpmverifypackage_object']//xs:element[@name='version']">
-        <jxb:property name="rpm_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='rpmverifypackage_state']//xs:element[@name='version']">
-        <jxb:property name="rpm_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='slackwarepkginfo_state']//xs:element[@name='version']">
-        <jxb:property name="slackwarepkginfo_version" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/linux-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.linux"/>
+      <jxb:package name="scap.oval.sc.linux"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='dpkginfo_item']//xs:element[@name='version']">
-        <jxb:property name="dpkginfo_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='rpminfo_item']//xs:element[@name='version']">
-        <jxb:property name="rpm_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='rpmverifyfile_item']//xs:element[@name='version']">
-        <jxb:property name="rpm_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='rpmverifypackage_item']//xs:element[@name='version']">
-        <jxb:property name="rpm_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='slackwarepkginfo_item']//xs:element[@name='version']">
-        <jxb:property name="slackwarepkginfo_version" />
-    </jxb:bindings>
     <!-- rename to conform with object/state/test name pattern -->
     <jxb:bindings node="xs:element[@name='inetlisteningserver_item']//xs:complexType">
         <jxb:class name="InetlisteningserversItem" />
@@ -542,7 +419,7 @@
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/macos-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.macos"/>
+      <jxb:package name="scap.oval.def.macos"/>
     </jxb:schemaBindings>
     <!-- avoid overloading the status attribute -->
     <jxb:bindings node="xs:element[@name='launchd_state']//xs:element[@name='status']">
@@ -551,7 +428,7 @@
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/macos-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.macos"/>
+      <jxb:package name="scap.oval.sc.macos"/>
     </jxb:schemaBindings>
     <!-- rename to conform with with object/state/test name pattern -->
     <jxb:bindings node="xs:element[@name='inetlisteningserver_item']//xs:complexType">
@@ -567,89 +444,57 @@
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/netconf-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.netconf"/>
+      <jxb:package name="scap.oval.def.netconf"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/netconf-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.netconf"/>
+      <jxb:package name="scap.oval.sc.netconf"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/pixos-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.pixos"/>
+      <jxb:package name="scap.oval.def.pixos"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/pixos-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.pixos"/>
+      <jxb:package name="scap.oval.sc.pixos"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/sharepoint-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.sharepoint"/>
+      <jxb:package name="scap.oval.def.sharepoint"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the id property -->
-    <jxb:bindings node="xs:element[@name='infopolicycoll_object']//xs:element[@name='id']">
-        <jxb:property name="infopolicycoll_id" />
-    </jxb:bindings>
-    <!-- avoid overloading the id property -->
-    <jxb:bindings node="xs:element[@name='infopolicycoll_state']//xs:element[@name='id']">
-        <jxb:property name="infopolicycoll_id" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/sharepoint-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.sharepoint"/>
+      <jxb:package name="scap.oval.sc.sharepoint"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the id property -->
-    <jxb:bindings node="xs:element[@name='infopolicycoll_item']//xs:element[@name='id']">
-        <jxb:property name="infopolicycoll_id" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/solaris-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.solaris"/>
+      <jxb:package name="scap.oval.def.solaris"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='package_state']//xs:element[@name='version']">
-        <jxb:property name="package_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='patch54_object']//xs:element[@name='version']">
-        <jxb:property name="patch_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='patch_state']//xs:element[@name='version']">
-        <jxb:property name="patch_version" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/solaris-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.solaris"/>
+      <jxb:package name="scap.oval.sc.solaris"/>
     </jxb:schemaBindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='package_item']//xs:element[@name='version']">
-        <jxb:property name="package_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='patch_item']//xs:element[@name='version']">
-        <jxb:property name="patch_version" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/unix-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.unix"/>
+      <jxb:package name="scap.oval.def.unix"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/unix-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.unix"/>
+      <jxb:package name="scap.oval.sc.unix"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/windows-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.definitions.windows"/>
+      <jxb:package name="scap.oval.def.windows"/>
     </jxb:schemaBindings>
     <!-- Compensate for confusion between principle and principal -->
     <jxb:bindings node="xs:element[@name='accesstoken_object']//xs:element[@name='security_principle']">
@@ -669,25 +514,12 @@
     <jxb:bindings node="xs:element[@name='accesstoken_state']//xs:element[@name='setrustedcredmanaccessnameright']">
         <jxb:property name="setrustedcredmanaccessnameprivilege" />
     </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='file_state']//xs:element[@name='version']">
-        <jxb:property name="file_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the id property -->
-    <jxb:bindings node="xs:element[@name='metabase_object']//xs:element[@name='id']">
-        <jxb:property name="metabase_id" />
-        <jxb:factoryMethod name="MetabaseObjectMetabaseId" />
-    </jxb:bindings>
-    <!-- avoid overloading the id property -->
-    <jxb:bindings node="xs:element[@name='metabase_state']//xs:element[@name='id']">
-        <jxb:property name="metabase_id" />
-    </jxb:bindings>
+    <!-- pseudo-implement user_sid55_object, to match the user_sid_item parameter names -->
     <jxb:bindings node="xs:element[@name='user_sid_object']//xs:element[@name='user']">
-        <!-- pseudo-implement user_sid55_object, to match the user_sid_item parameter names -->
         <jxb:property name="user_sid" />
     </jxb:bindings>
+    <!-- pseudo-implement user_sid55_state, to match the user_sid_item parameter names -->
     <jxb:bindings node="xs:element[@name='user_sid_state']//xs:element[@name='user']">
-        <!-- pseudo-implement user_sid55_state, to match the user_sid_item parameter names -->
         <jxb:property name="user_sid" />
     </jxb:bindings>
     <jxb:bindings node="xs:element[@name='user_sid_state']//xs:element[@name='group']">
@@ -697,7 +529,7 @@
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval-5.11.1/windows-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.systemcharacteristics.windows"/>
+      <jxb:package name="scap.oval.sc.windows"/>
     </jxb:schemaBindings>
     <!-- Compensate for confusion between principle and principal -->
     <jxb:bindings node="xs:element[@name='accesstoken_item']//xs:element[@name='security_principle']">
@@ -713,14 +545,6 @@
     <!-- Compensate for confusion between setrustedcredmanaccessnameright and setrustedcredmanaccessnameprivilege -->
     <jxb:bindings node="xs:element[@name='accesstoken_item']//xs:element[@name='setrustedcredmanaccessnameright']">
         <jxb:property name="setrustedcredmanaccessnameprivilege" />
-    </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='file_item']//xs:element[@name='version']">
-        <jxb:property name="file_version" />
-    </jxb:bindings>
-    <!-- avoid overloading the id property -->
-    <jxb:bindings node="xs:element[@name='metabase_item']//xs:element[@name='id']">
-        <jxb:property name="metabase_id" />
     </jxb:bindings>
   </jxb:bindings>
 
