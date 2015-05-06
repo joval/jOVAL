@@ -2,6 +2,7 @@
 # This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
 
 SCAP_VERSION=1.2
+OVAL_VERSION=5.11.1
 
 Default: all
 
@@ -63,6 +64,7 @@ RSRC=rsrc
 DOCS=docs
 GEN=gen-src
 SCHEMADIR=schemas
+OVAL_SCHEMA=$(SCHEMADIR)/oval-$(OVAL_VERSION)
 BINDINGS=$(SCHEMADIR)/bindings.xjb
 CATALOG=schemas.cat
 EPISODE=schemas.episode
@@ -83,3 +85,6 @@ CYBERSCOPE=$(TOP)/cyberscope
 CYBERSCOPE_LIB=$(CYBERSCOPE)/cyberscope-schema.jar
 DODARF=$(TOP)/dod-arf
 DODARF_LIB=$(DODARF)/DoD-ARF-schema.jar
+
+SAXON=$(TOP)/Saxon
+SAXON_LIB=$(SAXON)/saxon9he.jar

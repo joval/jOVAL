@@ -10,6 +10,7 @@ include classes.mk
 include schemas.mk
 
 SCHEMA_FILES:=$(foreach schema, $(SCHEMAS), $(SCHEMADIR)/$(schema))
+OVAL_DOCS:=$(foreach schema, $(wildcard $(OVAL_SCHEMA)/*.xsd), $(DOCS)/$(notdir $(basename $(schema))).html)
 CLASS_FILES:=$(foreach class, $(CLASSES), $(BUILD)/$(subst .,/,$(class)).class)
 PACKAGES=$(sort $(basename $(CLASSES)))
 PACKAGEDIRS=$(subst .,/,$(PACKAGES))
@@ -20,7 +21,7 @@ PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 BROKEN=<bindings scd=\"x-schema::tns\"
 FIXED=<bindings scd=\"x-schema::tns\" if-exists=\"true\"
 
-all: $(SCAP_LIB)
+all: $(SCAP_LIB) $(OVAL_DOCS)
 
 $(SCAP_LIB): $(GEN) classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
@@ -30,6 +31,7 @@ clean:
 	rm -f $(SCAP_LIB)
 	rm -rf $(BUILD)
 	rm -rf $(GEN)
+	rm -rf $(DOCS)
 
 resources:
 	mkdir -p $(BUILD)/META-INF
@@ -53,3 +55,9 @@ $(BUILD)/%.class: $(GEN)/%.java
 
 $(BUILD)/%/:
 	mkdir -p $@
+
+$(DOCS):
+	mkdir -p $@
+
+$(DOCS)/%.html: $(OVAL_SCHEMA)/%.xsd
+	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:rsrc/oval_xsd2html.xsl.xml -o:$@
