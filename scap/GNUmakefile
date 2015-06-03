@@ -17,11 +17,11 @@ PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
 SCHEMATRON=schematron
 SCH=gen-sch
-OVAL_SCH:=$(SCH)/oval-definitions-schematron.sch \
-	  $(SCH)/oval-directives-schematron.sch \
-	  $(SCH)/oval-results-schematron.sch \
-	  $(SCH)/oval-system-characteristics-schematron.sch \
-	  $(SCH)/oval-variables-schematron.sch \
+OVAL_SCH:=$(SCH)/oval-definitions-schematron.xsl \
+	  $(SCH)/oval-directives-schematron.xsl \
+	  $(SCH)/oval-results-schematron.xsl \
+	  $(SCH)/oval-system-characteristics-schematron.xsl \
+	  $(SCH)/oval-variables-schematron.xsl \
 
 #
 # Make namespaces optional in the episode bindings
@@ -76,3 +76,6 @@ $(SCH):
 
 $(SCH)/%-schematron.sch: $(SCHEMATRON)/%.xml
 	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:rsrc/ExtractSchFromXSD.xsl -o:$@
+
+%.xsl: %.sch
+	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:rsrc/iso_svrl_for_xslt1.xsl -o:$@
