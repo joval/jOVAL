@@ -15,13 +15,21 @@ CLASS_FILES:=$(foreach class, $(CLASSES), $(BUILD)/$(subst .,/,$(class)).class)
 PACKAGES=$(sort $(basename $(CLASSES)))
 PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
+SCHEMATRON=schematron
+SCH=gen-sch
+OVAL_SCH:=$(SCH)/oval-definitions-schematron.sch \
+	  $(SCH)/oval-directives-schematron.sch \
+	  $(SCH)/oval-results-schematron.sch \
+	  $(SCH)/oval-system-characteristics-schematron.sch \
+	  $(SCH)/oval-variables-schematron.sch \
+
 #
 # Make namespaces optional in the episode bindings
 #
 BROKEN=<bindings scd=\"x-schema::tns\"
 FIXED=<bindings scd=\"x-schema::tns\" if-exists=\"true\"
 
-all: $(SCAP_LIB) $(OVAL_DOCS)
+all: $(SCAP_LIB) $(OVAL_DOCS) $(OVAL_SCH)
 
 $(SCAP_LIB): $(GEN) classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
@@ -32,6 +40,7 @@ clean:
 	rm -rf $(BUILD)
 	rm -rf $(GEN)
 	rm -rf $(DOCS)
+	rm -rf $(SCH)
 
 resources:
 	mkdir -p $(BUILD)/META-INF
@@ -60,4 +69,10 @@ $(DOCS):
 	mkdir -p $@
 
 $(DOCS)/%.html: $(OVAL_SCHEMA)/%.xsd
-	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:rsrc/oval_xsd2html.xsl.xml -o:$@
+	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:rsrc/oval_xsd2html.xsl -o:$@
+
+$(SCH):
+	mkdir -p $@
+
+$(SCH)/%-schematron.sch: $(SCHEMATRON)/%.xml
+	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:rsrc/ExtractSchFromXSD.xsl -o:$@

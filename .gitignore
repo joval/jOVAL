@@ -1,5 +1,6 @@
 .DS_Store
 gen-src/
+gen-sch/
 build/
 docs/
 cyberscope/schemas.episode

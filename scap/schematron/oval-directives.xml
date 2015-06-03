@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2015 jOVAL.org.  All rights reserved.
+  This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
+                  schemaLocation="../schemas/oval-5.11.1/oval-common-schema.xsd"/>
+      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-directives-5"
+                  schemaLocation="../schemas/oval-5.11.1/oval-directives-schema.xsd"/>
+</xsd:schema>
