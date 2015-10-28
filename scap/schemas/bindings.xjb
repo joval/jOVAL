@@ -148,14 +148,14 @@
     <jxb:bindings node="xs:complexType[@name='profileType']//xs:attribute[@name='id']">
         <jxb:property name="profileId" />
     </jxb:bindings>
-    <jxb:bindings node="xs:complexType[@name='profileType']//xs:attribute[@name='Id']">
-        <jxb:property name="profileTypeId" />
-    </jxb:bindings>
     <jxb:bindings node="xs:complexType[@name='testResultType']/xs:attribute[@name='id']">
         <jxb:property name="testResultId" />
     </jxb:bindings>
     <jxb:bindings node="xs:complexType[@name='tailoringType']/xs:attribute[@name='id']">
         <jxb:property name="tailoringId" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:complexType[@name='valueType']//xs:attribute[@name='id']">
+        <jxb:property name="valueId" />
     </jxb:bindings>
   </jxb:bindings>
 
