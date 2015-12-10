@@ -980,6 +980,8 @@
                 maxOccurs="unbounded"/>
             <xsd:element name="check-export" type="cdf:checkExportType" minOccurs="0"
                 maxOccurs="unbounded"/>
+            <xsd:element name="inline-export" type="cdf:inlineExportType" minOccurs="0"
+                maxOccurs="unbounded"/>
             <xsd:element name="check-content-ref" minOccurs="0" maxOccurs="unbounded"
                 type="cdf:checkContentRefType"/>
             <xsd:element name="check-content" minOccurs="0" maxOccurs="1"
@@ -1018,6 +1020,19 @@
                 by the checking system or processor. </xsd:documentation>
         </xsd:annotation>
         <xsd:attribute name="value-id" type="xsd:NCName" use="required"/>
+        <xsd:attribute name="export-name" type="xsd:string" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="inlineExportType">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en"> Data type for the inline-export element, which
+                specifies the value(s) to be used for the named value of the checking system or
+                processor. </xsd:documentation>
+        </xsd:annotation>
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+             <xsd:element name="value" type="xsd:string"/>
+             <xsd:element name="complex-value" type="cdf:complexValueType"/>
+        </xsd:choice>
         <xsd:attribute name="export-name" type="xsd:string" use="required"/>
     </xsd:complexType>
 
@@ -1098,12 +1113,16 @@
                             maxOccurs="1"/>
                         <xsd:element name="complex-value" type="cdf:selComplexValueType"
                             minOccurs="1" maxOccurs="1"/>
+                        <xsd:element name="import-value" type="cdf:selImportType" minOccurs="1"
+                            maxOccurs="1"/>
                     </xsd:choice>
                     <xsd:choice minOccurs="0" maxOccurs="unbounded">
                         <xsd:element name="default" type="cdf:selStringType" minOccurs="1"
                             maxOccurs="1"/>
                         <xsd:element name="complex-default" type="cdf:selComplexValueType"
                             minOccurs="1" maxOccurs="1"/>
+                        <xsd:element name="import-default" type="cdf:selImportType" minOccurs="1"
+                            maxOccurs="1"/>
                     </xsd:choice>
                     <xsd:element name="match" type="cdf:selStringType" minOccurs="0"
                         maxOccurs="unbounded"/>
@@ -1194,6 +1213,68 @@
                 <xsd:attribute name="selector" default="" type="xsd:string" use="optional"/>
             </xsd:extension>
         </xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="selImportType">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en"> This type is for an element that has a selector
+                attribute and a value that derives from an import from a check.  It is used for
+                some of the child elements of Value.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="check">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en"> A check defined in this context is a
+                        restriction of the regular checkType. No check-exports are permitted, but
+                        instead, statically-defined inline-exports are allowed. Also, a single
+                        check-import is required, which defines the value that this element will
+                        ultimately express.
+                    </xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:complexContent>
+                        <xsd:restriction base="cdf:checkType">
+                            <xsd:sequence>
+                                <xsd:element name="check-import" type="cdf:checkImportType"
+                                    minOccurs="1" maxOccurs="1"/>
+                                <xsd:element name="check-export" type="cdf:checkExportType"
+                                    minOccurs="0" maxOccurs="0"/>
+                                <xsd:element name="inline-export" type="cdf:inlineExportType"
+                                    minOccurs="0" maxOccurs="unbounded"/>
+                                <xsd:element name="check-content-ref" minOccurs="0"
+                                    maxOccurs="unbounded" type="cdf:checkContentRefType"/>
+                                <xsd:element name="check-content" minOccurs="0" maxOccurs="1"
+                                    type="cdf:checkContentType"/>
+                            </xsd:sequence>
+                            <xsd:attribute name="system" type="xsd:anyURI" use="required"/>
+                            <xsd:attribute ref="xml:base"/>
+                        </xsd:restriction>
+                    </xsd:complexContent>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+        <xsd:attribute name="type" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="simple">
+                        <xsd:annotation>
+                            <xsd:documentation xml:lang="en"> This type is for a Value that
+                                should be treated like a selStringType.
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:enumeration>
+                    <xsd:enumeration value="complex">
+                        <xsd:annotation>
+                            <xsd:documentation xml:lang="en"> This type is for a Value that
+                                should be treated like a selComplexType.
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:enumeration>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="selector" default="" type="xsd:string" use="optional"/>
     </xsd:complexType>
 
     <xsd:complexType name="uriRefType">
