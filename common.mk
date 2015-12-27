@@ -38,9 +38,11 @@ RAW_JAVA_VERSION:=$(shell $(JAVA_HOME)/bin/java -version 2>&1)
 ifeq (1.8, $(findstring 1.8, $(RAW_JAVA_VERSION)))
     JAVA_VERSION=1.8
     XJC=$(JAVA_HOME)/bin/xjc
+    JAVADOCFLAGS=-Xdoclint:none -J-Xmx512m
 else ifeq (1.7, $(findstring 1.7, $(RAW_JAVA_VERSION)))
     JAVA_VERSION=1.7
     XJC=$(JAVA_HOME)/bin/xjc
+    JAVADOCFLAGS=-J-Xmx512m
 else ifeq (1.6, $(findstring 1.6, $(RAW_JAVA_VERSION)))
     JAVA_VERSION=1.6
     ifeq (x, x$(JAXB_HOME))
@@ -50,6 +52,7 @@ else ifeq (1.6, $(findstring 1.6, $(RAW_JAVA_VERSION)))
     else
         XJC=$(JAVA) -jar $(JAXB_HOME)/lib/jaxb-xjc.jar
     endif
+    JAVADOCFLAGS=-J-Xmx512m
 else
     $(error "Unsupported Java version: $(RAW_JAVA_VERSION)")
 endif

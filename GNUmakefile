@@ -15,7 +15,7 @@ all: $(SCAP_LIB) $(SCAP_EXT_LIB) $(DOCS)/index.html $(CYBERSCOPE_LIB) $(DODARF_L
 
 $(DOCS)/index.html: $(SCAP_LIB) $(SCAP_EXT_LIB)
 	mkdir -p $(DOCS)
-	$(JAVADOC) -J-Xmx512m -d $(DOCS) -sourcepath $(SOURCEPATH) -subpackages org:scap
+	$(JAVADOC) $(JAVADOCFLAGS) -d $(DOCS) -sourcepath $(SOURCEPATH) -subpackages org:scap
 
 $(SCAP_LIB): $(SCAP)/$(BINDINGS)
 	@$(MAKE) --directory=$(SCAP)
