@@ -20,7 +20,7 @@ $(DODARF_LIB): $(GEN) classes resources $(DOCS)
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 $(DOCS): $(GEN)
-	$(JAVADOC) -J-Xmx512m -d $(DOCS) -sourcepath $(GEN) -subpackages org:mil.disa
+	$(JAVADOC) $(JAVADOCFLAGS) -d $(DOCS) -sourcepath $(GEN) -subpackages org:mil.disa
 
 clean:
 	rm -f $(EPISODE)
