@@ -1685,6 +1685,7 @@ CLASSES=\
 	scap.oval.variables.package-info	\
 	scap.oval.variables.VariablesType	\
 	scap.oval.variables.VariableType	\
+	scap.xccdf.BenchmarkReferenceType	\
 	scap.xccdf.CcOperatorEnumType	\
 	scap.xccdf.CheckContentRefType	\
 	scap.xccdf.CheckContentType	\
@@ -1717,7 +1718,6 @@ CLASSES=\
 	scap.xccdf.NoticeType	\
 	scap.xccdf.ObjectFactory	\
 	scap.xccdf.OverrideableCPE2IdrefType	\
-	scap.xccdf.OverrideableIdrefType	\
 	scap.xccdf.OverrideType	\
 	scap.xccdf.package-info	\
 	scap.xccdf.ParamType	\
@@ -1747,8 +1747,12 @@ CLASSES=\
 	scap.xccdf.StatusType	\
 	scap.xccdf.SubType	\
 	scap.xccdf.SubUseEnumType	\
+	scap.xccdf.TailoringBenchmarkReferenceType	\
+	scap.xccdf.TailoringReferenceType	\
 	scap.xccdf.TailoringType	\
+	scap.xccdf.TailoringVersionType	\
 	scap.xccdf.TargetFactsType	\
+	scap.xccdf.TargetIdRefType	\
 	scap.xccdf.TestResultType	\
 	scap.xccdf.TextType	\
 	scap.xccdf.TextWithSubType	\
