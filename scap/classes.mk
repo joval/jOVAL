@@ -1685,10 +1685,10 @@ CLASSES=\
 	scap.oval.variables.package-info	\
 	scap.oval.variables.VariablesType	\
 	scap.oval.variables.VariableType	\
+	scap.xccdf.BenchmarkReferenceType	\
 	scap.xccdf.CcOperatorEnumType	\
 	scap.xccdf.CheckContentRefType	\
 	scap.xccdf.CheckContentType	\
-	scap.xccdf.CheckExportType	\
 	scap.xccdf.CheckImportType	\
 	scap.xccdf.CheckType	\
 	scap.xccdf.ComplexCheckType	\
@@ -1696,6 +1696,8 @@ CLASSES=\
 	scap.xccdf.CPE2IdrefType	\
 	scap.xccdf.DcStatusType	\
 	scap.xccdf.FactType	\
+	scap.xccdf.FixContentRefType	\
+	scap.xccdf.FixContentType	\
 	scap.xccdf.FixStrategyEnumType	\
 	scap.xccdf.FixTextType	\
 	scap.xccdf.FixType	\
@@ -1717,7 +1719,6 @@ CLASSES=\
 	scap.xccdf.NoticeType	\
 	scap.xccdf.ObjectFactory	\
 	scap.xccdf.OverrideableCPE2IdrefType	\
-	scap.xccdf.OverrideableIdrefType	\
 	scap.xccdf.OverrideType	\
 	scap.xccdf.package-info	\
 	scap.xccdf.ParamType	\
@@ -1739,6 +1740,7 @@ CLASSES=\
 	scap.xccdf.SelChoicesType	\
 	scap.xccdf.SelComplexValueType	\
 	scap.xccdf.SelectableItemType	\
+	scap.xccdf.SelImportType	\
 	scap.xccdf.SelNumType	\
 	scap.xccdf.SelStringType	\
 	scap.xccdf.SeverityEnumType	\
@@ -1747,13 +1749,19 @@ CLASSES=\
 	scap.xccdf.StatusType	\
 	scap.xccdf.SubType	\
 	scap.xccdf.SubUseEnumType	\
+	scap.xccdf.TailoringBenchmarkReferenceType	\
+	scap.xccdf.TailoringReferenceType	\
 	scap.xccdf.TailoringType	\
+	scap.xccdf.TailoringVersionType	\
 	scap.xccdf.TargetFactsType	\
+	scap.xccdf.TargetIdRefType	\
 	scap.xccdf.TestResultType	\
 	scap.xccdf.TextType	\
 	scap.xccdf.TextWithSubType	\
 	scap.xccdf.UriRefType	\
+	scap.xccdf.ValueExportType	\
 	scap.xccdf.ValueOperatorType	\
+	scap.xccdf.ValueRefExportType	\
 	scap.xccdf.ValueType	\
 	scap.xccdf.ValueTypeType	\
 	scap.xccdf.VersionType	\

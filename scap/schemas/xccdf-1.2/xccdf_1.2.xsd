@@ -1943,7 +1943,7 @@ NOT || P | F | U | E | N | K | S | I ||
                         processing environment to the checking system.</xsd:documentation>
                 </xsd:annotation>
             </xsd:element>
-            <xsd:element name="inline-export" type="cdf:valueRefExportType" minOccurs="0"
+            <xsd:element name="inline-export" type="cdf:valueExportType" minOccurs="0"
                 maxOccurs="unbounded">
                 <xsd:annotation>
                     <xsd:documentation xml:lang="en">An element containing a value declaration for
