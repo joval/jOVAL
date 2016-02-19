@@ -1906,7 +1906,7 @@ NOT || P | F | U | E | N | K | S | I ||
                         processing environment to the checking system.</xsd:documentation>
                 </xsd:annotation>
             </xsd:element>
-            <xsd:element name="inline-export" type="cdf:checkExportType" minOccurs="0"
+            <xsd:element name="inline-export" type="cdf:inlineExportType" minOccurs="0"
                 maxOccurs="unbounded">
                 <xsd:annotation>
                     <xsd:documentation xml:lang="en">An element containing a value declaration for
@@ -2543,6 +2543,12 @@ NOT || P | F | U | E | N | K | S | I ||
                                     type="cdf:checkContentType"/>
                             </xsd:sequence>
                             <xsd:attribute name="system" type="xsd:anyURI" use="required"/>
+<!--DAS
+<xsd:attribute name="negate" type="xsd:boolean" fixed="false"/>
+<xsd:attribute name="id" type="xsd:NCName" use="optional"/>
+<xsd:attribute name="selector" fixed="" type="xsd:string"/>
+<xsd:attribute name="multi-check" type="xsd:boolean" fixed="false"/>
+-->
                             <xsd:attribute ref="xml:base"/>
                         </xsd:restriction>
                     </xsd:complexContent>
