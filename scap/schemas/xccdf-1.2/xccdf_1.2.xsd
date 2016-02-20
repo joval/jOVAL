@@ -1497,55 +1497,6 @@
         </xsd:restriction>
     </xsd:simpleType>
 
-
-    <xsd:complexType name="fixTextType" mixed="true">
-        <xsd:annotation>
-            <xsd:documentation xml:lang="en"> Data type for the &lt;xccdf:fixtext&gt; element, which
-                contains data that describes how to bring a target system into compliance with an
-                &lt;xccdf:Rule&gt;. Each &lt;xccdf:fixtext&gt; element may be associated with one or
-                more &lt;xccdf:fix&gt; elements through the @fixref attribute. The body holds
-                explanatory text about the fix procedures.</xsd:documentation>
-        </xsd:annotation>
-        <xsd:complexContent>
-            <xsd:extension base="cdf:htmlTextWithSubType">
-                <xsd:attribute name="fixref" type="xsd:NCName" use="optional">
-                    <xsd:annotation>
-                        <xsd:documentation xml:lang="en">A reference to the @id of an
-                            &lt;xccdf:fix&gt; element. </xsd:documentation>
-                    </xsd:annotation>
-                </xsd:attribute>
-                <xsd:attribute name="reboot" type="xsd:boolean" use="optional" default="0">
-                    <xsd:annotation>
-                        <xsd:documentation xml:lang="en">True if a reboot is known to be required
-                            and false otherwise. </xsd:documentation>
-                    </xsd:annotation>
-                </xsd:attribute>
-                <xsd:attribute name="strategy" type="cdf:fixStrategyEnumType" use="optional"
-                    default="unknown">
-                    <xsd:annotation>
-                        <xsd:documentation xml:lang="en">The method or approach for making the
-                            described fix. </xsd:documentation>
-                    </xsd:annotation>
-                </xsd:attribute>
-                <xsd:attribute name="disruption" type="cdf:ratingEnumType" use="optional"
-                    default="unknown">
-                    <xsd:annotation>
-                        <xsd:documentation xml:lang="en">An estimate of the potential for disruption
-                            or operational degradation that the application of this fix will impose
-                            on the target. </xsd:documentation>
-                    </xsd:annotation>
-                </xsd:attribute>
-                <xsd:attribute name="complexity" type="cdf:ratingEnumType" use="optional"
-                    default="unknown">
-                    <xsd:annotation>
-                        <xsd:documentation xml:lang="en">The estimated complexity or difficulty of
-                            applying the fix to the target. </xsd:documentation>
-                    </xsd:annotation>
-                </xsd:attribute>
-            </xsd:extension>
-        </xsd:complexContent>
-    </xsd:complexType>
-
     <xsd:complexType name="fixType">
         <xsd:annotation>
             <xsd:documentation xml:lang="en"> Data type for the &lt;xccdf:fix&gt; element. The body
