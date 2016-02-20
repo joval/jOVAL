@@ -1699,7 +1699,6 @@ CLASSES=\
 	scap.xccdf.FixContentRefType	\
 	scap.xccdf.FixContentType	\
 	scap.xccdf.FixStrategyEnumType	\
-	scap.xccdf.FixTextType	\
 	scap.xccdf.FixType	\
 	scap.xccdf.GroupType	\
 	scap.xccdf.HtmlTextType	\
