@@ -7,9 +7,9 @@ SCHEMAS=\
 	cpe-2.3/cpe-dictionary_2.3.xsd	\
 	cpe-2.3/cpe-language_2.3.xsd	\
 	cpe-2.3/cpe-naming_2.3.xsd	\
-	ds-1.2/scap-source-data-stream_1.2.xsd	\
+	ds-1.3/scap-source-data-stream_1.3.xsd	\
 	dublin/simpledc20021212.xsd	\
-	joval/diagnostic-schema-1.0.xsd	\
+	joval/diagnostic-schema-1.1.xsd	\
 	oasis/catalog-1.1.xsd	\
 	oasis/xAL.xsd	\
 	oasis/xNL.xsd	\
@@ -65,9 +65,9 @@ SCHEMAS=\
 	oval-5.11.1/oval-directives-schema.xsd	\
 	oval-5.11.1/oval-variables-schema.xsd	\
 	oval-5.11.1/evaluation-ids.xsd	\
-	sce-1.0/sce-1.0-xccdf-extended-component.xsd	\
-	sce-1.0/sce-result-schema.xsd	\
-	xccdf-1.2/xccdf_1.2.xsd	\
+	sce-1.1/sce-1.0-xccdf-extended-component.xsd	\
+	sce-1.1/sce-result-schema.xsd	\
+	xccdf-1.3/xccdf_1.3.xsd	\
 	xml/xlink.xsd	\
 	xml/xmldsig-core-schema.xsd
 

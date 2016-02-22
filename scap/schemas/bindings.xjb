@@ -67,7 +67,7 @@
   <!-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>             Datastream Bindings               <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< -->
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
 
-  <jxb:bindings schemaLocation="ds-1.2/scap-source-data-stream_1.2.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="ds-1.3/scap-source-data-stream_1.3.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.datastream"/>
     </jxb:schemaBindings>
@@ -132,7 +132,7 @@
   <!-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>               XCCDF Bindings                  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< -->
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
 
-  <jxb:bindings schemaLocation="xccdf-1.2/xccdf_1.2.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="xccdf-1.3/xccdf_1.3.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.xccdf"/>
     </jxb:schemaBindings>
@@ -163,12 +163,12 @@
   <!-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>                SCE Bindings                   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< -->
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
 
-  <jxb:bindings schemaLocation="sce-1.0/sce-1.0-xccdf-extended-component.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="sce-1.1/sce-1.0-xccdf-extended-component.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="org.openscap.sce.xccdf"/>
     </jxb:schemaBindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="sce-1.0/sce-result-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="sce-1.1/sce-result-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="org.openscap.sce.results"/>
     </jxb:schemaBindings>
@@ -552,7 +552,7 @@
   <!-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>          Diagnostic Schema Bindings           <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< -->
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
 
-  <jxb:bindings schemaLocation="joval/diagnostic-schema-1.0.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="joval/diagnostic-schema-1.1.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="org.joval.scap.diagnostics"/>
     </jxb:schemaBindings>

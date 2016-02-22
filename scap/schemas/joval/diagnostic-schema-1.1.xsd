@@ -5,7 +5,7 @@
   This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
 -->
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:diag="http://www.joval.org/schemas/scap/1.2/diagnostic" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" xmlns:oval-res="http://oval.mitre.org/XMLSchema/oval-results-5" xmlns:ocil="http://scap.nist.gov/schema/ocil/2.0" xmlns:ocil-diag="http://www.gocil.org/schemas/ocil/2.0/diagnostic" xmlns:sce="http://open-scap.org/page/SCE_result_file" xmlns:cdf="http://checklists.nist.gov/xccdf/1.2" targetNamespace="http://www.joval.org/schemas/scap/1.2/diagnostic" elementFormDefault="qualified" version="1.0">
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:diag="http://www.joval.org/schemas/scap/1.3/diagnostic" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" xmlns:oval-res="http://oval.mitre.org/XMLSchema/oval-results-5" xmlns:ocil="http://scap.nist.gov/schema/ocil/2.0" xmlns:ocil-diag="http://www.gocil.org/schemas/ocil/2.0/diagnostic" xmlns:sce="http://open-scap.org/page/SCE_result_file" xmlns:cdf="http://checklists.nist.gov/xccdf/1.3" targetNamespace="http://www.joval.org/schemas/scap/1.3/diagnostic" elementFormDefault="qualified" version="1.0">
     <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
     <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
     <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
@@ -13,7 +13,7 @@
     <xsd:import namespace="http://scap.nist.gov/schema/ocil/2.0"/>
     <xsd:import namespace="http://www.gocil.org/schemas/ocil/2.0/diagnostic"/>
     <xsd:import namespace="http://open-scap.org/page/SCE_result_file"/>
-    <xsd:import namespace="http://checklists.nist.gov/xccdf/1.2"/>
+    <xsd:import namespace="http://checklists.nist.gov/xccdf/1.3"/>
     <xsd:element name="rule_diagnostics">
         <xsd:complexType>
             <xsd:sequence>

@@ -1,25 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-    xmlns:cdf="http://checklists.nist.gov/xccdf/1.2" xmlns:cpe2="http://cpe.mitre.org/language/2.0"
-    targetNamespace="http://checklists.nist.gov/xccdf/1.2" elementFormDefault="qualified"
-    attributeFormDefault="unqualified" version="1.2.1">
+    xmlns:cdf="http://checklists.nist.gov/xccdf/1.3" xmlns:cpe2="http://cpe.mitre.org/language/2.0"
+    targetNamespace="http://checklists.nist.gov/xccdf/1.3" elementFormDefault="qualified"
+    attributeFormDefault="unqualified" version="1.3">
 
     <xsd:annotation>
-        <xsd:documentation xml:lang="en"> This schema defines the Extensible Configuration Checklist
-            Description Format (XCCDF), a data format for defining security benchmarks and
-            checklists, and for recording the results of applying such benchmarks. For more
-            information, consult the specification document, NIST Interagency Report 7275 Revision
-            4, "Specification for the Extensible Configuration Checklist Description Format Version
-            1.2". This schema was developed by Neal Ziring, with ideas and assistance from David
-            Waltermire. The following helpful individuals also contributed ideas to the definition
-            of this schema: David Proulx, Andrew Buttner, Ryan Wilson, Matthew Kerr, and Stephen
-            Quinn. Ian Crawford found numerous discrepancies between this schema and the spec
-            document. Peter Mell and his colleagues also made many suggestions. </xsd:documentation>
+        <xsd:documentation xml:lang="en"> This schema defines an experimental revision to the
+              Extensible Configuration Checklist Description Format (XCCDF), a data format for
+              defining security benchmarks and checklists, and for recording the results of applying
+              such benchmarks. For more information, consult the specification document, NIST
+              Interagency Report 7275 Revision 4, "Specification for the Extensible Configuration
+              Checklist Description Format Version 1.2". This schema was developed by David Solin,
+              based on the XCCDF 1.2 schema. </xsd:documentation>
         <xsd:appinfo>
-            <schema>XCCDF Language</schema>
-            <author>Neal Ziring</author>
-            <version>1.2</version>
-            <date>2012-02-23</date>
+            <schema>XCCDF Language (Experimental)</schema>
+            <author>David Solin</author>
+            <version>1.3</version>
+            <date>2016-02-19</date>
         </xsd:appinfo>
     </xsd:annotation>
 
@@ -233,7 +230,7 @@
                 <xsd:annotation>
                     <xsd:documentation xml:lang="en">Name of an &lt;xccdf:Benchmark&gt; authoring
                         style or set of conventions or constraints to which this
-                        &lt;xccdf:Benchmark&gt; conforms (e.g., “SCAP 1.2”).</xsd:documentation>
+                        &lt;xccdf:Benchmark&gt; conforms (e.g., “SCAP 1.3”).</xsd:documentation>
                 </xsd:annotation>
             </xsd:attribute>
             <xsd:attribute name="style-href" type="xsd:anyURI" use="optional">
@@ -1300,14 +1297,6 @@
                                 reader.</xsd:documentation>
                         </xsd:annotation>
                     </xsd:element>
-                    <xsd:element name="fixtext" type="cdf:fixTextType" minOccurs="0"
-                        maxOccurs="unbounded">
-                        <xsd:annotation>
-                            <xsd:documentation xml:lang="en">Data that describes how to bring a
-                                target system into compliance with this
-                                &lt;xccdf:Rule&gt;.</xsd:documentation>
-                        </xsd:annotation>
-                    </xsd:element>
                     <xsd:element name="fix" type="cdf:fixType" minOccurs="0" maxOccurs="unbounded">
                         <xsd:annotation>
                             <xsd:documentation xml:lang="en">A command string, script, or other
@@ -1508,79 +1497,48 @@
         </xsd:restriction>
     </xsd:simpleType>
 
-
-    <xsd:complexType name="fixTextType" mixed="true">
-        <xsd:annotation>
-            <xsd:documentation xml:lang="en"> Data type for the &lt;xccdf:fixtext&gt; element, which
-                contains data that describes how to bring a target system into compliance with an
-                &lt;xccdf:Rule&gt;. Each &lt;xccdf:fixtext&gt; element may be associated with one or
-                more &lt;xccdf:fix&gt; elements through the @fixref attribute. The body holds
-                explanatory text about the fix procedures.</xsd:documentation>
-        </xsd:annotation>
-        <xsd:complexContent>
-            <xsd:extension base="cdf:htmlTextWithSubType">
-                <xsd:attribute name="fixref" type="xsd:NCName" use="optional">
-                    <xsd:annotation>
-                        <xsd:documentation xml:lang="en">A reference to the @id of an
-                            &lt;xccdf:fix&gt; element. </xsd:documentation>
-                    </xsd:annotation>
-                </xsd:attribute>
-                <xsd:attribute name="reboot" type="xsd:boolean" use="optional" default="0">
-                    <xsd:annotation>
-                        <xsd:documentation xml:lang="en">True if a reboot is known to be required
-                            and false otherwise. </xsd:documentation>
-                    </xsd:annotation>
-                </xsd:attribute>
-                <xsd:attribute name="strategy" type="cdf:fixStrategyEnumType" use="optional"
-                    default="unknown">
-                    <xsd:annotation>
-                        <xsd:documentation xml:lang="en">The method or approach for making the
-                            described fix. </xsd:documentation>
-                    </xsd:annotation>
-                </xsd:attribute>
-                <xsd:attribute name="disruption" type="cdf:ratingEnumType" use="optional"
-                    default="unknown">
-                    <xsd:annotation>
-                        <xsd:documentation xml:lang="en">An estimate of the potential for disruption
-                            or operational degradation that the application of this fix will impose
-                            on the target. </xsd:documentation>
-                    </xsd:annotation>
-                </xsd:attribute>
-                <xsd:attribute name="complexity" type="cdf:ratingEnumType" use="optional"
-                    default="unknown">
-                    <xsd:annotation>
-                        <xsd:documentation xml:lang="en">The estimated complexity or difficulty of
-                            applying the fix to the target. </xsd:documentation>
-                    </xsd:annotation>
-                </xsd:attribute>
-            </xsd:extension>
-        </xsd:complexContent>
-    </xsd:complexType>
-
-    <xsd:complexType name="fixType" mixed="true">
+    <xsd:complexType name="fixType">
         <xsd:annotation>
             <xsd:documentation xml:lang="en"> Data type for the &lt;xccdf:fix&gt; element. The body
-                of this element contains a command string, script, or other system modification
-                statement that, if executed on the target system, can bring it into full, or at
+                of this element contains a command string, script, or reference to an external fix
+                system that, if executed on the target system, can bring it into full, or at
                 least better, compliance with this &lt;xccdf:Rule&gt;. </xsd:documentation>
         </xsd:annotation>
-        <xsd:choice minOccurs="0" maxOccurs="unbounded">
-            <xsd:element name="sub" type="cdf:subType">
-                <xsd:annotation>
-                    <xsd:documentation xml:lang="en">Specifies an &lt;xccdf:Value&gt; or
-                        &lt;xccdf:plain-text&gt; element to be used for text substitution
-                    </xsd:documentation>
-                </xsd:annotation>
-            </xsd:element>
-            <xsd:element name="instance" type="cdf:instanceFixType">
-                <xsd:annotation>
-                    <xsd:documentation xml:lang="en">Designates a spot where the name of the
-                        instance should be substituted into the fix template to generate the final
-                        fix data. If the @context attribute is omitted, the value of the @context
-                        defaults to “undefined”.</xsd:documentation>
-                </xsd:annotation>
-            </xsd:element>
-        </xsd:choice>
+        <xsd:sequence>
+            <xsd:element name="title" type="cdf:textWithSubType" minOccurs="1" maxOccurs="1"/>
+            <xsd:element name="description" type="cdf:htmlTextWithSubType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <xsd:element name="fix-import" type="cdf:checkImportType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <xsd:element name="fix-export" type="cdf:valueRefExportType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <xsd:element name="inline-export" type="cdf:valueExportType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <xsd:element name="fix-content-ref" minOccurs="0" maxOccurs="unbounded"
+                type="cdf:fixContentRefType"/>
+            <xsd:element name="fix-content" minOccurs="0" maxOccurs="1"
+                type="cdf:fixContentType"/>
+        </xsd:sequence>
+        <xsd:attribute name="system" type="xsd:anyURI" use="optional">
+            <xsd:annotation>
+                <xsd:documentation xml:lang="en">A URI that identifies the scheme, language, engine,
+                    or process for which the fix contents are written. Table 17 in the XCCDF
+                    specification defines several general-purpose URNs that may be used for this,
+                    and tool vendors and system providers may define and use target-specific
+                    URNs.</xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="platform" type="xsd:anyURI" use="optional">
+            <xsd:annotation>
+                <xsd:documentation xml:lang="en">In case different fix scripts or procedures are
+                    required for different target platform types (e.g., different patches for
+                    Windows Vista and Windows 7), this attribute allows a CPE name or CPE
+                    applicability language expression to be associated with an &lt;xccdf:fix&gt;
+                    element. This should appear on an &lt;xccdf:fix&gt; when the content applies to
+                    only one platform out of several to which the &lt;xccdf:Rule&gt; could apply.
+                </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
         <xsd:attribute name="id" type="xsd:NCName" use="optional">
             <xsd:annotation>
                 <xsd:documentation xml:lang="en">A local identifier for the element. It is optional
@@ -1588,6 +1546,18 @@
                     @id but different values for their other attributes. It is used primarily to
                     allow &lt;xccdf:fixtext&gt; elements to be associated with one or more
                     &lt;xccdf:fix&gt; elements </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="selector" default="" type="xsd:string" use="optional">
+            <xsd:annotation>
+                <xsd:documentation xml:lang="en">This may be referenced from &lt;xccdf:Profile&gt;
+                    selection elements or used during manual tailoring to refine the application of
+                    the &lt;xccdf:Rule&gt;. If no selector values are specified for a given
+                    &lt;xccdf:Rule&gt; by &lt;xccdf:Profile&gt; elements or manual tailoring, all
+                    &lt;xccdf:fix&gt; elements with non-empty @selector attributes are ignored. If
+                    an &lt;xccdf:Rule&gt; has multiple &lt;xccdf:fix&gt; elements with the same
+                    @selector attribute, each must employ a different fix system, as identified
+                    by the @system attribute of the &lt;xccdf:fix&gt; element.</xsd:documentation>
             </xsd:annotation>
         </xsd:attribute>
         <xsd:attribute name="reboot" type="xsd:boolean" use="optional" default="0">
@@ -1616,26 +1586,44 @@
                     the fix to the target. </xsd:documentation>
             </xsd:annotation>
         </xsd:attribute>
-        <xsd:attribute name="system" type="xsd:anyURI" use="optional">
-            <xsd:annotation>
-                <xsd:documentation xml:lang="en">A URI that identifies the scheme, language, engine,
-                    or process for which the fix contents are written. Table 17 in the XCCDF
-                    specification defines several general-purpose URNs that may be used for this,
-                    and tool vendors and system providers may define and use target-specific
-                    URNs.</xsd:documentation>
-            </xsd:annotation>
-        </xsd:attribute>
-        <xsd:attribute name="platform" type="xsd:anyURI" use="optional">
-            <xsd:annotation>
-                <xsd:documentation xml:lang="en">In case different fix scripts or procedures are
-                    required for different target platform types (e.g., different patches for
-                    Windows Vista and Windows 7), this attribute allows a CPE name or CPE
-                    applicability language expression to be associated with an &lt;xccdf:fix&gt;
-                    element. This should appear on an &lt;xccdf:fix&gt; when the content applies to
-                    only one platform out of several to which the &lt;xccdf:Rule&gt; could apply.
-                </xsd:documentation>
-            </xsd:annotation>
-        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="fixContentRefType">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en"> Data type for the fix-content-ref element, which
+                points to the code for a detached fix in another file. This element has no body,
+                just a couple of attributes: href and name. The name is optional, if it does not
+                appear then this reference is to the entire other document. </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="href" type="xsd:anyURI" use="required"/>
+        <xsd:attribute name="name" type="xsd:string"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="fixContentType" mixed="true">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en"> Data type for the &lt;xccdf:fix-content&gt; element.
+                The body of this element contains a command string, script, or other system
+                modification statement that, if executed on the target system, can bring it into
+                full, or at least better, compliance with this &lt;xccdf:Rule&gt;.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="sub" type="cdf:subType">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en">Specifies an &lt;xccdf:Value&gt; or
+                        &lt;xccdf:plain-text&gt; element to be used for text substitution
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="instance" type="cdf:instanceFixType">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en">Designates a spot where the name of the
+                        instance should be substituted into the fix template to generate the final
+                        fix data. If the @context attribute is omitted, the value of the @context
+                        defaults to “undefined”.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+        </xsd:choice>
     </xsd:complexType>
 
     <xsd:simpleType name="fixStrategyEnumType">
@@ -1897,13 +1885,22 @@ NOT || P | F | U | E | N | K | S | I ||
                         &lt;xccdf:rule-result&gt;.</xsd:documentation>
                 </xsd:annotation>
             </xsd:element>
-            <xsd:element name="check-export" type="cdf:checkExportType" minOccurs="0"
+            <xsd:element name="check-export" type="cdf:valueRefExportType" minOccurs="0"
                 maxOccurs="unbounded">
                 <xsd:annotation>
                     <xsd:documentation xml:lang="en">A mapping from an &lt;xccdf:Value&gt; element
                         to a checking system variable (i.e., external name or id for use by the
                         checking system). This supports export of tailoring values from the XCCDF
                         processing environment to the checking system.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="inline-export" type="cdf:valueExportType" minOccurs="0"
+                maxOccurs="unbounded">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en">An element containing a value declaration for
+                        export to a checking system variable (i.e., external name or id for use by
+                        the checking system). This also supports export of tailoring values from the
+                        XCCDF processing environment to the checking system.</xsd:documentation>
                 </xsd:annotation>
             </xsd:element>
             <xsd:element name="check-content-ref" minOccurs="0" maxOccurs="unbounded"
@@ -2014,16 +2011,16 @@ NOT || P | F | U | E | N | K | S | I ||
         </xsd:attribute>
     </xsd:complexType>
 
-    <xsd:complexType name="checkExportType">
+    <xsd:complexType name="valueRefExportType">
         <xsd:annotation>
             <xsd:documentation xml:lang="en"> Data type for the &lt;xccdf:check-export&gt; element,
-                which specifies a mapping from an &lt;xccdf:Value&gt; element to a checking system
-                variable (i.e., external name or id for use by the checking system). This supports
-                export of tailoring &lt;xccdf:Value&gt; elements from the XCCDF processing
-                environment to the checking system. The interface between the XCCDF benchmark
-                consumer and the checking system should support, at a minimum, passing the
-                &lt;xccdf:value&gt; property of the &lt;xccdf:Value&gt; element, but may also
-                support passing the &lt;xccdf:Value&gt; element's @type and @operator
+                which specifies a mapping from an &lt;xccdf:Value&gt; element to a checking or
+                fixing system variable (i.e., external name or id for use by the checking or
+                fixing system). This supports export of tailoring &lt;xccdf:Value&gt; elements
+                from the XCCDF processing environment to the checking system. The interface between
+                the XCCDF benchmark consumer and the checking system should support, at a minimum,
+                passing the &lt;xccdf:value&gt; property of the &lt;xccdf:Value&gt; element, but may
+                also support passing the &lt;xccdf:Value&gt; element's @type and @operator
                 properties.</xsd:documentation>
         </xsd:annotation>
         <xsd:attribute name="value-id" type="xsd:NCName" use="required">
@@ -2039,6 +2036,29 @@ NOT || P | F | U | E | N | K | S | I ||
                     properties will be mapped. </xsd:documentation>
             </xsd:annotation>
         </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="valueExportType">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en"> Data type for the inline-export element, which
+                specifies the value(s) to be used for the named value of the checking or fixing
+                system or processor. </xsd:documentation>
+        </xsd:annotation>
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+             <xsd:element name="value" type="xsd:string">
+                  <xsd:annotation>
+                      <xsd:documentation xml:lang="en"> Holds the actual value to be exported
+                           to the external check system. </xsd:documentation>
+                  </xsd:annotation>
+             </xsd:element>
+             <xsd:element name="complex-value" type="cdf:complexValueType">
+                  <xsd:annotation>
+                      <xsd:documentation xml:lang="en"> Holds the actual values to be exported
+                           to the external check system. </xsd:documentation>
+                  </xsd:annotation>
+             </xsd:element>
+        </xsd:choice>
+        <xsd:attribute name="export-name" type="xsd:string" use="required"/>
     </xsd:complexType>
 
     <xsd:complexType name="checkContentRefType">
@@ -2168,6 +2188,14 @@ NOT || P | F | U | E | N | K | S | I ||
                                 </xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
+                        <xsd:element name="import-value" type="cdf:selImportType" minOccurs="1"
+                            maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation xml:lang="en">A value (simple or complex) that
+                                    will be associated with this &lt;xccdf:Value&gt;, which will be
+                                    imported from an external check system. </xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
                     </xsd:choice>
                     <xsd:choice minOccurs="0" maxOccurs="unbounded">
                         <xsd:element name="default" type="cdf:selStringType" minOccurs="1"
@@ -2195,6 +2223,18 @@ NOT || P | F | U | E | N | K | S | I ||
                                     &lt;xccdf:complex-default&gt; elements, only one may omit a
                                     @selector attribute and no two may have the same @selector
                                     value. </xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="import-default" type="cdf:selImportType" minOccurs="1"
+                            maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation xml:lang="en">The default value (simple or
+                                    complex) that displayed to the user as a suggestion by benchmark
+                                    producers during tailoring of this &lt;xccdf:Value&gt; element.
+                                    imported from an external check system. If there are multiple
+                                    &lt;xccdf:default&gt; and/or &lt;xccdf:complex-default&gt;
+                                    elements, only one may omit a @selector attribute and no two may
+                                    have the same @selector value. </xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
                     </xsd:choice>
@@ -2456,6 +2496,76 @@ NOT || P | F | U | E | N | K | S | I ||
                 </xsd:attribute>
             </xsd:extension>
         </xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="selImportType">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en"> This type is for an element that has a selector
+                attribute and a value that derives from an import from a check.  It is used for
+                some of the child elements of Value.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="check">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en"> A check defined in this context is a
+                        restriction of the regular checkType. No check-exports are permitted, but
+                        instead, statically-defined inline-exports are allowed. Also, a single
+                        check-import is required, which defines the value that this element will
+                        ultimately express.
+                    </xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:complexContent>
+                        <xsd:restriction base="cdf:checkType">
+                            <xsd:sequence>
+                                <xsd:element name="check-import" type="cdf:checkImportType"
+                                    minOccurs="1" maxOccurs="1"/>
+                                <xsd:element name="check-export" type="cdf:valueRefExportType"
+                                    minOccurs="0" maxOccurs="0"/>
+                                <xsd:element name="inline-export" type="cdf:valueExportType"
+                                    minOccurs="0" maxOccurs="unbounded"/>
+                                <xsd:element name="check-content-ref" minOccurs="0"
+                                    maxOccurs="unbounded" type="cdf:checkContentRefType"/>
+                                <xsd:element name="check-content" minOccurs="0" maxOccurs="1"
+                                    type="cdf:checkContentType"/>
+                            </xsd:sequence>
+                            <xsd:attribute name="system" type="xsd:anyURI" use="required"/>
+                            <xsd:attribute ref="xml:base"/>
+                        </xsd:restriction>
+                    </xsd:complexContent>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+        <xsd:attribute name="type" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="simple">
+                        <xsd:annotation>
+                            <xsd:documentation xml:lang="en"> This type is for a Value that
+                                should be treated like a selStringType.
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:enumeration>
+                    <xsd:enumeration value="complex">
+                        <xsd:annotation>
+                            <xsd:documentation xml:lang="en"> This type is for a Value that
+                                should be treated like a selComplexType.
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:enumeration>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="hint" type="xsd:string" use="required">
+            <xsd:annotation>
+                <xsd:documentation xml:lang="en"> This attribute indicates the text that
+                    should be displayed to the user when a corresponding instance of a
+                    selImportType is selected. This is necessary because tailoring should
+                    precede retrieval of check data from the system. </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="selector" default="" type="xsd:string" use="optional"/>
     </xsd:complexType>
 
     <xsd:complexType name="uriRefType">
@@ -4073,4 +4183,13 @@ NOT || P | F | U | E | N | K | S | I ||
                 
 5/27/11         Added ComplexChecks in      Better tracking of result structures during complex checks 
                 rule-results
+
+12/9/16         Added inline-export,        New structures to make possible the import of values from
+                import-value and            external checks, which can then be used in other checks.
+                import-default
+
+2/18/16         Added fix-content and       Aligned the structure of XCCDF fix elements with that of
+                fix-content-ref             XCCDF check elements, to permit reference to external
+                version # to 1.3            files. Also renamed import and export types, as they can
+                                            now be used in the context of both checks and fixes.
 -->
