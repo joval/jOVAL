@@ -13,4 +13,6 @@ PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5" "../scap/schemas/ova
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" "../scap/schemas/oval-5.11.1/oval-system-characteristics-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#x-linux" "schemas/x-linux-definitions-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-linux" "schemas/x-linux-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#x-windows" "schemas/x-windows-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-windows" "schemas/x-windows-system-characteristics-schema.xsd"
 PUBLIC "http://www.w3.org/2000/09/xmldsig#" "../scap/schemas/xml/xmldsig-core-schema.xsd"

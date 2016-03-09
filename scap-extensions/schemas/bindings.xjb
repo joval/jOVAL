@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-  Copyright (C) 2015 JovalCM.com.  All rights reserved.
+  Copyright (C) 2016 JovalCM.com.  All rights reserved.
   This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
 
 -->
@@ -29,5 +29,15 @@
     <jxb:bindings node="xs:element[@name='apt_item']//xs:element[@name='operation']">
         <jxb:property name="dpkg_operation" />
     </jxb:bindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="x-windows-definitions-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.def.windows.extended"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="x-windows-system-characteristics-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.sc.windows.extended"/>
+    </jxb:schemaBindings>
   </jxb:bindings>
 </jxb:bindings>

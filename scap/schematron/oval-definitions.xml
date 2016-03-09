@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Copyright (C) 2015 jOVAL.org.  All rights reserved.
+  Copyright (C) 2016 JovalCM.com.  All rights reserved.
   This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
 -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
@@ -50,4 +50,11 @@
                   schemaLocation="../schemas/oval-5.11.1/unix-definitions-schema.xsd"/>
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows"
                   schemaLocation="../schemas/oval-5.11.1/windows-definitions-schema.xsd"/>
+
+      <!-- Schema extensions are exported below -->
+
+      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#x-linux"
+                  schemaLocation="../../scap-extensions/schemas/x-linux-definitions-schema.xsd"/>
+      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#x-windows"
+                  schemaLocation="../../scap-extensions/schemas/x-windows-definitions-schema.xsd"/>
 </xsd:schema>
