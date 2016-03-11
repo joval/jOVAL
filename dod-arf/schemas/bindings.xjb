@@ -123,11 +123,32 @@
       <jxb:package name="mil.disa.cpe.record"/>
     </jxb:schemaBindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="cve_0.1.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="cve_0.1.1.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.cve"/>
     </jxb:schemaBindings>
   </jxb:bindings>
+  <jxb:bindings schemaLocation="cvss-v2_0.2.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="mil.disa.cvss"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="nvd-cve-feed_2.0.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="gov.nist.cve.feed"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="patch_0.1.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="mil.disa.patch"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="vulnerability_0.4.1.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="mil.disa.vulnerability"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+
 
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
   <!-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>               XCCDF Bindings                  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< -->

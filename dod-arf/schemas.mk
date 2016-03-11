@@ -5,14 +5,17 @@ SCHEMAS=\
 	cnd-core.xsd	\
 	cpe-1.0.xsd	\
 	cpe-record_0.1.xsd	\
-	cve_0.1.xsd	\
+	cve_0.1.1.xsd	\
+	cvss-v2_0.2.xsd	\
 	device_record.xsd	\
 	ext_net_data.xsd	\
 	geolocation.xsd	\
 	global_enumerations.xsd	\
 	IC-ISM-v2.xsd	\
+	nvd-cve-feed_2.0.xsd	\
 	ops_attributes.xsd	\
 	organization.xsd	\
+	patch_0.1.xsd	\
 	person.xsd	\
 	platform-0.2.3.xsd	\
 	replication.xsd	\
@@ -20,6 +23,7 @@ SCHEMAS=\
 	scap-core_0.1.xsd	\
 	security_marking.xsd	\
 	tagged_value.xsd	\
+	vulnerability_0.4.1.xsd	\
 	x509_cert.xsd	\
 	xccdf-1.1.4.xsd	\
 	xccdfp-1.1.xsd
