@@ -1,4 +1,7 @@
 CLASSES=\
+	gov.nist.cve.feed.Nvd	\
+	gov.nist.cve.feed.ObjectFactory	\
+	gov.nist.cve.feed.package-info	\
 	mil.disa.arf.AssessmentReportType	\
 	mil.disa.arf.ContentType	\
 	mil.disa.arf.ObjectFactory	\
@@ -77,6 +80,37 @@ CLASSES=\
 	mil.disa.cve.CveType	\
 	mil.disa.cve.ObjectFactory	\
 	mil.disa.cve.package-info	\
+	mil.disa.cvss.AccessComplexityEnumType	\
+	mil.disa.cvss.AccessComplexityType	\
+	mil.disa.cvss.AccessVectorEnumType	\
+	mil.disa.cvss.AccessVectorType	\
+	mil.disa.cvss.AuthenticationEnumType	\
+	mil.disa.cvss.AuthenticationType	\
+	mil.disa.cvss.BaseMetricsType	\
+	mil.disa.cvss.CiaEnumType	\
+	mil.disa.cvss.CiaRequirementEnumType	\
+	mil.disa.cvss.CiaRequirementType	\
+	mil.disa.cvss.CiaType	\
+	mil.disa.cvss.CollateralDamagePotentialEnumType	\
+	mil.disa.cvss.CollateralDamagePotentialType	\
+	mil.disa.cvss.ConfidenceEnumType	\
+	mil.disa.cvss.ConfidenceType	\
+	mil.disa.cvss.CvssImpactType	\
+	mil.disa.cvss.CvssType	\
+	mil.disa.cvss.EnvironmentalMetricsType	\
+	mil.disa.cvss.ExploitabilityEnumType	\
+	mil.disa.cvss.ExploitabilityType	\
+	mil.disa.cvss.MetricsType	\
+	mil.disa.cvss.ObjectFactory	\
+	mil.disa.cvss.package-info	\
+	mil.disa.cvss.RemediationLevelEnumType	\
+	mil.disa.cvss.RemediationLevelType	\
+	mil.disa.cvss.TargetDistributionEnumType	\
+	mil.disa.cvss.TargetDistributionType	\
+	mil.disa.cvss.TemporalMetricsType	\
+	mil.disa.patch.ObjectFactory	\
+	mil.disa.patch.package-info	\
+	mil.disa.patch.PatchType	\
 	mil.disa.scap.CheckReferenceType	\
 	mil.disa.scap.CheckSearchType	\
 	mil.disa.scap.NotesType	\
@@ -128,6 +162,21 @@ CLASSES=\
 	mil.disa.types.TaggedURIType	\
 	mil.disa.types.ValidityType	\
 	mil.disa.types.X509CertType	\
+	mil.disa.vulnerability.AssociatedExploitLocationType	\
+	mil.disa.vulnerability.CweReferenceType	\
+	mil.disa.vulnerability.FixActionDescriptionEnumType	\
+	mil.disa.vulnerability.FixActionType	\
+	mil.disa.vulnerability.FixActionTypeEnumType	\
+	mil.disa.vulnerability.FixEffectivenessEnumType	\
+	mil.disa.vulnerability.ObjectFactory	\
+	mil.disa.vulnerability.OsvdbExtensionType	\
+	mil.disa.vulnerability.package-info	\
+	mil.disa.vulnerability.SecurityProtectionType	\
+	mil.disa.vulnerability.ToolConfigurationType	\
+	mil.disa.vulnerability.VulnerabilityReferenceCategoryEnumType	\
+	mil.disa.vulnerability.VulnerabilityReferenceType	\
+	mil.disa.vulnerability.VulnerabilityType	\
+	mil.disa.vulnerability.VulnerableSoftwareType	\
 	mil.disa.xccdf.Benchmark	\
 	mil.disa.xccdf.CcOperatorEnumType	\
 	mil.disa.xccdf.CheckContentRefType	\
@@ -220,4 +269,5 @@ CLASSES=\
 	mil.disa.xccdfp.package-info	\
 	mil.disa.xccdfp.Platform	\
 	mil.disa.xccdfp.PlatformSpecification	\
-	mil.disa.xccdfp.TextType
+	mil.disa.xccdfp.TextType	\
+	scap.cpe.language.ObjectFactory
