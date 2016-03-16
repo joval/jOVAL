@@ -45,6 +45,7 @@ classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
 $(GEN): $(SCHEMA_FILES)
 	mkdir -p $@
 	$(XJC) -verbose $(XJCFLAGS_EXT) $(SCHEMA_FILES) $(SCAP_LIB) -b $(BINDINGS) -d $(GEN)
+	find $(GEN) -name ObjectFactory.java | grep cpe | xargs rm
 
 $(BUILD)/%.class: $(GEN)/%.java
 	$(JAVAC) $(JAVACFLAGS) -d $(BUILD) -classpath $(CLASSPATH) $<

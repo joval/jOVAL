@@ -269,5 +269,4 @@ CLASSES=\
 	mil.disa.xccdfp.package-info	\
 	mil.disa.xccdfp.Platform	\
 	mil.disa.xccdfp.PlatformSpecification	\
-	mil.disa.xccdfp.TextType	\
-	scap.cpe.language.ObjectFactory
+	mil.disa.xccdfp.TextType
