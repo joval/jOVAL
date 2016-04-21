@@ -2,7 +2,7 @@
 <!--
 
   Copyright (C) 2013 jOVAL.org.  All rights reserved.
-  This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
+  This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
 
 -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:diag="http://www.joval.org/schemas/scap/1.2/diagnostic" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" xmlns:oval-res="http://oval.mitre.org/XMLSchema/oval-results-5" xmlns:ocil="http://scap.nist.gov/schema/ocil/2.0" xmlns:ocil-diag="http://www.gocil.org/schemas/ocil/2.0/diagnostic" xmlns:sce="http://open-scap.org/page/SCE_result_file" xmlns:cdf="http://checklists.nist.gov/xccdf/1.2" targetNamespace="http://www.joval.org/schemas/scap/1.2/diagnostic" elementFormDefault="qualified" version="1.0">
