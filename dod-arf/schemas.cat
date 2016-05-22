@@ -1,3 +1,4 @@
+OVERRIDE no
 PUBLIC "http://metadata.dod.mil/mdr/ns/netops/shared_data/assessment/0.41" "schemas/assessment.xsd"
 PUBLIC "http://metadata.dod.mil/mdr/ns/netops/shared_data/assessment_report/0.41" "schemas/assessment_report.xsd"
 PUBLIC "http://scap.nist.gov/schema/cce/0.1" "schemas/cce_0.1.xsd"
@@ -21,7 +22,7 @@ PUBLIC "urn:us:gov:ic:ism:v2" "schemas/IC-ISM-v2.xsd"
 PUBLIC "http://metadata.dod.mil/mdr/ns/netops/shared_data/ops_attributes/0.41" "schemas/ops_attributes.xsd"
 PUBLIC "http://metadata.dod.mil/mdr/ns/netops/shared_data/organization/0.41" "schemas/organization.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-common-5" "../scap/schemas/oval-5.11.1/oval-common-schema.xsd"
-PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5" "../scap/schemas/oval-5.11.1/oval-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5" "../scap/schemas/oval-5.11.1/oval-repository-metadata-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-results-5" "../scap/schemas/oval-5.11.1/oval-results-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" "../scap/schemas/oval-5.11.1/oval-system-characteristics-schema.xsd"
 PUBLIC "http://metadata.dod.mil/mdr/ns/netops/shared_data/person/0.41" "schemas/person.xsd"

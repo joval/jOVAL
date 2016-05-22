@@ -456,6 +456,7 @@ CLASSES=\
 	scap.oval.def.catos.VersionObject	\
 	scap.oval.def.catos.VersionState	\
 	scap.oval.def.catos.VersionTest	\
+	scap.oval.def.core.AffectedCPEListType	\
 	scap.oval.def.core.AffectedType	\
 	scap.oval.def.core.ArithmeticEnumeration	\
 	scap.oval.def.core.ArithmeticFunctionType	\
@@ -507,6 +508,9 @@ CLASSES=\
 	scap.oval.def.core.GlobToRegexFunctionType	\
 	scap.oval.def.core.LiteralComponentType	\
 	scap.oval.def.core.LocalVariable	\
+	scap.oval.def.core.MetadataContributorType	\
+	scap.oval.def.core.MetadataDatesType	\
+	scap.oval.def.core.MetadataStatusEnumeration	\
 	scap.oval.def.core.MetadataType	\
 	scap.oval.def.core.Notes	\
 	scap.oval.def.core.ObjectComponentType	\
@@ -514,12 +518,14 @@ CLASSES=\
 	scap.oval.def.core.ObjectRefType	\
 	scap.oval.def.core.ObjectsType	\
 	scap.oval.def.core.ObjectType	\
+	scap.oval.def.core.OriginalMetadataType	\
 	scap.oval.def.core.OvalDefinitions	\
 	scap.oval.def.core.package-info	\
 	scap.oval.def.core.PossibleRestrictionType	\
 	scap.oval.def.core.PossibleValueType	\
 	scap.oval.def.core.ReferenceType	\
 	scap.oval.def.core.RegexCaptureFunctionType	\
+	scap.oval.def.core.RepositoryMetadataType	\
 	scap.oval.def.core.RestrictionType	\
 	scap.oval.def.core.Set	\
 	scap.oval.def.core.SetOperatorEnumeration	\

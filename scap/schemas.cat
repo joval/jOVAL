@@ -14,6 +14,7 @@ This software is licensed under the LGPL 3.0 license available at http://www.gnu
 
 --
 
+OVERRIDE no
 PUBLIC "http://scap.nist.gov/schema/asset-identification/1.1" "schemas/ai-1.1/asset-identification_1.1.0.xsd"
 PUBLIC "http://scap.nist.gov/schema/asset-reporting-format/1.1" "schemas/arf-1.1/asset-reporting-format_1.1.0.xsd"
 PUBLIC "http://scap.nist.gov/schema/reporting-core/1.1" "schemas/arf-1.1/reporting-core_1.1.0.xsd"
@@ -32,7 +33,7 @@ PUBLIC "http://scap.nist.gov/schema/ocil/2.0" "schemas/ocil-2.0/ocil-2.0.xsd"
 PUBLIC "http://www.gocil.org/schemas/ocil/2.0/diagnostic" "schemas/ocil-2.0/ocil-diagnostic-schema.xsd"
 PUBLIC "http://www.gocil.org/schemas/ocil/2.0/variables" "schemas/ocil-2.0/ocil-variables-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-common-5" "schemas/oval-5.11.1/oval-common-schema.xsd"
-PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5" "schemas/oval-5.11.1/oval-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5" "schemas/oval-5.11.1/oval-repository-metadata-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" "schemas/oval-5.11.1/oval-system-characteristics-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-results-5" "schemas/oval-5.11.1/oval-results-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#aix" "schemas/oval-5.11.1/aix-definitions-schema.xsd"
