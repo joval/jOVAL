@@ -520,12 +520,12 @@ CLASSES=\
 	scap.oval.def.core.ObjectType	\
 	scap.oval.def.core.OriginalMetadataType	\
 	scap.oval.def.core.OvalDefinitions	\
+	scap.oval.def.core.OvalRepository	\
 	scap.oval.def.core.package-info	\
 	scap.oval.def.core.PossibleRestrictionType	\
 	scap.oval.def.core.PossibleValueType	\
 	scap.oval.def.core.ReferenceType	\
 	scap.oval.def.core.RegexCaptureFunctionType	\
-	scap.oval.def.core.RepositoryMetadataType	\
 	scap.oval.def.core.RestrictionType	\
 	scap.oval.def.core.Set	\
 	scap.oval.def.core.SetOperatorEnumeration	\

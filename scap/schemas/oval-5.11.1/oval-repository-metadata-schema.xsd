@@ -4,7 +4,6 @@
     xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5"
     targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5" elementFormDefault="qualified" version="5.10">
     <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
-    <xsd:include schemaLocation="oval-definitions-schema.xsd"/>
     <xsd:redefine schemaLocation="oval-definitions-schema.xsd">
         <xsd:complexType name="MetadataType">
             <xsd:complexContent>
