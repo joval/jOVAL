@@ -4,21 +4,7 @@
     xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5"
     targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5" elementFormDefault="qualified" version="5.10">
     <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
-    <xsd:redefine schemaLocation="oval-definitions-schema.xsd">
-        <xsd:complexType name="MetadataType">
-            <xsd:complexContent>
-                <xsd:restriction base="oval-def:MetadataType">
-                    <xsd:sequence>
-                        <xsd:element name="title" type="xsd:string" minOccurs="1" maxOccurs="1"/>
-                        <xsd:element name="affected" type="oval-def:AffectedType" minOccurs="0" maxOccurs="unbounded"/>
-                        <xsd:element name="reference" type="oval-def:ReferenceType" minOccurs="0" maxOccurs="unbounded"/>
-                        <xsd:element name="description" type="xsd:string" minOccurs="1" maxOccurs="1"/>
-                        <xsd:element ref="oval-def:oval_repository" minOccurs="0" maxOccurs="1"/>
-                    </xsd:sequence>
-                </xsd:restriction>
-            </xsd:complexContent>
-        </xsd:complexType>
-    </xsd:redefine>
+    <xsd:include schemaLocation="oval-definitions-schema.xsd"/>
     <xsd:element name="oval_repository">
         <xsd:complexType>
             <xsd:sequence>

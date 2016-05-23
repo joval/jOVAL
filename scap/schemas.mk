@@ -18,6 +18,7 @@ SCHEMAS=\
 	ocil-2.0/ocil-variables-schema.xsd	\
 	oval-5.11.1/oval-common-schema.xsd	\
 	oval-5.11.1/oval-definitions-schema.xsd	\
+	oval-5.11.1/oval-definitions-extended-schema.xsd	\
 	oval-5.11.1/oval-system-characteristics-schema.xsd	\
 	oval-5.11.1/oval-results-schema.xsd	\
 	oval-5.11.1/aix-definitions-schema.xsd	\
@@ -63,7 +64,6 @@ SCHEMAS=\
 	oval-5.11.1/windows-definitions-schema.xsd	\
 	oval-5.11.1/windows-system-characteristics-schema.xsd	\
 	oval-5.11.1/oval-directives-schema.xsd	\
-	oval-5.11.1/oval-repository-metadata-schema.xsd	\
 	oval-5.11.1/oval-variables-schema.xsd	\
 	oval-5.11.1/evaluation-ids.xsd	\
 	sce-1.0/sce-1.0-xccdf-extended-component.xsd	\

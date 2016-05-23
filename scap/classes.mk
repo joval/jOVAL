@@ -518,7 +518,6 @@ CLASSES=\
 	scap.oval.def.core.ObjectRefType	\
 	scap.oval.def.core.ObjectsType	\
 	scap.oval.def.core.ObjectType	\
-	scap.oval.def.core.OriginalMetadataType	\
 	scap.oval.def.core.OvalDefinitions	\
 	scap.oval.def.core.OvalRepository	\
 	scap.oval.def.core.package-info	\
