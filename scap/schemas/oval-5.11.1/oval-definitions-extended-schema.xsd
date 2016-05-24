@@ -89,4 +89,18 @@
             <xsd:enumeration value="INTERIM"/>
         </xsd:restriction>
     </xsd:simpleType>
+    <xsd:element name="expected_results">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="result" type="oval-def:ExpectedResultType" minOccurs="1" maxOccurs="unbounded"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:complexType name="ExpectedResultType">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="configuration" type="xsd:string" use="optional"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
 </xsd:schema>
