@@ -501,10 +501,13 @@ CLASSES=\
 	scap.oval.def.core.EntityStateStringType	\
 	scap.oval.def.core.EntityStateVersionType	\
 	scap.oval.def.core.EscapeRegexFunctionType	\
+	scap.oval.def.core.ExpectedResults	\
+	scap.oval.def.core.ExpectedResultType	\
 	scap.oval.def.core.ExtendDefinitionType	\
 	scap.oval.def.core.ExternalVariable	\
 	scap.oval.def.core.Filter	\
 	scap.oval.def.core.FilterActionEnumeration	\
+	scap.oval.def.core.ForeachVariable	\
 	scap.oval.def.core.GlobToRegexFunctionType	\
 	scap.oval.def.core.LiteralComponentType	\
 	scap.oval.def.core.LocalVariable	\
