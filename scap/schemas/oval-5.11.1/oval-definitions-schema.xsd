@@ -349,7 +349,7 @@
             <xsd:documentation>The required id attribute uniquely identifies each test, and must conform to the format specified by the TestIdPattern simple type. The required version attribute holds the current version of the test. Versions are integers, starting at 1 and incrementing every time a test is modified.</xsd:documentation> 
             <xsd:documentation>The optional check_existence attribute specifies how many items in the set defined by the OVAL Object must exist for the test to evaluate to true. The default value for this attribute is 'at_least_one_exists' indicating that by default the test may evaluate to true if at least one item defined by the OVAL Object exists on the system. For example, if a value of 'all_exist' is given, every item defined by the OVAL Object must exist on the system for the test to evaluate to true. If the OVAL Object uses a variable reference, then every value of that variable must exist. Note that a pattern match defines a unique set of matching items found on a system. So when check_existence = 'all_exist' and a regex matches anything on a system the test will evaluate to true (since all matching objects on the system were found on the system). When check_existence = 'all_exist' and a regex does not match anything on a system the test will evaluate to false.</xsd:documentation>
             <xsd:documentation>The required check attribute specifies how many items in the set defined by the OVAL Object (ignoring items with a status of Does Not Exist) must satisfy the state requirements.  For example, should the test check that all matching files have a specified version or that at least one file has the specified version?  The valid check values are explained in the description of the CheckEnumeration simple type. Note that if the test does not contain any references to OVAL States, then the check attribute has no meaning and can be ignored during evaluation.</xsd:documentation>
-            <xsd:documentation>The optional check_instance attribute specifies, in the event that multiple object instances are created by a foreach_variable reference, how to combine the results from each instance into a single result for the test. The default value for this attribute is 'all' indicating that by default the test may evaluate to true only if all instances of the object evaluate to true for this test.</xsd:documentation>
+            <xsd:documentation>The optional check_instance attribute specifies, in the event that multiple object instances are created by an instance function, how to combine the results from each instance into a single result for the test. The default value for this attribute is 'all' indicating that by default the test may evaluate to true only if all instances of the object evaluate to true for this test.</xsd:documentation>
             <xsd:documentation>An OVAL Test evaluates to true if both the check_existence  and check attributes are satisfied during evaluation. The evaluation result for a test is determined by first evaluating the check_existence attribute. If the result of evaluating the check_existence attribute is true then the check attribute is evaluated. An interpreter may choose to always evaluate both the check_existence and the check attributes, but once the check_existence attribute evaluation has resulted in false the overall test result after evaluating the check attribute will not be affected.</xsd:documentation>
             <xsd:documentation>The optional state_operator attribute provides the logical operator that combines the evaluation results from each referenced state on a per item basis.  Each matching item is compared to each referenced state. The result of comparing each state to a single item is combined based on the specified state_operator value to determine one result for each item. Finally, the results for each item are combined based on the specified check value.  Note that if the test does not contain any references to OVAL States, then the state_operator attribute has no meaning and can be ignored during evaluation. Referencing multiple states in one test allows ranges of possible values to be expressed. For example, one state can check that a value greater than 8 is found and another state can check that a value of less than 16 is found.  In this example the referenced states are combined with a state_operator = 'AND' indicating that the conditions of all referenced states must be satisfied and that the value must be between 8 AND 16.  The valid state_operation values are explained in the description of the OperatorEnumeration simple type.</xsd:documentation>
             <xsd:appinfo>
@@ -629,20 +629,6 @@
             </xsd:complexContent>
         </xsd:complexType>
     </xsd:element>
-    <xsd:element name="foreach_variable" substitutionGroup="oval-def:variable">
-        <xsd:annotation>
-            <xsd:documentation>The foreach_variable element extends the VariableType and defines a variable like a local_variable, except instead of potentially taking on multiple values, it causes objects referencing such a variable to split into multiple instances (analogous to execution forks). For example, if an object_component is used and it references a file object that identifies a set of 5 files, then the instance variable would cause 5 copies of an object referencing that variable to be made, each with a single value for the variable. A test referencing an instance-forked object will have multiple results, which are combined together into a single result according to the value of that test's check_instance attribute.</xsd:documentation>
-        </xsd:annotation>
-        <xsd:complexType>
-            <xsd:complexContent>
-                <xsd:extension base="oval-def:VariableType">
-                    <xsd:sequence>
-                        <xsd:group ref="oval-def:ComponentGroup" />
-                    </xsd:sequence>
-                </xsd:extension>
-            </xsd:complexContent>
-        </xsd:complexType>
-    </xsd:element>
     <xsd:group name="ComponentGroup">
         <xsd:annotation>
             <xsd:documentation>Any value that is pulled directly off the local system is defined by the basic component element. For example, the name of a user or the value of a registry key. Please refer to the definition of the ObjectComponentType for more information. A value can also be obtained from another variable. The variable element identifies a variable id to pull a value(s) from. Please refer to the definition of the VariableComponentType for more information. Literal values can also be specified.</xsd:documentation>
@@ -733,6 +719,7 @@
             <xsd:element name="unique" type="oval-def:UniqueFunctionType"/>
             <xsd:element name="count" type="oval-def:CountFunctionType"/>
             <xsd:element name="glob_to_regex" type="oval-def:GlobToRegexFunctionType"/>
+            <xsd:element name="instance" type="oval-def:InstanceFunctionType"/>
         </xsd:choice>
     </xsd:group>
     <xsd:complexType name="ArithmeticFunctionType">
@@ -1083,6 +1070,14 @@
             <xsd:group ref="oval-def:ComponentGroup"/>
         </xsd:sequence>
         <xsd:attribute name="glob_noescape" type="xsd:boolean" use="optional" default="false"/>
+    </xsd:complexType>
+    <xsd:complexType name="InstanceFunctionType">
+        <xsd:annotation>
+            <xsd:documentation>The instance function takes one or more components and spawns discrete instances if those components are multi-valued. When a multi-instance variable value is referenced by an object entity, multiple instances of that object will be created, each with its own variable_instance attribute value.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence maxOccurs="unbounded">
+            <xsd:group ref="oval-def:ComponentGroup"/>
+        </xsd:sequence>
     </xsd:complexType>
     <!-- =============================================================================== -->
     <!-- =================================  SIGNATURE  ================================= -->
