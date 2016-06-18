@@ -507,8 +507,8 @@ CLASSES=\
 	scap.oval.def.core.ExternalVariable	\
 	scap.oval.def.core.Filter	\
 	scap.oval.def.core.FilterActionEnumeration	\
-	scap.oval.def.core.ForeachVariable	\
 	scap.oval.def.core.GlobToRegexFunctionType	\
+	scap.oval.def.core.InstanceFunctionType	\
 	scap.oval.def.core.LiteralComponentType	\
 	scap.oval.def.core.LocalVariable	\
 	scap.oval.def.core.MetadataContributorType	\
