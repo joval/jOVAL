@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:sch="http://purl.oclc.org/dsdl/schematron" xmlns:x-cmd-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#cmd" targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#cmd" elementFormDefault="qualified" version="5.11">
+    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
+    <xsd:annotation>
+        <xsd:documentation>
+            The following is a proposal for the experimental system characteristics that will support assessment of Shell Command output.  
+            Each item is an extension of the standard item element defined in the Core System Characteristics Schema. Through extension, 
+            each item inherits a set of elements and attributes that are shared amongst all OVAL items. Each item is described in detail 
+            and should provide the information necessary to understand what each element and attribute represents. This document is intended 
+            for developers and assumes some familiarity with XML. A high level description of the interaction between the different items and 
+            their relationship to the Core System Characteristics Schema is not outlined here.
+        </xsd:documentation>
+        <xsd:documentation>
+            The OVAL Schema is maintained by The Center for Internet Security and developed by the public OVAL Community. For more information, including 
+            how to get involved in the project and how to submit change requests, please visit the OVAL website at http://oval.cisecurity.org.
+        </xsd:documentation>
+        <xsd:appinfo>
+            <schema>Experimental Schema for Shell Command System Characteristics</schema>
+            <version>5.11</version>
+            <date>11/1/2014 8:00:00 AM</date>
+            <terms_of_use>Copyright (c) 2002-2013, The Center for Internet Security. All rights reserved. The contents of this file are subject to the terms of the OVAL License located at http://oval.mitre.org/oval/about/termsofuse.html. See the OVAL License for the specific language governing permissions and limitations for use of this schema. When distributing copies of the OVAL Schema, this license header must be included.</terms_of_use>
+            <sch:ns prefix="oval-def" uri="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
+            <sch:ns prefix="oval-sc" uri="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
+            <sch:ns prefix="x-cmd-sc" uri="http://oval.mitre.org/XMLSchema/x-cmd"/>
+            <sch:ns prefix="xsi" uri="http://www.w3.org/2001/XMLSchema-instance"/>
+        </xsd:appinfo>
+    </xsd:annotation>
+    
+    <!-- =============================================================================== -->
+    <!-- Shell Command Item -->
+    <!-- =============================================================================== -->
+    <xsd:element name="shellcommand_item" substitutionGroup="oval-sc:item">
+        <xsd:annotation>
+            <xsd:documentation>
+                TO DO: Add some documentation
+            </xsd:documentation>
+            <xsd:documentation>
+                Each item extends the standard ItemType as defined in the oval-system-characteristics-schema and one should refer to the ItemType description for more information.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="oval-sc:ItemType">
+                    <xsd:sequence>
+                        <xsd:element name="command" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>The executed shell command</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="line_selection" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>The regular expression outlining which lines of command output are collected.  If xsi:nil="true" then collect all lines of output</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="exit_status" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>The exit status value from the command</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="stdout_line" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
+                            <xsd:annotation>
+                                <xsd:documentation>Each line of standard output from the shell command which matches the line selection</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="stderr_line" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
+                            <xsd:annotation>
+                                <xsd:documentation>Each line of standard error output from the shell command.  All standard error lines are always included in any shellcommand_item generated.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

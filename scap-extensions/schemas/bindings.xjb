@@ -30,6 +30,16 @@
         <jxb:property name="dpkg_operation" />
     </jxb:bindings>
   </jxb:bindings>
+  <jxb:bindings schemaLocation="x-shellcommand-definitions-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.def.independent.extended"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="x-shellcommand-system-characteristics-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.sc.independent.extended"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
   <jxb:bindings schemaLocation="x-windows-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.windows.extended"/>
