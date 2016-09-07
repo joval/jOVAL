@@ -501,6 +501,8 @@ CLASSES=\
 	scap.oval.def.core.EntityStateStringType	\
 	scap.oval.def.core.EntityStateVersionType	\
 	scap.oval.def.core.EscapeRegexFunctionType	\
+	scap.oval.def.core.ExpectedResults	\
+	scap.oval.def.core.ExpectedResultType	\
 	scap.oval.def.core.ExtendDefinitionType	\
 	scap.oval.def.core.ExternalVariable	\
 	scap.oval.def.core.Filter	\
@@ -1112,6 +1114,7 @@ CLASSES=\
 	scap.oval.def.windows.EntityStateAuditType	\
 	scap.oval.def.windows.EntityStateCmdletVerbType	\
 	scap.oval.def.windows.EntityStateDriveTypeType	\
+	scap.oval.def.windows.EntityStateFileAttributeType	\
 	scap.oval.def.windows.EntityStateFileTypeType	\
 	scap.oval.def.windows.EntityStateGUIDType	\
 	scap.oval.def.windows.EntityStateInterfaceTypeType	\
@@ -1631,6 +1634,7 @@ CLASSES=\
 	scap.oval.sc.windows.EntityItemAuditType	\
 	scap.oval.sc.windows.EntityItemCmdletVerbType	\
 	scap.oval.sc.windows.EntityItemDriveTypeType	\
+	scap.oval.sc.windows.EntityItemFileAttributeType	\
 	scap.oval.sc.windows.EntityItemFileTypeType	\
 	scap.oval.sc.windows.EntityItemGUIDType	\
 	scap.oval.sc.windows.EntityItemInterfaceTypeType	\

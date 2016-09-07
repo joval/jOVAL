@@ -2,7 +2,7 @@
 # This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
 
 SCAP_VERSION=1.2.1
-OVAL_VERSION=5.11.1
+OVAL_VERSION=5.11.2
 
 Default: all
 
