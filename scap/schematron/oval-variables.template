@@ -5,7 +5,7 @@
 -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
-                  schemaLocation="../schemas/oval-5.11.2/oval-common-schema.xsd"/>
+                  schemaLocation="../schemas/oval-[OVAL_VERSION]/oval-common-schema.xsd"/>
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-variables-5"
-                  schemaLocation="../schemas/oval-5.11.2/oval-variables-schema.xsd"/>
+                  schemaLocation="../schemas/oval-[OVAL_VERSION]/oval-variables-schema.xsd"/>
 </xsd:schema>

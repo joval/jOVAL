@@ -7,9 +7,8 @@ include $(TOP)/common.mk
 CLASSPATH="$(CLASSLIB)$(CLN)$(GEN)"
 
 include classes.mk
-include schemas.mk
 
-SCHEMA_FILES:=$(foreach schema, $(SCHEMAS), $(SCHEMADIR)/$(schema))
+SCHEMA_FILES:=$(shell for file in `find $(SCHEMADIR) -type f -name *.xsd | grep -v xml.xsd`; do echo $$file; done)
 OVAL_DOCS:=$(foreach schema, $(wildcard $(OVAL_SCHEMA)/*.xsd), $(DOCS)/$(notdir $(basename $(schema))).html)
 CLASS_FILES:=$(foreach class, $(CLASSES), $(BUILD)/$(subst .,/,$(class)).class)
 PACKAGES=$(sort $(basename $(CLASSES)))
@@ -34,19 +33,24 @@ all: $(SCAP_LIB) $(OVAL_DOCS) $(DOCS)/index.html $(OVAL_SCH)
 $(SCAP_LIB): $(GEN) classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
+$(CATALOG): $(CATALOG_TEMPLATE)
+	cat $< | sed 's/\[OVAL_VERSION\]/$(OVAL_VERSION)/g' > $@
+
 clean:
+	rm -f $(CATALOG)
 	rm -f $(EPISODE)
 	rm -f $(SCAP_LIB)
 	rm -rf $(BUILD)
 	rm -rf $(GEN)
 	rm -rf $(DOCS)
 	rm -rf $(SCH)
+	rm -f $(SCHEMATRON)/*.xml
 
 resources:
 	mkdir -p $(BUILD)/META-INF
 	sed 's/$(BROKEN)/$(FIXED)/' $(EPISODE) > $(BUILD)/META-INF/sun-jaxb.episode
 	mkdir -p $(BUILD)/scap/schemas
-	cp $(CATALOG) $(BUILD)/scap
+	mv $(CATALOG) $(BUILD)/scap
 	cp $(RSRC)/registry.ini $(BUILD)/scap
 	cp -R $(SCHEMADIR)/* $(BUILD)/scap/schemas
 	rm $(BUILD)/scap/schemas/bindings.xjb
@@ -55,7 +59,7 @@ classes: classdirs $(CLASS_FILES)
 
 classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
 
-$(GEN): $(SCHEMA_FILES)
+$(GEN): $(SCHEMA_FILES) $(CATALOG)
 	mkdir -p $@
 	$(XJC) $(XJCFLAGS) $(SCHEMA_FILES) -b $(BINDINGS) -d $(GEN)
 
@@ -73,6 +77,9 @@ $(DOCS)/%.html: $(OVAL_SCHEMA)/%.xsd
 
 $(SCH):
 	mkdir -p $@
+
+$(SCHEMATRON)/%.xml: $(SCHEMATRON)/%.template
+	cat $< | sed 's/\[OVAL_VERSION\]/$(OVAL_VERSION)/g' > $@
 
 $(SCH)/%-schematron.sch: $(SCHEMATRON)/%.xml
 	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:rsrc/ExtractSchFromXSD.xsl -o:$@

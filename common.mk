@@ -69,6 +69,7 @@ GEN=gen-src
 SCHEMADIR=schemas
 OVAL_SCHEMA=$(SCHEMADIR)/oval-$(OVAL_VERSION)
 BINDINGS=$(SCHEMADIR)/bindings.xjb
+CATALOG_TEMPLATE=catalog.template
 CATALOG=schemas.cat
 EPISODE=schemas.episode
 XJCFLAGS=-enableIntrospection -catalog $(CATALOG) -episode $(EPISODE)
