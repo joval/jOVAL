@@ -44,7 +44,6 @@ clean:
 	rm -rf $(GEN)
 	rm -rf $(DOCS)
 	rm -rf $(SCH)
-	rm -f $(SCHEMATRON)/*.xml
 
 resources:
 	mkdir -p $(BUILD)/META-INF

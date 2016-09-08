@@ -50,11 +50,4 @@
                   schemaLocation="../schemas/oval-[OVAL_VERSION]/unix-system-characteristics-schema.xsd"/>
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#windows"
                   schemaLocation="../schemas/oval-[OVAL_VERSION]/windows-system-characteristics-schema.xsd"/>
-
-      <!-- Schema extensions are imported below -->
-
-      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-linux"
-                  schemaLocation="../../scap-extensions/schemas/x-linux-system-characteristics-schema.xsd"/>
-      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-windows"
-                  schemaLocation="../../scap-extensions/schemas/x-windows-system-characteristics-schema.xsd"/>
 </xsd:schema>

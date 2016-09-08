@@ -870,6 +870,9 @@ CLASSES=\
 	scap.oval.def.macos.Plist510Object	\
 	scap.oval.def.macos.Plist510State	\
 	scap.oval.def.macos.Plist510Test	\
+	scap.oval.def.macos.Plist511Object	\
+	scap.oval.def.macos.Plist511State	\
+	scap.oval.def.macos.Plist511Test	\
 	scap.oval.def.macos.PlistObject	\
 	scap.oval.def.macos.PlistState	\
 	scap.oval.def.macos.PlistTest	\
@@ -1162,6 +1165,9 @@ CLASSES=\
 	scap.oval.def.windows.InterfaceObject	\
 	scap.oval.def.windows.InterfaceState	\
 	scap.oval.def.windows.InterfaceTest	\
+	scap.oval.def.windows.JunctionObject	\
+	scap.oval.def.windows.JunctionState	\
+	scap.oval.def.windows.JunctionTest	\
 	scap.oval.def.windows.LicenseObject	\
 	scap.oval.def.windows.LicenseState	\
 	scap.oval.def.windows.LicenseTest	\
@@ -1535,6 +1541,7 @@ CLASSES=\
 	scap.oval.sc.macos.NvramItem	\
 	scap.oval.sc.macos.ObjectFactory	\
 	scap.oval.sc.macos.package-info	\
+	scap.oval.sc.macos.Plist511Item	\
 	scap.oval.sc.macos.PlistItem	\
 	scap.oval.sc.macos.Pwpolicy59Item	\
 	scap.oval.sc.macos.PwpolicyItem	\
@@ -1659,6 +1666,7 @@ CLASSES=\
 	scap.oval.sc.windows.GroupItem	\
 	scap.oval.sc.windows.GroupSidItem	\
 	scap.oval.sc.windows.InterfaceItem	\
+	scap.oval.sc.windows.JunctionItem	\
 	scap.oval.sc.windows.LicenseItem	\
 	scap.oval.sc.windows.LockoutpolicyItem	\
 	scap.oval.sc.windows.MetabaseItem	\
