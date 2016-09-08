@@ -4060,6 +4060,14 @@
       <xsd:element name="peheader_test" substitutionGroup="oval-def:test">
             <xsd:annotation>
                   <xsd:documentation>The peheader_test is used to check data from a Portable Executable file header. It extends the standard TestType as defined in the oval-definitions-schema and one should refer to the TestType description for more information. The required object element references a peheader_object and the optional state element specifies the metadata to check.</xsd:documentation>
+                  <xsd:appinfo>
+                        <oval:element_mapping>
+                              <oval:test>peheader_test</oval:test>
+                              <oval:object>peheader_object</oval:object>
+                              <oval:state>peheader_state</oval:state>
+                              <oval:item target_namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#windows">peheader_item</oval:item>
+                        </oval:element_mapping>
+                  </xsd:appinfo>
             </xsd:annotation>
             <xsd:complexType>
                   <xsd:complexContent>
@@ -4432,6 +4440,11 @@
                                     <xsd:element name="real_number_of_directory_entries" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>The real_number_of_directory_entries entity is the real number of data directory entries in the remainder of the optional header calculated by enumerating the directory entries.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="windows_view" type="win-def:EntityStateWindowsViewType" minOccurs="0">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The windows view value to which this was targeted. This is used to indicate which view (32-bit or 64-bit), the associated State applies to.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
                               </xsd:sequence>
@@ -4891,9 +4904,9 @@
                                                 <xsd:documentation>The id given to the parent of the process that is created for the specified command line</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="priority" type="oval-def:EntityStateStringType" minOccurs="0">
+                                    <xsd:element name="priority" type="oval-def:EntityStateIntType" minOccurs="0">
                                           <xsd:annotation>
-                                                <xsd:documentation>The base priority of the process.</xsd:documentation>
+                                                <xsd:documentation>The base priority of the process. The priority value range is from 0 to 31.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
                                     <xsd:element name="image_path" type="oval-def:EntityStateStringType" minOccurs="0">
@@ -5015,7 +5028,7 @@
                                     </xsd:element>
                                     <xsd:element name="priority" type="oval-def:EntityStateIntType" minOccurs="0">
                                           <xsd:annotation>
-                                                <xsd:documentation>The base priority of the process.</xsd:documentation>
+                                                <xsd:documentation>The base priority of the process. The priority value range is from 0 to 31.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
                                     <xsd:element name="image_path" type="oval-def:EntityStateStringType" minOccurs="0">
@@ -5588,7 +5601,7 @@
                                                 <xsd:element name="behaviors" type="win-def:RegkeyAuditPermissionsBehaviors" minOccurs="0"/>
                                                 <xsd:element name="hive" type="win-def:EntityObjectRegistryHiveType">
                                                       <xsd:annotation>
-                                                            <xsd:documentation>The hive that the registry key belongs to. This is restricted to a specific set of values: HKEY_CLASSES_ROOT, HKEY_CURRENT_CONFIG, HKEY_CURRENT_USER, HKEY_CURRENT_USER_LOCAL_SETTINGS,HKEY_LOCAL_MACHINE, and HKEY_USERS.</xsd:documentation>
+                                                            <xsd:documentation>The hive that the registry key belongs to. This is restricted to a specific set of values: HKEY_CLASSES_ROOT, HKEY_CURRENT_CONFIG, HKEY_CURRENT_USER, HKEY_CURRENT_USER_LOCAL_SETTINGS, HKEY_LOCAL_MACHINE, and HKEY_USERS.</xsd:documentation>
                                                       </xsd:annotation>
                                                 </xsd:element>
                                                 <xsd:element name="key" type="oval-def:EntityObjectStringType">
@@ -9577,7 +9590,7 @@
                         </xsd:enumeration>
                         <xsd:enumeration value="HKEY_CURRENT_USER_LOCAL_SETTINGS">
                               <xsd:annotation>
-                                    <xsd:documentation>Registry entries subordinate to this key define preferences of the current user that are local to the machine. These entries are not included in the per-user registry portion of a roaming user profile.</xsd:documentation>
+                                    <xsd:documentation>Registry entries subordinate to this key define preferences of the current user that are local to the machine. These entries are not included in the per-user registry portion of a roaming user profile. This key is supported starting with Windows 7 and Windows Server 2008 R2.</xsd:documentation>
                               </xsd:annotation>
                         </xsd:enumeration>
                         <xsd:enumeration value="HKEY_LOCAL_MACHINE">
