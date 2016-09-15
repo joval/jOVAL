@@ -1,0 +1,91 @@
+-- 
+Copyright (C) 2015 jOVAL.org.  All rights reserved.
+This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
+
+  This is a TR9401 catalog file.  It has two purposes:
+
+  1) Is is used for JAXB compilation, being fed into XJC via the -catalog option.
+
+  2) It is packaged in the schema JAR file, under the scap basename. At runtime, this file is loaded by the
+     org.joval.xml.SchemaRegistry class, and used to create mappings for an org.w3c.dom.xml.LSResourceResolver.
+     The resolver uses the ClassLoader to find resources corresponding to [basename]/location, corresponding
+     to each public or system ID, and the locations that are specified below. This makes it possible to load
+     a whole multi-part schema, its validator, and its JAXBContext, using just a single JAR file.
+
+--
+
+OVERRIDE no
+PUBLIC "http://scap.nist.gov/schema/asset-identification/1.1" "schemas/ai-1.1/asset-identification_1.1.0.xsd"
+PUBLIC "http://scap.nist.gov/schema/asset-reporting-format/1.1" "schemas/arf-1.1/asset-reporting-format_1.1.0.xsd"
+PUBLIC "http://scap.nist.gov/schema/reporting-core/1.1" "schemas/arf-1.1/reporting-core_1.1.0.xsd"
+PUBLIC "http://scap.nist.gov/schema/scap/constructs/1.2" "schemas/constructs-1.2/scap-constructs_1.2.xsd"
+PUBLIC "http://cpe.mitre.org/dictionary/2.0" "schemas/cpe-2.3/cpe-dictionary_2.3.xsd"
+PUBLIC "http://scap.nist.gov/schema/cpe-extension/2.3" "schemas/cpe-2.3/cpe-dictionary-extension_2.3.xsd"
+PUBLIC "http://cpe.mitre.org/language/2.0" "schemas/cpe-2.3/cpe-language_2.3.xsd"
+PUBLIC "http://cpe.mitre.org/naming/2.0" "schemas/cpe-2.3/cpe-naming_2.3.xsd"
+PUBLIC "http://scap.nist.gov/schema/scap/source/1.2" "schemas/ds-1.2/scap-source-data-stream_1.2.xsd"
+PUBLIC "http://purl.org/dc/elements/1.1/" "schemas/dublin/simpledc20021212.xsd"
+PUBLIC "http://www.joval.org/schemas/scap/1.2/diagnostic" "schemas/joval/diagnostic-schema-1.0.xsd"
+PUBLIC "urn:oasis:names:tc:entity:xmlns:xml:catalog" "schemas/oasis/catalog-1.1.xsd"
+PUBLIC "urn:oasis:names:tc:ciq:xsdschema:xAL:2.0" "schemas/oasis/xAL.xsd"
+PUBLIC "urn:oasis:names:tc:ciq:xsdschema:xNL:2.0" "schemas/oasis/xNL.xsd"
+PUBLIC "http://scap.nist.gov/schema/ocil/2.0" "schemas/ocil-2.0/ocil-2.0.xsd"
+PUBLIC "http://www.gocil.org/schemas/ocil/2.0/diagnostic" "schemas/ocil-2.0/ocil-diagnostic-schema.xsd"
+PUBLIC "http://www.gocil.org/schemas/ocil/2.0/variables" "schemas/ocil-2.0/ocil-variables-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-common-5" "schemas/oval-[OVAL_VERSION]/oval-common-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5" "schemas/oval-[OVAL_VERSION]/oval-definitions-extended-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" "schemas/oval-[OVAL_VERSION]/oval-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-results-5" "schemas/oval-[OVAL_VERSION]/oval-results-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#aix" "schemas/oval-[OVAL_VERSION]/aix-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#aix" "schemas/oval-[OVAL_VERSION]/aix-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#android" "schemas/oval-[OVAL_VERSION]/android-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#android" "schemas/oval-[OVAL_VERSION]/android-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#apache" "schemas/oval-[OVAL_VERSION]/apache-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#apache" "schemas/oval-[OVAL_VERSION]/apache-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#apple_ios" "schemas/oval-[OVAL_VERSION]/apple-ios-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#apple_ios" "schemas/oval-[OVAL_VERSION]/apple-ios-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#asa" "schemas/oval-[OVAL_VERSION]/asa-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#asa" "schemas/oval-[OVAL_VERSION]/asa-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#catos" "schemas/oval-[OVAL_VERSION]/catos-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#catos" "schemas/oval-[OVAL_VERSION]/catos-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#esx" "schemas/oval-[OVAL_VERSION]/esx-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#esx" "schemas/oval-[OVAL_VERSION]/esx-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#freebsd" "schemas/oval-[OVAL_VERSION]/freebsd-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#freebsd" "schemas/oval-[OVAL_VERSION]/freebsd-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#hpux" "schemas/oval-[OVAL_VERSION]/hpux-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#hpux" "schemas/oval-[OVAL_VERSION]/hpux-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" "schemas/oval-[OVAL_VERSION]/independent-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#independent" "schemas/oval-[OVAL_VERSION]/independent-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#ios" "schemas/oval-[OVAL_VERSION]/ios-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#ios" "schemas/oval-[OVAL_VERSION]/ios-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#iosxe" "schemas/oval-[OVAL_VERSION]/iosxe-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#iosxe" "schemas/oval-[OVAL_VERSION]/iosxe-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#junos" "schemas/oval-[OVAL_VERSION]/junos-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#junos" "schemas/oval-[OVAL_VERSION]/junos-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" "schemas/oval-[OVAL_VERSION]/linux-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#linux" "schemas/oval-[OVAL_VERSION]/linux-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#macos" "schemas/oval-[OVAL_VERSION]/macos-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#macos" "schemas/oval-[OVAL_VERSION]/macos-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#netconf" "schemas/oval-[OVAL_VERSION]/netconf-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#netconf" "schemas/oval-[OVAL_VERSION]/netconf-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#pixos" "schemas/oval-[OVAL_VERSION]/pixos-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#pixos" "schemas/oval-[OVAL_VERSION]/pixos-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#sharepoint" "schemas/oval-[OVAL_VERSION]/sharepoint-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#sharepoint" "schemas/oval-[OVAL_VERSION]/sharepoint-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris" "schemas/oval-[OVAL_VERSION]/solaris-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#solaris" "schemas/oval-[OVAL_VERSION]/solaris-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" "schemas/oval-[OVAL_VERSION]/unix-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#unix" "schemas/oval-[OVAL_VERSION]/unix-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" "schemas/oval-[OVAL_VERSION]/windows-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#windows" "schemas/oval-[OVAL_VERSION]/windows-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-directives-5" "schemas/oval-[OVAL_VERSION]/oval-directives-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-variables-5" "schemas/oval-[OVAL_VERSION]/oval-variables-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/ovaldi/evalids" "schemas/oval-[OVAL_VERSION]/evaluation-ids.xsd"
+PUBLIC "http://open-scap.org/page/SCE_xccdf_stream" "schemas/sce-1.0/sce-1.0-xccdf-extended-component.xsd"
+PUBLIC "http://open-scap.org/page/SCE_result_file" "schemas/sce-1.0/sce-result-schema.xsd"
+PUBLIC "http://checklists.nist.gov/xccdf/1.2" "schemas/xccdf-1.2/xccdf_1.2.xsd"
+SYSTEM "datatypes.dtd" "schemas/xml/datatypes.dtd"
+PUBLIC "http://www.w3.org/1999/xlink" "schemas/xml/xlink.xsd"
+PUBLIC "http://www.w3.org/XML/1998/namespace" "schemas/xml/xml.xsd"
+PUBLIC "http://www.w3.org/2000/09/xmldsig#" "schemas/xml/xmldsig-core-schema.xsd"
+SYSTEM "XMLSchema.dtd" "schemas/xml/XMLSchema.dtd"

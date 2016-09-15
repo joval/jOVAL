@@ -40,14 +40,4 @@
       <jxb:package name="scap.oval.sc.independent.extended"/>
     </jxb:schemaBindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="x-windows-definitions-schema.xsd" node="/xs:schema">
-    <jxb:schemaBindings>
-      <jxb:package name="scap.oval.def.windows.extended"/>
-    </jxb:schemaBindings>
-  </jxb:bindings>
-  <jxb:bindings schemaLocation="x-windows-system-characteristics-schema.xsd" node="/xs:schema">
-    <jxb:schemaBindings>
-      <jxb:package name="scap.oval.sc.windows.extended"/>
-    </jxb:schemaBindings>
-  </jxb:bindings>
 </jxb:bindings>
