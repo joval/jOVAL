@@ -1222,6 +1222,7 @@ CLASSES=\
 	scap.oval.def.windows.RegkeyeffectiverightsObject	\
 	scap.oval.def.windows.RegkeyeffectiverightsState	\
 	scap.oval.def.windows.RegkeyeffectiverightsTest	\
+	scap.oval.def.windows.ServiceEffectiveRightsBehaviors	\
 	scap.oval.def.windows.ServiceeffectiverightsObject	\
 	scap.oval.def.windows.ServiceeffectiverightsState	\
 	scap.oval.def.windows.ServiceeffectiverightsTest	\
