@@ -781,10 +781,56 @@
                                         <xsd:documentation>This subcategory audits the user and device claims that are present in the token of an associated logon. This state corresponds with the following GUID specified in ntsecapi.h: 0cce9247-69ae-11d9-bed3-505054503030.</xsd:documentation>
                                    </xsd:annotation>
                               </xsd:element>
+                              <xsd:element name="audit_detailedtracking_tokenrightadjusted" type="win-sc:EntityItemAuditType" minOccurs="0">
+                                   <xsd:annotation>
+                                        <xsd:documentation>Undocumented subpolicy corresponding with the following GUID specified in ntsecapi.h: 0cce924a-69ae-11d9-bed3-505054503030.</xsd:documentation>
+                                   </xsd:annotation>
+                              </xsd:element>
                          </xsd:sequence>
                     </xsd:extension>
                </xsd:complexContent>
           </xsd:complexType>
+     </xsd:element>
+     <!-- =============================================================================== -->
+     <!-- ======================  CBS COMPONENT APPLICABLE ITEM   ======================= -->
+     <!-- =============================================================================== -->
+      <xsd:element name="cbscomponentapplicable_item" substitutionGroup="oval-sc:item">
+            <xsd:annotation>
+                  <xsd:documentation>The cbscomponentapplicable_item describes a CBS component in the component store that is applicable to an update described by a corresponding cbscomponentapplicable_object.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-sc:ItemType">
+                              <xsd:sequence>
+                                    <xsd:element name="name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The CBS package name.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="arch" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The CBS package processorArchitecture.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="lang" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The CBS package language.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="token" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The public key token of the code signing certificate used to sign the CBS package.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="assembly_version" type="oval-sc:EntityItemVersionType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>Indicates the version of a discovered assembly that is applicable for elevation to the target_version.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
      </xsd:element>
      <!-- =============================================================================== -->
      <!-- ===============================  CMDLET ITEM   ================================ -->

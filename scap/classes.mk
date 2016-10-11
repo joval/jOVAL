@@ -1099,6 +1099,10 @@ CLASSES=\
 	scap.oval.def.windows.AuditeventpolicysubcategoriesState	\
 	scap.oval.def.windows.AuditeventpolicysubcategoriesTest	\
 	scap.oval.def.windows.AuditeventpolicyTest	\
+	scap.oval.def.windows.CbsComponentApplicableBehaviors	\
+	scap.oval.def.windows.CbscomponentapplicableObject	\
+	scap.oval.def.windows.CbscomponentapplicableState	\
+	scap.oval.def.windows.CbscomponentapplicableTest	\
 	scap.oval.def.windows.CmdletObject	\
 	scap.oval.def.windows.CmdletState	\
 	scap.oval.def.windows.CmdletTest	\
@@ -1635,6 +1639,7 @@ CLASSES=\
 	scap.oval.sc.windows.ActivedirectoryItem	\
 	scap.oval.sc.windows.AuditeventpolicyItem	\
 	scap.oval.sc.windows.AuditeventpolicysubcategoriesItem	\
+	scap.oval.sc.windows.CbscomponentapplicableItem	\
 	scap.oval.sc.windows.CmdletItem	\
 	scap.oval.sc.windows.DnscacheItem	\
 	scap.oval.sc.windows.EntityItemAddrTypeType	\
