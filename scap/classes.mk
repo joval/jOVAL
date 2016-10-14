@@ -783,6 +783,9 @@ CLASSES=\
 	scap.oval.def.junos.XmlShowObject	\
 	scap.oval.def.junos.XmlShowState	\
 	scap.oval.def.junos.XmlShowTest	\
+	scap.oval.def.linux.ApparmorstatusObject	\
+	scap.oval.def.linux.ApparmorstatusState	\
+	scap.oval.def.linux.ApparmorstatusTest	\
 	scap.oval.def.linux.DpkginfoObject	\
 	scap.oval.def.linux.DpkginfoState	\
 	scap.oval.def.linux.DpkginfoTest	\
@@ -1514,6 +1517,7 @@ CLASSES=\
 	scap.oval.sc.junos.VersionItem	\
 	scap.oval.sc.junos.XmlConfigItem	\
 	scap.oval.sc.junos.XmlShowItem	\
+	scap.oval.sc.linux.ApparmorstatusItem	\
 	scap.oval.sc.linux.DpkginfoItem	\
 	scap.oval.sc.linux.EntityItemProtocolType	\
 	scap.oval.sc.linux.EntityItemRpmVerifyResultType	\
