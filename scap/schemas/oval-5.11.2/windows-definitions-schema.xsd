@@ -1330,25 +1330,6 @@
                   <xsd:documentation>The CbsComponentApplicableBehaviors complex type defines a number of behaviors that allow a targeted definition of the cbscomponentapplicable_object being specified.</xsd:documentation>
                   <xsd:documentation>DAS</xsd:documentation>
             </xsd:annotation>
-            <xsd:attribute name="service_branch" use="optional" default="GDR">
-                  <xsd:annotation>
-                        <xsd:documentation>'service_branch' attribute can be set to either LDR or GDR (the two servicing branches for Windows assemblies), and describes which branch is applicable for the component applicability check.</xsd:documentation>
-                  </xsd:annotation>
-                  <xsd:simpleType>
-                        <xsd:restriction base="xsd:string">
-                              <xsd:enumeration value="GDR">
-                                    <xsd:annotation>
-                                          <xsd:documentation>The value designating a General Distribution Release (i.e., a file distributed with an RTM or Service Pack).</xsd:documentation>
-                                    </xsd:annotation>
-                              </xsd:enumeration>
-                              <xsd:enumeration value="LDR">
-                                    <xsd:annotation>
-                                          <xsd:documentation>The value designating a Limited Distribution Release (i.e., a file distributed with a hotfix).</xsd:documentation>
-                                    </xsd:annotation>
-                              </xsd:enumeration>
-                        </xsd:restriction>
-                  </xsd:simpleType>
-            </xsd:attribute>
             <xsd:attribute name="elevate" use="optional" default="revision">
                   <xsd:annotation>
                         <xsd:documentation>The 'elevate' attribute specifies the package elevation scope, which is used to determine the applicability of the target version. Values are restricted to: revision, distribution, build, serviceLevel, install and version. These values describe the different default elevation types permissible for a CBS component update.</xsd:documentation>
