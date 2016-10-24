@@ -5526,6 +5526,11 @@
                                                 <xsd:documentation>Note that if the intent is to test a version number held in the registry (as a reg_sz) then instead of setting the datatype to 'string', the datatype can be set to 'version'. This allows tools performing the evaluation to know how to perform less than and greater than operations correctly.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
+                                    <xsd:element name="expanded_value" type="oval-def:EntityStateAnySimpleType" minOccurs="0">
+                                          <xsd:annotation>
+                                                <xsd:documentation>For registry values of type REG_EXPAND_SZ, this entity contains the expanded value. Otherwise, it should not exist.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
                                     <xsd:element name="windows_view" type="win-def:EntityStateWindowsViewType" minOccurs="0">
                                           <xsd:annotation>
                                                 <xsd:documentation>The windows view value to which this was targeted. This is used to indicate which view (32-bit or 64-bit), the associated State applies to.</xsd:documentation>
