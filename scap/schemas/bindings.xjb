@@ -62,6 +62,18 @@
         <jxb:property name="arcTitle" />
     </jxb:bindings>
   </jxb:bindings>
+  <jxb:bindings schemaLocation="xhtml/xhtml1-strict.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="org.w3c.xhtml"/>
+    </jxb:schemaBindings>
+    <jxb:bindings node="xs:attributeGroup[@name='i18n']/xs:attribute[@name='lang']">
+        <jxb:property name="xhtmlLang" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:element[@name='bdo']//xs:attribute[@name='lang']">
+        <jxb:property name="xhtmlLang" />
+    </jxb:bindings>
+  </jxb:bindings>
+
 
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
   <!-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>             Datastream Bindings               <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< -->
