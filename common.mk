@@ -54,7 +54,7 @@ else ifeq (win, $(PLATFORM))
 else
     JXLIB=$(JAXB_HOME)/lib
 endif
-XJC=$(JAVA) -Djavax.xml.accessExternalSchema=all -Dcom.sun.tools.xjc.XJCFacade.nohack=true -cp "$(JXLIB)/jaxb-xjc.jar" com.sun.tools.xjc.XJCFacade
+XJC=$(JAVA) -Djavax.xml.accessExternalSchema=all -Dcom.sun.tools.xjc.XJCFacade.nohack=true -cp $(JXLIB)/jaxb-xjc.jar com.sun.tools.xjc.XJCFacade
 
 NULL:=
 SPACE:=$(NULL) # end of the line
