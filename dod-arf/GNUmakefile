@@ -46,7 +46,7 @@ $(CATALOG): $(CATALOG_TEMPLATE)
 
 $(GEN): $(SCHEMA_FILES) $(CATALOG)
 	mkdir -p $@
-	$(XJC) -verbose $(XJCFLAGS_EXT) $(SCHEMA_FILES) $(SCAP_LIB) -b $(BINDINGS) -d $(GEN)
+	$(XJC) $(XJCFLAGS_EXT) $(SCHEMA_FILES) $(SCAP_LIB) -b $(BINDINGS) -d $(GEN)
 	find $(GEN) -name ObjectFactory.java | grep scap\.cpe | xargs rm
 
 $(BUILD)/%.class: $(GEN)/%.java

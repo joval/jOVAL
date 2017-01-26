@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-  Copyright (C) 2013 jOVAL.org.  All rights reserved.
+  Copyright (C) 2013-2017 JovalCM.com.  All rights reserved.
   This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
 
 -->
-<jxb:bindings version="1.0" xmlns:jxb="http://java.sun.com/xml/ns/jaxb" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<jxb:bindings version="1.0"
+	xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:namespace="http://jaxb2-commons.dev.java.net/namespace-prefix">
   <jxb:bindings>
     <jxb:globalBindings generateIsSetMethod="true"/>
   </jxb:bindings>
@@ -18,21 +21,33 @@
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.types"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="replication"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="cnd-core.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.types"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="cndc"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="tagged_value.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.types"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="tagged_value"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="x509_cert.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.types"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="x509_cert"/>
+    </jxb:bindings>
     <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:complexType[@name='x509CertType']//xs:element[@name='version']">
         <jxb:property name="cert_version" />
@@ -42,16 +57,25 @@
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.types"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="security_marking"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="IC-ISM-v2.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.types"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="icism"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="ops_attributes.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.types"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="ops_attributes"/>
+    </jxb:bindings>
   </jxb:bindings>
 
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
@@ -62,46 +86,73 @@
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.arf"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="assessment_report"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="assessment.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.arf"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="assessment"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="scan_data.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.arf"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="scan_data"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="device_record.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.asset"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="device"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="organization.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.asset.organization"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="organization"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="person.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.asset.person"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="person"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="ext_net_data.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.asset"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="ext_net_data"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="geolocation.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.asset"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="geolocation"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="global_enumerations.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.asset"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="global-enum"/>
+    </jxb:bindings>
   </jxb:bindings>
 
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
@@ -112,41 +163,65 @@
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.cce"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="cce"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="cpe-1.0.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.cpe"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="cpe1"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="cpe-record_0.1.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.cpe.record"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="cpe-record_0.1"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="cve_0.1.1.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.cve"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="cve"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="cvss-v2_0.2.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.cvss"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="cvss"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="nvd-cve-feed_2.0.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="gov.nist.cve.feed"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="nvd-feed"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="patch_0.1.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.patch"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="patch"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="vulnerability_0.4.1.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.vulnerability"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="vuln"/>
+    </jxb:bindings>
   </jxb:bindings>
 
 
@@ -158,11 +233,17 @@
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.xccdf.platform"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="cisp"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="xccdf-1.1.4.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.xccdf"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="cdf"/>
+    </jxb:bindings>
     <jxb:bindings node="xs:element[@name='Benchmark']//xs:attribute[@name='id']">
       <jxb:property name="benchmarkId" />
     </jxb:bindings>
@@ -186,10 +267,16 @@
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.xccdfp"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="cdfp"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="scap-core_0.1.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="mil.disa.scap"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="scap_core"/>
+    </jxb:bindings>
   </jxb:bindings>
 </jxb:bindings>

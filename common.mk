@@ -37,25 +37,24 @@ endif
 RAW_JAVA_VERSION:=$(shell $(JAVA_HOME)/bin/java -version 2>&1)
 ifeq (1.8, $(findstring 1.8, $(RAW_JAVA_VERSION)))
     JAVA_VERSION=1.8
-    XJC=$(JAVA_HOME)/bin/xjc
     JAVADOCFLAGS=-Xdoclint:none -J-Xmx512m
 else ifeq (1.7, $(findstring 1.7, $(RAW_JAVA_VERSION)))
     JAVA_VERSION=1.7
-    XJC=$(JAVA_HOME)/bin/xjc
     JAVADOCFLAGS=-J-Xmx512m
 else ifeq (1.6, $(findstring 1.6, $(RAW_JAVA_VERSION)))
     JAVA_VERSION=1.6
-    ifeq (x, x$(JAXB_HOME))
-        $(error "You must set the JAXB_HOME environment variable when using Java 6.")
-    else ifeq (win, $(PLATFORM))
-        XJC=$(JAVA) -jar '$(shell cygpath -w $(JAXB_HOME))\lib\jaxb-xjc.jar'
-    else
-        XJC=$(JAVA) -jar $(JAXB_HOME)/lib/jaxb-xjc.jar
-    endif
     JAVADOCFLAGS=-J-Xmx512m
 else
     $(error "Unsupported Java version: $(RAW_JAVA_VERSION)")
 endif
+ifeq (x, x$(JAXB_HOME))
+    $(error "You must set the JAXB_HOME environment variable.")
+else ifeq (win, $(PLATFORM))
+    JXLIB='$(shell cygpath -w $(JAXB_HOME))\lib'
+else
+    JXLIB=$(JAXB_HOME)/lib
+endif
+XJC=$(JAVA) -Djavax.xml.accessExternalSchema=all -Dcom.sun.tools.xjc.XJCFacade.nohack=true -cp "$(JXLIB)/jaxb-xjc.jar" com.sun.tools.xjc.XJCFacade
 
 NULL:=
 SPACE:=$(NULL) # end of the line
@@ -73,7 +72,7 @@ CATALOG_TEMPLATE=catalog.template
 CATALOG=schemas.cat
 EPISODE=schemas.episode
 XJCFLAGS=-enableIntrospection -catalog $(CATALOG) -episode $(EPISODE)
-XJCFLAGS_EXT=$(XJCFLAGS) -extension
+XJCFLAGS_EXT=-classpath "$(NAMESPACE_PLUGIN)" $(XJCFLAGS) -extension -Xnamespace-prefix
 
 #
 # Make namespaces optional in the episode bindings
@@ -90,5 +89,6 @@ CYBERSCOPE_LIB=$(CYBERSCOPE)/cyberscope-schema.jar
 DODARF=$(TOP)/dod-arf
 DODARF_LIB=$(DODARF)/DoD-ARF-schema.jar
 
-SAXON=$(TOP)/Saxon
-SAXON_LIB=$(SAXON)/saxon9he.jar
+THIRDPARTY=$(TOP)/3rd-party
+SAXON_LIB=$(THIRDPARTY)/saxon9he.jar
+NAMESPACE_PLUGIN=$(THIRDPARTY)/jaxb2-namespace-prefix-1.3.jar

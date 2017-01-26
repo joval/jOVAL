@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-  Copyright (C) 2013 jOVAL.org.  All rights reserved.
+  Copyright (C) 2013-2017 JovalCM.com.  All rights reserved.
   This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
 
 -->
-<jxb:bindings version="1.0" xmlns:jxb="http://java.sun.com/xml/ns/jaxb" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<jxb:bindings version="1.0"
+	xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:namespace="http://jaxb2-commons.dev.java.net/namespace-prefix">
   <jxb:bindings>
     <jxb:globalBindings generateIsSetMethod="true"/>
   </jxb:bindings>
@@ -18,11 +21,17 @@
     <jxb:schemaBindings>
       <jxb:package name="cyberscope.oasis.types"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="ct"/>
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oasis/xAL.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="cyberscope.oasis.address"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="xal3"/>
+    </jxb:bindings>
     <jxb:bindings node="xs:complexType[@name='AddressType']//xs:attribute[@type='AddressTypeList']">
         <jxb:property name="TypeName" />
     </jxb:bindings>
@@ -31,6 +40,9 @@
     <jxb:schemaBindings>
       <jxb:package name="cyberscope.oasis.name"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="xnl3"/>
+    </jxb:bindings>
     <jxb:bindings node="xs:complexType[@name='OrganisationNameType']//xs:attribute[@type='OrganisationNameTypeList']">
         <jxb:property name="TypeName" />
     </jxb:bindings>
@@ -47,6 +59,9 @@
     <jxb:schemaBindings>
       <jxb:package name="cyberscope.ai"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="cscope-ai"/>
+    </jxb:bindings>
   </jxb:bindings>
 
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
@@ -57,6 +72,9 @@
     <jxb:schemaBindings>
       <jxb:package name="cyberscope.arf"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="cscope-arf"/>
+    </jxb:bindings>
   </jxb:bindings>
 
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
@@ -67,5 +85,8 @@
     <jxb:schemaBindings>
       <jxb:package name="cyberscope.lasr"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="lasr"/>
+    </jxb:bindings>
   </jxb:bindings>
 </jxb:bindings>
