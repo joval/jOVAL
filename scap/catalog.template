@@ -85,6 +85,7 @@ PUBLIC "http://open-scap.org/page/SCE_xccdf_stream" "schemas/sce-1.0/sce-1.0-xcc
 PUBLIC "http://open-scap.org/page/SCE_result_file" "schemas/sce-1.0/sce-result-schema.xsd"
 PUBLIC "http://checklists.nist.gov/xccdf/1.2" "schemas/xccdf-1.2/xccdf_1.2.xsd"
 SYSTEM "datatypes.dtd" "schemas/xml/datatypes.dtd"
+PUBLIC "http://www.w3.org/1999/xhtml" "schemas/xml/xhtml1-strict.xsd"
 PUBLIC "http://www.w3.org/1999/xlink" "schemas/xml/xlink.xsd"
 PUBLIC "http://www.w3.org/XML/1998/namespace" "schemas/xml/xml.xsd"
 PUBLIC "http://www.w3.org/2000/09/xmldsig#" "schemas/xml/xmldsig-core-schema.xsd"

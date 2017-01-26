@@ -83,7 +83,7 @@
         <jxb:property name="arcTitle" />
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="xhtml/xhtml1-strict.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="xml/xhtml1-strict.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="org.w3c.xhtml"/>
     </jxb:schemaBindings>
