@@ -1,7 +1,7 @@
-# Copyright (C) 2015 jOVAL.org.  All rights reserved.
+# Copyright (C) 2015-2017 JovalCM.com.  All rights reserved.
 # This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
 
-SCAP_VERSION=1.2.1
+SCAP_VERSION=1.3.A
 OVAL_VERSION=5.11.2
 
 Default: all
@@ -47,14 +47,6 @@ else ifeq (1.6, $(findstring 1.6, $(RAW_JAVA_VERSION)))
 else
     $(error "Unsupported Java version: $(RAW_JAVA_VERSION)")
 endif
-ifeq (x, x$(JAXB_HOME))
-    $(error "You must set the JAXB_HOME environment variable.")
-else ifeq (win, $(PLATFORM))
-    JXLIB='$(shell cygpath -w $(JAXB_HOME))\lib'
-else
-    JXLIB=$(JAXB_HOME)/lib
-endif
-XJC=$(JAVA) -Djavax.xml.accessExternalSchema=all -Dcom.sun.tools.xjc.XJCFacade.nohack=true -cp $(JXLIB)/jaxb-xjc.jar com.sun.tools.xjc.XJCFacade
 
 NULL:=
 SPACE:=$(NULL) # end of the line
@@ -73,6 +65,7 @@ CATALOG=schemas.cat
 EPISODE=schemas.episode
 XJCFLAGS=-enableIntrospection -catalog $(CATALOG) -episode $(EPISODE)
 XJCFLAGS_EXT=-classpath "$(NAMESPACE_PLUGIN)" $(XJCFLAGS) -extension -Xnamespace-prefix
+XJC=$(JAVA) -Djavax.xml.accessExternalSchema=all -Dcom.sun.tools.xjc.XJCFacade.nohack=true -cp $(XJC_LIB) com.sun.tools.xjc.XJCFacade
 
 #
 # Make namespaces optional in the episode bindings
@@ -91,4 +84,5 @@ DODARF_LIB=$(DODARF)/DoD-ARF-schema.jar
 
 THIRDPARTY=$(TOP)/3rd-party
 SAXON_LIB=$(THIRDPARTY)/saxon9he.jar
+XJC_LIB=$(THIRDPARTY)/jaxb-xjc-2.2.6.jar
 NAMESPACE_PLUGIN=$(THIRDPARTY)/jaxb2-namespace-prefix-1.3.jar
