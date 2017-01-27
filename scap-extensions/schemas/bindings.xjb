@@ -41,18 +41,18 @@
   </jxb:bindings>
   <jxb:bindings schemaLocation="x-shellcommand-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.def.cis"/>
+      <jxb:package name="scap.oval.def.independent.extended"/>
     </jxb:schemaBindings>
     <jxb:bindings>
-      <namespace:prefix name="cmd-def"/>
+      <namespace:prefix name="x-ind-def"/>
     </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="x-shellcommand-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.sc.cis"/>
+      <jxb:package name="scap.oval.sc.independent.extended"/>
     </jxb:schemaBindings>
     <jxb:bindings>
-      <namespace:prefix name="cmd-sc"/>
+      <namespace:prefix name="x-ind-sc"/>
     </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="x-windows-definitions-schema.xsd" node="/xs:schema">
