@@ -37,8 +37,7 @@ endif
 RAW_JAVA_VERSION:=$(shell $(JAVA_HOME)/bin/java -version 2>&1)
 ifeq (9.0, $(findstring 9.0, $(RAW_JAVA_VERSION)))
     JAVA_VERSION=9
-    JAVADOCFLAGS=--add-modules java.xml.bind -Xdoclint:none -J-Xmx512m
-    JAVACFLAGS=--add-modules java.xml.bind
+    JAVADOCFLAGS=-Xdoclint:none -J-Xmx512m
 else ifeq (1.8, $(findstring 1.8, $(RAW_JAVA_VERSION)))
     JAVA_VERSION=1.8
     JAVADOCFLAGS=-Xdoclint:none -J-Xmx512m
@@ -69,11 +68,7 @@ CATALOG=schemas.cat
 EPISODE=schemas.episode
 XJCFLAGS=-enableIntrospection -catalog $(CATALOG) -episode $(EPISODE)
 XJCFLAGS_EXT=-classpath "$(NAMESPACE_PLUGIN)" $(XJCFLAGS) -extension -Xnamespace-prefix
-ifeq (9, $(JAVA_VERSION))
-    XJC=$(JAVA) --add-modules java.xml.bind -Djavax.xml.accessExternalSchema=all -Dcom.sun.tools.xjc.XJCFacade.nohack=true -cp $(XJC_LIB) com.sun.tools.xjc.XJCFacade
-else
-    XJC=$(JAVA) -Djavax.xml.accessExternalSchema=all -Dcom.sun.tools.xjc.XJCFacade.nohack=true -cp $(XJC_LIB) com.sun.tools.xjc.XJCFacade
-endif
+XJC=$(JAVA) -Djavax.xml.accessExternalSchema=all -Dcom.sun.tools.xjc.XJCFacade.nohack=true -cp $(XJC_LIB) com.sun.tools.xjc.XJCFacade
 
 #
 # Make namespaces optional in the episode bindings
@@ -91,9 +86,12 @@ DODARF=$(TOP)/dod-arf
 DODARF_LIB=$(DODARF)/DoD-ARF-schema.jar
 
 THIRDPARTY=$(TOP)/3rd-party
+ifeq (9, $(JAVA_VERSION))
+    JAXB_LIB=$(THIRDPARTY)/jaxb-2.2.6-api.jar
+endif
 SAXON_LIB=$(THIRDPARTY)/saxon9he.jar
 ifeq (9, $(JAVA_VERSION))
-    XJC_LIB=$(THIRDPARTY)/jaxb-2.2.6-xjc.jar$(CLN)$(THIRDPARTY)/jaxb-2.2.6-impl.jar
+    XJC_LIB=$(JAXB_LIB)$(CLN)$(THIRDPARTY)/jaxb-2.2.6-impl.jar$(CLN)$(THIRDPARTY)/jaxb-2.2.6-xjc.jar$(CLN)$(THIRDPARTY)/activation.jar
 else
     XJC_LIB=$(THIRDPARTY)/jaxb-2.2.6-xjc.jar
 endif
