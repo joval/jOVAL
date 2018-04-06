@@ -17,7 +17,7 @@ all: $(SCAP_LIB) $(SCAP_EXT_LIB) $(DOCS)/index.html $(CYBERSCOPE_LIB) $(DODARF_L
 $(DOCS)/index.html: $(SCAP_LIB) $(SCAP_EXT_LIB)
 	mkdir -p $(DOCS)
 ifeq (9, $(JAVA_VERSION))
-# NB: A bug in Java 9.0.4's javadoc crashes when running against org.w3c.xml.signature.ObjectFactory, so we skip the package
+# See JDK bug: https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8200432
 	$(JAVADOC) $(JAVADOCFLAGS) -d $(DOCS) -classpath $(CLASSPATH) -sourcepath $(SOURCEPATH) -subpackages org:scap -exclude org.w3c.xml.signature
 else
 	$(JAVADOC) $(JAVADOCFLAGS) -d $(DOCS) -classpath $(CLASSPATH) -sourcepath $(SOURCEPATH) -subpackages org:scap
