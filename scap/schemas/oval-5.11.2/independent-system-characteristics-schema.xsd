@@ -463,7 +463,7 @@
                                            <xsd:appinfo>
                                                  <sch:pattern id="win-sc_tfc_i">
                                                        <sch:rule context="win-sc:textfilecontent_item/win-sc:instance">
-                                                             <sch:assert test="string-length(.) = 0 or number(.) &lt; 1"><sch:value-of select="../@id"/> - the value of instance must be greater than one</sch:assert>
+                                                             <sch:assert test="number(.) &gt;= 0"><sch:value-of select="../@id"/> - the value of instance must be greater than or equal to one.</sch:assert>
                                                        </sch:rule>
                                                  </sch:pattern>
                                            </xsd:appinfo>
