@@ -1,29 +1,40 @@
 CLASSES=\
-	scap.oval.def.independent.extended.ObjectFactory	\
-	scap.oval.def.independent.extended.package-info	\
-	scap.oval.def.independent.extended.ShellcommandObject	\
-	scap.oval.def.independent.extended.ShellcommandState	\
-	scap.oval.def.independent.extended.ShellcommandTest	\
-	scap.oval.def.linux.extended.AptBehaviors	\
-	scap.oval.def.linux.extended.AptObject	\
-	scap.oval.def.linux.extended.AptState	\
-	scap.oval.def.linux.extended.AptTest	\
-	scap.oval.def.linux.extended.EntityStateDpkgOperationType	\
-	scap.oval.def.linux.extended.ObjectFactory	\
-	scap.oval.def.linux.extended.package-info	\
-	scap.oval.def.windows.extended.CbsComponentApplicableBehaviors	\
-	scap.oval.def.windows.extended.CbscomponentapplicableObject	\
-	scap.oval.def.windows.extended.CbscomponentapplicableState	\
-	scap.oval.def.windows.extended.CbscomponentapplicableTest	\
-	scap.oval.def.windows.extended.ObjectFactory	\
-	scap.oval.def.windows.extended.package-info	\
+	scap.oval.sc.independent.extended.ShellcommandItem	\
 	scap.oval.sc.independent.extended.ObjectFactory	\
 	scap.oval.sc.independent.extended.package-info	\
-	scap.oval.sc.independent.extended.ShellcommandItem	\
 	scap.oval.sc.linux.extended.AptItem	\
-	scap.oval.sc.linux.extended.EntityItemDpkgOperationType	\
 	scap.oval.sc.linux.extended.ObjectFactory	\
+	scap.oval.sc.linux.extended.EntityItemDpkgOperationType	\
 	scap.oval.sc.linux.extended.package-info	\
 	scap.oval.sc.windows.extended.CbscomponentapplicableItem	\
 	scap.oval.sc.windows.extended.ObjectFactory	\
-	scap.oval.sc.windows.extended.package-info
+	scap.oval.sc.windows.extended.package-info	\
+	scap.oval.sc.protocols.EntityItemHttpMethodType	\
+	scap.oval.sc.protocols.ObjectFactory	\
+	scap.oval.sc.protocols.HttpItem	\
+	scap.oval.sc.protocols.package-info	\
+	scap.oval.def.independent.extended.ShellcommandTest	\
+	scap.oval.def.independent.extended.ShellcommandObject	\
+	scap.oval.def.independent.extended.ObjectFactory	\
+	scap.oval.def.independent.extended.ShellcommandState	\
+	scap.oval.def.independent.extended.package-info	\
+	scap.oval.def.linux.extended.AptTest	\
+	scap.oval.def.linux.extended.AptState	\
+	scap.oval.def.linux.extended.ObjectFactory	\
+	scap.oval.def.linux.extended.AptObject	\
+	scap.oval.def.linux.extended.AptBehaviors	\
+	scap.oval.def.linux.extended.EntityStateDpkgOperationType	\
+	scap.oval.def.linux.extended.package-info	\
+	scap.oval.def.windows.extended.CbscomponentapplicableTest	\
+	scap.oval.def.windows.extended.CbscomponentapplicableObject	\
+	scap.oval.def.windows.extended.ObjectFactory	\
+	scap.oval.def.windows.extended.CbsComponentApplicableBehaviors	\
+	scap.oval.def.windows.extended.CbscomponentapplicableState	\
+	scap.oval.def.windows.extended.package-info	\
+	scap.oval.def.protocols.EntityObjectHttpMethodType	\
+	scap.oval.def.protocols.HttpState	\
+	scap.oval.def.protocols.ObjectFactory	\
+	scap.oval.def.protocols.EntityStateHttpMethodType	\
+	scap.oval.def.protocols.HttpObject	\
+	scap.oval.def.protocols.HttpTest	\
+	scap.oval.def.protocols.package-info	\

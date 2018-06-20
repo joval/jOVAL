@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" 
+            xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" 
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            xmlns:x-net-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#x-protocols" 
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#x-protocols"
+            elementFormDefault="qualified" version="5.11.2">
+      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
+      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
+      <xsd:annotation>
+            <xsd:documentation>The following is a proposal for experimental tests, objects, and states that involve the exercise of specific network-based protocols. Each test is an extension of the standard test element defined in the Core Definition Schema. Through extension, each test inherits a set of elements and attributes that are shared amongst all OVAL tests. Each test is described in detail and should provide the information necessary to understand what each element and attribute represents. This document is intended for developers and assumes some familiarity with XML. A high level description of the interaction between the different tests and their relationship to the Core Definition Schema is not outlined here.</xsd:documentation>
+            <xsd:documentation>The OVAL Schema is maintained and developed by the public OVAL Community. For more information, including how to get involved in the project and how to submit change requests, please visit the OVAL website at http://oval.cisecurity.org.</xsd:documentation>
+            <xsd:appinfo>
+                  <schema>Experimental Network Protocols Definitions</schema>
+                  <version>5.11.2:1.0</version>
+                  <date>06/20/2018 09:00:00 AM</date>
+                  <terms_of_use>Copyright (c) 2018, Center for Internet Security. All rights reserved.  The contents of this file are subject to the terms of the OVAL License located at https://oval.cisecurity.org/terms. See the OVAL License for the specific language governing permissions and limitations for use of this schema.  When distributing copies of the OVAL Schema, this license header must be included.</terms_of_use>
+                  <sch:ns prefix="oval-def" uri="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
+                  <sch:ns prefix="x-net-def" uri="http://oval.mitre.org/XMLSchema/oval-definitions-5#x-protocols"/>
+                  <sch:ns prefix="xsi" uri="http://www.w3.org/2001/XMLSchema-instance"/>
+            </xsd:appinfo>
+      </xsd:annotation>
+      <!-- =============================================================================== -->
+      <!-- ==================================  HTTP TEST  ================================ -->
+      <!-- =============================================================================== -->
+      <xsd:element name="http_test" substitutionGroup="oval-def:test">
+            <xsd:annotation>
+                  <xsd:documentation>The http_test is used to query a web server path.</xsd:documentation>
+                  <xsd:appinfo>
+                        <oval:element_mapping>
+                              <oval:test>http_test</oval:test>
+                              <oval:object>http_object</oval:object>
+                              <oval:state>http_state</oval:state>
+                              <oval:item target_namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-protocols">http_item</oval:item>
+                        </oval:element_mapping>
+                  </xsd:appinfo>
+                  <xsd:appinfo>
+                        <sch:pattern id="net-def_http">
+                              <sch:rule context="x-net-def:http_test/x-net-def:object">
+                                    <sch:assert test="@object_ref=ancestor::oval-def:oval_definitions/oval-def:objects/x-net-def:http_object/@id"><sch:value-of select="../@id"/> - the object child element of an http_test must reference an http_object</sch:assert>
+                              </sch:rule>
+                              <sch:rule context="x-net-def:http_test/x-net-def:state">
+                                    <sch:assert test="@state_ref=ancestor::oval-def:oval_definitions/oval-def:states/x-net-def:http_state/@id"><sch:value-of select="../@id"/> - the state child element of an http_test must reference an http_state</sch:assert>
+                              </sch:rule>
+                        </sch:pattern>
+                  </xsd:appinfo>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-def:TestType">
+                              <xsd:sequence>
+                                    <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                                    <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="http_object" substitutionGroup="oval-def:object">
+            <xsd:annotation>
+                  <xsd:documentation>The http_object describes a query of a web server path. It specifies a port, path, method, request headers, and optionally, other request characteristics such as POST data.</xsd:documentation>
+                  <xsd:appinfo>
+                        <sch:pattern id="net-def_http_object_verify_filter_state">
+                              <sch:rule context="x-net-def:http_object//oval-def:filter">
+                                    <sch:let name="parent_object" value="ancestor::x-net-def:http_object"/>
+                                    <sch:let name="parent_object_id" value="$parent_object/@id"/>
+                                    <sch:let name="state_ref" value="."/>
+                                    <sch:let name="reffed_state" value="ancestor::oval-def:oval_definitions/oval-def:states/*[@id=$state_ref]"/>
+                                    <sch:let name="state_name" value="local-name($reffed_state)"/>
+                                    <sch:let name="state_namespace" value="namespace-uri($reffed_state)"/>
+                                    <sch:assert test="(($state_namespace='http://oval.mitre.org/XMLSchema/oval-definitions-5#x-protocols') and ($state_name='http_state'))">State referenced in filter for <sch:value-of select="name($parent_object)"/> '<sch:value-of select="$parent_object_id"/>' is of the wrong type.</sch:assert>
+                              </sch:rule>
+                        </sch:pattern>
+                  </xsd:appinfo>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-def:ObjectType">
+                              <xsd:sequence>
+                                    <xsd:choice>
+                                          <xsd:element ref="oval-def:set"/>
+                                          <xsd:sequence>
+                                                <xsd:element name="method" type="x-net-def:EntityObjectHttpMethodType" minOccurs="1" maxOccurs="1">
+                                                      <xsd:annotation>
+                                                            <xsd:documentation>The method of the HTTP request.</xsd:documentation>
+                                                      </xsd:annotation>
+                                                </xsd:element>
+                                                <xsd:element name="port" type="oval-def:EntityObjectIntType" minOccurs="1" maxOccurs="1">
+                                                      <xsd:annotation>
+                                                            <xsd:documentation>The 'port' attribute specifies the port number for the web server listener. The value of this entity is typically 80 for clear-text, and 443 for secure connections. Values between 1 and 65535 (inclusive) are permitted.</xsd:documentation>
+                                                      </xsd:annotation>
+                                                </xsd:element>
+                                                <xsd:element name="secure" type="oval-def:EntityObjectBoolType" minOccurs="1" maxOccurs="1">
+                                                      <xsd:annotation>
+                                                            <xsd:documentation>Specifies whether or not transport layer security (TLS) should be used when establishing a connection.</xsd:documentation>
+                                                      </xsd:annotation>
+                                                </xsd:element>
+                                                <xsd:element name="path" type="oval-def:EntityObjectStringType" minOccurs="1" maxOccurs="1">
+                                                      <xsd:annotation>
+                                                            <xsd:documentation>The path of the HTTP request.</xsd:documentation>
+                                                      </xsd:annotation>
+                                                </xsd:element>
+                                                <xsd:element name="request_headers" type="oval-def:EntityObjectRecordType" nillable="true">
+                                                      <xsd:annotation>
+                                                            <xsd:documentation>A list of properties (name and value pairs) sent as request headers. Each property name must be unique. When xsi:nil='true', request headers are not provided to the server.</xsd:documentation>
+                                                            <xsd:appinfo>
+                                                                  <sch:pattern id="x-net-def_httpobjrequestheaders">
+                                                                        <sch:rule context="x-net-def:http_object/x-net-def:request_headers">
+                                                                              <sch:assert test="@datatype='record'"><sch:value-of select="../@id"/> - datatype attribute for the request_headers entity of an http_object must be 'record'</sch:assert>
+                                                                        </sch:rule>
+                                                                  </sch:pattern>
+                                                            </xsd:appinfo>
+                                                      </xsd:annotation>
+                                                      <xsd:unique name="UniqueHttpObjRequestHeadersFieldName">
+                                                            <xsd:selector xpath="./oval-def:field"/>
+                                                            <xsd:field xpath="@name"/>
+                                                      </xsd:unique>
+                                                </xsd:element>
+                                                <xsd:element name="post_data" type="oval-def:EntityObjectAnySimpleType" nillable="true">
+                                                      <xsd:annotation>
+                                                            <xsd:documentation>Data to post to the URI. Only valid when used in conjunction with a POST or PUT request method.</xsd:documentation>
+                                                      </xsd:annotation>
+                                                </xsd:element>
+                                                <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                                          </xsd:sequence>
+                                    </xsd:choice>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="http_state" substitutionGroup="oval-def:state">
+            <xsd:annotation>
+                  <xsd:documentation>The http_state allows for assertions about the data retrieved via an http_object.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-def:StateType">
+                              <xsd:sequence>
+                                    <xsd:element name="method" type="x-net-def:EntityStateHttpMethodType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The method of the HTTP request.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="port" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The 'port' attribute specifies the port number for the web server listener. The value of this entity is typically 80 for clear-text, and 443 for secure connections. Values between 1 and 65535 (inclusive) are permitted.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="secure" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>Specifies whether or not transport layer security (TLS) should be used when establishing a connection.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="path" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The path of the HTTP request.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="request_headers" type="oval-def:EntityStateRecordType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>A list of properties (name and value pairs) sent as request headers. Each property name must be unique. When xsi:nil='true', request headers are not provided to the server.</xsd:documentation>
+                                                <xsd:appinfo>
+                                                      <sch:pattern id="x-net-def_httpsterequestheaders">
+                                                            <sch:rule context="x-net-def:http_state/x-net-def:request_headers">
+                                                                  <sch:assert test="@datatype='record'"><sch:value-of select="../@id"/> - datatype attribute for the request_headers entity of an http_state must be 'record'</sch:assert>
+                                                            </sch:rule>
+                                                      </sch:pattern>
+                                                </xsd:appinfo>
+                                          </xsd:annotation>
+                                          <xsd:unique name="UniqueHttpSteRequestHeadersFieldName">
+                                                <xsd:selector xpath="./oval-def:field"/>
+                                                <xsd:field xpath="@name"/>
+                                          </xsd:unique>
+                                    </xsd:element>
+                                    <xsd:element name="post_data" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>Data to post to the URI. Only valid when used in conjunction with a POST or PUT request method.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="response_headers" type="oval-def:EntityStateRecordType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>A list of properties (name and value pairs) returned by the server as response headers. Each property name must be unique.</xsd:documentation>
+                                                <xsd:appinfo>
+                                                      <sch:pattern id="x-net-def_httpsteresponseheaders">
+                                                            <sch:rule context="x-net-def:http_state/x-net-def:response_headers">
+                                                                  <sch:assert test="@datatype='record'"><sch:value-of select="../@id"/> - datatype attribute for the response_headers entity of an http_state must be 'record'</sch:assert>
+                                                            </sch:rule>
+                                                      </sch:pattern>
+                                                </xsd:appinfo>
+                                          </xsd:annotation>
+                                          <xsd:unique name="UniqueHttpSteResponseHeadersFieldName">
+                                                <xsd:selector xpath="./oval-def:field"/>
+                                                <xsd:field xpath="@name"/>
+                                          </xsd:unique>
+                                    </xsd:element>
+                                    <xsd:element name="message_body" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The message body returned by the server.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
+      </xsd:element>
+      <xsd:complexType name="EntityObjectHttpMethodType">
+            <xsd:annotation>
+                  <xsd:documentation>The EntityObjectHttpMethodType restricts a string value to the permitted HTTP methods. The empty string is also allowed to support empty element associated with variable references. Note that when using pattern matches and variables care must be taken to ensure that the regular expression and variable values align with the specified pattern restriction.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleContent>
+                  <xsd:restriction base="oval-def:EntityObjectStringType">
+                        <xsd:enumeration value="GET">
+                              <xsd:annotation>
+                                    <xsd:documentation>The GET method is used to retrieve information from a request URI.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="POST">
+                              <xsd:annotation>
+                                    <xsd:documentation>The POST method is used to post subordinate data to a request URI.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="HEAD">
+                              <xsd:annotation>
+                                    <xsd:documentation>The HEAD method is equivalent to a GET, except that no message-body is returned.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="PUT">
+                              <xsd:annotation>
+                                    <xsd:documentation>A PUT method is used to store resource information at a request URI.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="DELETE">
+                              <xsd:annotation>
+                                    <xsd:documentation>A DELETE method is used to delete the resource at the request URI.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="">
+                              <xsd:annotation>
+                                    <xsd:documentation>The empty string value is permitted here to allow for empty elements associated with variable references.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                  </xsd:restriction>
+            </xsd:simpleContent>
+      </xsd:complexType>
+      <xsd:complexType name="EntityStateHttpMethodType">
+            <xsd:annotation>
+                  <xsd:documentation>The EntityStateHttpMethodType restricts a string value to the permitted HTTP methods. The empty string is also allowed to support empty element associated with variable references. Note that when using pattern matches and variables care must be taken to ensure that the regular expression and variable values align with the specified pattern restriction.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleContent>
+                  <xsd:restriction base="oval-def:EntityStateStringType">
+                        <xsd:enumeration value="GET">
+                              <xsd:annotation>
+                                    <xsd:documentation>The GET method is used to retrieve information from a request URI.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="POST">
+                              <xsd:annotation>
+                                    <xsd:documentation>The POST method is used to post subordinate data to a request URI.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="HEAD">
+                              <xsd:annotation>
+                                    <xsd:documentation>The HEAD method is equivalent to a GET, except that no message-body is returned.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="PUT">
+                              <xsd:annotation>
+                                    <xsd:documentation>A PUT method is used to store resource information at a request URI.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="DELETE">
+                              <xsd:annotation>
+                                    <xsd:documentation>A DELETE method is used to delete the resource at the request URI.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="">
+                              <xsd:annotation>
+                                    <xsd:documentation>The empty string value is permitted here to allow for empty elements associated with variable references.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                  </xsd:restriction>
+            </xsd:simpleContent>
+      </xsd:complexType>
+</xsd:schema>
