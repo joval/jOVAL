@@ -62,6 +62,11 @@
                                                 <xsd:documentation>Data to post to the URI. Only valid when used in conjunction with a POST or PUT request method.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
+                                    <xsd:element name="response_code" type="oval-sc:EntityItemIntType" minOccurs="1" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The 'response_code' attribute indicates the response code returned by the server for the requested URI. See: https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
                                     <xsd:element name="response_headers" type="oval-sc:EntityItemRecordType" minOccurs="1" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>A list of properties (name and value pairs) returned by the server as response headers. Each property name must be unique.</xsd:documentation>

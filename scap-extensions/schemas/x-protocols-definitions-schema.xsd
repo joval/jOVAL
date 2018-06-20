@@ -81,6 +81,7 @@
                                     <xsd:choice>
                                           <xsd:element ref="oval-def:set"/>
                                           <xsd:sequence>
+                                                <xsd:element name="behaviors" type="x-net-def:HttpBehaviors" minOccurs="0"/>
                                                 <xsd:element name="method" type="x-net-def:EntityObjectHttpMethodType" minOccurs="1" maxOccurs="1">
                                                       <xsd:annotation>
                                                             <xsd:documentation>The method of the HTTP request.</xsd:documentation>
@@ -89,6 +90,13 @@
                                                 <xsd:element name="port" type="oval-def:EntityObjectIntType" minOccurs="1" maxOccurs="1">
                                                       <xsd:annotation>
                                                             <xsd:documentation>The 'port' attribute specifies the port number for the web server listener. The value of this entity is typically 80 for clear-text, and 443 for secure connections. Values between 1 and 65535 (inclusive) are permitted.</xsd:documentation>
+                                                            <xsd:appinfo>
+                                                                  <sch:pattern id="x-net-def_httpobject_port">
+                                                                        <sch:rule context="x-net-def:http_object/x-net-def:port">
+                                                                              <sch:assert test="(@var_ref and string-length(.) = 0) or (number(.) &gt;= 1 and number(.) &lt;= 65535)"><sch:value-of select="../@id"/> - the value of port must be between 1 and 65535, or empty if var_ref is used.</sch:assert>
+                                                                        </sch:rule>
+                                                                  </sch:pattern>
+                                                            </xsd:appinfo>
                                                       </xsd:annotation>
                                                 </xsd:element>
                                                 <xsd:element name="secure" type="oval-def:EntityObjectBoolType" minOccurs="1" maxOccurs="1">
@@ -120,6 +128,13 @@
                                                 <xsd:element name="post_data" type="oval-def:EntityObjectAnySimpleType" nillable="true">
                                                       <xsd:annotation>
                                                             <xsd:documentation>Data to post to the URI. Only valid when used in conjunction with a POST or PUT request method.</xsd:documentation>
+                                                            <xsd:appinfo>
+                                                                  <sch:pattern id="x-net-def_httpobject_post_data">
+                                                                        <sch:rule context="x-net-def:http_object/x-net-def:post_data">
+                                                                              <sch:assert test="@xsi:nil='true' or ../x-net-def:method='POST' or ../x-net-def:method='PUT'"><sch:value-of select="../@id"/> - the post_data must have xsi:nil=true unless the method is POST or PUT.</sch:assert>
+                                                                        </sch:rule>
+                                                                  </sch:pattern>
+                                                            </xsd:appinfo>
                                                       </xsd:annotation>
                                                 </xsd:element>
                                                 <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
@@ -146,6 +161,13 @@
                                     <xsd:element name="port" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>The 'port' attribute specifies the port number for the web server listener. The value of this entity is typically 80 for clear-text, and 443 for secure connections. Values between 1 and 65535 (inclusive) are permitted.</xsd:documentation>
+                                                <xsd:appinfo>
+                                                      <sch:pattern id="x-net-def_httpstate_port">
+                                                            <sch:rule context="x-net-def:http_state/x-net-def:port">
+                                                                  <sch:assert test="(@var_ref and string-length(.) = 0) or (number(.) &gt;= 1 and number(.) &lt;= 65535)"><sch:value-of select="../@id"/> - the value of port must be between 1 and 65535, or empty if var_ref is used.</sch:assert>
+                                                            </sch:rule>
+                                                      </sch:pattern>
+                                                </xsd:appinfo>
                                           </xsd:annotation>
                                     </xsd:element>
                                     <xsd:element name="secure" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1">
@@ -179,6 +201,11 @@
                                                 <xsd:documentation>Data to post to the URI. Only valid when used in conjunction with a POST or PUT request method.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
+                                    <xsd:element name="response_code" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The 'response_code' attribute indicates the response code returned by the server for the requested URI. See: https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
                                     <xsd:element name="response_headers" type="oval-def:EntityStateRecordType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>A list of properties (name and value pairs) returned by the server as response headers. Each property name must be unique.</xsd:documentation>
@@ -190,10 +217,6 @@
                                                       </sch:pattern>
                                                 </xsd:appinfo>
                                           </xsd:annotation>
-                                          <xsd:unique name="UniqueHttpSteResponseHeadersFieldName">
-                                                <xsd:selector xpath="./oval-def:field"/>
-                                                <xsd:field xpath="@name"/>
-                                          </xsd:unique>
                                     </xsd:element>
                                     <xsd:element name="message_body" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
@@ -205,6 +228,16 @@
                   </xsd:complexContent>
             </xsd:complexType>
       </xsd:element>
+      <xsd:complexType name="HttpBehaviors">
+            <xsd:annotation>
+                  <xsd:documentation>The HttpBehaviors complex type defines behaviors that allow a more detailed definition of the http_object being specified.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:attribute name="follow_redirects" type="xsd:boolean" use="optional" default="true">
+                  <xsd:annotation>
+                        <xsd:documentation>The 'follow_redirects' behavior defines whether server redirects should be obeyed and traversed when retrieving an http_item. If set to 'true', any redirects will be traversed and the http_item will reflect the server response to the (potentially) redirected request. If set to 'false', the http_item will contain information about the redirect reply (provided there is one). The default value is 'true'.</xsd:documentation>
+                  </xsd:annotation>
+            </xsd:attribute>
+      </xsd:complexType>
       <xsd:complexType name="EntityObjectHttpMethodType">
             <xsd:annotation>
                   <xsd:documentation>The EntityObjectHttpMethodType restricts a string value to the permitted HTTP methods. The empty string is also allowed to support empty element associated with variable references. Note that when using pattern matches and variables care must be taken to ensure that the regular expression and variable values align with the specified pattern restriction.</xsd:documentation>

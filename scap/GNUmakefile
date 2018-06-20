@@ -28,7 +28,9 @@ OVAL_SCH:=$(SCH)/oval-definitions-schematron.xsl \
 BROKEN=<bindings scd=\"x-schema::tns\"
 FIXED=<bindings scd=\"x-schema::tns\" if-exists=\"true\"
 
-all: $(SCAP_LIB) $(OVAL_DOCS) $(DOCS)/index.html $(OVAL_SCH)
+all: $(SCAP_LIB) $(OVAL_DOCS) $(DOCS)/index.html schematrons
+
+schematrons: $(OVAL_SCH)
 
 $(SCAP_LIB): $(GEN) classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .

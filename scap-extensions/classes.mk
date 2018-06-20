@@ -35,6 +35,7 @@ CLASSES=\
 	scap.oval.def.protocols.HttpState	\
 	scap.oval.def.protocols.ObjectFactory	\
 	scap.oval.def.protocols.EntityStateHttpMethodType	\
+	scap.oval.def.protocols.HttpBehaviors	\
 	scap.oval.def.protocols.HttpObject	\
 	scap.oval.def.protocols.HttpTest	\
-	scap.oval.def.protocols.package-info	\
+	scap.oval.def.protocols.package-info
