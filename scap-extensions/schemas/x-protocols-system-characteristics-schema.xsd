@@ -52,27 +52,27 @@
                                                 <xsd:documentation>The path of the HTTP request.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="request_headers" type="oval-sc:EntityItemRecordType" minOccurs="1" maxOccurs="1">
+                                    <xsd:element name="request_headers" type="oval-sc:EntityItemRecordType" minOccurs="0" maxOccurs="1" nillable="true">
                                           <xsd:annotation>
                                                 <xsd:documentation>A list of properties (name and value pairs) sent as request headers. Each property name must be unique. When xsi:nil='true', request headers are not provided to the server.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="post_data" type="oval-sc:EntityItemAnySimpleType" minOccurs="1" maxOccurs="1">
+                                    <xsd:element name="post_data" type="oval-sc:EntityItemAnySimpleType" minOccurs="0" maxOccurs="1" nillable="true">
                                           <xsd:annotation>
                                                 <xsd:documentation>Data to post to the URI. Only valid when used in conjunction with a POST or PUT request method.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="response_code" type="oval-sc:EntityItemIntType" minOccurs="1" maxOccurs="1">
+                                    <xsd:element name="response_code" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>The 'response_code' attribute indicates the response code returned by the server for the requested URI. See: https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="response_headers" type="oval-sc:EntityItemRecordType" minOccurs="1" maxOccurs="1">
+                                    <xsd:element name="response_headers" type="oval-sc:EntityItemRecordType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>A list of properties (name and value pairs) returned by the server as response headers. Each property name must be unique.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="message_body" type="oval-sc:EntityItemAnySimpleType" minOccurs="1" maxOccurs="1">
+                                    <xsd:element name="message_body" type="oval-sc:EntityItemAnySimpleType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>The message body returned by the server.</xsd:documentation>
                                           </xsd:annotation>
