@@ -59,7 +59,7 @@
       </xsd:element>
       <xsd:element name="http_object" substitutionGroup="oval-def:object">
             <xsd:annotation>
-                  <xsd:documentation>The http_object describes a query of a web server path. It specifies a port, path, method, request headers, and optionally, other request characteristics such as POST data.</xsd:documentation>
+                  <xsd:documentation>The http_object describes a query of a web server path. It specifies a path, method, request headers, and optionally, other request characteristics such as POST data.</xsd:documentation>
                   <xsd:appinfo>
                         <sch:pattern id="net-def_http_object_verify_filter_state">
                               <sch:rule context="x-net-def:http_object//oval-def:filter">
@@ -85,23 +85,6 @@
                                                 <xsd:element name="method" type="x-net-def:EntityObjectHttpMethodType" minOccurs="1" maxOccurs="1">
                                                       <xsd:annotation>
                                                             <xsd:documentation>The method of the HTTP request.</xsd:documentation>
-                                                      </xsd:annotation>
-                                                </xsd:element>
-                                                <xsd:element name="port" type="oval-def:EntityObjectIntType" minOccurs="1" maxOccurs="1">
-                                                      <xsd:annotation>
-                                                            <xsd:documentation>The 'port' attribute specifies the port number for the web server listener. The value of this entity is typically 80 for clear-text, and 443 for secure connections. Values between 1 and 65535 (inclusive) are permitted.</xsd:documentation>
-                                                            <xsd:appinfo>
-                                                                  <sch:pattern id="x-net-def_httpobject_port">
-                                                                        <sch:rule context="x-net-def:http_object/x-net-def:port">
-                                                                              <sch:assert test="(@var_ref and string-length(.) = 0) or (number(.) &gt;= 1 and number(.) &lt;= 65535)"><sch:value-of select="../@id"/> - the value of port must be between 1 and 65535, or empty if var_ref is used.</sch:assert>
-                                                                        </sch:rule>
-                                                                  </sch:pattern>
-                                                            </xsd:appinfo>
-                                                      </xsd:annotation>
-                                                </xsd:element>
-                                                <xsd:element name="secure" type="oval-def:EntityObjectBoolType" minOccurs="1" maxOccurs="1">
-                                                      <xsd:annotation>
-                                                            <xsd:documentation>Specifies whether or not transport layer security (TLS) should be used when establishing a connection.</xsd:documentation>
                                                       </xsd:annotation>
                                                 </xsd:element>
                                                 <xsd:element name="path" type="oval-def:EntityObjectStringType" minOccurs="1" maxOccurs="1">
@@ -158,23 +141,6 @@
                                                 <xsd:documentation>The method of the HTTP request.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="port" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
-                                          <xsd:annotation>
-                                                <xsd:documentation>The 'port' attribute specifies the port number for the web server listener. The value of this entity is typically 80 for clear-text, and 443 for secure connections. Values between 1 and 65535 (inclusive) are permitted.</xsd:documentation>
-                                                <xsd:appinfo>
-                                                      <sch:pattern id="x-net-def_httpstate_port">
-                                                            <sch:rule context="x-net-def:http_state/x-net-def:port">
-                                                                  <sch:assert test="(@var_ref and string-length(.) = 0) or (number(.) &gt;= 1 and number(.) &lt;= 65535)"><sch:value-of select="../@id"/> - the value of port must be between 1 and 65535, or empty if var_ref is used.</sch:assert>
-                                                            </sch:rule>
-                                                      </sch:pattern>
-                                                </xsd:appinfo>
-                                          </xsd:annotation>
-                                    </xsd:element>
-                                    <xsd:element name="secure" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1">
-                                          <xsd:annotation>
-                                                <xsd:documentation>Specifies whether or not transport layer security (TLS) should be used when establishing a connection.</xsd:documentation>
-                                          </xsd:annotation>
-                                    </xsd:element>
                                     <xsd:element name="path" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>The path of the HTTP request.</xsd:documentation>
@@ -199,6 +165,23 @@
                                     <xsd:element name="post_data" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>Data to post to the URI. Only valid when used in conjunction with a POST or PUT request method.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="port" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The 'port' attribute specifies the port number for the web server listener. The value of this entity is typically 80 for clear-text, and 443 for secure connections. Values between 1 and 65535 (inclusive) are permitted.</xsd:documentation>
+                                                <xsd:appinfo>
+                                                      <sch:pattern id="x-net-def_httpstate_port">
+                                                            <sch:rule context="x-net-def:http_state/x-net-def:port">
+                                                                  <sch:assert test="(@var_ref and string-length(.) = 0) or (number(.) &gt;= 1 and number(.) &lt;= 65535)"><sch:value-of select="../@id"/> - the value of port must be between 1 and 65535, or empty if var_ref is used.</sch:assert>
+                                                            </sch:rule>
+                                                      </sch:pattern>
+                                                </xsd:appinfo>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="secure" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>Specifies whether or not transport layer security (TLS) was used when establishing a connection.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
                                     <xsd:element name="response_code" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
