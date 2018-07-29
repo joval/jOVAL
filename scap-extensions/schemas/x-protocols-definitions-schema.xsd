@@ -550,4 +550,102 @@
                   </xsd:complexContent>
             </xsd:complexType>
       </xsd:element>
+      <!-- =============================================================================== -->
+      <!-- ==================================  SMTP TEST  ================================ -->
+      <!-- =============================================================================== -->
+      <xsd:element name="smtp_test" substitutionGroup="oval-def:test">
+            <xsd:annotation>
+                  <xsd:documentation>The smtp_test is used to query an SMTP server for information about itself.</xsd:documentation>
+                  <xsd:appinfo>
+                        <oval:element_mapping>
+                              <oval:test>smtp_test</oval:test>
+                              <oval:object>smtp_object</oval:object>
+                              <oval:state>smtp_state</oval:state>
+                              <oval:item target_namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-protocols">smtp_item</oval:item>
+                        </oval:element_mapping>
+                  </xsd:appinfo>
+                  <xsd:appinfo>
+                        <sch:pattern id="net-def_ftp">
+                              <sch:rule context="x-net-def:smtp_test/x-net-def:object">
+                                    <sch:assert test="@object_ref=ancestor::oval-def:oval_definitions/oval-def:objects/x-net-def:smtp_object/@id"><sch:value-of select="../@id"/> - the object child element of an smtp_test must reference an smtp_object</sch:assert>
+                              </sch:rule>
+                              <sch:rule context="x-net-def:smtp_test/x-net-def:state">
+                                    <sch:assert test="@state_ref=ancestor::oval-def:oval_definitions/oval-def:states/x-net-def:smtp_state/@id"><sch:value-of select="../@id"/> - the state child element of an smtp_test must reference an smtp_state</sch:assert>
+                              </sch:rule>
+                        </sch:pattern>
+                  </xsd:appinfo>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-def:TestType">
+                              <xsd:sequence>
+                                    <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                                    <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="smtp_object" substitutionGroup="oval-def:object">
+            <xsd:annotation>
+                  <xsd:documentation>The smtp_object describes a query of an SMTP server.</xsd:documentation>
+                  <xsd:appinfo>
+                        <sch:pattern id="net-def_smtp_object_verify_filter_state">
+                              <sch:rule context="x-net-def:smtp_object//oval-def:filter">
+                                    <sch:let name="parent_object" value="ancestor::x-net-def:smtp_object"/>
+                                    <sch:let name="parent_object_id" value="$parent_object/@id"/>
+                                    <sch:let name="state_ref" value="."/>
+                                    <sch:let name="reffed_state" value="ancestor::oval-def:oval_definitions/oval-def:states/*[@id=$state_ref]"/>
+                                    <sch:let name="state_name" value="local-name($reffed_state)"/>
+                                    <sch:let name="state_namespace" value="namespace-uri($reffed_state)"/>
+                                    <sch:assert test="(($state_namespace='http://oval.mitre.org/XMLSchema/oval-definitions-5#x-protocols') and ($state_name='smtp_state'))">State referenced in filter for <sch:value-of select="name($parent_object)"/> '<sch:value-of select="$parent_object_id"/>' is of the wrong type.</sch:assert>
+                              </sch:rule>
+                        </sch:pattern>
+                  </xsd:appinfo>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-def:ObjectType">
+                              <xsd:sequence>
+                                    <xsd:choice>
+                                          <xsd:element ref="oval-def:set"/>
+                                          <xsd:sequence>
+                                                <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                                          </xsd:sequence>
+                                    </xsd:choice>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="smtp_state" substitutionGroup="oval-def:state">
+            <xsd:annotation>
+                  <xsd:documentation>The smtp_state allows for assertions about the data retrieved via an smtp_object.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-def:StateType">
+                              <xsd:sequence>
+                                    <xsd:element name="port" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The 'port' attribute specifies the port number for the FTP server's control connection listener. The value of this entity is typically 25. Values between 1 and 65535 (inclusive) are permitted.</xsd:documentation>
+                                                <xsd:appinfo>
+                                                      <sch:pattern id="x-net-def_smtp_state_port">
+                                                            <sch:rule context="x-net-def:ssh_state/x-net-def:port">
+                                                                  <sch:assert test="(@var_ref and string-length(.) = 0) or (number(.) &gt;= 1 and number(.) &lt;= 65535)"><sch:value-of select="../@id"/> - the value of port must be between 1 and 65535, or empty if var_ref is used.</sch:assert>
+                                                            </sch:rule>
+                                                      </sch:pattern>
+                                                </xsd:appinfo>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="login_banner" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The login banner accompanying the 220 message upon establishing a connection to the server.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
+      </xsd:element>
 </xsd:schema>

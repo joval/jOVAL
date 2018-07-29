@@ -13,6 +13,7 @@ CLASSES=\
 	scap.oval.sc.protocols.ObjectFactory	\
 	scap.oval.sc.protocols.FtpItem	\
 	scap.oval.sc.protocols.HttpItem	\
+	scap.oval.sc.protocols.SmtpItem	\
 	scap.oval.sc.protocols.SshItem	\
 	scap.oval.sc.protocols.package-info	\
 	scap.oval.def.independent.extended.ShellcommandTest	\
@@ -42,6 +43,8 @@ CLASSES=\
 	scap.oval.def.protocols.HttpBehaviors	\
 	scap.oval.def.protocols.HttpObject	\
 	scap.oval.def.protocols.HttpTest	\
+	scap.oval.def.protocols.SmtpObject	\
+	scap.oval.def.protocols.SmtpTest	\
 	scap.oval.def.protocols.SshObject	\
 	scap.oval.def.protocols.SshTest	\
 	scap.oval.def.protocols.package-info

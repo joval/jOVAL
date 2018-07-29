@@ -228,4 +228,30 @@
                   </xsd:complexContent>
             </xsd:complexType>
      </xsd:element>
+     <!-- =============================================================================== -->
+     <!-- ==================================  SMTP ITEM ================================= -->
+     <!-- =============================================================================== -->
+     <xsd:element name="smtp_item" substitutionGroup="oval-sc:item">
+            <xsd:annotation>
+                  <xsd:documentation>Represents an SMTP server banner message.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-sc:ItemType">
+                              <xsd:sequence>
+                                    <xsd:element name="port" type="oval-sc:EntityItemIntType" minOccurs="1" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The 'port' attribute specifies the port number for the SMTP server's connection listener. The value of this entity is typically 25. Values between 1 and 65535 (inclusive) are permitted.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="greeting" type="oval-sc:EntityItemStringType" minOccurs="1" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The greeting message accompanying the 220 code upon establishing a connection to the server.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
+     </xsd:element>
 </xsd:schema>
