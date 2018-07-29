@@ -150,7 +150,7 @@
                                           <xsd:annotation>
                                                 <xsd:documentation>A list of properties (name and value pairs) sent as request headers. Each property name must be unique. When xsi:nil='true', request headers are not provided to the server.</xsd:documentation>
                                                 <xsd:appinfo>
-                                                      <sch:pattern id="x-net-def_httpsterequestheaders">
+                                                      <sch:pattern id="x-net-def_http_state_requestheaders">
                                                             <sch:rule context="x-net-def:http_state/x-net-def:request_headers">
                                                                   <sch:assert test="@datatype='record'"><sch:value-of select="../@id"/> - datatype attribute for the request_headers entity of an http_state must be 'record'</sch:assert>
                                                             </sch:rule>
@@ -171,7 +171,7 @@
                                           <xsd:annotation>
                                                 <xsd:documentation>The 'port' attribute specifies the port number for the web server listener. The value of this entity is typically 80 for clear-text, and 443 for secure connections. Values between 1 and 65535 (inclusive) are permitted.</xsd:documentation>
                                                 <xsd:appinfo>
-                                                      <sch:pattern id="x-net-def_httpstate_port">
+                                                      <sch:pattern id="x-net-def_http_state_port">
                                                             <sch:rule context="x-net-def:http_state/x-net-def:port">
                                                                   <sch:assert test="(@var_ref and string-length(.) = 0) or (number(.) &gt;= 1 and number(.) &lt;= 65535)"><sch:value-of select="../@id"/> - the value of port must be between 1 and 65535, or empty if var_ref is used.</sch:assert>
                                                             </sch:rule>
@@ -193,7 +193,7 @@
                                           <xsd:annotation>
                                                 <xsd:documentation>A list of properties (name and value pairs) returned by the server as response headers. Each property name must be unique.</xsd:documentation>
                                                 <xsd:appinfo>
-                                                      <sch:pattern id="x-net-def_httpsteresponseheaders">
+                                                      <sch:pattern id="x-net-def_http_state_responseheaders">
                                                             <sch:rule context="x-net-def:http_state/x-net-def:response_headers">
                                                                   <sch:assert test="@datatype='record'"><sch:value-of select="../@id"/> - datatype attribute for the response_headers entity of an http_state must be 'record'</sch:assert>
                                                             </sch:rule>
@@ -375,6 +375,18 @@
                   <xsd:complexContent>
                         <xsd:extension base="oval-def:StateType">
                               <xsd:sequence>
+                                    <xsd:element name="port" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The 'port' attribute specifies the port number for the SSH server listener. The value of this entity is typically 22. Values between 1 and 65535 (inclusive) are permitted.</xsd:documentation>
+                                                <xsd:appinfo>
+                                                      <sch:pattern id="x-net-def_ssh_state_port">
+                                                            <sch:rule context="x-net-def:ssh_state/x-net-def:port">
+                                                                  <sch:assert test="(@var_ref and string-length(.) = 0) or (number(.) &gt;= 1 and number(.) &lt;= 65535)"><sch:value-of select="../@id"/> - the value of port must be between 1 and 65535, or empty if var_ref is used.</sch:assert>
+                                                            </sch:rule>
+                                                      </sch:pattern>
+                                                </xsd:appinfo>
+                                          </xsd:annotation>
+                                    </xsd:element>
                                     <xsd:element name="proto_version" type="oval-def:EntityStateVersionType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>The version of the SSH protocol.</xsd:documentation>
@@ -433,6 +445,104 @@
                                     <xsd:element name="language_server_to_client" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>A language that is supported for server to client communication.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
+      </xsd:element>
+      <!-- =============================================================================== -->
+      <!-- ==================================  FTP TEST  ================================= -->
+      <!-- =============================================================================== -->
+      <xsd:element name="ftp_test" substitutionGroup="oval-def:test">
+            <xsd:annotation>
+                  <xsd:documentation>The ftp_test is used to query an FTP server for information about itself.</xsd:documentation>
+                  <xsd:appinfo>
+                        <oval:element_mapping>
+                              <oval:test>ftp_test</oval:test>
+                              <oval:object>ftp_object</oval:object>
+                              <oval:state>ftp_state</oval:state>
+                              <oval:item target_namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-protocols">ftp_item</oval:item>
+                        </oval:element_mapping>
+                  </xsd:appinfo>
+                  <xsd:appinfo>
+                        <sch:pattern id="net-def_ftp">
+                              <sch:rule context="x-net-def:ftp_test/x-net-def:object">
+                                    <sch:assert test="@object_ref=ancestor::oval-def:oval_definitions/oval-def:objects/x-net-def:ftp_object/@id"><sch:value-of select="../@id"/> - the object child element of an ftp_test must reference an ftp_object</sch:assert>
+                              </sch:rule>
+                              <sch:rule context="x-net-def:ftp_test/x-net-def:state">
+                                    <sch:assert test="@state_ref=ancestor::oval-def:oval_definitions/oval-def:states/x-net-def:ftp_state/@id"><sch:value-of select="../@id"/> - the state child element of an ftp_test must reference an ftp_state</sch:assert>
+                              </sch:rule>
+                        </sch:pattern>
+                  </xsd:appinfo>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-def:TestType">
+                              <xsd:sequence>
+                                    <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                                    <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="ftp_object" substitutionGroup="oval-def:object">
+            <xsd:annotation>
+                  <xsd:documentation>The ftp_object describes a query of an FTP server.</xsd:documentation>
+                  <xsd:appinfo>
+                        <sch:pattern id="net-def_ftp_object_verify_filter_state">
+                              <sch:rule context="x-net-def:ftp_object//oval-def:filter">
+                                    <sch:let name="parent_object" value="ancestor::x-net-def:ftp_object"/>
+                                    <sch:let name="parent_object_id" value="$parent_object/@id"/>
+                                    <sch:let name="state_ref" value="."/>
+                                    <sch:let name="reffed_state" value="ancestor::oval-def:oval_definitions/oval-def:states/*[@id=$state_ref]"/>
+                                    <sch:let name="state_name" value="local-name($reffed_state)"/>
+                                    <sch:let name="state_namespace" value="namespace-uri($reffed_state)"/>
+                                    <sch:assert test="(($state_namespace='http://oval.mitre.org/XMLSchema/oval-definitions-5#x-protocols') and ($state_name='ftp_state'))">State referenced in filter for <sch:value-of select="name($parent_object)"/> '<sch:value-of select="$parent_object_id"/>' is of the wrong type.</sch:assert>
+                              </sch:rule>
+                        </sch:pattern>
+                  </xsd:appinfo>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-def:ObjectType">
+                              <xsd:sequence>
+                                    <xsd:choice>
+                                          <xsd:element ref="oval-def:set"/>
+                                          <xsd:sequence>
+                                                <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                                          </xsd:sequence>
+                                    </xsd:choice>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="ftp_state" substitutionGroup="oval-def:state">
+            <xsd:annotation>
+                  <xsd:documentation>The ftp_state allows for assertions about the data retrieved via an ftp_object.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-def:StateType">
+                              <xsd:sequence>
+                                    <xsd:element name="port" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The 'port' attribute specifies the port number for the FTP server's control connection listener. The value of this entity is typically 21. Values between 1 and 65535 (inclusive) are permitted.</xsd:documentation>
+                                                <xsd:appinfo>
+                                                      <sch:pattern id="x-net-def_ftp_state_port">
+                                                            <sch:rule context="x-net-def:ssh_state/x-net-def:port">
+                                                                  <sch:assert test="(@var_ref and string-length(.) = 0) or (number(.) &gt;= 1 and number(.) &lt;= 65535)"><sch:value-of select="../@id"/> - the value of port must be between 1 and 65535, or empty if var_ref is used.</sch:assert>
+                                                            </sch:rule>
+                                                      </sch:pattern>
+                                                </xsd:appinfo>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="login_banner" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The login banner accompanying the 220 message upon establishing a connection to the server.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
                               </xsd:sequence>

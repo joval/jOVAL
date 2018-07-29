@@ -11,6 +11,7 @@ CLASSES=\
 	scap.oval.sc.windows.extended.package-info	\
 	scap.oval.sc.protocols.EntityItemHttpMethodType	\
 	scap.oval.sc.protocols.ObjectFactory	\
+	scap.oval.sc.protocols.FtpItem	\
 	scap.oval.sc.protocols.HttpItem	\
 	scap.oval.sc.protocols.SshItem	\
 	scap.oval.sc.protocols.package-info	\
@@ -36,6 +37,8 @@ CLASSES=\
 	scap.oval.def.protocols.HttpState	\
 	scap.oval.def.protocols.ObjectFactory	\
 	scap.oval.def.protocols.EntityStateHttpMethodType	\
+	scap.oval.def.protocols.FtpObject	\
+	scap.oval.def.protocols.FtpTest	\
 	scap.oval.def.protocols.HttpBehaviors	\
 	scap.oval.def.protocols.HttpObject	\
 	scap.oval.def.protocols.HttpTest	\
