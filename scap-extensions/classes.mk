@@ -12,6 +12,7 @@ CLASSES=\
 	scap.oval.sc.protocols.EntityItemHttpMethodType	\
 	scap.oval.sc.protocols.ObjectFactory	\
 	scap.oval.sc.protocols.HttpItem	\
+	scap.oval.sc.protocols.SshItem	\
 	scap.oval.sc.protocols.package-info	\
 	scap.oval.def.independent.extended.ShellcommandTest	\
 	scap.oval.def.independent.extended.ShellcommandObject	\
@@ -38,4 +39,6 @@ CLASSES=\
 	scap.oval.def.protocols.HttpBehaviors	\
 	scap.oval.def.protocols.HttpObject	\
 	scap.oval.def.protocols.HttpTest	\
+	scap.oval.def.protocols.SshObject	\
+	scap.oval.def.protocols.SshTest	\
 	scap.oval.def.protocols.package-info

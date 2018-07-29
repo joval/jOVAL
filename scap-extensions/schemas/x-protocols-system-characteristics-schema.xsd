@@ -26,7 +26,7 @@
      <!-- =============================================================================== -->
      <xsd:element name="http_item" substitutionGroup="oval-sc:item">
             <xsd:annotation>
-                  <xsd:documentation></xsd:documentation>
+                  <xsd:documentation>Represents an HTTP server request/response.</xsd:documentation>
             </xsd:annotation>
             <xsd:complexType>
                   <xsd:complexContent>
@@ -121,4 +121,85 @@
                   </xsd:restriction>
             </xsd:simpleContent>
      </xsd:complexType>
+     <!-- =============================================================================== -->
+     <!-- ==================================  SSH ITEM  ================================= -->
+     <!-- =============================================================================== -->
+     <xsd:element name="ssh_item" substitutionGroup="oval-sc:item">
+            <xsd:annotation>
+                  <xsd:documentation>Represents an SSH server negotiation response.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-sc:ItemType">
+                              <xsd:sequence>
+                                    <xsd:element name="port" type="oval-sc:EntityItemIntType" minOccurs="1" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The 'port' attribute specifies the port number for the web server listener. The value of this entity is typically 22. Values between 1 and 65535 (inclusive) are permitted.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="proto_version" type="oval-sc:EntityItemVersionType" minOccurs="1" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The SSH protocol version.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="software_version" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The SSH server's software version string.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="kex_algorithm" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
+                                          <xsd:annotation>
+                                                <xsd:documentation>A key exchange algorithm supported by the server.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="server_host_key_algorithm" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
+                                          <xsd:annotation>
+                                                <xsd:documentation>A supported server host key algorithm.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="encryption_algorithm_client_to_server" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
+                                          <xsd:annotation>
+                                                <xsd:documentation>An encryption algorithm that is supported for client to server communication.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="encryption_algorithm_server_to_client" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
+                                          <xsd:annotation>
+                                                <xsd:documentation>An encryption algorithm that is supported for server to client communication.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="mac_algorithm_client_to_server" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
+                                          <xsd:annotation>
+                                                <xsd:documentation>A MAC algorithm that is supported for client to server communication.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="mac_algorithm_server_to_client" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
+                                          <xsd:annotation>
+                                                <xsd:documentation>A MAC algorithm that is supported for server to client communication.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="compression_algorithm_client_to_server" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
+                                          <xsd:annotation>
+                                                <xsd:documentation>A compression algorithm that is supported for client to server communication.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="compression_algorithm_server_to_client" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
+                                          <xsd:annotation>
+                                                <xsd:documentation>A compression algorithm that is supported for server to client communication.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="language_client_to_server" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
+                                          <xsd:annotation>
+                                                <xsd:documentation>A language that is supported for client to server communication.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="language_server_to_client" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
+                                          <xsd:annotation>
+                                                <xsd:documentation>A language that is supported for server to client communication.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
+     </xsd:element>
 </xsd:schema>
