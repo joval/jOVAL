@@ -10,11 +10,13 @@ CLASSES=\
 	scap.oval.sc.windows.extended.ObjectFactory	\
 	scap.oval.sc.windows.extended.package-info	\
 	scap.oval.sc.protocols.EntityItemHttpMethodType	\
-	scap.oval.sc.protocols.ObjectFactory	\
+	scap.oval.sc.protocols.EntityItemProtocolType	\
 	scap.oval.sc.protocols.FtpItem	\
-	scap.oval.sc.protocols.HttpItem	\
 	scap.oval.sc.protocols.SmtpItem	\
+	scap.oval.sc.protocols.ObjectFactory	\
+	scap.oval.sc.protocols.HttpItem	\
 	scap.oval.sc.protocols.SshItem	\
+	scap.oval.sc.protocols.PortItem	\
 	scap.oval.sc.protocols.package-info	\
 	scap.oval.def.independent.extended.ShellcommandTest	\
 	scap.oval.def.independent.extended.ShellcommandObject	\
@@ -34,17 +36,24 @@ CLASSES=\
 	scap.oval.def.windows.extended.CbsComponentApplicableBehaviors	\
 	scap.oval.def.windows.extended.CbscomponentapplicableState	\
 	scap.oval.def.windows.extended.package-info	\
+	scap.oval.def.protocols.FtpTest	\
+	scap.oval.def.protocols.SmtpTest	\
 	scap.oval.def.protocols.EntityObjectHttpMethodType	\
 	scap.oval.def.protocols.HttpState	\
 	scap.oval.def.protocols.ObjectFactory	\
+	scap.oval.def.protocols.SmtpObject	\
+	scap.oval.def.protocols.PortObject	\
 	scap.oval.def.protocols.EntityStateHttpMethodType	\
 	scap.oval.def.protocols.FtpObject	\
-	scap.oval.def.protocols.FtpTest	\
+	scap.oval.def.protocols.FtpState	\
+	scap.oval.def.protocols.SshState	\
+	scap.oval.def.protocols.PortState	\
+	scap.oval.def.protocols.PortTest	\
+	scap.oval.def.protocols.SmtpState	\
 	scap.oval.def.protocols.HttpBehaviors	\
 	scap.oval.def.protocols.HttpObject	\
-	scap.oval.def.protocols.HttpTest	\
-	scap.oval.def.protocols.SmtpObject	\
-	scap.oval.def.protocols.SmtpTest	\
 	scap.oval.def.protocols.SshObject	\
+	scap.oval.def.protocols.HttpTest	\
 	scap.oval.def.protocols.SshTest	\
-	scap.oval.def.protocols.package-info
+	scap.oval.def.protocols.package-info	\
+	scap.oval.def.protocols.EntityStateProtocolType
