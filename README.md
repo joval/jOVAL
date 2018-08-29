@@ -24,4 +24,4 @@ The project can be built using GNU make; simply run 'make' from the project's ro
 &nbsp;
 =============
 
-Copyright (c) 2011-2015, jOVAL.org.  All rights reserved.
+Copyright (c) 2011-2018, JovalCM.com.  All rights reserved.
