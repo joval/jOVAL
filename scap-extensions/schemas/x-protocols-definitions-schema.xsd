@@ -851,6 +851,50 @@
                   </xsd:complexContent>
             </xsd:complexType>
       </xsd:element>
+      <xsd:complexType name="EntityStateTlsVersionType">
+            <xsd:annotation>
+                  <xsd:documentation>The EntityStateTlsVersionType restricts a string value to the permitted TLS/SSL version values. The empty string is also allowed to support empty element associated with variable references. Note that when using pattern matches and variables care must be taken to ensure that the regular expression and variable values align with the specified pattern restriction.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleContent>
+                  <xsd:restriction base="oval-def:EntityStateStringType">
+                        <xsd:enumeration value="SSL 1.0">
+                              <xsd:annotation>
+                                    <xsd:documentation>SSL 1.0 (major version = 1, minor version = 0)</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="SSL 2.0">
+                              <xsd:annotation>
+                                    <xsd:documentation>SSL 2.0 (major version = 2, minor version = 0)</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="SSL 3.0">
+                              <xsd:annotation>
+                                    <xsd:documentation>SSL 3.0 (major version = 3, minor version = 0)</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS 1.0">
+                              <xsd:annotation>
+                                    <xsd:documentation>TLS 1.0 (major version = 3, minor version = 1)</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS 1.1">
+                              <xsd:annotation>
+                                    <xsd:documentation>TLS 1.1 (major version = 3, minor version = 2)</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS 1.2">
+                              <xsd:annotation>
+                                    <xsd:documentation>TLS 1.2 (major version = 3, minor version = 3)</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="">
+                              <xsd:annotation>
+                                    <xsd:documentation>The empty string value is permitted here to allow for empty elements associated with variable references.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                  </xsd:restriction>
+            </xsd:simpleContent>
+      </xsd:complexType>
       <!-- =============================================================================== -->
       <!-- ===========================  TLS CIPHER SUITE TEST  =========================== -->
       <!-- =============================================================================== -->
@@ -933,6 +977,16 @@
                   <xsd:complexContent>
                         <xsd:extension base="oval-def:StateType">
                               <xsd:sequence>
+                                    <xsd:element name="ciphersuite" type="x-net-def:EntityStateTlsCipherSuiteType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The sole ciphersuite proposed by the client and accepted by the server.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="raw_ciphersuite" type="oval-def:EntityStateBinaryType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The binary value of the ciphersuite.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
                                     <xsd:element name="port" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>The 'port' attribute specifies the port number for the TLS/SSL listener. The value of this entity is typically 443. Values between 1 and 65535 (inclusive) are permitted.</xsd:documentation>
@@ -943,16 +997,6 @@
                                                             </sch:rule>
                                                       </sch:pattern>
                                                 </xsd:appinfo>
-                                          </xsd:annotation>
-                                    </xsd:element>
-                                    <xsd:element name="ciphersuite" type="x-net-def:EntityStateTlsCipherSuiteType" minOccurs="0" maxOccurs="1">
-                                          <xsd:annotation>
-                                                <xsd:documentation>The sole ciphersuite proposed by the client and accepted by the server.</xsd:documentation>
-                                          </xsd:annotation>
-                                    </xsd:element>
-                                    <xsd:element name="raw_ciphersuite" type="oval-def:EntityStateBinaryType" minOccurs="0" maxOccurs="1">
-                                          <xsd:annotation>
-                                                <xsd:documentation>The binary value of the ciphersuite.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
                               </xsd:sequence>
@@ -1037,7 +1081,6 @@
                   </xsd:complexContent>
             </xsd:complexType>
       </xsd:element>
-DAS
       <xsd:element name="tlscertificate_state" substitutionGroup="oval-def:state">
             <xsd:annotation>
                   <xsd:documentation>The tlscertificate_state allows for assertions about the data retrieved via a tlscertificate_object.</xsd:documentation>
@@ -1046,6 +1089,18 @@ DAS
                   <xsd:complexContent>
                         <xsd:extension base="oval-def:StateType">
                               <xsd:sequence>
+                                    <xsd:element name="index" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The index entity calls out a specific certificate in the chain. This can only be a positive integer.</xsd:documentation>
+                                                <xsd:appinfo>
+                                                      <sch:pattern id="x-net-def_tlscert_i">
+                                                            <sch:rule context="x-net-def:tlscertificate_state/x-net-def:index">
+                                                                  <sch:assert test="(@var_ref and string-length(.) = 0) or (number(.) &gt;= 0)"><sch:value-of select="../@id"/> - the value of index must be greater than or equal to one, or empty if var_ref is used.</sch:assert>
+                                                            </sch:rule>
+                                                      </sch:pattern>
+                                                </xsd:appinfo>
+                                          </xsd:annotation>
+                                    </xsd:element>
                                     <xsd:element name="port" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>The 'port' attribute specifies the port number for the TLS/SSL listener. The value of this entity is typically 443. Values between 1 and 65535 (inclusive) are permitted.</xsd:documentation>
@@ -1058,14 +1113,44 @@ DAS
                                                 </xsd:appinfo>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="certificate" type="x-net-def:EntityStateTlsCipherSuiteType" minOccurs="0" maxOccurs="1">
+                                    <xsd:element name="subject_principal" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
-                                                <xsd:documentation>The sole certificate proposed by the client and accepted by the server.</xsd:documentation>
+                                                <xsd:documentation>The distinguished name of the certificate subject.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="raw_certificate" type="oval-def:EntityStateBinaryType" minOccurs="0" maxOccurs="1">
+                                    <xsd:element name="subject_alt_name" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
-                                                <xsd:documentation>The binary value of the certificate.</xsd:documentation>
+                                                <xsd:documentation>An alternative name of the certificate subject.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="issuer_principal" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The distinguished name of the certificate issuer.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="issuer_alt_name" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>An alternative name of the certificate issuer.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="signature_algorithm_oid" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The certificate's signature algorithm OID, represented by a set of nonnegative whole numbers separated by periods. For example, the string "1.2.840.10040.4.3" identifies the SHA-1 with DSA signature algorithm defined in RFC 3279.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="not_before" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The beginning of the validity period for the certificate, expressed as the number of milliseconds since January 1, 1970, 00:00:00 GMT.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="not_after" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The end of the validity period for the certificate, expressed as the number of milliseconds since January 1, 1970, 00:00:00 GMT.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="serial_number" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>Get the certificate serial number expressed as an integer.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
                               </xsd:sequence>
@@ -3332,50 +3417,6 @@ DAS
                         <xsd:enumeration value="CIPHERSUITE_OTHER_BINARY">
                               <xsd:annotation>
                                     <xsd:documentation>This enumeration value is permitted for use with any binary value not expressed in this enumeration, in the interest of forward-compatibility.</xsd:documentation>
-                              </xsd:annotation>
-                        </xsd:enumeration>
-                        <xsd:enumeration value="">
-                              <xsd:annotation>
-                                    <xsd:documentation>The empty string value is permitted here to allow for empty elements associated with variable references.</xsd:documentation>
-                              </xsd:annotation>
-                        </xsd:enumeration>
-                  </xsd:restriction>
-            </xsd:simpleContent>
-      </xsd:complexType>
-      <xsd:complexType name="EntityStateTlsVersionType">
-            <xsd:annotation>
-                  <xsd:documentation>The EntityStateTlsVersionType restricts a string value to the permitted TLS/SSL version values. The empty string is also allowed to support empty element associated with variable references. Note that when using pattern matches and variables care must be taken to ensure that the regular expression and variable values align with the specified pattern restriction.</xsd:documentation>
-            </xsd:annotation>
-            <xsd:simpleContent>
-                  <xsd:restriction base="oval-def:EntityStateStringType">
-                        <xsd:enumeration value="SSL 1.0">
-                              <xsd:annotation>
-                                    <xsd:documentation>SSL 1.0 (major version = 1, minor version = 0)</xsd:documentation>
-                              </xsd:annotation>
-                        </xsd:enumeration>
-                        <xsd:enumeration value="SSL 2.0">
-                              <xsd:annotation>
-                                    <xsd:documentation>SSL 2.0 (major version = 2, minor version = 0)</xsd:documentation>
-                              </xsd:annotation>
-                        </xsd:enumeration>
-                        <xsd:enumeration value="SSL 3.0">
-                              <xsd:annotation>
-                                    <xsd:documentation>SSL 3.0 (major version = 3, minor version = 0)</xsd:documentation>
-                              </xsd:annotation>
-                        </xsd:enumeration>
-                        <xsd:enumeration value="TLS 1.0">
-                              <xsd:annotation>
-                                    <xsd:documentation>TLS 1.0 (major version = 3, minor version = 1)</xsd:documentation>
-                              </xsd:annotation>
-                        </xsd:enumeration>
-                        <xsd:enumeration value="TLS 1.1">
-                              <xsd:annotation>
-                                    <xsd:documentation>TLS 1.1 (major version = 3, minor version = 2)</xsd:documentation>
-                              </xsd:annotation>
-                        </xsd:enumeration>
-                        <xsd:enumeration value="TLS 1.2">
-                              <xsd:annotation>
-                                    <xsd:documentation>TLS 1.2 (major version = 3, minor version = 3)</xsd:documentation>
                               </xsd:annotation>
                         </xsd:enumeration>
                         <xsd:enumeration value="">
