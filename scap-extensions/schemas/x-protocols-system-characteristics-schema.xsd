@@ -454,6 +454,11 @@
                                                </xsd:appinfo>
                                          </xsd:annotation>
                                    </xsd:element>
+                                   <xsd:element name="protocol_version" type="x-net-sc:EntityItemTlsVersionType" minOccurs="0" maxOccurs="1">
+                                         <xsd:annotation>
+                                               <xsd:documentation>The TLS/SSL protocol version.</xsd:documentation>
+                                         </xsd:annotation>
+                                   </xsd:element>
                              </xsd:sequence>
                        </xsd:extension>
                  </xsd:complexContent>
