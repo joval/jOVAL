@@ -1067,19 +1067,17 @@
                         <xsd:extension base="oval-def:ObjectType">
                               <xsd:sequence>
                                     <xsd:choice>
-                                          <xsd:choice>
-                                                <xsd:element ref="oval-def:set"/>
-                                                <xsd:sequence>
-                                                      <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
-                                                </xsd:sequence>
-                                          </xsd:choice>
-                                          <xsd:element name="index" type="oval-def:EntityObjectIntType" minOccurs="1" maxOccurs="1">
-                                                <xsd:annotation>
-                                                      <xsd:documentation>The index entity calls out a specific certificate in the chain. It can have both positive and negative values. If the value is positive, the index of the specific match of the index is counted from the beginning of the certificate chain, starting with the TLS/SSL server certificate. The first certificate is given an index value of 1, the second certificate (i.e., the issuer of the first certificate) is given an index value of 2, and so on. For positive values, the 'less than' and 'less than or equals' operations imply the the object is operating only on positive values. Frequently, this entity will be defined as 'greater than or equals' 1, which results in the object representing the set of all certificates in the chain.</xsd:documentation>
-                                                      <xsd:documentation>Negative values are used to simplify collection of certificates counting backwards from the end of the chain. To find the last certificate, use an instance of -1; the penultimate certificate is found using an instance value of -2, and so on. For negative values, the 'greater than' and 'greater than or equals' operations imply the object is operating only on negative values. For example, searching for instances greater than or equal to -2 would yield only the last two certificates.</xsd:documentation>
-                                                      <xsd:documentation>Note that index item entities will always have positive values.</xsd:documentation>
-                                                </xsd:annotation>
-                                          </xsd:element>
+                                          <xsd:element ref="oval-def:set"/>
+                                          <xsd:sequence>
+                                                <xsd:element name="index" type="oval-def:EntityObjectIntType" minOccurs="1" maxOccurs="1">
+                                                      <xsd:annotation>
+                                                            <xsd:documentation>The index entity calls out a specific certificate in the chain. It can have both positive and negative values. If the value is positive, the index of the specific match of the index is counted from the beginning of the certificate chain, starting with the TLS/SSL server certificate. The first certificate is given an index value of 1, the second certificate (i.e., the issuer of the first certificate) is given an index value of 2, and so on. For positive values, the 'less than' and 'less than or equals' operations imply the the object is operating only on positive values. Frequently, this entity will be defined as 'greater than or equals' 1, which results in the object representing the set of all certificates in the chain.</xsd:documentation>
+                                                            <xsd:documentation>Negative values are used to simplify collection of certificates counting backwards from the end of the chain. To find the last certificate, use an instance of -1; the penultimate certificate is found using an instance value of -2, and so on. For negative values, the 'greater than' and 'greater than or equals' operations imply the object is operating only on negative values. For example, searching for instances greater than or equal to -2 would yield only the last two certificates.</xsd:documentation>
+                                                            <xsd:documentation>Note that index item entities will always have positive values.</xsd:documentation>
+                                                      </xsd:annotation>
+                                                </xsd:element>
+                                                <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                                          </xsd:sequence>
                                     </xsd:choice>
                               </xsd:sequence>
                         </xsd:extension>
