@@ -526,12 +526,12 @@
                                    </xsd:element>
                                    <xsd:element name="not_before" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
                                          <xsd:annotation>
-                                               <xsd:documentation>The beginning of the validity period for the certificate, expressed as the number of milliseconds since January 1, 1970, 00:00:00 GMT.</xsd:documentation>
+                                               <xsd:documentation>The beginning of the validity period for the certificate, expressed as the number of seconds since January 1, 1970, 00:00:00 GMT.</xsd:documentation>
                                          </xsd:annotation>
                                    </xsd:element>
                                    <xsd:element name="not_after" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
                                          <xsd:annotation>
-                                               <xsd:documentation>The end of the validity period for the certificate, expressed as the number of milliseconds since January 1, 1970, 00:00:00 GMT.</xsd:documentation>
+                                               <xsd:documentation>The end of the validity period for the certificate, expressed as the number of seconds since January 1, 1970, 00:00:00 GMT.</xsd:documentation>
                                          </xsd:annotation>
                                    </xsd:element>
                                    <xsd:element name="serial_number" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
