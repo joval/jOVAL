@@ -539,6 +539,11 @@
                                                <xsd:documentation>Get the certificate serial number expressed as an integer.</xsd:documentation>
                                          </xsd:annotation>
                                    </xsd:element>
+                                   <xsd:element name="public_key_length" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
+                                         <xsd:annotation>
+                                               <xsd:documentation>Get the bit length of the certificate's public key.</xsd:documentation>
+                                         </xsd:annotation>
+                                   </xsd:element>
                              </xsd:sequence>
                        </xsd:extension>
                  </xsd:complexContent>
