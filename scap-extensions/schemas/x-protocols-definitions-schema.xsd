@@ -887,6 +887,11 @@
                                     <xsd:documentation>TLS 1.2 (major version = 3, minor version = 3)</xsd:documentation>
                               </xsd:annotation>
                         </xsd:enumeration>
+                        <xsd:enumeration value="TLS 1.3">
+                              <xsd:annotation>
+                                    <xsd:documentation>TLS 1.3 (major version = 3, minor version = 4)</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
                         <xsd:enumeration value="">
                               <xsd:annotation>
                                     <xsd:documentation>The empty string value is permitted here to allow for empty elements associated with variable references.</xsd:documentation>
@@ -1158,7 +1163,7 @@
                                     </xsd:element>
                                     <xsd:element name="public_key_length" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
-                                                <xsd:documentation>Get the bit length of the certificate's public key.</xsd:documentation>
+                                                <xsd:documentation>Get the size of the certificate's public key. For an RSA key, this is the bit length of the public key modulus. For a DSA key, it is the bit length of the public key (y). For an ecliptic key, it is the bit length of the public key.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
                               </xsd:sequence>

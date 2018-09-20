@@ -413,6 +413,11 @@
                                    <xsd:documentation>TLS 1.2 (major version = 3, minor version = 3)</xsd:documentation>
                              </xsd:annotation>
                        </xsd:enumeration>
+                       <xsd:enumeration value="TLS 1.3">
+                             <xsd:annotation>
+                                   <xsd:documentation>TLS 1.3 (major version = 3, minor version = 4)</xsd:documentation>
+                             </xsd:annotation>
+                       </xsd:enumeration>
                        <xsd:enumeration value="">
                              <xsd:annotation>
                                    <xsd:documentation>The empty string value is permitted here to allow for empty elements associated with variable references.</xsd:documentation>
