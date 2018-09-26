@@ -1522,6 +1522,16 @@
                                     <xsd:documentation>Corresponds to the binary value 0x0046.</xsd:documentation>
                               </xsd:annotation>
                         </xsd:enumeration>
+                        <xsd:enumeration value="TLS_RSA_EXPORT1024_WITH_RC4_56_MD5">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0060.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_RSA_EXPORT1024_WITH_RC2_CBC_56_MD5">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0061.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
                         <xsd:enumeration value="TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA">
                               <xsd:annotation>
                                     <xsd:documentation>Corresponds to the binary value 0x0062.</xsd:documentation>
@@ -5694,6 +5704,266 @@
                         <xsd:enumeration value="SSL3_CK_KRB5_RC4_40_MD5">
                               <xsd:annotation>
                                     <xsd:documentation>Corresponds to the binary value 0x0300002BL.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_AGL_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xCC13.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_AGL_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xCC14.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_AGL_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xCC15.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xCCA8.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xCCA9.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xCCAA.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_PSK_WITH_CHACHA20_POLY1305_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xCCAB.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xCCAC.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_DHE_PSK_WITH_CHACHA20_POLY1305_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xCCAD.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_RSA_PSK_WITH_CHACHA20_POLY1305_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xCCAE.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_RSA_WITH_ESTREAM_SALSA20_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xE410.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_RSA_WITH_SALSA20_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xE411.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_ECDHE_RSA_WITH_ESTREAM_SALSA20_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xE412.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_ECDHE_RSA_WITH_SALSA20_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xE413.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_ECDHE_ECDSA_WITH_ESTREAM_SALSA20_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xE414.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_ECDHE_ECDSA_WITH_SALSA20_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xE415.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_PSK_WITH_ESTREAM_SALSA20_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xE416.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_PSK_WITH_SALSA20_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xE417.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_ECDHE_PSK_WITH_ESTREAM_SALSA20_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xE418.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_ECDHE_PSK_WITH_SALSA20_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xE419.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_RSA_PSK_WITH_ESTREAM_SALSA20_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xE41A.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_RSA_PSK_WITH_SALSA20_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xE41B.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_DHE_PSK_WITH_ESTREAM_SALSA20_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xE41C.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_DHE_PSK_WITH_SALSA20_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xE41D.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_DHE_RSA_WITH_ESTREAM_SALSA20_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xE41E.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_DHE_RSA_WITH_SALSA20_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xE41F.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GOST2012256_GOST89_GOST89">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xFF85.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_AES_128_GCM_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x1301.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_AES_256_GCM_SHA384">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x1302.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_CHACHA20_POLY1305_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x1303.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_AES_128_CCM_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x1304.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_AES_128_CCM_8_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x1305.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_CECPQ1_RSA_WITH_CHACHA20_POLY1305_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x16B7.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_CECPQ1_ECDSA_WITH_CHACHA20_POLY1305_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x16B8.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_CECPQ1_RSA_WITH_AES_256_GCM_SHA384">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x16B9.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_CECPQ1_ECDSA_WITH_AES_256_GCM_SHA384">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x16BA.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_0A">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0A0A.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_1A">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x1A1A.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_2A">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x2A2A.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_3A">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x3A3A.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_4A">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x4A4A.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_5A">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x5A5A.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_6A">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x6A6A.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_7A">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x7A7A.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_8A">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x8A8A.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_9A">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x9A9A.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_AA">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xAAAA.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_BA">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xBABA.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_CA">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xCACA.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_DA">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xDADA.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_EA">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xEAEA.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_FA">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0xFAFA.</xsd:documentation>
                               </xsd:annotation>
                         </xsd:enumeration>
                         <xsd:enumeration value="">
