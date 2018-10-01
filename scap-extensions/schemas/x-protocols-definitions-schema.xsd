@@ -786,7 +786,7 @@
       </xsd:element>
       <xsd:element name="tlsversion_object" substitutionGroup="oval-def:object">
             <xsd:annotation>
-                  <xsd:documentation>The tlsversion_object represents a series of handshake attempts to a TLS/SSL server, using each enumerated version of the protocol. One item will be produced for each correspondingly successful handshake (except possibly in cases where a filter and/or set is supplied).</xsd:documentation>
+                  <xsd:documentation>The tlsversion_object represents a series of handshake attempts with a TLS/SSL server, using each enumerated version of the protocol. One item will be produced for each correspondingly successful handshake (except possibly in cases where a filter and/or set is supplied).</xsd:documentation>
                   <xsd:appinfo>
                         <sch:pattern id="net-def_tlsversion_object_verify_filter_state">
                               <sch:rule context="x-net-def:tlsversion_object//oval-def:filter">
@@ -938,7 +938,7 @@
       </xsd:element>
       <xsd:element name="tlsciphersuite_object" substitutionGroup="oval-def:object">
             <xsd:annotation>
-                  <xsd:documentation>The tlsciphersuite_object represents a handshake attempt with a TLS/SSL server, where the client offers only the cipher suite specified in the object (or potentially multiple suites in the vase of a var_ref).</xsd:documentation>
+                  <xsd:documentation>The tlsciphersuite_object represents a handshake attempt with a TLS/SSL server, where the client offers only the cipher suite specified in the object (or potentially, in the case of a var_ref, multiple suites one-at-a-time).</xsd:documentation>
                   <xsd:appinfo>
                         <sch:pattern id="net-def_tlsciphersuite_object_verify_filter_state">
                               <sch:rule context="x-net-def:tlsciphersuite_object//oval-def:filter">
