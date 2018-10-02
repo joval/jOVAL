@@ -1074,6 +1074,18 @@
                                     <xsd:choice>
                                           <xsd:element ref="oval-def:set"/>
                                           <xsd:sequence>
+                                                <xsd:choice>
+                                                      <xsd:element name="signature_algorithm" type="x-net-def:EntityObjectTlsSignatureSchemeType" nillable="true">
+                                                            <xsd:annotation>
+                                                                  <xsd:documentation>The signature_algorithm entity calls out the specific signature scheme the client must propose for certificate signatures, in the handshake client_hello's signature_algorithms extension. If xsi:nil='true', the client will propose all the schemes identified in RFC8446 section 4.2.3 (i.e., all the schemes enumerated in EntityObjectTlsSignatureSchemeType). Note that implementations are required to add supported_groups and key_share extensions whenever an Ecliptic Curve scheme is specified (i.e., any scheme whose raw value ends in 0x03). For the broadest possible compatibility, the supported_groups extension (when added by the client) to the handshake client_hello must include all the curves defined by RFC 4492, RFC 7919 and RFC 8422.</xsd:documentation>
+                                                            </xsd:annotation>
+                                                      </xsd:element>
+                                                      <xsd:element name="raw_signature_algorithm" type="oval-def:EntityObjectBinaryType">
+                                                            <xsd:annotation>
+                                                                  <xsd:documentation>The binary value of a signature scheme to use for the request. Use this entity when no EntityObjectTlsSignatureSchemeType value corresponds to the desired signature scheme (e.g., a new scheme which has not yet been added to the OVAL type enumeration, or a deprecated TLS 1.2 SignatureAndHashAlgorithm combination). Note the same rules described for Ecliptic Curve extensions for the signature_algorithm entity also apply for any raw_signature_algorithm value ending in 0x03.</xsd:documentation>
+                                                            </xsd:annotation>
+                                                      </xsd:element>
+                                                </xsd:choice>
                                                 <xsd:element name="index" type="oval-def:EntityObjectIntType" minOccurs="1" maxOccurs="1">
                                                       <xsd:annotation>
                                                             <xsd:documentation>The index entity calls out a specific certificate in the chain. It can have both positive and negative values. If the value is positive, the index of the specific match of the index is counted from the beginning of the certificate chain, starting with the TLS/SSL server certificate. The first certificate is given an index value of 1, the second certificate (i.e., the issuer of the first certificate) is given an index value of 2, and so on. For positive values, the 'less than' and 'less than or equals' operations imply the the object is operating only on positive values. Frequently, this entity will be defined as 'greater than or equals' 1, which results in the object representing the set of all certificates in the chain.</xsd:documentation>
@@ -1097,6 +1109,16 @@
                   <xsd:complexContent>
                         <xsd:extension base="oval-def:StateType">
                               <xsd:sequence>
+                                    <xsd:element name="signature_algorithm" type="x-net-def:EntityStateTlsSignatureSchemeType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The sole signature_algorithm that was proposed by the client (if any).</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="raw_signature_algorithm" type="oval-def:EntityStateBinaryType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The binary value of the signature_algorithm proposed by the client (if any).</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
                                     <xsd:element name="index" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
                                                 <xsd:documentation>The index entity calls out a specific certificate in the chain. This can only be a positive integer.</xsd:documentation>
@@ -5964,6 +5986,194 @@
                         <xsd:enumeration value="TLS_GREASE_IS_THE_WORD_FA">
                               <xsd:annotation>
                                     <xsd:documentation>Corresponds to the binary value 0xFAFA.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="">
+                              <xsd:annotation>
+                                    <xsd:documentation>The empty string value is permitted here to allow for empty elements associated with variable references.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                  </xsd:restriction>
+            </xsd:simpleContent>
+      </xsd:complexType>
+      <xsd:complexType name="EntityObjectTlsSignatureSchemeType">
+            <xsd:annotation>
+                  <xsd:documentation>The EntityObjectTlsSignatureSchemeType restricts a string value to the permitted TLS 1.3 certificate signing schemes. The empty string is also allowed to support empty element associated with variable references. Note that when using pattern matches and variables care must be taken to ensure that the regular expression and variable values align with the specified pattern restriction.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleContent>
+                  <xsd:restriction base="oval-def:EntityObjectStringType">
+                        <xsd:enumeration value="RSA_PKCS1_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0401.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PKCS1_SHA384">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0501.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PKCS1_SHA512">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0601.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="ECDSA_SECP256R1_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0403.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="ECDSA_SECP384R1_SHA384">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0503.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="ECDSA_SECP521R1_SHA512">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0603.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PSS_RSAE_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0804.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PSS_RSAE_SHA384">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0805.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PSS_RSAE_SHA512">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0806.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="ED25519">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0807.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="ED448">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0808.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PSS_PSS_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0809.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PSS_PSS_SHA384">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x080a.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PSS_PSS_SHA512">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x080b.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PKCS1_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0201.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="ECDSA_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0203.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="">
+                              <xsd:annotation>
+                                    <xsd:documentation>The empty string value is permitted here to allow for empty elements associated with variable references.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                  </xsd:restriction>
+            </xsd:simpleContent>
+      </xsd:complexType>
+      <xsd:complexType name="EntityStateTlsSignatureSchemeType">
+            <xsd:annotation>
+                  <xsd:documentation>The EntityStateTlsSignatureSchemeType restricts a string value to the permitted TLS 1.3 certificate signing schemes. The empty string is also allowed to support empty element associated with variable references. Note that when using pattern matches and variables care must be taken to ensure that the regular expression and variable values align with the specified pattern restriction.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleContent>
+                  <xsd:restriction base="oval-def:EntityStateStringType">
+                        <xsd:enumeration value="RSA_PKCS1_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0401.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PKCS1_SHA384">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0501.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PKCS1_SHA512">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0601.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="ECDSA_SECP256R1_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0403.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="ECDSA_SECP384R1_SHA384">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0503.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="ECDSA_SECP521R1_SHA512">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0603.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PSS_RSAE_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0804.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PSS_RSAE_SHA384">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0805.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PSS_RSAE_SHA512">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0806.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="ED25519">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0807.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="ED448">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0808.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PSS_PSS_SHA256">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0809.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PSS_PSS_SHA384">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x080a.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PSS_PSS_SHA512">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x080b.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="RSA_PKCS1_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0201.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="ECDSA_SHA1">
+                              <xsd:annotation>
+                                    <xsd:documentation>Corresponds to the binary value 0x0203.</xsd:documentation>
                               </xsd:annotation>
                         </xsd:enumeration>
                         <xsd:enumeration value="">
