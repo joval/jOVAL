@@ -1165,7 +1165,7 @@
                                     </xsd:element>
                                     <xsd:element name="signature_algorithm_oid" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
                                           <xsd:annotation>
-                                                <xsd:documentation>The certificate's signature algorithm OID, represented by a set of nonnegative whole numbers separated by periods. For example, the string "1.2.840.10040.4.3" identifies the SHA-1 with DSA signature algorithm defined in RFC 3279.</xsd:documentation>
+                                                <xsd:documentation>The certificate's signature algorithm OID, represented by a set of nonnegative whole numbers separated by periods. For example, the string "1.2.840.10040.4.3" identifies the SHA-1 with DSA signature algorithm defined in RFC 3279. For a list of OIDs and corresponding algorithm names, see https://msdn.microsoft.com/en-us/library/ff635603.aspx</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
                                     <xsd:element name="not_before" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">

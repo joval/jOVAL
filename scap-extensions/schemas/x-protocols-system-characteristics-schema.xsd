@@ -480,9 +480,9 @@
                  <xsd:complexContent>
                        <xsd:extension base="oval-sc:ItemType">
                              <xsd:sequence>
-                                   <xsd:element name="signature_algorithm" type="x-net-sc:EntityItemTlsSignatureSchemeType" minOccurs="0" maxOccurs="1">
+                                   <xsd:element name="signature_algorithm" type="x-net-sc:EntityItemTlsSignatureSchemeType" minOccurs="0" maxOccurs="1" nillable="true">
                                          <xsd:annotation>
-                                               <xsd:documentation>The sole signature_algorithm that was proposed by the client (if defined by the object).</xsd:documentation>
+                                               <xsd:documentation>The sole signature_algorithm that was proposed by the client (if defined by the object). Use xsi:nil='true' in the cases where the tlscertificate_object's signature_algorithm was also xsi:nil='true'.</xsd:documentation>
                                          </xsd:annotation>
                                    </xsd:element>
                                    <xsd:element name="raw_signature_algorithm" type="oval-sc:EntityItemBinaryType" minOccurs="0" maxOccurs="1">
