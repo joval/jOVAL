@@ -551,12 +551,17 @@
                                    </xsd:element>
                                    <xsd:element name="serial_number" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
                                          <xsd:annotation>
-                                               <xsd:documentation>Get the certificate serial number expressed as an integer.</xsd:documentation>
+                                               <xsd:documentation>Specifies the certificate serial number expressed as an integer.</xsd:documentation>
+                                         </xsd:annotation>
+                                   </xsd:element>
+                                   <xsd:element name="public_key_type" type="x-net-sc:EntityItemPublicKeyTypeType" minOccurs="0" maxOccurs="1">
+                                         <xsd:annotation>
+                                               <xsd:documentation>Specifies the type of the certificate's public key.</xsd:documentation>
                                          </xsd:annotation>
                                    </xsd:element>
                                    <xsd:element name="public_key_length" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
                                          <xsd:annotation>
-                                               <xsd:documentation>Get the bit length of the certificate's public key.</xsd:documentation>
+                                               <xsd:documentation>Specifies the bit length of the certificate's public key.</xsd:documentation>
                                          </xsd:annotation>
                                    </xsd:element>
                              </xsd:sequence>
@@ -3182,6 +3187,35 @@
                         <xsd:enumeration value="ECDSA_SHA1">
                               <xsd:annotation>
                                     <xsd:documentation>Corresponds to the binary value 0x0203.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="">
+                              <xsd:annotation>
+                                    <xsd:documentation>The empty string value is permitted here to allow for empty elements associated with variable references.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                  </xsd:restriction>
+            </xsd:simpleContent>
+      </xsd:complexType>
+      <xsd:complexType name="EntityItemPublicKeyTypeType">
+            <xsd:annotation>
+                  <xsd:documentation>The EntityItemPublicKeyTypeType restricts a string value to the permitted public key type values. The empty string is also allowed to support empty element associated with variable references. Note that when using pattern matches and variables care must be taken to ensure that the regular expression and variable values align with the specified pattern restriction.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleContent>
+                  <xsd:restriction base="oval-sc:EntityItemStringType">
+                        <xsd:enumeration value="RSA">
+                              <xsd:annotation>
+                                    <xsd:documentation>Denotes an RSA public key.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="DSA">
+                              <xsd:annotation>
+                                    <xsd:documentation>Denotes a DSA public key.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                        <xsd:enumeration value="Ecliptic">
+                              <xsd:annotation>
+                                    <xsd:documentation>Denotes an Ecliptic Curve-based public key.</xsd:documentation>
                               </xsd:annotation>
                         </xsd:enumeration>
                         <xsd:enumeration value="">
