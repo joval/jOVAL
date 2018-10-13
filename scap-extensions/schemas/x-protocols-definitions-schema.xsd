@@ -59,11 +59,20 @@
       </xsd:element>
       <xsd:element name="port_object" substitutionGroup="oval-def:object">
             <xsd:annotation>
-                  <xsd:documentation>The port_object is a singleton object describing all listening ports on a target device.</xsd:documentation>
+                  <xsd:documentation>The port_object is a singleton object describing all listening ports on a target device (or a filtered representation of the same).</xsd:documentation>
             </xsd:annotation>
             <xsd:complexType>
                   <xsd:complexContent>
-                        <xsd:extension base="oval-def:ObjectType" />
+                        <xsd:extension base="oval-def:ObjectType">
+                              <xsd:sequence>
+                                    <xsd:choice>
+                                          <xsd:element ref="oval-def:set"/>
+                                          <xsd:sequence>
+                                                <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                                          </xsd:sequence>
+                                    </xsd:choice>
+                              </xsd:sequence>
+                        </xsd:extension>
                   </xsd:complexContent>
             </xsd:complexType>
       </xsd:element>
