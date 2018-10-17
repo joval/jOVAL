@@ -296,9 +296,9 @@
                                                 </xsd:appinfo>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="banner_message" type="oval-sc:EntityItemStringType" minOccurs="1" maxOccurs="1">
+                                    <xsd:element name="banner" type="oval-sc:EntityItemStringType" minOccurs="1" maxOccurs="unbounded">
                                           <xsd:annotation>
-                                                <xsd:documentation>The login banner accompanying the 220 message upon establishing a connection to the server.</xsd:documentation>
+                                                <xsd:documentation>The banner lines accompanying 220 messages upon establishing a connection to the server.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
                               </xsd:sequence>
@@ -329,9 +329,9 @@
                                                 </xsd:appinfo>
                                           </xsd:annotation>
                                     </xsd:element>
-                                    <xsd:element name="greeting" type="oval-sc:EntityItemStringType" minOccurs="1" maxOccurs="1">
+                                    <xsd:element name="greeting" type="oval-sc:EntityItemStringType" minOccurs="1" maxOccurs="unbounded">
                                           <xsd:annotation>
-                                                <xsd:documentation>The greeting message accompanying the 220 code upon establishing a connection to the server.</xsd:documentation>
+                                                <xsd:documentation>The greeting messages accompanying 220 response lines upon establishing a connection to the server.</xsd:documentation>
                                           </xsd:annotation>
                                     </xsd:element>
                               </xsd:sequence>
