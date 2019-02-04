@@ -182,6 +182,65 @@
           </xsd:complexType>
      </xsd:element>
      <!-- =============================================================================== -->
+     <!-- ==============================  APK INFO ITEM  ================================ -->
+     <!-- =============================================================================== -->
+     <xsd:element name="apkinfo_item" substitutionGroup="oval-sc:item">
+          <xsd:annotation>
+               <xsd:documentation>This item stores Alpine Linux APK package info.</xsd:documentation>
+          </xsd:annotation>
+          <xsd:complexType>
+               <xsd:complexContent>
+                    <xsd:extension base="oval-sc:ItemType">
+                         <xsd:sequence>
+                              <xsd:element name="name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                                   <xsd:annotation>
+                                        <xsd:documentation>This is the pakage name to check.</xsd:documentation>
+                                   </xsd:annotation>
+                              </xsd:element>
+                              <xsd:element name="release" minOccurs="0" maxOccurs="1">
+                                   <xsd:annotation>
+                                        <xsd:documentation>This is the release number of the build.</xsd:documentation>
+                                   </xsd:annotation>
+                                   <xsd:complexType>
+                                        <xsd:simpleContent>
+                                             <xsd:restriction base="oval-sc:EntityItemAnySimpleType">
+                                                  <xsd:attribute name="datatype" use="optional" default="string">
+                                                       <xsd:simpleType>
+                                                            <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                                                                 <xsd:enumeration value="string"/>
+                                                                 <xsd:enumeration value="version"/>
+                                                            </xsd:restriction>
+                                                       </xsd:simpleType>
+                                                  </xsd:attribute>
+                                             </xsd:restriction>
+                                        </xsd:simpleContent>
+                                   </xsd:complexType>
+                              </xsd:element>
+                              <xsd:element name="version" minOccurs="0" maxOccurs="1">
+                                   <xsd:annotation>
+                                        <xsd:documentation>This is the version number of the build, changed by the vendor/builder.</xsd:documentation>
+                                   </xsd:annotation>
+                                   <xsd:complexType>
+                                        <xsd:simpleContent>
+                                             <xsd:restriction base="oval-sc:EntityItemAnySimpleType">
+                                                  <xsd:attribute name="datatype" use="optional" default="string">
+                                                       <xsd:simpleType>
+                                                            <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                                                                 <xsd:enumeration value="string"/>
+                                                                 <xsd:enumeration value="version"/>
+                                                            </xsd:restriction>
+                                                       </xsd:simpleType>
+                                                  </xsd:attribute>
+                                             </xsd:restriction>
+                                        </xsd:simpleContent>
+                                   </xsd:complexType>
+                              </xsd:element>
+                         </xsd:sequence>
+                    </xsd:extension>
+               </xsd:complexContent>
+          </xsd:complexType>
+     </xsd:element>
+     <!-- =============================================================================== -->
      <!-- ==========================  IF LISTENERS ITEM  ================================ -->
      <!-- =============================================================================== -->
      <xsd:element name="iflisteners_item" substitutionGroup="oval-sc:item">
@@ -286,6 +345,78 @@
                               <xsd:element name="user_id" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
                                    <xsd:annotation>
                                         <xsd:documentation>The numeric user id, or uid, is the third column of each user's entry in /etc/passwd. It represents the owner, and thus privilege level, of the specified program.</xsd:documentation>
+                                   </xsd:annotation>
+                              </xsd:element>
+                         </xsd:sequence>
+                    </xsd:extension>
+               </xsd:complexContent>
+          </xsd:complexType>
+     </xsd:element>
+     <!-- =============================================================================== -->
+     <!-- ================================  LSMOD ITEM  ================================= -->
+     <!-- =============================================================================== -->
+     <xsd:element name="lsmod_item" substitutionGroup="oval-sc:item">
+          <xsd:annotation>
+               <xsd:documentation>
+                    "lsmod" is a trivial program which nicely formats the contents of the /proc/modules, showing what loadable kernel modules are currently loaded.  Each item extends 
+                    the standard ItemType as defined in the oval-system-characteristics-schema and one should refer to the ItemType description for more information.
+               </xsd:documentation>
+          </xsd:annotation>
+          <xsd:complexType>
+               <xsd:complexContent>
+                    <xsd:extension base="oval-sc:ItemType">
+                         <xsd:sequence>
+                              <xsd:element name="module_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                                   <xsd:annotation>
+                                        <xsd:documentation>The name of the currently loaded module</xsd:documentation>
+                                   </xsd:annotation>
+                              </xsd:element>
+                              <xsd:element name="module_size" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
+                                   <xsd:annotation>
+                                        <xsd:documentation>Denotes the size of the module (not memory used)</xsd:documentation>
+                                   </xsd:annotation>
+                              </xsd:element>
+                              <xsd:element name="use_count" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
+                                   <xsd:annotation>
+                                        <xsd:documentation>Denotes the use count for the module</xsd:documentation>
+                                   </xsd:annotation>
+                              </xsd:element>
+                              <xsd:element name="used_by" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
+                                   <xsd:annotation>
+                                        <xsd:documentation>
+                                             "Used by" denotes this module's referring modules. The "Used by" list is sometimes incomplete (meaning, the number of used_by entities may not match the number specified by the use_count entity).  If the module controls its own unloading via a can_unload routine then the use count displayed by lsmod is always -1, irrespective of the real use count.
+                                        </xsd:documentation>
+                                   </xsd:annotation>
+                              </xsd:element>
+                         </xsd:sequence>
+                    </xsd:extension>
+               </xsd:complexContent>
+          </xsd:complexType>
+     </xsd:element>
+     <!-- =============================================================================== -->
+     <!-- ==============================  MODPROBE ITEM  =============================== -->
+     <!-- =============================================================================== -->
+     <xsd:element name="modprobe_item" substitutionGroup="oval-sc:item">
+          <xsd:annotation>
+               <xsd:documentation>The modprobe_item captures limited information, parsing the output of the "modprobe -n -v [module_name]" command.</xsd:documentation>
+               <xsd:documentation>
+                    Collection of a modprobe_item is determined by the "modprobe -n -v module_name" command.  Due to the limitations of the modprobe command, and its
+                    requirement for a specific module_name, only the "equals" operation is supported, as there is no method to collect this information otherwise.  To support 
+                    other collection methods, variable references should be used to collect specific module names for use in collection here.
+               </xsd:documentation>
+          </xsd:annotation>
+          <xsd:complexType>
+               <xsd:complexContent>
+                    <xsd:extension base="oval-sc:ItemType">
+                         <xsd:sequence>
+                              <xsd:element name="module_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                                   <xsd:annotation>
+                                        <xsd:documentation>The name of the kernel module for which information was collected</xsd:documentation>
+                                   </xsd:annotation>
+                              </xsd:element>
+                              <xsd:element name="modprobe_line" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
+                                   <xsd:annotation>
+                                        <xsd:documentation>The modprobe_line element represents a single line of output from the "modprobe -n -v [module_name]" command.</xsd:documentation>
                                    </xsd:annotation>
                               </xsd:element>
                          </xsd:sequence>
