@@ -1,7 +1,7 @@
-# Copyright (C) 2015-2018 JovalCM.com.  All rights reserved.
+# Copyright (C) 2015-2019 JovalCM.com.  All rights reserved.
 # This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
 
-SCAP_VERSION=1.3.D
+SCAP_VERSION=1.3.E
 OVAL_VERSION=5.11.2
 
 Default: all
