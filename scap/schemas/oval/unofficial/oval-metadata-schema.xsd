@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+    xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" 
+    xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+    targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5" elementFormDefault="qualified" version="5.10">
+    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
+    <xsd:element name="oval_repository">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="dates" type="oval-def:MetadataDatesType" minOccurs="1" maxOccurs="1"/>
+                <xsd:element name="status" type="oval-def:MetadataStatusEnumeration" minOccurs="1" maxOccurs="1"/>
+                <xsd:element name="affected_cpe_list" type="oval-def:AffectedCPEListType" minOccurs="0" maxOccurs="1"/>
+                <xsd:element name="min_schema_version" type="oval:SchemaVersionType" minOccurs="0" maxOccurs="1"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:complexType name="AffectedCPEListType">
+        <xsd:sequence>
+            <xsd:element name="cpe" minOccurs="1" maxOccurs="unbounded" type="xsd:anyURI"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <xsd:complexType name="MetadataDatesType">
+        <xsd:sequence>
+            <xsd:element name="created" minOccurs="0" maxOccurs="1">
+                <xsd:annotation>
+                    <xsd:documentation>The created element represents the date the definition was created and the set of contributors that created the definition.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="contributor" type="oval-def:MetadataContributorType" minOccurs="0" maxOccurs="unbounded"/>
+                    </xsd:sequence>
+                    <xsd:attribute name="date" type="xsd:dateTime" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="submitted" minOccurs="1" maxOccurs="1">
+                <xsd:annotation>
+                    <xsd:documentation>The submitted element represents the date the definition was submitted to the OVAL Repository and the set of contributors that submitted the definition.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="contributor" type="oval-def:MetadataContributorType" minOccurs="0" maxOccurs="unbounded"/>
+                    </xsd:sequence>
+                    <xsd:attribute name="date" type="xsd:dateTime" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:choice minOccurs="0" maxOccurs="unbounded">
+                <xsd:element name="modified">
+                    <xsd:annotation>
+                        <xsd:documentation>The modified element represents the date the definition was modified, a brief comment about the change that was made,  and the set of contributors that modified the definition.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element name="contributor" type="oval-def:MetadataContributorType" minOccurs="0" maxOccurs="unbounded"/>
+                        </xsd:sequence>
+                        <xsd:attribute name="date" type="xsd:dateTime" use="required"/>
+                        <xsd:attribute name="comment" type="xsd:string" use="required"/>
+                    </xsd:complexType>
+                </xsd:element>
+                <xsd:element name="status_change">
+                    <xsd:annotation>
+                        <xsd:documentation>The status_change element records the data and time that a definition's satatus is chagned. This element is managed by the OVAL Repository.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:complexType>
+                        <xsd:simpleContent>
+                            <xsd:extension base="oval-def:MetadataStatusEnumeration">
+                                <xsd:attribute name="date" type="xsd:dateTime" use="required"/>
+                            </xsd:extension>
+                        </xsd:simpleContent>
+                    </xsd:complexType>
+                </xsd:element>
+            </xsd:choice>
+        </xsd:sequence>
+    </xsd:complexType>
+    <xsd:complexType name="MetadataContributorType">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="organization" type="xsd:string" use="optional"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+    <xsd:simpleType name="MetadataStatusEnumeration">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="ACCEPTED"/>
+            <xsd:enumeration value="DEPRECATED"/>
+            <xsd:enumeration value="DRAFT"/>
+            <xsd:enumeration value="INCOMPLETE"/>
+            <xsd:enumeration value="INITIAL SUBMISSION"/>
+            <xsd:enumeration value="INTERIM"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:element name="expected_results">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="result" type="oval-def:ExpectedResultType" minOccurs="1" maxOccurs="unbounded"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:complexType name="ExpectedResultType">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="configuration" type="xsd:string" use="optional"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+</xsd:schema>
