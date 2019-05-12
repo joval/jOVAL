@@ -47,7 +47,7 @@ $(GEN): $(SCHEMA_FILES)
 	$(XJC) $(XJCFLAGS_EXT) $(SCHEMA_FILES) $(SCAP_LIB) -b $(BINDINGS) -d $(GEN)
 
 $(BUILD)/%.class: $(GEN)/%.java
-	$(JAVAC) $(JAVACFLAGS) -d $(BUILD) -classpath $(CLASSPATH) $<
+	$(JAVAC) -d $(BUILD) -classpath $(CLASSPATH) $<
 
 $(BUILD)/%/:
 	mkdir -p $@

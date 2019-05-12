@@ -28,7 +28,7 @@ resources:
 	mkdir -p $(BUILD)/META-INF
 	sed 's/$(BROKEN)/$(FIXED)/' $(EPISODE) > $(BUILD)/META-INF/sun-jaxb.episode
 	mkdir -p $(BUILD)/scapx/schemas
-	mv $(CATALOG) $(BUILD)/scapx
+	cp $(CATALOG) $(BUILD)/scapx
 	cp $(RSRC)/registry.ini $(BUILD)/scapx
 	cp -R $(SCHEMADIR)/* $(BUILD)/scapx/schemas
 	rm $(BUILD)/scapx/schemas/bindings.xjb
@@ -37,16 +37,13 @@ classes: classdirs $(CLASS_FILES)
 
 classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
 
-$(CATALOG): $(CATALOG_TEMPLATE)
-	cat $< | sed 's/\[OVAL_VERSION\]/$(OVAL_VERSION)/g' > $@
-
-$(GEN): $(SCHEMA_FILES) $(CATALOG)
+$(GEN): $(SCHEMA_FILES)
 	mkdir -p $@
 	$(XJC) $(XJCFLAGS_EXT) $(SCHEMA_FILES) $(SCAP_LIB) -b $(BINDINGS) -d $(GEN)
 	find $(GEN) -name ObjectFactory.java | grep core | xargs rm
 
 $(BUILD)/%.class: $(GEN)/%.java
-	$(JAVAC) $(JAVACFLAGS) -d $(BUILD) -classpath $(CLASSPATH) $<
+	$(JAVAC) -d $(BUILD) -classpath $(CLASSPATH) $<
 
 $(BUILD)/%/:
 	mkdir -p $@
