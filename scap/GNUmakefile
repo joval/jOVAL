@@ -15,7 +15,7 @@ PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
 SCHEMATRON=schematron
 SCH=gen-sch
-OVAL_SCH:=$(foreach file, $(wildcard $(SCHEMATRON)/*.xml), $(SCH)/$(notdir $(basename $(file))).xsl)
+OVAL_SCH:=$(foreach file, $(wildcard $(SCHEMATRON)/*.xml), $(SCH)/$(notdir $(basename $(file)))-schematron.xsl)
 
 OVAL_OFFICIAL=$(OVAL_SCHEMA)/official
 OVAL_SCHEMA_FILES:=$(foreach schema, $(shell find $(OVAL_SRC) -name *.xsd ! -name xmldsig*), $(OVAL_OFFICIAL)/$(notdir $(schema)))
@@ -78,7 +78,7 @@ $(DOCS)/%.html: $(OVAL_OFFICIAL)/%.xsd
 $(SCH):
 	mkdir -p $@
 
-$(SCH)/%.sch: $(SCHEMATRON)/%.xml
+$(SCH)/%-schematron.sch: $(SCHEMATRON)/%.xml
 	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:rsrc/ExtractSchFromXSD.xsl -o:$@
 
 %.xsl: %.sch
