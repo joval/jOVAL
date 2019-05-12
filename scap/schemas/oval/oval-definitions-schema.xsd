@@ -5,6 +5,6 @@
 -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	    targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5">
-      <xsd:include schemaLocation="tmp/oval-definitions-schema.xsd"/>
+      <xsd:include schemaLocation="official/oval-definitions-schema.xsd"/>
       <xsd:include schemaLocation="unofficial/oval-metadata-schema.xsd"/>
 </xsd:schema>

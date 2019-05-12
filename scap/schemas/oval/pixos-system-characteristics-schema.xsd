@@ -5,5 +5,5 @@
 -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	    targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#pixos">
-      <xsd:include schemaLocation="tmp/pixos-system-characteristics-schema.xsd"/>
+      <xsd:include schemaLocation="official/pixos-system-characteristics-schema.xsd"/>
 </xsd:schema>

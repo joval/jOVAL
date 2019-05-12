@@ -5,5 +5,5 @@
 -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	    targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#junos">
-      <xsd:include schemaLocation="tmp/junos-definitions-schema.xsd"/>
+      <xsd:include schemaLocation="official/junos-definitions-schema.xsd"/>
 </xsd:schema>

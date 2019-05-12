@@ -5,5 +5,5 @@
 -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	    targetNamespace="http://oval.mitre.org/XMLSchema/oval-results-5">
-      <xsd:include schemaLocation="tmp/oval-results-schema.xsd"/>
+      <xsd:include schemaLocation="official/oval-results-schema.xsd"/>
 </xsd:schema>

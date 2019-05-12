@@ -5,5 +5,5 @@
 -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	    targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <xsd:include schemaLocation="tmp/unix-definitions-schema.xsd"/>
+      <xsd:include schemaLocation="official/unix-definitions-schema.xsd"/>
 </xsd:schema>

@@ -5,5 +5,5 @@
 -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	    targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#solaris">
-      <xsd:include schemaLocation="tmp/solaris-system-characteristics-schema.xsd"/>
+      <xsd:include schemaLocation="official/solaris-system-characteristics-schema.xsd"/>
 </xsd:schema>

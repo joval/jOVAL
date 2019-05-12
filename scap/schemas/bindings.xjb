@@ -285,7 +285,7 @@
 
   <!-- ++++++++++++++++++++++++++++++++++++++++     Generic Schemas       ++++++++++++++++++++++++++++++++++++++++ -->
 
-  <jxb:bindings schemaLocation="oval/tmp/oval-common-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/oval-common-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.common"/>
     </jxb:schemaBindings>
@@ -293,7 +293,7 @@
       <namespace:prefix name="oval"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/oval-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/oval-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.core"/>
     </jxb:schemaBindings>
@@ -316,7 +316,7 @@
         <jxb:property name="state_version" />
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/oval-directives-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/oval-directives-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.directives"/>
     </jxb:schemaBindings>
@@ -324,7 +324,7 @@
       <namespace:prefix name="oval-dir"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/oval-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/oval-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.core"/>
     </jxb:schemaBindings>
@@ -335,7 +335,7 @@
         <jxb:property name="item_id" />
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/oval-results-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/oval-results-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.results"/>
     </jxb:schemaBindings>
@@ -343,7 +343,7 @@
       <namespace:prefix name="oval-res"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/oval-variables-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/oval-variables-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.variables"/>
     </jxb:schemaBindings>
@@ -351,7 +351,7 @@
       <namespace:prefix name="oval-var"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/evaluation-ids.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/evaluation-ids.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.evaluation"/>
     </jxb:schemaBindings>
@@ -366,7 +366,7 @@
 
   <!-- ++++++++++++++++++++++++++++++++++++++++     Platform Schemas      ++++++++++++++++++++++++++++++++++++++++ -->
 
-  <jxb:bindings schemaLocation="oval/tmp/aix-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/aix-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.aix"/>
     </jxb:schemaBindings>
@@ -374,7 +374,7 @@
       <namespace:prefix name="aix-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/aix-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/aix-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.aix"/>
     </jxb:schemaBindings>
@@ -382,7 +382,7 @@
       <namespace:prefix name="aix-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/android-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/android-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.android"/>
     </jxb:schemaBindings>
@@ -390,7 +390,7 @@
       <namespace:prefix name="android-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/android-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/android-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.android"/>
     </jxb:schemaBindings>
@@ -398,7 +398,7 @@
       <namespace:prefix name="android-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/apache-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/apache-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.apache"/>
     </jxb:schemaBindings>
@@ -406,7 +406,7 @@
       <namespace:prefix name="apache-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/apache-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/apache-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.apache"/>
     </jxb:schemaBindings>
@@ -414,7 +414,7 @@
       <namespace:prefix name="apache-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/apple-ios-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/apple-ios-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.appleios"/>
     </jxb:schemaBindings>
@@ -422,7 +422,7 @@
       <namespace:prefix name="apple-ios-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/apple-ios-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/apple-ios-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.appleios"/>
     </jxb:schemaBindings>
@@ -430,7 +430,7 @@
       <namespace:prefix name="apple-ios-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/asa-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/asa-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.asa"/>
     </jxb:schemaBindings>
@@ -438,7 +438,7 @@
       <namespace:prefix name="asa-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/asa-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/asa-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.asa"/>
     </jxb:schemaBindings>
@@ -446,7 +446,7 @@
       <namespace:prefix name="asa-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/catos-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/catos-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.catos"/>
     </jxb:schemaBindings>
@@ -454,7 +454,7 @@
       <namespace:prefix name="catos-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/catos-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/catos-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.catos"/>
     </jxb:schemaBindings>
@@ -462,7 +462,7 @@
       <namespace:prefix name="catos-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/esx-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/esx-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.esx"/>
     </jxb:schemaBindings>
@@ -470,7 +470,7 @@
       <namespace:prefix name="esx-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/esx-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/esx-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.esx"/>
     </jxb:schemaBindings>
@@ -482,7 +482,7 @@
         <jxb:property name="patch_status" />
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/freebsd-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/freebsd-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.freebsd"/>
     </jxb:schemaBindings>
@@ -490,7 +490,7 @@
       <namespace:prefix name="freebsd-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/freebsd-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/freebsd-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.freebsd"/>
     </jxb:schemaBindings>
@@ -498,7 +498,7 @@
       <namespace:prefix name="freebsd-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/hpux-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/hpux-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.hpux"/>
     </jxb:schemaBindings>
@@ -506,7 +506,7 @@
       <namespace:prefix name="hpux-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/hpux-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/hpux-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.hpux"/>
     </jxb:schemaBindings>
@@ -514,7 +514,7 @@
       <namespace:prefix name="hpux-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/independent-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/independent-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.independent"/>
     </jxb:schemaBindings>
@@ -522,7 +522,7 @@
       <namespace:prefix name="ind-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/independent-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/independent-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.independent"/>
     </jxb:schemaBindings>
@@ -530,7 +530,7 @@
       <namespace:prefix name="ind-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/ios-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/ios-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.ios"/>
     </jxb:schemaBindings>
@@ -538,7 +538,7 @@
       <namespace:prefix name="ios-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/ios-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/ios-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.ios"/>
     </jxb:schemaBindings>
@@ -546,7 +546,7 @@
       <namespace:prefix name="ios-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/iosxe-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/iosxe-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.iosxe"/>
     </jxb:schemaBindings>
@@ -554,7 +554,7 @@
       <namespace:prefix name="iosxe-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/iosxe-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/iosxe-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.iosxe"/>
     </jxb:schemaBindings>
@@ -562,7 +562,7 @@
       <namespace:prefix name="iosxe-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/junos-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/junos-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.junos"/>
     </jxb:schemaBindings>
@@ -570,7 +570,7 @@
       <namespace:prefix name="junos-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/junos-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/junos-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.junos"/>
     </jxb:schemaBindings>
@@ -578,7 +578,7 @@
       <namespace:prefix name="junos-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/linux-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/linux-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.linux"/>
     </jxb:schemaBindings>
@@ -586,7 +586,7 @@
       <namespace:prefix name="linux-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/linux-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/linux-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.linux"/>
     </jxb:schemaBindings>
@@ -601,7 +601,7 @@
         <jxb:factoryMethod name="InetlisteningserversItem" />
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/macos-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/macos-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.macos"/>
     </jxb:schemaBindings>
@@ -613,7 +613,7 @@
         <jxb:property name="launchd_status" />
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/macos-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/macos-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.macos"/>
     </jxb:schemaBindings>
@@ -632,7 +632,7 @@
         <jxb:property name="launchd_status" />
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/netconf-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/netconf-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.netconf"/>
     </jxb:schemaBindings>
@@ -640,7 +640,7 @@
       <namespace:prefix name="netconf-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/netconf-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/netconf-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.netconf"/>
     </jxb:schemaBindings>
@@ -648,7 +648,7 @@
       <namespace:prefix name="netconf-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/pixos-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/pixos-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.pixos"/>
     </jxb:schemaBindings>
@@ -656,7 +656,7 @@
       <namespace:prefix name="pixos-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/pixos-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/pixos-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.pixos"/>
     </jxb:schemaBindings>
@@ -664,7 +664,7 @@
       <namespace:prefix name="pixos-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/sharepoint-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/sharepoint-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.sharepoint"/>
     </jxb:schemaBindings>
@@ -672,7 +672,7 @@
       <namespace:prefix name="sharepoint-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/sharepoint-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/sharepoint-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.sharepoint"/>
     </jxb:schemaBindings>
@@ -680,7 +680,7 @@
       <namespace:prefix name="sharepoint-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/solaris-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/solaris-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.solaris"/>
     </jxb:schemaBindings>
@@ -688,7 +688,7 @@
       <namespace:prefix name="solaris-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/solaris-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/solaris-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.solaris"/>
     </jxb:schemaBindings>
@@ -696,7 +696,7 @@
       <namespace:prefix name="solaris-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/unix-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/unix-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.unix"/>
     </jxb:schemaBindings>
@@ -704,7 +704,7 @@
       <namespace:prefix name="unix-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/unix-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/unix-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.unix"/>
     </jxb:schemaBindings>
@@ -712,7 +712,7 @@
       <namespace:prefix name="unix-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/windows-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/windows-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.windows"/>
     </jxb:schemaBindings>
@@ -754,7 +754,7 @@
         <jxb:property name="description" />
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="oval/tmp/windows-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="oval/official/windows-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.windows"/>
     </jxb:schemaBindings>

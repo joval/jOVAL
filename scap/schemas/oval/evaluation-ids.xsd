@@ -5,5 +5,5 @@
 -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	    targetNamespace="http://oval.mitre.org/XMLSchema/ovaldi/evalids">
-      <xsd:include schemaLocation="tmp/evaluation-ids.xsd"/>
+      <xsd:include schemaLocation="official/evaluation-ids.xsd"/>
 </xsd:schema>

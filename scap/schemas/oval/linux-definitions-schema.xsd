@@ -5,7 +5,7 @@
 -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	    targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
-      <xsd:include schemaLocation="tmp/linux-definitions-schema.xsd"/>
+      <xsd:include schemaLocation="official/linux-definitions-schema.xsd"/>
       <xsd:include schemaLocation="unofficial/linux-alpine-def-schema.xsd"/>
       <xsd:include schemaLocation="unofficial/linux-lsmod-def-schema.xsd"/>
 </xsd:schema>

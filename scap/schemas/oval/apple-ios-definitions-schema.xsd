@@ -5,5 +5,5 @@
 -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	    targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#apple_ios">
-      <xsd:include schemaLocation="tmp/apple-ios-definitions-schema.xsd"/>
+      <xsd:include schemaLocation="official/apple-ios-definitions-schema.xsd"/>
 </xsd:schema>
