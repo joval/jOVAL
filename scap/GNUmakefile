@@ -19,7 +19,7 @@ OVAL_SCH:=$(foreach file, $(wildcard $(SCHEMATRON)/*.xml), $(SCH)/$(notdir $(bas
 
 OVAL_OFFICIAL=$(OVAL_SCHEMA)/official
 OVAL_SCHEMA_FILES:=$(foreach schema, $(shell find $(OVAL_SRC) -name *.xsd ! -name xmldsig*), $(OVAL_OFFICIAL)/$(notdir $(schema)))
-OVAL_DOCS:=$(foreach schema, $(wildcard $(OVAL_OFFICIAL)/*.xsd), $(DOCS)/$(notdir $(basename $(schema))).html)
+OVAL_DOCS:=$(foreach schema, $(wildcard $(OVAL_SRC)/*.xsd), $(DOCS)/$(notdir $(basename $(schema))).html)
 
 #
 # Make namespaces optional in the episode bindings
