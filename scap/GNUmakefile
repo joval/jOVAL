@@ -27,7 +27,7 @@ OVAL_DOCS:=$(foreach schema, $(wildcard $(OVAL_OFFICIAL)/*.xsd), $(DOCS)/$(notdi
 BROKEN=<bindings scd=\"x-schema::tns\"
 FIXED=<bindings scd=\"x-schema::tns\" if-exists=\"true\"
 
-all: $(SCAP_LIB) $(OVAL_DOCS) $(DOCS)/index.html schematrons
+all: $(SCAP_LIB) $(DOCS)/index.html $(OVAL_DOCS) schematrons
 
 schematrons: $(OVAL_SCH)
 
@@ -66,10 +66,8 @@ $(BUILD)/%.class: $(GEN)/%.java
 $(BUILD)/%/:
 	mkdir -p $@
 
-$(DOCS):
-	mkdir -p $@
-
-$(DOCS)/index.html: $(DOCS) $(RSRC)/index.html
+$(DOCS)/index.html: $(RSRC)/index.html
+	mkdir -p $(DOCS)
 	sed 's/\[VERSION\]/$(OVAL_VERSION)/g' $< > $@
 
 $(DOCS)/%.html: $(OVAL_OFFICIAL)/%.xsd
