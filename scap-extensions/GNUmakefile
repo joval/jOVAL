@@ -33,9 +33,12 @@ resources:
 	cp -R $(SCHEMADIR)/* $(BUILD)/scapx/schemas
 	rm $(BUILD)/scapx/schemas/bindings.xjb
 
-classes: classdirs $(CLASS_FILES)
+classes: classdirs
+	$(MAKE) -j$(NUMPROCS) classfiles
 
 classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
+
+classfiles: $(CLASS_FILES)
 
 $(GEN): $(SCHEMA_FILES)
 	mkdir -p $@

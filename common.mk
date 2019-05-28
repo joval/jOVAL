@@ -17,6 +17,8 @@ else
   OS=$(shell uname)
   ifeq (Linux, $(findstring Linux,$(OS)))
     PLATFORM=linux
+  else ifeq (Darwin, $(findstring Darwin,$(OS)))
+    PLATFORM=mac
   endif
   CLN=:
 endif
@@ -46,6 +48,12 @@ else ifeq (1.6, $(findstring 1.6, $(RAW_JAVA_VERSION)))
     JAVADOCFLAGS=-J-Xmx512m
 else
     $(error "Unsupported Java version: $(RAW_JAVA_VERSION)")
+endif
+
+ifeq (mac, $(PLATFORM))
+    NUMPROCS=$(shell sysctl -n hw.ncpu)
+else
+    NUMPROCS=$(shell nproc)
 endif
 
 NULL:=

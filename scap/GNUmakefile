@@ -27,7 +27,7 @@ OVAL_DOCS:=$(foreach schema, $(wildcard $(OVAL_SRC)/*.xsd), $(DOCS)/$(notdir $(b
 BROKEN=<bindings scd=\"x-schema::tns\"
 FIXED=<bindings scd=\"x-schema::tns\" if-exists=\"true\"
 
-all: $(SCAP_LIB) $(DOCS)/index.html $(OVAL_DOCS) schematrons
+all: $(SCAP_LIB) $(DOCS)/index.html ovaldocs schematrons
 
 schematrons: $(OVAL_SCH)
 
@@ -52,9 +52,12 @@ resources:
 	cp -R $(SCHEMADIR)/* $(BUILD)/scap/schemas
 	rm $(BUILD)/scap/schemas/bindings.xjb
 
-classes: classdirs $(CLASS_FILES)
+classes: classdirs
+	$(MAKE) -j$(NUMPROCS) classfiles
 
 classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
+
+classfiles: $(CLASS_FILES)
 
 $(GEN): $(OVAL_OFFICIAL) $(OVAL_SCHEMA_FILES) $(SCHEMA_FILES)
 	mkdir -p $@
@@ -69,6 +72,9 @@ $(BUILD)/%/:
 $(DOCS)/index.html: $(RSRC)/index.html
 	mkdir -p $(DOCS)
 	sed 's/\[VERSION\]/$(OVAL_VERSION)/g' $< > $@
+
+ovaldocs:
+	$(MAKE) -j$(NUMPROCS) $(OVAL_DOCS)
 
 $(DOCS)/%.html: $(OVAL_OFFICIAL)/%.xsd
 	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:rsrc/oval_xsd2html.xsl -o:$@

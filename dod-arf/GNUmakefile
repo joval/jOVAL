@@ -37,9 +37,12 @@ resources:
 	cp -R $(SCHEMADIR)/* $(BUILD)/dodarf/schemas
 	rm $(BUILD)/dodarf/schemas/bindings.xjb
 
-classes: classdirs $(CLASS_FILES)
+classes: classdirs
+	$(MAKE) -j$(NUMPROCS) classfiles
 
 classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
+
+classfiles: $(CLASS_FILES)
 
 $(GEN): $(SCHEMA_FILES)
 	mkdir -p $@
