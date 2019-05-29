@@ -52,6 +52,8 @@ endif
 
 ifeq (mac, $(PLATFORM))
     NUMPROCS=$(shell sysctl -n hw.ncpu)
+else ifeq (win, $(PLATFORM))
+    NUMPROCS=1
 else
     NUMPROCS=$(shell nproc)
 endif
