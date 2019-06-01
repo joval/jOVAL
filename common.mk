@@ -29,12 +29,18 @@ ifeq (win, $(PLATFORM))
     JAVADOC=$(WIN_JAVA_HOME)/bin/javadoc.exe
     JAVAC=$(WIN_JAVA_HOME)/bin/javac.exe
     CLASSLIB=$(shell cygpath -w $(JAVA_HOME))\jre\lib\rt.jar
+    NUMPROCS=1
 else
     JAVA=$(JAVA_HOME)/bin/java
     JAR=$(JAVA_HOME)/bin/jar
     JAVADOC=$(JAVA_HOME)/bin/javadoc
     JAVAC=$(JAVA_HOME)/bin/javac
     CLASSLIB=$(JAVA_HOME)/jre/lib/rt.jar
+    ifeq (mac, $(PLATFORM))
+        NUMPROCS=$(shell sysctl -n hw.ncpu)
+    else
+        NUMPROCS=$(shell nproc)
+    endif
 endif
 RAW_JAVA_VERSION:=$(shell $(JAVA_HOME)/bin/java -version 2>&1)
 ifeq (1.8, $(findstring 1.8, $(RAW_JAVA_VERSION)))
@@ -48,14 +54,6 @@ else ifeq (1.6, $(findstring 1.6, $(RAW_JAVA_VERSION)))
     JAVADOCFLAGS=-J-Xmx512m
 else
     $(error "Unsupported Java version: $(RAW_JAVA_VERSION)")
-endif
-
-ifeq (mac, $(PLATFORM))
-    NUMPROCS=$(shell sysctl -n hw.ncpu)
-else ifeq (win, $(PLATFORM))
-    NUMPROCS=1
-else
-    NUMPROCS=$(shell nproc)
 endif
 
 NULL:=
