@@ -106,6 +106,9 @@
     <jxb:schemaBindings>
       <jxb:package name="org.iso.svrl"/>
     </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="svrl"/>
+    </jxb:bindings>
   </jxb:bindings>
 
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
