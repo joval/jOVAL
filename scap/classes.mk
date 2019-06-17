@@ -571,10 +571,9 @@ CLASSES=\
 	scap.oval.sc.unix.package-info	\
 	scap.oval.sc.unix.FileextendedattributeItem	\
 	scap.oval.sc.linux.InetlisteningserversItem	\
-	scap.oval.sc.linux.LsmodItem	\
+	scap.oval.sc.linux.EntityItemSEStatusPolicyType	\
 	scap.oval.sc.linux.SystemdunitpropertyItem	\
 	scap.oval.sc.linux.DpkginfoItem	\
-	scap.oval.sc.linux.ModprobeItem	\
 	scap.oval.sc.linux.IflistenersItem	\
 	scap.oval.sc.linux.EntityItemProtocolType	\
 	scap.oval.sc.linux.SlackwarepkginfoItem	\
@@ -585,7 +584,9 @@ CLASSES=\
 	scap.oval.sc.linux.ApparmorstatusItem	\
 	scap.oval.sc.linux.ObjectFactory	\
 	scap.oval.sc.linux.RpminfoItem	\
+	scap.oval.sc.linux.EntityItemSEStatusModeType	\
 	scap.oval.sc.linux.PartitionItem	\
+	scap.oval.sc.linux.SestatusItem	\
 	scap.oval.sc.linux.SelinuxbooleanItem	\
 	scap.oval.sc.linux.RpmverifypackageItem	\
 	scap.oval.sc.linux.SystemdunitdependencyItem	\
@@ -1228,27 +1229,23 @@ CLASSES=\
 	scap.oval.def.linux.SystemdunitdependencyObject	\
 	scap.oval.def.linux.PartitionObject	\
 	scap.oval.def.linux.IflistenersObject	\
-	scap.oval.def.linux.ModprobeTest	\
 	scap.oval.def.linux.IflistenersTest	\
 	scap.oval.def.linux.SelinuxbooleanState	\
 	scap.oval.def.linux.SelinuxsecuritycontextState	\
 	scap.oval.def.linux.SystemdunitpropertyTest	\
+	scap.oval.def.linux.EntityStateSEStatusModeType	\
 	scap.oval.def.linux.RpmVerifyFileBehaviors	\
 	scap.oval.def.linux.KernelmoduleState	\
-	scap.oval.def.linux.ModprobeState	\
 	scap.oval.def.linux.DpkginfoTest	\
 	scap.oval.def.linux.SlackwarepkginfoState	\
-	scap.oval.def.linux.LsmodTest	\
 	scap.oval.def.linux.RpmVerifyPackageBehaviors	\
 	scap.oval.def.linux.InetlisteningserversTest	\
-	scap.oval.def.linux.LsmodObject	\
 	scap.oval.def.linux.DpkginfoState	\
 	scap.oval.def.linux.DpkginfoObject	\
 	scap.oval.def.linux.SelinuxbooleanObject	\
 	scap.oval.def.linux.IflistenersState	\
 	scap.oval.def.linux.ApkinfoState	\
 	scap.oval.def.linux.ObjectFactory	\
-	scap.oval.def.linux.LsmodState	\
 	scap.oval.def.linux.RpmverifyTest	\
 	scap.oval.def.linux.RpmverifyfileObject	\
 	scap.oval.def.linux.InetlisteningserversState	\
@@ -1257,7 +1254,6 @@ CLASSES=\
 	scap.oval.def.linux.InetlisteningserversObject	\
 	scap.oval.def.linux.KernelmoduleTest	\
 	scap.oval.def.linux.SystemdunitpropertyState	\
-	scap.oval.def.linux.ModprobeObject	\
 	scap.oval.def.linux.KernelmoduleObject	\
 	scap.oval.def.linux.ApparmorstatusObject	\
 	scap.oval.def.linux.PartitionState	\
@@ -1269,13 +1265,17 @@ CLASSES=\
 	scap.oval.def.linux.SystemdunitdependencyState	\
 	scap.oval.def.linux.ApparmorstatusState	\
 	scap.oval.def.linux.SelinuxsecuritycontextObject	\
+	scap.oval.def.linux.SestatusState	\
 	scap.oval.def.linux.RpmverifypackageObject	\
 	scap.oval.def.linux.RpmVerifyBehaviors	\
 	scap.oval.def.linux.RpminfoTest	\
 	scap.oval.def.linux.RpmInfoBehaviors	\
+	scap.oval.def.linux.SestatusObject	\
 	scap.oval.def.linux.SlackwarepkginfoObject	\
 	scap.oval.def.linux.ApkinfoObject	\
+	scap.oval.def.linux.SestatusTest	\
 	scap.oval.def.linux.PartitionTest	\
+	scap.oval.def.linux.EntityStateSEStatusPolicyType	\
 	scap.oval.def.linux.package-info	\
 	scap.oval.def.linux.SystemdunitpropertyObject	\
 	scap.oval.def.linux.EntityStateProtocolType	\
