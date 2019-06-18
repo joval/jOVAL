@@ -6,4 +6,5 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	    targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#macos">
       <xsd:include schemaLocation="../official/macos-definitions-schema.xsd"/>
+      <xsd:include schemaLocation="../unofficial/macos-pwpolicy512-def-schema.xsd"/>
 </xsd:schema>

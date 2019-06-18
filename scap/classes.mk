@@ -425,6 +425,7 @@ CLASSES=\
 	scap.oval.sc.macos.EntityItemDataTypeType	\
 	scap.oval.sc.macos.Inetlisteningserver510Item	\
 	scap.oval.sc.macos.RlimitItem	\
+	scap.oval.sc.macos.Pwpolicy512Item	\
 	scap.oval.sc.macos.SystemprofilerItem	\
 	scap.oval.sc.macos.AuthorizationdbItem	\
 	scap.oval.sc.macos.DiskutilItem	\
@@ -590,6 +591,7 @@ CLASSES=\
 	scap.oval.sc.linux.SelinuxbooleanItem	\
 	scap.oval.sc.linux.RpmverifypackageItem	\
 	scap.oval.sc.linux.SystemdunitdependencyItem	\
+	scap.oval.sc.linux.EntityItemSEStatusType	\
 	scap.oval.sc.linux.RpmverifyItem	\
 	scap.oval.sc.linux.KernelmoduleItem	\
 	scap.oval.sc.linux.package-info	\
@@ -830,8 +832,10 @@ CLASSES=\
 	scap.oval.def.macos.RlimitTest	\
 	scap.oval.def.macos.EntityStatePlistTypeType	\
 	scap.oval.def.macos.AuthorizationdbTest	\
+	scap.oval.def.macos.Pwpolicy512Object	\
 	scap.oval.def.macos.SystemprofilerTest	\
 	scap.oval.def.macos.Plist511State	\
+	scap.oval.def.macos.Pwpolicy512Test	\
 	scap.oval.def.macos.GatekeeperObject	\
 	scap.oval.def.macos.CorestorageState	\
 	scap.oval.def.macos.Inetlisteningserver510State	\
@@ -851,6 +855,7 @@ CLASSES=\
 	scap.oval.def.macos.Plist510State	\
 	scap.oval.def.macos.Plist510Object	\
 	scap.oval.def.macos.ObjectFactory	\
+	scap.oval.def.macos.Pwpolicy512State	\
 	scap.oval.def.macos.Plist510Test	\
 	scap.oval.def.macos.Plist511Test	\
 	scap.oval.def.macos.CorestorageObject	\
@@ -1245,6 +1250,7 @@ CLASSES=\
 	scap.oval.def.linux.SelinuxbooleanObject	\
 	scap.oval.def.linux.IflistenersState	\
 	scap.oval.def.linux.ApkinfoState	\
+	scap.oval.def.linux.EntityStateSEStatusType	\
 	scap.oval.def.linux.ObjectFactory	\
 	scap.oval.def.linux.RpmverifyTest	\
 	scap.oval.def.linux.RpmverifyfileObject	\
