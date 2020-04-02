@@ -421,6 +421,7 @@ CLASSES=\
 	scap.oval.sc.macos.SoftwareupdateItem	\
 	scap.oval.sc.macos.NvramItem	\
 	scap.oval.sc.macos.PlistItem	\
+	scap.oval.sc.macos.EntityItemPackageSourceType	\
 	scap.oval.sc.macos.EntityItemPlistTypeType	\
 	scap.oval.sc.macos.EntityItemDataTypeTypeExtended	\
 	scap.oval.sc.macos.EntityItemDataTypeType	\
@@ -835,6 +836,7 @@ CLASSES=\
 	scap.oval.def.macos.AuthorizationdbState	\
 	scap.oval.def.macos.RlimitTest	\
 	scap.oval.def.macos.InstallhistoryObject	\
+	scap.oval.def.macos.EntityStatePackageSourceType	\
 	scap.oval.def.macos.EntityStatePlistTypeType	\
 	scap.oval.def.macos.AuthorizationdbTest	\
 	scap.oval.def.macos.Pwpolicy512Object	\

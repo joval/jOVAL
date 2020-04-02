@@ -15,7 +15,7 @@
           <xsd:annotation>
                <xsd:documentation>
                     The installhistory_item stores information retrieved from the system_profiler about installed software on the device.
-                    Information is collected from the target endpoint using the "system_profiler SPInstallHistoryDataType -xml"" command
+                    Information is collected from the target endpoint using the "system_profiler SPInstallHistoryDataType" command
                     and output values are parsed from the XML output.
                </xsd:documentation>
           </xsd:annotation>
@@ -45,11 +45,10 @@
                                         </xsd:documentation>
                                    </xsd:annotation>
                               </xsd:element>
-                              <xsd:element name="package_source" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                              <xsd:element name="package_source" type="macos-sc:EntityItemPackageSourceType" minOccurs="0" maxOccurs="1">
                                    <xsd:annotation>
                                         <xsd:documentation>
-                                             The package_source element contains the source of the installed software item, e.g. 'package_source_apple' or
-                                             'package_source_other'.
+                                             The package_source element contains the source of the installed software item.
                                         </xsd:documentation>
                                    </xsd:annotation>
                               </xsd:element>
@@ -58,4 +57,18 @@
                </xsd:complexContent>
           </xsd:complexType>
      </xsd:element>
+      <xsd:complexType name="EntityItemPackageSourceType">
+            <xsd:simpleContent>
+                  <xsd:restriction base="oval-sc:EntityItemStringType">
+                        <xsd:enumeration value="Apple"/>
+                        <xsd:enumeration value="AppStore"/>
+                        <xsd:enumeration value="ThirdParty"/>
+                        <xsd:enumeration value="">
+                              <xsd:annotation>
+                                    <xsd:documentation>The empty string value is permitted here to allow for detailed error reporting.</xsd:documentation>
+                              </xsd:annotation>
+                        </xsd:enumeration>
+                  </xsd:restriction>
+            </xsd:simpleContent>
+      </xsd:complexType>
 </xsd:schema>
