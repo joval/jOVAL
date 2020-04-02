@@ -91,5 +91,12 @@ $(SCH)/%-schematron.sch: $(SCHEMATRON)/%.xml
 $(OVAL_OFFICIAL):
 	mkdir -p $@
 
+$(OVAL_OFFICIAL)/macos-%.xsd: $(OVAL_SRC)/macos-%.xsd
+	sed 's/ schemaLocation=.*\//\//g' $< > $@
+	sed -i.bak 's/macos-def:EntityObjectDataTypeType/macos-def:EntityObjectDataTypeTypeExtended/g' $@
+	sed -i.bak 's/macos-def:EntityStateDataTypeType/macos-def:EntityStateDataTypeTypeExtended/g' $@
+	sed -i.bak 's/macos-sc:EntityItemDataTypeType/macos-sc:EntityItemDataTypeTypeExtended/g' $@
+	rm $(OVAL_OFFICIAL)/*.bak
+
 $(OVAL_OFFICIAL)/%.xsd: $(OVAL_SRC)/%.xsd
 	sed 's/ schemaLocation=.*\//\//g' $< > $@

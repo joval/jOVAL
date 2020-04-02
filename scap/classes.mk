@@ -422,6 +422,7 @@ CLASSES=\
 	scap.oval.sc.macos.NvramItem	\
 	scap.oval.sc.macos.PlistItem	\
 	scap.oval.sc.macos.EntityItemPlistTypeType	\
+	scap.oval.sc.macos.EntityItemDataTypeTypeExtended	\
 	scap.oval.sc.macos.EntityItemDataTypeType	\
 	scap.oval.sc.macos.Inetlisteningserver510Item	\
 	scap.oval.sc.macos.RlimitItem	\
@@ -435,6 +436,7 @@ CLASSES=\
 	scap.oval.sc.macos.SystemsetupItem	\
 	scap.oval.sc.macos.PwpolicyItem	\
 	scap.oval.sc.macos.GatekeeperItem	\
+	scap.oval.sc.macos.InstallhistoryItem	\
 	scap.oval.sc.macos.CorestorageItem	\
 	scap.oval.sc.macos.Plist511Item	\
 	scap.oval.sc.macos.Pwpolicy59Item	\
@@ -718,6 +720,7 @@ CLASSES=\
 	scap.oval.sc.windows.SharedresourceeffectiverightsItem	\
 	scap.oval.sc.windows.FileItem	\
 	scap.oval.sc.windows.PortItem	\
+	scap.oval.sc.windows.AppcmdItem	\
 	scap.oval.sc.windows.Wmi57Item	\
 	scap.oval.sc.windows.PeheaderItem	\
 	scap.oval.sc.windows.EntityItemNTUserAccountTypeType	\
@@ -729,6 +732,7 @@ CLASSES=\
 	scap.oval.sc.windows.ServiceeffectiverightsItem	\
 	scap.oval.sc.windows.EntityItemServiceCurrentStateType	\
 	scap.oval.sc.windows.EntityItemRegistryTypeType	\
+	scap.oval.sc.windows.EntityItemAppCmdObjectType	\
 	scap.oval.sc.windows.RegkeyeffectiverightsItem	\
 	scap.oval.sc.windows.package-info	\
 	scap.oval.sc.windows.UserSidItem	\
@@ -830,6 +834,7 @@ CLASSES=\
 	scap.oval.def.macos.KeychainTest	\
 	scap.oval.def.macos.AuthorizationdbState	\
 	scap.oval.def.macos.RlimitTest	\
+	scap.oval.def.macos.InstallhistoryObject	\
 	scap.oval.def.macos.EntityStatePlistTypeType	\
 	scap.oval.def.macos.AuthorizationdbTest	\
 	scap.oval.def.macos.Pwpolicy512Object	\
@@ -863,11 +868,14 @@ CLASSES=\
 	scap.oval.def.macos.SystemsetupObject	\
 	scap.oval.def.macos.PwpolicyObject	\
 	scap.oval.def.macos.NvramObject	\
+	scap.oval.def.macos.EntityStateDataTypeTypeExtended	\
 	scap.oval.def.macos.InetlisteningserversObject	\
 	scap.oval.def.macos.Pwpolicy59Test	\
 	scap.oval.def.macos.Pwpolicy59Object	\
 	scap.oval.def.macos.GatekeeperState	\
+	scap.oval.def.macos.InstallhistoryTest	\
 	scap.oval.def.macos.DiskutilState	\
+	scap.oval.def.macos.EntityObjectDataTypeTypeExtended	\
 	scap.oval.def.macos.EntityStateDataTypeType	\
 	scap.oval.def.macos.CorestorageTest	\
 	scap.oval.def.macos.PlistObject	\
@@ -878,6 +886,7 @@ CLASSES=\
 	scap.oval.def.macos.GatekeeperTest	\
 	scap.oval.def.macos.AccountinfoState	\
 	scap.oval.def.macos.PlistState	\
+	scap.oval.def.macos.InstallhistoryState	\
 	scap.oval.def.macos.PwpolicyState	\
 	scap.oval.def.macos.PwpolicyTest	\
 	scap.oval.def.macos.KeychainState	\
@@ -1441,6 +1450,7 @@ CLASSES=\
 	scap.oval.def.asa.SnmpGroupObject	\
 	scap.oval.def.asa.package-info	\
 	scap.oval.def.windows.WmiObject	\
+	scap.oval.def.windows.EntityStateAppCmdObjectType	\
 	scap.oval.def.windows.ServiceeffectiverightsObject	\
 	scap.oval.def.windows.LockoutpolicyState	\
 	scap.oval.def.windows.MetabaseObject	\
@@ -1605,7 +1615,10 @@ CLASSES=\
 	scap.oval.def.windows.UserObject	\
 	scap.oval.def.windows.CmdletState	\
 	scap.oval.def.windows.PortTest	\
+	scap.oval.def.windows.AppcmdObject	\
+	scap.oval.def.windows.AppcmdTest	\
 	scap.oval.def.windows.Process58Object	\
+	scap.oval.def.windows.AppcmdState	\
 	scap.oval.def.windows.Wmi57Test	\
 	scap.oval.def.windows.Regkeyauditedpermissions53Test	\
 	scap.oval.def.windows.ServiceObject	\
@@ -1629,6 +1642,7 @@ CLASSES=\
 	scap.oval.def.windows.EntityStateSharedResourceTypeType	\
 	scap.oval.def.windows.SidBehaviors	\
 	scap.oval.def.windows.Fileeffectiverights53Test	\
+	scap.oval.def.windows.EntityObjectAppCmdObjectType	\
 	scap.oval.def.windows.VolumeObject	\
 	scap.oval.def.windows.package-info	\
 	scap.oval.def.windows.PrinterEffectiveRightsBehaviors	\
