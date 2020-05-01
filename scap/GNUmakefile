@@ -91,11 +91,12 @@ $(SCH)/%-schematron.sch: $(SCHEMATRON)/%.xml
 $(OVAL_OFFICIAL):
 	mkdir -p $@
 
+$(OVAL_OFFICIAL)/oval-common-schema.xsd: $(OVAL_SRC)/oval-common-schema.xsd
+	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:$(OVAL_SCHEMA)/unofficial/common-strip-family.xsl -o:$@
+
 $(OVAL_OFFICIAL)/macos-%.xsd: $(OVAL_SRC)/macos-%.xsd
-	sed 's/ schemaLocation=.*\//\//g' $< > $@
-	sed -i.bak 's/macos-def:EntityObjectDataTypeType/macos-def:EntityObjectDataTypeTypeExtended/g' $@
-	sed -i.bak 's/macos-def:EntityStateDataTypeType/macos-def:EntityStateDataTypeTypeExtended/g' $@
-	sed -i.bak 's/macos-sc:EntityItemDataTypeType/macos-sc:EntityItemDataTypeTypeExtended/g' $@
+	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:$(OVAL_SCHEMA)/unofficial/macos-strip-datatypetype.xsl -o:$@
+	sed -i.bak 's/ schemaLocation=.*\//\//g' $@
 	rm $(OVAL_OFFICIAL)/*.bak
 
 $(OVAL_OFFICIAL)/%.xsd: $(OVAL_SRC)/%.xsd

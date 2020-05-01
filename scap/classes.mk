@@ -959,9 +959,7 @@ CLASSES=\
 	scap.oval.def.macos.DiskutilState	\
 	scap.oval.def.macos.DiskutilTest	\
 	scap.oval.def.macos.EntityObjectDataTypeType	\
-	scap.oval.def.macos.EntityObjectDataTypeTypeExtended	\
 	scap.oval.def.macos.EntityStateDataTypeType	\
-	scap.oval.def.macos.EntityStateDataTypeTypeExtended	\
 	scap.oval.def.macos.EntityStatePackageSourceType	\
 	scap.oval.def.macos.EntityStatePermissionCompareType	\
 	scap.oval.def.macos.EntityStatePlistTypeType	\
@@ -1666,7 +1664,6 @@ CLASSES=\
 	scap.oval.sc.macos.CorestorageItem	\
 	scap.oval.sc.macos.DiskutilItem	\
 	scap.oval.sc.macos.EntityItemDataTypeType	\
-	scap.oval.sc.macos.EntityItemDataTypeTypeExtended	\
 	scap.oval.sc.macos.EntityItemPackageSourceType	\
 	scap.oval.sc.macos.EntityItemPermissionCompareType	\
 	scap.oval.sc.macos.EntityItemPlistTypeType	\

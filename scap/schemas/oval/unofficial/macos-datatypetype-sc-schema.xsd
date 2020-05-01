@@ -8,7 +8,7 @@
             elementFormDefault="qualified" version="5.11">
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
-   <xsd:complexType name="EntityItemDataTypeTypeExtended">
+   <xsd:complexType name="EntityItemDataTypeType">
       <xsd:simpleContent>
          <xsd:restriction base="oval-sc:EntityItemStringType">
             <xsd:enumeration value="SPHardwareDataType"/>
