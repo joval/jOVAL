@@ -39,6 +39,22 @@
         <jxb:property name="dpkg_operation" />
     </jxb:bindings>
   </jxb:bindings>
+  <jxb:bindings schemaLocation="x-nexus-definitions-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.def.nexus"/>
+    </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="nexus-def"/>
+    </jxb:bindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="x-nexus-system-characteristics-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.sc.nexus"/>
+    </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="nexus-sc"/>
+    </jxb:bindings>
+  </jxb:bindings>
   <jxb:bindings schemaLocation="x-protocols-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.protocols"/>

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:nexus-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nexus"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nexus"
+            elementFormDefault="qualified" version="5.11">
+    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
+    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
+    <xsd:annotation>
+        <xsd:documentation>The following is a description of the elements, types, and attributes that compose the NX-OS specific system characteristic items found in Open Vulnerability and Assessment Language (OVAL). Each item is an extension of the standard item element defined in the Core System Characteristic Schema. Through extension, each item inherits a set of elements and attributes that are shared amongst all OVAL Items. Each item is described in detail and should provide the information necessary to understand what each element and attribute represents. This document is intended for developers and assumes some familiarity with XML. A high level description of the interaction between the different tests and their relationship to the Core System Characteristic Schema is not outlined here.</xsd:documentation>
+        <xsd:documentation>The OVAL Schema is maintained by the OVAL Community. For more information, including how to get involved in the project and how to submit change requests, please visit the OVAL website at http://oval.cisecurity.org.</xsd:documentation>
+        <xsd:appinfo>
+            <schema>NX-OS System Characteristics</schema>
+            <version>5.11.1:1.0</version>
+            <date>05/02/2020 09:00:00 AM</date>
+            <terms_of_use>For the portion subject to the copyright in the United States: Copyright (c) 2020 United States Government. All rights reserved. Copyright (c) 2020, Center for Internet Security. All rights reserved. The contents of this file are subject to the terms of the OVAL License located at https://oval.cisecurity.org/terms. See the OVAL License for the specific language governing permissions and limitations for use of this schema. When distributing copies of the OVAL Schema, this license header must be included.</terms_of_use>
+            <sch:ns prefix="oval-sc" uri="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
+            <sch:ns prefix="nexus-sc" uri="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nexus"/>
+            <sch:ns prefix="xsi" uri="http://www.w3.org/2001/XMLSchema-instance"/>
+        </xsd:appinfo>
+    </xsd:annotation>
+    <!-- ================================================================================= -->
+    <!-- ==========================  NX-OS GLOBAL ITEM   ================================= -->
+    <!-- ================================================================================= -->
+    <xsd:element name="global_item" substitutionGroup="oval-sc:item">
+        <xsd:annotation>
+            <xsd:documentation>Sotres information about the existence of a particular line in the NX-OS config file under the global context</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="oval-sc:ItemType">
+                    <xsd:sequence>
+                        <xsd:element name="global_command" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>The global_command entity identifies a specific line in the NX-OS config file under the global context.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <!-- ================================================================================= -->
+    <!-- ==============================  NX-OS LINE ITEM  ================================ -->
+    <!-- ================================================================================= -->
+    <xsd:element name="line_item" substitutionGroup="oval-sc:item">
+        <xsd:annotation>
+            <xsd:documentation>Stores the properties of specific lines in the IOS-XE config file.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="oval-sc:ItemType">
+                    <xsd:sequence>
+                        <xsd:element name="show_subcommand" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>The name of the SHOW sub-command.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="config_line" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>The value returned from by the specified SHOW sub-command.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <!-- ================================================================================= -->
+    <!-- ===========================  NX-OS VERSION ITEM  ================================ -->
+    <!-- ================================================================================= -->
+    <xsd:element name="version_item" substitutionGroup="oval-sc:item">
+        <xsd:annotation>
+            <xsd:documentation>The version_state element defines the version information held within a Cisco NX-OS version. It extends the standard ItemType as defined in the oval-system-characteristics schema and one should refer to the ItemType description for more information.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="oval-sc:ItemType">
+                    <xsd:sequence>
+                        <xsd:element name="version_string" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>The entire NX-OS version string, for example: '7.1(0)N1(1b)' or '9.2(1)'.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="major_release" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>The major version piece of the version string. The value is an integer, and in the example 6.2(8b) the major_release is '6'</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="minor_release" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>The minor release piece of the version string. The value is an integer, and in the example 6.2(8b) the minor_release is '2'</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="maintenance_release" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>The maintenance release piece of the version string. The value is an integer, and in the example 6.2(8b) the maintenance release is '8'</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="rebuild" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>The rebuild identifier piece of the version string. The value is a string, and in the example 6.2(8b) the rebuild is 'b'. For the examples 7.1(0)N1(1b) and 9.2(1), there is no rebuilt identifier.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="platform" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>The platform designator piece of the version string. The value is a string, and in the example 7.1(0)N1(1b) the platform designator is 'N'. For the examples 6.2(8b) and 9.2(1), there is no platform designator.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="platform_minor" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>The platform minor release piece of the version string. The value is an integer, and in the example 7.1(0)N2(1b) the platform minor release is '2'. For the examples 6.2(8b) and 9.2(1), there is no platform minor release.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="platform_maintenance" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>The platform maintenance release piece of the version string. The value is an integer, and in the example 7.1(0)N1(2b) the platform maintenance release is '2'. For the examples 6.2(8b) and 9.2(1), there is no platform maintenance release.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="platform_rebuild" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>The platform rebuild identifier piece of the version string. The value is a string, and in the example 7.1(0)N1(1b) the platform rebuild identifier is 'b'. For the examples 6.2(8b) and 9.2(1), there is no platform rebuild identifier.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <!-- ================================================================================= -->
+    <!-- ==========================  NX-OS SECTION ITEM   ================================ -->
+    <!-- ================================================================================= -->
+    <xsd:element name="section_item" substitutionGroup="oval-sc:item">
+        <xsd:annotation>
+            <xsd:documentation>Stores command that are part of a IOS-XE configuration section. For example all configuration lines under an interface. It should not store configurations for configs that already have a separate item. For example BGP has a router item and should not also be stored in a section_item. </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="oval-sc:ItemType">
+                    <xsd:sequence>
+                        <xsd:element name="section_command" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>The name of the section command.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="section_config_lines" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                            <xsd:annotation>
+                                <xsd:documentation>Element with all config lines of the section</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="config_line" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
+                            <xsd:annotation>
+                                <xsd:documentation>Element with one config line of the section at a time</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>
