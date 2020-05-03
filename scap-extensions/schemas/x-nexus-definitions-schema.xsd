@@ -286,7 +286,7 @@
                         </xsd:element>
                         <xsd:element name="rebuild" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
-                                <xsd:documentation>The rebuild identifier piece of the version string. The value is a string, and in the example 6.2(8b) the rebuild is 'b'. For the examples 7.1(0)N1(1b) and 9.2(1), there is no rebuilt identifier.</xsd:documentation>
+                                <xsd:documentation>The rebuild identifier piece of the version string. The value is a string, and in the example 6.2(8b) the rebuild is 'b'. For the examples 7.1(0)N1(1b) and 9.2(1), there is no rebuild identifier.</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
                         <xsd:element name="platform" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
