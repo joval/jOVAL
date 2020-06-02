@@ -1,3 +1,4 @@
+CLASSES=\
 	scap.oval.sc.independent.extended.ObjectFactory	\
 	scap.oval.sc.independent.extended.package-info	\
 	scap.oval.sc.nexus.ObjectFactory	\
@@ -17,4 +18,4 @@
 	scap.oval.def.windows.extended.ObjectFactory	\
 	scap.oval.def.windows.extended.package-info	\
 	scap.oval.def.protocols.ObjectFactory	\
-	scap.oval.def.protocols.package-info	\
+	scap.oval.def.protocols.package-info
