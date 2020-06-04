@@ -26,10 +26,21 @@
 	<xsl:template match="xsd:schema">
 		<html>
 		<head>
-			<title>OVAL <xsl:value-of select="xsd:annotation/xsd:appinfo/schema"/> Schema Element Dictionary</title>
+			<title>OVAL <xsl:value-of select="document(./xsd:include/@schemaLocation)/xsd:schema/xsd:annotation/xsd:appinfo/schema"/> Schema Element Dictionary</title>
 		</head>
 		<body bgcolor="#ffffff">
 
+		<xsl:for-each select="xsd:include">
+			<xsl:for-each select="document(./@schemaLocation)//xsd:schema">
+				<xsl:call-template name="included"/>
+			</xsl:for-each>
+		</xsl:for-each>
+
+		</body>
+		</html>
+	</xsl:template>
+
+	<xsl:template name="included">
 		<xsl:for-each select="xsd:annotation">
 			<h1 align="center">- Open Vulnerability and Assessment Language -<br/>Element Dictionary</h1>
 			<ul>
@@ -92,9 +103,6 @@
 				<xsl:when test="name()='xsd:attributeGroup'"><xsl:call-template name="global_attribute_group"/></xsl:when>
 			</xsl:choose>
 		</xsl:for-each>
-
-		</body>
-		</html>
 	</xsl:template>
 	
 	<xsl:template name="global_element">
