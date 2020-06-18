@@ -616,6 +616,12 @@
         <jxb:property name="launchd_status" />
     </jxb:bindings>
   </jxb:bindings>
+  <jxb:bindings schemaLocation="oval/unofficial/macos-filevault-def-schema.xsd" node="/xs:schema">
+    <!-- avoid overloading the status property -->
+    <jxb:bindings node="xs:element[@name='filevault_state']//xs:element[@name='status']">
+        <jxb:property name="filevault_status" />
+    </jxb:bindings>
+  </jxb:bindings>
   <jxb:bindings schemaLocation="oval/official/macos-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.sc.macos"/>
@@ -633,6 +639,12 @@
     <!-- avoid overloading the status attribute -->
     <jxb:bindings node="xs:element[@name='launchd_item']//xs:element[@name='status']">
         <jxb:property name="launchd_status" />
+    </jxb:bindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="oval/unofficial/macos-filevault-sc-schema.xsd" node="/xs:schema">
+    <!-- avoid overloading the status attribute -->
+    <jxb:bindings node="xs:element[@name='filevault_item']//xs:element[@name='status']">
+        <jxb:property name="filevault_status" />
     </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="oval/official/netconf-definitions-schema.xsd" node="/xs:schema">

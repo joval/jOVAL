@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:macos-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#macos"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#macos"
+            elementFormDefault="qualified" version="5.11">
+     <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
+     <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
+     <!-- =============================================================================== -->
+     <!-- ============================  FILE VAULT ITEM  ================================ -->
+     <!-- =============================================================================== -->
+     <xsd:element name="filevault_item" substitutionGroup="oval-sc:item">
+          <xsd:annotation>
+               <xsd:documentation>
+                    The filevault_item stores information about the status of File Vault on the machine.
+               </xsd:documentation>
+          </xsd:annotation>
+          <xsd:complexType>
+               <xsd:complexContent>
+                    <xsd:extension base="oval-sc:ItemType">
+                         <xsd:sequence>
+                              <xsd:element name="status" type="macos-sc:EntityItemFileVaultStatusType" minOccurs="0" maxOccurs="1">
+                                   <xsd:annotation>
+                                        <xsd:documentation>
+                                             The status element contains the File Vault status on the machine. If encryption is in progress, the status will be 'encrypting', otherwise it will be 'enabled' or 'disabled'.
+                                        </xsd:documentation>
+                                   </xsd:annotation>
+                              </xsd:element>
+                         </xsd:sequence>
+                    </xsd:extension>
+               </xsd:complexContent>
+          </xsd:complexType>
+     </xsd:element>
+     <xsd:complexType name="EntityItemFileVaultStatusType">
+           <xsd:simpleContent>
+                 <xsd:restriction base="oval-sc:EntityItemStringType">
+                       <xsd:enumeration value="enabled"/>
+                       <xsd:enumeration value="disabled"/>
+                       <xsd:enumeration value="encrypting"/>
+                       <xsd:enumeration value="">
+                             <xsd:annotation>
+                                   <xsd:documentation>The empty string value is permitted here to allow for detailed error reporting.</xsd:documentation>
+                             </xsd:annotation>
+                       </xsd:enumeration>
+                 </xsd:restriction>
+           </xsd:simpleContent>
+     </xsd:complexType>
+</xsd:schema>

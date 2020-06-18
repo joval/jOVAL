@@ -92,17 +92,17 @@ $(OVAL_OFFICIAL):
 	mkdir -p $@
 
 $(OVAL_OFFICIAL)/oval-common-schema.xsd: $(OVAL_SRC)/oval-common-schema.xsd
-	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:$(OVAL_SCHEMA)/unofficial/strip-common-family.xsl -o:$@
+	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:$(OVAL_SCHEMA)/unofficial/strip-redefined-common.xsl -o:$@
 	sed -i.bak 's/ schemaLocation=.*\//\//g' $@
 	rm $(OVAL_OFFICIAL)/*.bak
 
 $(OVAL_OFFICIAL)/independent-%.xsd: $(OVAL_SRC)/independent-%.xsd
-	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:$(OVAL_SCHEMA)/unofficial/strip-independent-familytype.xsl -o:$@
+	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:$(OVAL_SCHEMA)/unofficial/strip-redefined-independent.xsl -o:$@
 	sed -i.bak 's/ schemaLocation=.*\//\//g' $@
 	rm $(OVAL_OFFICIAL)/*.bak
 
 $(OVAL_OFFICIAL)/macos-%.xsd: $(OVAL_SRC)/macos-%.xsd
-	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:$(OVAL_SCHEMA)/unofficial/strip-macos-datatypetype.xsl -o:$@
+	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:$(OVAL_SCHEMA)/unofficial/strip-redefined-macos.xsl -o:$@
 	sed -i.bak 's/ schemaLocation=.*\//\//g' $@
 	rm $(OVAL_OFFICIAL)/*.bak
 

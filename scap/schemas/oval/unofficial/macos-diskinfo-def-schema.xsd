@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:macos-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#macos"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#macos"
+            elementFormDefault="qualified" version="5.11">
+      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
+      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
+      <!-- =============================================================================== -->
+      <!-- ===============================  DISK INFO TEST  ============================== -->
+      <!-- =============================================================================== -->
+      <xsd:element name="diskinfo_test" substitutionGroup="oval-def:test">
+            <xsd:annotation>
+                  <xsd:documentation>
+                        The diskinfo_test is used to inspect the contents of 'diskutil info &lt;device ID&gt;' command output. It extends the standard TestType
+                        as defined in the oval-definitions-schema and one should refer to the TestType description for more information.  The required object
+                        element references an diskinfo_object and the optional state element references an diskinfo_state that specifies the information to check.
+                  </xsd:documentation>
+                  <xsd:appinfo>
+                        <oval:element_mapping>
+                              <oval:test>diskinfo_test</oval:test>
+                              <oval:object>diskinfo_object</oval:object>
+                              <oval:state>diskinfo_state</oval:state>
+                              <oval:item target_namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#macos">diskinfo_item</oval:item>
+                        </oval:element_mapping>
+                  </xsd:appinfo>
+                  <xsd:appinfo>
+                        <sch:pattern id="macos-def_diskinfotst">
+                              <sch:rule context="macos-def:diskinfo_test/macos-def:object">
+                                    <sch:assert test="@object_ref=ancestor::oval-def:oval_definitions/oval-def:objects/macos-def:diskinfo_object/@id"><sch:value-of select="../@id"/> - the object child element of an diskinfo_test must reference an diskinfo_object</sch:assert>
+                              </sch:rule>
+                              <sch:rule context="macos-def:diskinfo_test/macos-def:state">
+                                    <sch:assert test="@state_ref=ancestor::oval-def:oval_definitions/oval-def:states/macos-def:diskinfo_state/@id"><sch:value-of select="../@id"/> - the state child element of an diskinfo_test must reference an diskinfo_state</sch:assert>
+                              </sch:rule>
+                        </sch:pattern>
+                  </xsd:appinfo>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-def:TestType">
+                              <xsd:sequence>
+                                    <xsd:element name="object" type="oval-def:ObjectRefType" />
+                                    <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="diskinfo_object" substitutionGroup="oval-def:object">
+            <xsd:annotation>
+                  <xsd:documentation>
+                        The diskinfo_object is used by an diskinfo_test to define the scope of disks on the local system that should be collected using the 'diskutil
+                        info &lt;name&gt;' command. Each object extends the standard ObjectType as defined in the oval-definitions-schema and one should refer to the
+                        ObjectType description for more information. The common set element allows complex objects to be created using filters and set logic. Again,
+                        please refer to the description of the set element in the oval-definitions-schema.
+                  </xsd:documentation>
+                  <xsd:appinfo>
+                        <sch:pattern id="macos-def_diskinfo_object_verify_filter_state">
+                              <sch:rule context="macos-def:diskinfo_object//oval-def:filter">
+                                    <sch:let name="parent_object" value="ancestor::macos-def:diskinfo_object"/>
+                                    <sch:let name="parent_object_id" value="$parent_object/@id"/>
+                                    <sch:let name="state_ref" value="."/>
+                                    <sch:let name="reffed_state" value="ancestor::oval-def:oval_definitions/oval-def:states/*[@id=$state_ref]"/>
+                                    <sch:let name="state_name" value="local-name($reffed_state)"/>
+                                    <sch:let name="state_namespace" value="namespace-uri($reffed_state)"/>
+                                    <sch:assert test="(($state_namespace='http://oval.mitre.org/XMLSchema/oval-definitions-5#macos') and ($state_name='diskinfo_state'))">State referenced in filter for <sch:value-of select="name($parent_object)"/> '<sch:value-of select="$parent_object_id"/>' is of the wrong type. </sch:assert>
+                              </sch:rule>
+                        </sch:pattern>
+                  </xsd:appinfo>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-def:ObjectType">
+                              <xsd:sequence>
+                                    <xsd:choice>
+                                          <xsd:element ref="oval-def:set"/>
+                                          <xsd:sequence>
+                                                <xsd:element name="device_identifier" type="oval-def:EntityObjectStringType">
+                                                      <xsd:annotation>
+                                                            <xsd:documentation>
+                                                                  The device_identifier element specifies the name(s) of the disk whose information should be collected
+                                                                  from the local system. Use a wildcard pattern to collect information for all disk devices.
+                                                            </xsd:documentation>
+                                                      </xsd:annotation>
+                                                </xsd:element>
+                                                <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                                          </xsd:sequence>
+                                    </xsd:choice>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="diskinfo_state" substitutionGroup="oval-def:state">
+            <xsd:annotation>
+                  <xsd:documentation>The diskinfo_state contains entities that are used to check against retrieved disk information.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-def:StateType">
+                              <xsd:sequence>
+                                    <xsd:element name="device_identifier" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The device identifier.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="volume_name" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The value of the volume name field (if any).</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="file_system_personality" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The value of the file system personality field (if any).</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="removable_media" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The value of the removable media field (if any).</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="device_location" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The value of the device location field (if any).</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="solid_state" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The value of the solid state flag.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="read_only" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The value of the read-only volume flag.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="file_vault" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>Whether or not FileVault is enabled on the disk.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="mount_point" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The mount point for this disk (if any).</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="smart_status" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The value of the SMART status field (if any).</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="encrypted" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>
+                                                      The value of the encrypted status field (if any). This is typically present for external drives,
+                                                      not APFS drives with FileVault active (for which this field does not exist).
+                                                </xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="apfs_uid" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The value of an APFS userid (for non-APFS disks, this does not exist).</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
+      </xsd:element>
+</xsd:schema>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+            xmlns:macos-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#macos"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#macos"
+            elementFormDefault="qualified" version="5.11">
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
+     <!-- =============================================================================== -->
+     <!-- ===========================  SYSTEMPROFILER ITEM  ============================= -->
+     <!-- =============================================================================== -->
+     <xsd:element name="systemprofiler_item" substitutionGroup="oval-sc:item">
+          <xsd:annotation>
+               <xsd:documentation>This item stores results from performing an XPATH query on the XML result of a systemprofiler data type query.</xsd:documentation>
+          </xsd:annotation>
+          <xsd:complexType>
+               <xsd:complexContent>
+                    <xsd:extension base="oval-sc:ItemType">
+                         <xsd:sequence>
+                              <xsd:element name="data_type" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                                   <xsd:annotation>
+                                        <xsd:documentation>Specifies the data type that was used in collection.</xsd:documentation>
+                                   </xsd:annotation>
+                              </xsd:element>
+                              <xsd:element name="xpath" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+                                   <xsd:annotation>
+                                        <xsd:documentation>Specifies an Xpath expression describing the text node(s) or attribute(s) to look at.</xsd:documentation>
+                                   </xsd:annotation>
+                              </xsd:element>
+                              <xsd:element name="value_of" type="oval-sc:EntityItemAnySimpleType" minOccurs="0" maxOccurs="unbounded">
+                                   <xsd:annotation>
+                                        <xsd:documentation>The value_of element checks the value(s) of the text node(s) or attribute(s) found. How this is used is entirely controlled by operator attributes.</xsd:documentation>
+                                   </xsd:annotation>
+                              </xsd:element>
+                         </xsd:sequence>
+                    </xsd:extension>
+               </xsd:complexContent>
+          </xsd:complexType>
+     </xsd:element>
+</xsd:schema>

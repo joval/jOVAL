@@ -13,6 +13,13 @@
     <xsl:template match="xs:complexType[@name='EntityObjectDataTypeType']"/>
     <xsl:template match="xs:complexType[@name='EntityStateDataTypeType']"/>
     <xsl:template match="xs:complexType[@name='EntityItemDataTypeType']"/>
+    <xsl:template match="xs:element[@name='accountinfo_item']"/>
+    <xsl:template match="xs:element[@name='accountinfo_state']"/>
+    <xsl:template match="xs:element[@name='gatekeeper_item']"/>
+    <xsl:template match="xs:element[@name='gatekeeper_state']"/>
+    <xsl:template match="xs:element[@name='systemsetup_state']"/>
+    <xsl:template match="xs:element[@name='systemprofiler_item']"/>
+    <xsl:template match="xs:element[@name='systemprofiler_object']"/>
+    <xsl:template match="xs:element[@name='systemprofiler_state']"/>
 
 </xsl:stylesheet>
-

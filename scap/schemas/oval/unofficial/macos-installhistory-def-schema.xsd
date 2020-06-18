@@ -142,7 +142,7 @@ of only white-space, the status of the entity should be "does not exist".
                         <xsd:enumeration value="ThirdParty"/>
                         <xsd:enumeration value="">
                               <xsd:annotation>
-                                    <xsd:documentation>The empty string value is permitted here to allow for detailed error reporting.</xsd:documentation>
+                                    <xsd:documentation>The empty string value is permitted here to allow for the use of variables.</xsd:documentation>
                               </xsd:annotation>
                         </xsd:enumeration>
                   </xsd:restriction>

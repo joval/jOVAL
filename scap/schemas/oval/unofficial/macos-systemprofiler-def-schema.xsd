@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+            xmlns:macos-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#macos"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#macos"
+            elementFormDefault="qualified" version="5.11">
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
+      <xsd:element name="systemprofiler_object" substitutionGroup="oval-def:object">
+            <xsd:annotation>
+                  <xsd:documentation>The systemprofiler_object element is used by an systemprofiler_test to define the object to be evaluated. Each object extends the standard ObjectType as defined in the oval-definitions-schema and one should refer to the ObjectType description for more information. The common set element allows complex objects to be created using filters and set logic. Again, please refer to the description of the set element in the oval-definitions-schema.</xsd:documentation>
+                  <xsd:documentation>An systemprofiler_object consists of a data_type entity that contains the name of the datatype that was probed by the system_profiler utility. The resulting plist data can be queried using the xpath entity.</xsd:documentation>
+                  <xsd:appinfo>
+                        <sch:pattern id="macos-def_systemprofiler_object_verify_filter_state">
+                              <sch:rule context="macos-def:systemprofiler_object//oval-def:filter">
+                                    <sch:let name="parent_object" value="ancestor::macos-def:systemprofiler_object"/>
+                                    <sch:let name="parent_object_id" value="$parent_object/@id"/>
+                                    <sch:let name="state_ref" value="."/>
+                                    <sch:let name="reffed_state" value="ancestor::oval-def:oval_definitions/oval-def:states/*[@id=$state_ref]"/>
+                                    <sch:let name="state_name" value="local-name($reffed_state)"/>
+                                    <sch:let name="state_namespace" value="namespace-uri($reffed_state)"/>
+                                    <sch:assert test="(($state_namespace='http://oval.mitre.org/XMLSchema/oval-definitions-5#macos') and ($state_name='systemprofiler_state'))">State referenced in filter for <sch:value-of select="name($parent_object)"/> '<sch:value-of select="$parent_object_id"/>' is of the wrong type. </sch:assert>
+                              </sch:rule>
+                        </sch:pattern>
+                  </xsd:appinfo>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-def:ObjectType">
+                              <xsd:sequence>
+                                    <xsd:choice>
+                                          <xsd:element ref="oval-def:set"/>
+                                          <xsd:sequence>
+                                                <xsd:element name="data_type" type="oval-def:EntityObjectStringType">
+                                                      <xsd:annotation>
+                                                            <xsd:documentation>The data_type entity provides the datatype value that is desired. This must be one of the values enumerated by the command 'system_profiler -listDataTypes', or else the object will have a status of 'does not exist'.</xsd:documentation>
+                                                      </xsd:annotation>
+                                                </xsd:element>
+                                                <xsd:element name="xpath" type="oval-def:EntityObjectStringType">
+                                                      <xsd:annotation>
+                                                            <xsd:documentation>Specifies an Xpath expression describing the text node(s) or attribute(s) to look at. Any valid Xpath 1.0 statement is usable with one exception, at most one field may be identified in the Xpath. This is because the value_of element in the data section is only designed to work against a single field. The only valid operator for xpath is equals since there is an infinite number of possible xpaths and determinining all those that do not equal a given xpath would be impossible.</xsd:documentation>
+                                                            <xsd:appinfo>
+                                                                  <sch:pattern id="macos-def_systemprofilerobjxpath">
+                                                                        <sch:rule context="macos-def:systemprofiler_object/macos-def:xpath">
+                                                                              <sch:assert test="not(@operation) or @operation='equals'"><sch:value-of select="../@id"/> - operation attribute for the xpath entity of an systemprofiler_object should be 'equals', note that this overrules the general operation attribute validation (i.e. follow this one)</sch:assert>
+                                                                        </sch:rule>
+                                                                  </sch:pattern>
+                                                            </xsd:appinfo>
+                                                      </xsd:annotation>
+                                                </xsd:element>
+                                                <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                                          </xsd:sequence>
+                                    </xsd:choice>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="systemprofiler_state" substitutionGroup="oval-def:state">
+            <xsd:annotation>
+                  <xsd:documentation>The systemprofiler_state element defines a value used to evaluate the result of a specific systemprofiler_object item.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:complexType>
+                  <xsd:complexContent>
+                        <xsd:extension base="oval-def:StateType">
+                              <xsd:sequence>
+                                    <xsd:element name="data_type" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The data_type entity provides the datatype value that is desired.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="xpath" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>Specifies an Xpath expression describing the text node(s) or attribute(s) to look at.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                                    <xsd:element name="value_of" type="oval-def:EntityStateAnySimpleType" minOccurs="0" maxOccurs="1">
+                                          <xsd:annotation>
+                                                <xsd:documentation>The value_of element checks the value(s) of the text node(s) or attribute(s) found.</xsd:documentation>
+                                          </xsd:annotation>
+                                    </xsd:element>
+                              </xsd:sequence>
+                        </xsd:extension>
+                  </xsd:complexContent>
+            </xsd:complexType>
+      </xsd:element>
+</xsd:schema>
