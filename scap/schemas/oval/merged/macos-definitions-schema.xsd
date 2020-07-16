@@ -14,6 +14,7 @@
       <xsd:include schemaLocation="../unofficial/macos-gatekeeper-def-schema.xsd"/>
       <xsd:include schemaLocation="../unofficial/macos-installhistory-def-schema.xsd"/>
       <xsd:include schemaLocation="../unofficial/macos-nvram512-def-schema.xsd"/>
+      <xsd:include schemaLocation="../unofficial/macos-profiles-def-schema.xsd"/>
       <xsd:include schemaLocation="../unofficial/macos-systemprofiler-def-schema.xsd"/>
       <xsd:include schemaLocation="../unofficial/macos-systemsetup-def-schema.xsd"/>
 </xsd:schema>
