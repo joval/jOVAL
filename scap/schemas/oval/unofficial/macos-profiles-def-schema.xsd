@@ -9,7 +9,7 @@
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
       <!-- =============================================================================== -->
-      <!-- ============================  MDM ENROLLMENT TEST  ============================ -->
+      <!-- ===============================  PROFILES TEST  =============================== -->
       <!-- =============================================================================== -->
       <xsd:element name="profiles_test" substitutionGroup="oval-def:test">
             <xsd:annotation>

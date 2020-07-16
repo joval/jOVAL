@@ -9,7 +9,7 @@
      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
      <!-- =============================================================================== -->
-     <!-- ==========================  MDM ENROLLMENT ITEM  ============================== -->
+     <!-- =============================  PROFILES ITEM  ================================= -->
      <!-- =============================================================================== -->
      <xsd:element name="profiles_item" substitutionGroup="oval-sc:item">
           <xsd:annotation>
