@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:tm="http://scap.nist.gov/schema/xml-dsig/1.0"
+  xmlns:dc="http://purl.org/dc/elements/1.1/" targetNamespace="http://scap.nist.gov/schema/xml-dsig/1.0"
+  elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.0">
+  <xsd:annotation>
+    <xsd:appinfo>
+      <schema>Trust Model for Security Automation Data</schema>
+      <author>Adam Halbardier, Harold Booth</author>
+      <version>1.0</version>
+      <date>2011-09-22</date>
+    </xsd:appinfo>
+  </xsd:annotation>
+  <xsd:import namespace="http://purl.org/dc/elements/1.1/"/>
+  <xsd:element name="signature-info">
+    <xsd:annotation>
+      <xsd:documentation>Metadata about an XML digital signature.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element maxOccurs="unbounded" minOccurs="0" ref="dc:creator">
+          <xsd:annotation>
+            <xsd:documentation>The person, organization, or tool that created the signature.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:element>
+        <xsd:element minOccurs="0" ref="dc:date">
+          <xsd:annotation>
+            <xsd:documentation>The date and time when the signature was created.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:element>
+        <xsd:element minOccurs="0" name="nonce" type="xsd:token">
+          <xsd:annotation>
+            <xsd:documentation>A token value that is possibly used for ordering of requests or the prevention of replay
+              attacks.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>

@@ -30,6 +30,7 @@ PUBLIC "urn:oasis:names:tc:entity:xmlns:xml:catalog" "schemas/oasis/catalog-1.1.
 PUBLIC "urn:oasis:names:tc:ciq:xsdschema:xAL:2.0" "schemas/oasis/xAL.xsd"
 PUBLIC "urn:oasis:names:tc:ciq:xsdschema:xNL:2.0" "schemas/oasis/xNL.xsd"
 PUBLIC "http://scap.nist.gov/schema/ocil/2.0" "schemas/ocil-2.0/ocil-2.0.xsd"
+PUBLIC "http://scap.nist.gov/schema/xml-dsig/1.0" "schemas/tmsad-1.0/tmsad_1.0.xsd"
 PUBLIC "http://www.gocil.org/schemas/ocil/2.0/diagnostic" "schemas/ocil-2.0/ocil-diagnostic-schema.xsd"
 PUBLIC "http://www.gocil.org/schemas/ocil/2.0/variables" "schemas/ocil-2.0/ocil-variables-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-common-5" "schemas/oval/merged/oval-common-schema.xsd"

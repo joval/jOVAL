@@ -4,13 +4,13 @@
   xmlns:cpe-dict="http://cpe.mitre.org/dictionary/2.0" xmlns:ocil="http://scap.nist.gov/schema/ocil/2.0"
   xmlns:dsig="http://www.w3.org/2000/09/xmldsig#" targetNamespace="http://scap.nist.gov/schema/scap/source/1.2"
   xmlns:cat="urn:oasis:names:tc:entity:xmlns:xml:catalog" xmlns:xlink="http://www.w3.org/1999/xlink"
-  elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.2">
+  elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.3">
   <xs:annotation>
     <xs:appinfo>
-      <schema>SCAP 1.2 Source Data Stream Collection</schema>
+      <schema>SCAP 1.3 Source Data Stream Collection</schema>
       <author>Adam Halbardier, David Waltermire</author>
-      <version>1.2</version>
-      <date>2011-10-10</date>
+      <version>1.3</version>
+      <date>2016-12-01</date>
     </xs:appinfo>
   </xs:annotation>
   <xs:import namespace="http://checklists.nist.gov/xccdf/1.2"/>
@@ -210,6 +210,7 @@
       <xs:enumeration value="1.0"/>
       <xs:enumeration value="1.1"/>
       <xs:enumeration value="1.2"/>
+      <xs:enumeration value="1.3"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:complexType name="contentSourceType">

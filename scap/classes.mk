@@ -144,5 +144,7 @@ CLASSES=\
 	scap.oval.sc.windows.package-info	\
 	scap.oval.variables.ObjectFactory	\
 	scap.oval.variables.package-info	\
+	scap.tmsad.ObjectFactory	\
+	scap.tmsad.package-info	\
 	scap.xccdf.ObjectFactory	\
-	scap.xccdf.package-info	\
+	scap.xccdf.package-info
