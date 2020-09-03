@@ -101,10 +101,5 @@ $(OVAL_OFFICIAL)/independent-%.xsd: $(OVAL_SRC)/independent-%.xsd
 	sed -i.bak 's/ schemaLocation=.*\//\//g' $@
 	rm $(OVAL_OFFICIAL)/*.bak
 
-$(OVAL_OFFICIAL)/macos-%.xsd: $(OVAL_SRC)/macos-%.xsd
-	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:$(OVAL_SCHEMA)/unofficial/strip-redefined-macos.xsl -o:$@
-	sed -i.bak 's/ schemaLocation=.*\//\//g' $@
-	rm $(OVAL_OFFICIAL)/*.bak
-
 $(OVAL_OFFICIAL)/%.xsd: $(OVAL_SRC)/%.xsd
 	sed 's/ schemaLocation=.*\//\//g' $< > $@

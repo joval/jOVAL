@@ -6,15 +6,4 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	    targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#macos">
       <xsd:include schemaLocation="../official/macos-definitions-schema.xsd"/>
-      <xsd:include schemaLocation="../unofficial/macos-accountinfo-def-schema.xsd"/>
-      <xsd:include schemaLocation="../unofficial/macos-disabledservice-def-schema.xsd"/>
-      <xsd:include schemaLocation="../unofficial/macos-diskinfo-def-schema.xsd"/>
-      <xsd:include schemaLocation="../unofficial/macos-filevault-def-schema.xsd"/>
-      <xsd:include schemaLocation="../unofficial/macos-firmwarepassword-def-schema.xsd"/>
-      <xsd:include schemaLocation="../unofficial/macos-gatekeeper-def-schema.xsd"/>
-      <xsd:include schemaLocation="../unofficial/macos-installhistory-def-schema.xsd"/>
-      <xsd:include schemaLocation="../unofficial/macos-nvram512-def-schema.xsd"/>
-      <xsd:include schemaLocation="../unofficial/macos-profiles-def-schema.xsd"/>
-      <xsd:include schemaLocation="../unofficial/macos-systemprofiler-def-schema.xsd"/>
-      <xsd:include schemaLocation="../unofficial/macos-systemsetup-def-schema.xsd"/>
 </xsd:schema>
