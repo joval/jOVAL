@@ -53,7 +53,7 @@
         <jxb:class name="OrganizationNameDetails" />
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="dublin/simpledc20021212.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="dublin/dc.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="org.purl.dc"/>
     </jxb:schemaBindings>
@@ -163,6 +163,35 @@
     </jxb:schemaBindings>
     <jxb:bindings>
       <namespace:prefix name="ai"/>
+    </jxb:bindings>
+  </jxb:bindings>
+
+  <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+  <!-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>                CCE Bindings                   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< -->
+  <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+
+  <jxb:bindings schemaLocation="dublin/dcmitype.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="org.purl.dc.dcmi"/>
+    </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="dcmi"/>
+    </jxb:bindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="dublin/dcterms.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="org.purl.dc.terms"/>
+    </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="dcterms"/>
+    </jxb:bindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="cce-2.0/cce-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.cce.list"/>
+    </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="cce"/>
     </jxb:bindings>
   </jxb:bindings>
 

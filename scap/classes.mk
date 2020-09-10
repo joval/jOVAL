@@ -17,6 +17,8 @@ CLASSES=\
 	org.openscap.sce.xccdf.package-info	\
 	org.purl.dc.ObjectFactory	\
 	org.purl.dc.package-info	\
+	org.purl.dc.terms.ObjectFactory	\
+	org.purl.dc.terms.package-info	\
 	org.w3c.xhtml.ObjectFactory	\
 	org.w3c.xhtml.package-info	\
 	org.w3c.xml.signature.ObjectFactory	\
@@ -31,6 +33,8 @@ CLASSES=\
 	scap.arf.reporting.package-info	\
 	scap.constructs.ObjectFactory	\
 	scap.constructs.package-info	\
+	scap.cce.list.ObjectFactory	\
+	scap.cce.list.package-info	\
 	scap.cpe.dictionary.ext.ObjectFactory	\
 	scap.cpe.dictionary.ext.package-info	\
 	scap.cpe.dictionary.ObjectFactory	\

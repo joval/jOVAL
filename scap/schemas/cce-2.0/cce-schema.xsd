@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2012 The MITRE Corporation. ALL RIGHTS RESERVED. -->
+<xsd:schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.w3.org/2001/XMLSchema http://www.w3.org/2001/XMLSchema.xsd"
+	xmlns:cce="http://cce.mitre.org"
+	xmlns:dcterms="http://purl.org/dc/terms/"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://cce.mitre.org">
+	<xsd:import namespace="http://purl.org/dc/terms/"/>
+
+	<xsd:element name="cce_list" type="cce:cce_list_type">
+		<xsd:keyref name="resource_id_ref" refer="cce:resource_id_key">
+			<xsd:selector xpath="cces/cce/references/reference"/>
+			<xsd:field xpath="@resource_id"/>
+		</xsd:keyref>
+
+		<xsd:key name="resource_id_key">
+			<xsd:selector xpath="resources/resource"/>
+			<xsd:field xpath="@resource_id"/>
+		</xsd:key>
+	</xsd:element>
+
+	<xsd:complexType name="cce_list_type">
+		<xsd:sequence>
+			<xsd:element name="cces" form="qualified" type="cce:cces_type" maxOccurs="1" minOccurs="1">
+				<xsd:unique name="unique_cce_id">
+					<xsd:selector xpath="cce"/>
+					<xsd:field xpath="@cce_id"/>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="resources" form="qualified" type="cce:resources_type" maxOccurs="1" minOccurs="1">
+				<xsd:unique name="unique_resource_id">
+					<xsd:selector xpath="resource"/>
+					<xsd:field xpath="@resource_id"/>
+				</xsd:unique>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modified" type="xsd:date"/>
+		<xsd:attribute name="version" type="xsd:string"/>
+	</xsd:complexType>
+
+	<xsd:complexType name="resources_type">
+		<xsd:sequence>
+			<xsd:element name="resource" form="qualified" type="cce:resource_type" maxOccurs="unbounded" minOccurs="0"/>
+		</xsd:sequence>
+		<xsd:attribute name="modified" type="xsd:date" use="required"/>
+	</xsd:complexType>
+
+	<xsd:complexType name="cces_type">
+		<xsd:sequence>
+			<xsd:element name="cce" form="qualified" type="cce:cce_type" maxOccurs="unbounded" minOccurs="1"/>
+		</xsd:sequence>
+		<xsd:attribute name="modified" type="xsd:date" use="required"/>
+	</xsd:complexType>
+
+	<xsd:complexType name="cce_type">
+		<xsd:sequence>
+			<xsd:element name="description" form="qualified" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+			<xsd:element name="parameters" form="qualified" type="cce:parameters_type" maxOccurs="1" minOccurs="1"/>
+			<xsd:element name="technical_mechanisms" form="qualified" type="cce:technical_mechanisms_type" maxOccurs="1" minOccurs="1"/> 
+			<xsd:element name="references" form="qualified" type="cce:references_type" maxOccurs="1" minOccurs="1"/>
+		</xsd:sequence>
+		<xsd:attribute name="cce_id" type="cce:cce_id_type" use="required"/>
+		<xsd:attribute name="platform" type="xsd:string" use="required"/>
+		<xsd:attribute name="modified" type="xsd:date" use="required"/>
+		<xsd:attribute name="deprecated" type="xsd:boolean" use="optional" default="false"/>
+	</xsd:complexType>
+
+	<xsd:complexType name="resource_type">
+		<xsd:sequence>
+			<xsd:element ref="dcterms:title" minOccurs="1" maxOccurs="1"/>
+			<xsd:element ref="dcterms:publisher" minOccurs="0" maxOccurs="1"/>
+			<xsd:element ref="dcterms:issued" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="version" form="qualified" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+			<xsd:element ref="dcterms:creator" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element ref="dcterms:format" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="notes" form="qualified" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+		<xsd:attribute name="resource_id" type="xsd:string" use="required"/>
+		<xsd:attribute name="modified" type="xsd:date" use="required"/>
+	</xsd:complexType>
+
+	<xsd:simpleType name="cce_id_type">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+
+	<xsd:complexType name="parameters_type">
+		<xsd:sequence>
+			<xsd:element name="parameter" form="qualified" type="xsd:string" maxOccurs="unbounded" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="technical_mechanisms_type">
+		<xsd:sequence>
+			<xsd:element name="technical_mechanism" form="qualified" type="xsd:string" maxOccurs="unbounded" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="references_type">
+		<xsd:sequence>
+			<xsd:element name="reference" form="qualified" type="cce:reference_type" maxOccurs="unbounded" minOccurs="0"/> 
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="reference_type">
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="resource_id" type="xsd:string" use="required"/>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+</xsd:schema>
