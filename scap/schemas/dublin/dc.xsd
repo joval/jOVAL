@@ -99,6 +99,7 @@
     </xs:sequence>
   </xs:group>
 
+<!--
   <xs:complexType name="elementContainer">
   	<xs:annotation>
     	<xs:documentation xml:lang="en">
@@ -111,4 +112,5 @@
       <xs:group ref="elementsGroup"/>
     </xs:choice>
   </xs:complexType>
+-->
 </xs:schema>
