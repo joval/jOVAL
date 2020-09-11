@@ -186,7 +186,7 @@
       <namespace:prefix name="dcterms"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="cce-2.0/cce-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="cce-v5/cce-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.cce.list"/>
     </jxb:schemaBindings>
