@@ -1,8 +1,8 @@
 CLASSES=\
 	scap.oval.sc.independent.extended.ObjectFactory	\
 	scap.oval.sc.independent.extended.package-info	\
-	scap.oval.sc.nexus.ObjectFactory	\
-	scap.oval.sc.nexus.package-info	\
+	scap.oval.sc.nxos.ObjectFactory	\
+	scap.oval.sc.nxos.package-info	\
 	scap.oval.sc.linux.extended.ObjectFactory	\
 	scap.oval.sc.linux.extended.package-info	\
 	scap.oval.sc.windows.extended.ObjectFactory	\
@@ -11,8 +11,8 @@ CLASSES=\
 	scap.oval.sc.protocols.package-info	\
 	scap.oval.def.independent.extended.ObjectFactory	\
 	scap.oval.def.independent.extended.package-info	\
-	scap.oval.def.nexus.ObjectFactory	\
-	scap.oval.def.nexus.package-info	\
+	scap.oval.def.nxos.ObjectFactory	\
+	scap.oval.def.nxos.package-info	\
 	scap.oval.def.linux.extended.ObjectFactory	\
 	scap.oval.def.linux.extended.package-info	\
 	scap.oval.def.windows.extended.ObjectFactory	\

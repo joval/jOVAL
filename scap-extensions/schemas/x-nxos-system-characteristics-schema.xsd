@@ -2,9 +2,9 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
             xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
-            xmlns:nexus-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nexus"
+            xmlns:nxos-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nxos"
             xmlns:sch="http://purl.oclc.org/dsdl/schematron"
-            targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nexus"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nxos"
             elementFormDefault="qualified" version="5.11">
     <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
     <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
@@ -17,7 +17,7 @@
             <date>05/02/2020 09:00:00 AM</date>
             <terms_of_use>For the portion subject to the copyright in the United States: Copyright (c) 2020 United States Government. All rights reserved. Copyright (c) 2020, Center for Internet Security. All rights reserved. The contents of this file are subject to the terms of the OVAL License located at https://oval.cisecurity.org/terms. See the OVAL License for the specific language governing permissions and limitations for use of this schema. When distributing copies of the OVAL Schema, this license header must be included.</terms_of_use>
             <sch:ns prefix="oval-sc" uri="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
-            <sch:ns prefix="nexus-sc" uri="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nexus"/>
+            <sch:ns prefix="nxos-sc" uri="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nxos"/>
             <sch:ns prefix="xsi" uri="http://www.w3.org/2001/XMLSchema-instance"/>
         </xsd:appinfo>
     </xsd:annotation>

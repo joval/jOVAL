@@ -53,9 +53,9 @@
                                     <xsd:documentation>The macos value describes the Mac operating system.</xsd:documentation>
                               </xsd:annotation>
                         </xsd:enumeration>
-                        <xsd:enumeration value="nexus">
+                        <xsd:enumeration value="nxos">
                               <xsd:annotation>
-                                    <xsd:documentation>The nexus value describes the Cisco NX-OS operating system.</xsd:documentation>
+                                    <xsd:documentation>The nxos value describes the Cisco NX-OS operating system.</xsd:documentation>
                               </xsd:annotation>
                         </xsd:enumeration>
                         <xsd:enumeration value="pixos">

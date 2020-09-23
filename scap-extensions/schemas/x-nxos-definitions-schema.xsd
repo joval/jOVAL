@@ -2,9 +2,9 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
             xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5"
-            xmlns:nexus-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#nexus"
+            xmlns:nxos-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#nxos"
             xmlns:sch="http://purl.oclc.org/dsdl/schematron"
-            targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#nexus"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#nxos"
             elementFormDefault="qualified" version="5.11">
     <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
     <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"/>
@@ -17,7 +17,7 @@
             <date>05/02/2020 09:00:00 AM</date>
             <terms_of_use>For the portion subject to copyright in the United States: Copyright (c) 2020 United States Government. All rights reserved. Copyright (c) 2020, Center for Internet Security. All rights reserved. The contents of this file are subject to the terms of the OVAL License located at https://oval.cisecurity.org/terms. See the OVAL License for the specific language governing permissions and limitations for use of this schema. When distributing copies of the OVAL Schema, this license header must be included.</terms_of_use>
             <sch:ns prefix="oval-def" uri="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
-            <sch:ns prefix="nexus-def" uri="http://oval.mitre.org/XMLSchema/oval-definitions-5#nexus"/>
+            <sch:ns prefix="nxos-def" uri="http://oval.mitre.org/XMLSchema/oval-definitions-5#nxos"/>
             <sch:ns prefix="xsi" uri="http://www.w3.org/2001/XMLSchema-instance"/>
         </xsd:appinfo>
     </xsd:annotation>
@@ -32,16 +32,16 @@
                     <oval:test>global_test</oval:test>
                     <oval:object>global_object</oval:object>
                     <oval:state>global_state</oval:state>
-                    <oval:item target_namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nexus">global_item</oval:item>
+                    <oval:item target_namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nxos">global_item</oval:item>
                 </oval:element_mapping>
             </xsd:appinfo>
             <xsd:appinfo>
-                <sch:pattern id="nexus-def_globaltst">
-                    <sch:rule context="nexus-def:global_test/nexus-def:object">
-                        <sch:assert test="@object_ref=ancestor::oval-def:oval_definitions/oval-def:objects/nexus-def:global_object/@id"><sch:value-of select="../@id"/> - the object child element of a global_test must reference a global_object</sch:assert>
+                <sch:pattern id="nxos-def_globaltst">
+                    <sch:rule context="nxos-def:global_test/nxos-def:object">
+                        <sch:assert test="@object_ref=ancestor::oval-def:oval_definitions/oval-def:objects/nxos-def:global_object/@id"><sch:value-of select="../@id"/> - the object child element of a global_test must reference a global_object</sch:assert>
                     </sch:rule>
-                    <sch:rule context="nexus-def:global_test/nexus-def:state">
-                        <sch:assert test="@state_ref=ancestor::oval-def:oval_definitions/oval-def:states/nexus-def:global_state/@id"><sch:value-of select="../@id"/> - the state child element of a global_test must reference a global_state</sch:assert>
+                    <sch:rule context="nxos-def:global_test/nxos-def:state">
+                        <sch:assert test="@state_ref=ancestor::oval-def:oval_definitions/oval-def:states/nxos-def:global_state/@id"><sch:value-of select="../@id"/> - the state child element of a global_test must reference a global_state</sch:assert>
                     </sch:rule>
                 </sch:pattern>
             </xsd:appinfo>
@@ -61,15 +61,15 @@
         <xsd:annotation>
             <xsd:documentation>The global_object element is used by a global test to define the object to be evaluated. For the most part this object checks for existence and is used without a state comparision. Each object extends the standard ObjectType as defined in the oval-definitions-schema and one should refer to the ObjectType description for more information. The common set element allows complex objects to be created using filters and set logic. Again, please refer to the description of the set element in the oval-definitions-schema.</xsd:documentation>
             <xsd:appinfo>
-                <sch:pattern id="nexus-def_global_object_verify_filter_state">
-                    <sch:rule context="nexus-def:global_object//oval-def:filter">
-                        <sch:let name="parent_object" value="ancestor::nexus-def:global_object"/>
+                <sch:pattern id="nxos-def_global_object_verify_filter_state">
+                    <sch:rule context="nxos-def:global_object//oval-def:filter">
+                        <sch:let name="parent_object" value="ancestor::nxos-def:global_object"/>
                         <sch:let name="parent_object_id" value="$parent_object/@id"/>
                         <sch:let name="state_ref" value="."/>
                         <sch:let name="reffed_state" value="ancestor::oval-def:oval_definitions/oval-def:states/*[@id=$state_ref]"/>
                         <sch:let name="state_name" value="local-name($reffed_state)"/>
                         <sch:let name="state_namespace" value="namespace-uri($reffed_state)"/>
-                        <sch:assert test="(($state_namespace='http://oval.mitre.org/XMLSchema/oval-definitions-5#nexus') and ($state_name='global_state'))">State referenced in filter for <sch:value-of select="name($parent_object)"/> '<sch:value-of select="$parent_object_id"/>' is of the wrong type. </sch:assert>
+                        <sch:assert test="(($state_namespace='http://oval.mitre.org/XMLSchema/oval-definitions-5#nxos') and ($state_name='global_state'))">State referenced in filter for <sch:value-of select="name($parent_object)"/> '<sch:value-of select="$parent_object_id"/>' is of the wrong type. </sch:assert>
                     </sch:rule>
                 </sch:pattern>
             </xsd:appinfo>
@@ -123,16 +123,16 @@
                     <oval:test>line_test</oval:test>
                     <oval:object>line_object</oval:object>
                     <oval:state>line_state</oval:state>
-                    <oval:item target_namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nexus">line_item</oval:item>
+                    <oval:item target_namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nxos">line_item</oval:item>
                 </oval:element_mapping>
             </xsd:appinfo>
             <xsd:appinfo>
-                <sch:pattern id="nexus-def_linetst">
-                    <sch:rule context="nexus-def:line_test/nexus-def:object">
-                        <sch:assert test="@object_ref=ancestor::oval-def:oval_definitions/oval-def:objects/nexus-def:line_object/@id"><sch:value-of select="../@id"/> - the object child element of a line_test must reference a line_object</sch:assert>
+                <sch:pattern id="nxos-def_linetst">
+                    <sch:rule context="nxos-def:line_test/nxos-def:object">
+                        <sch:assert test="@object_ref=ancestor::oval-def:oval_definitions/oval-def:objects/nxos-def:line_object/@id"><sch:value-of select="../@id"/> - the object child element of a line_test must reference a line_object</sch:assert>
                     </sch:rule>
-                    <sch:rule context="nexus-def:line_test/nexus-def:state">
-                        <sch:assert test="@state_ref=ancestor::oval-def:oval_definitions/oval-def:states/nexus-def:line_state/@id"><sch:value-of select="../@id"/> - the state child element of a line_test must reference a line_state</sch:assert>
+                    <sch:rule context="nxos-def:line_test/nxos-def:state">
+                        <sch:assert test="@state_ref=ancestor::oval-def:oval_definitions/oval-def:states/nxos-def:line_state/@id"><sch:value-of select="../@id"/> - the state child element of a line_test must reference a line_state</sch:assert>
                     </sch:rule>
                 </sch:pattern>
             </xsd:appinfo>
@@ -153,15 +153,15 @@
             <xsd:documentation>The line_object element is used by a line test to define the object to be evaluated. Each object extends the standard ObjectType as defined in the oval-definitions-schema and one should refer to the ObjectType description for more information. The common set element allows complex objects to be created using filters and set logic. Again, please refer to the description of the set element in the oval-definitions-schema.</xsd:documentation>
             <xsd:documentation>A line object consists of a show_subcommand entity that is the name of a SHOW sub-command to be tested.</xsd:documentation>
             <xsd:appinfo>
-                <sch:pattern id="nexus-def_line_object_verify_filter_state">
-                    <sch:rule context="nexus-def:line_object//oval-def:filter">
-                        <sch:let name="parent_object" value="ancestor::nexus-def:line_object"/>
+                <sch:pattern id="nxos-def_line_object_verify_filter_state">
+                    <sch:rule context="nxos-def:line_object//oval-def:filter">
+                        <sch:let name="parent_object" value="ancestor::nxos-def:line_object"/>
                         <sch:let name="parent_object_id" value="$parent_object/@id"/>
                         <sch:let name="state_ref" value="."/>
                         <sch:let name="reffed_state" value="ancestor::oval-def:oval_definitions/oval-def:states/*[@id=$state_ref]"/>
                         <sch:let name="state_name" value="local-name($reffed_state)"/>
                         <sch:let name="state_namespace" value="namespace-uri($reffed_state)"/>
-                        <sch:assert test="(($state_namespace='http://oval.mitre.org/XMLSchema/oval-definitions-5#nexus') and ($state_name='line_state'))">State referenced in filter for <sch:value-of select="name($parent_object)"/> '<sch:value-of select="$parent_object_id"/>' is of the wrong type. </sch:assert>
+                        <sch:assert test="(($state_namespace='http://oval.mitre.org/XMLSchema/oval-definitions-5#nxos') and ($state_name='line_state'))">State referenced in filter for <sch:value-of select="name($parent_object)"/> '<sch:value-of select="$parent_object_id"/>' is of the wrong type. </sch:assert>
                     </sch:rule>
                 </sch:pattern>
             </xsd:appinfo>
@@ -220,16 +220,16 @@
                     <oval:test>version_test</oval:test>
                     <oval:object>version_object</oval:object>
                     <oval:state>version_state</oval:state>
-                    <oval:item target_namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nexus">version_item</oval:item>
+                    <oval:item target_namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nxos">version_item</oval:item>
                 </oval:element_mapping>
             </xsd:appinfo>
             <xsd:appinfo>
-                <sch:pattern id="nexus-def_versiontst">
-                    <sch:rule context="nexus-def:version_test/nexus-def:object">
-                        <sch:assert test="@object_ref=ancestor::oval-def:oval_definitions/oval-def:objects/nexus-def:version_object/@id"><sch:value-of select="../@id"/> - the object child element of a version_test must reference a version_object</sch:assert>
+                <sch:pattern id="nxos-def_versiontst">
+                    <sch:rule context="nxos-def:version_test/nxos-def:object">
+                        <sch:assert test="@object_ref=ancestor::oval-def:oval_definitions/oval-def:objects/nxos-def:version_object/@id"><sch:value-of select="../@id"/> - the object child element of a version_test must reference a version_object</sch:assert>
                     </sch:rule>
-                    <sch:rule context="nexus-def:version_test/nexus-def:state">
-                        <sch:assert test="@state_ref=ancestor::oval-def:oval_definitions/oval-def:states/nexus-def:version_state/@id"><sch:value-of select="../@id"/> - the state child element of a version_test must reference a version_state</sch:assert>
+                    <sch:rule context="nxos-def:version_test/nxos-def:state">
+                        <sch:assert test="@state_ref=ancestor::oval-def:oval_definitions/oval-def:states/nxos-def:version_state/@id"><sch:value-of select="../@id"/> - the state child element of a version_test must reference a version_state</sch:assert>
                     </sch:rule>
                 </sch:pattern>
             </xsd:appinfo>
@@ -325,16 +325,16 @@
                     <oval:test>section_test</oval:test>
                     <oval:object>section_object</oval:object>
                     <oval:state>section_state</oval:state>
-                    <oval:item target_namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nexus">section_item</oval:item>
+                    <oval:item target_namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nxos">section_item</oval:item>
                 </oval:element_mapping>
             </xsd:appinfo>
             <xsd:appinfo>
-                <sch:pattern id="nexus-def_sectiontst">
-                    <sch:rule context="nexus-def:section_test/nexus-def:object">
-                        <sch:assert test="@object_ref=ancestor::oval-def:oval_definitions/oval-def:objects/nexus-def:section_object/@id"><sch:value-of select="../@id"/> - the object child element of a section_test must reference a section_object</sch:assert>
+                <sch:pattern id="nxos-def_sectiontst">
+                    <sch:rule context="nxos-def:section_test/nxos-def:object">
+                        <sch:assert test="@object_ref=ancestor::oval-def:oval_definitions/oval-def:objects/nxos-def:section_object/@id"><sch:value-of select="../@id"/> - the object child element of a section_test must reference a section_object</sch:assert>
                     </sch:rule>
-                    <sch:rule context="nexus-def:section_test/nexus-def:state">
-                        <sch:assert test="@state_ref=ancestor::oval-def:oval_definitions/oval-def:states/nexus-def:section_state/@id"><sch:value-of select="../@id"/> - the state child element of a section_test must reference a section_state</sch:assert>
+                    <sch:rule context="nxos-def:section_test/nxos-def:state">
+                        <sch:assert test="@state_ref=ancestor::oval-def:oval_definitions/oval-def:states/nxos-def:section_state/@id"><sch:value-of select="../@id"/> - the state child element of a section_test must reference a section_state</sch:assert>
                     </sch:rule>
                 </sch:pattern>
             </xsd:appinfo>
@@ -355,15 +355,15 @@
             <xsd:documentation>The section_object element is used by a section test to define the object to be evaluated. Each object extends the standard ObjectType as defined in the oval-definitions-schema and one should refer to the ObjectType description for more information. The common set element allows complex objects to be created using filters and set logic. Again, please refer to the description of the set element in the oval-definitions-schema.</xsd:documentation>
             <xsd:documentation>A section object consists of a section_command entity that is the name of a section command to be tested.</xsd:documentation>
             <xsd:appinfo>
-                <sch:pattern id="nexus-def_section_object_verify_filter_state">
-                    <sch:rule context="nexus-def:section_object//oval-def:filter">
-                        <sch:let name="parent_object" value="ancestor::nexus-def:section_object"/>
+                <sch:pattern id="nxos-def_section_object_verify_filter_state">
+                    <sch:rule context="nxos-def:section_object//oval-def:filter">
+                        <sch:let name="parent_object" value="ancestor::nxos-def:section_object"/>
                         <sch:let name="parent_object_id" value="$parent_object/@id"/>
                         <sch:let name="state_ref" value="."/>
                         <sch:let name="reffed_state" value="ancestor::oval-def:oval_definitions/oval-def:states/*[@id=$state_ref]"/>
                         <sch:let name="state_name" value="local-name($reffed_state)"/>
                         <sch:let name="state_namespace" value="namespace-uri($reffed_state)"/>
-                        <sch:assert test="(($state_namespace='http://oval.mitre.org/XMLSchema/oval-definitions-5#nexus') and ($state_name='section_state'))">State referenced in filter for <sch:value-of select="name($parent_object)"/> '<sch:value-of select="$parent_object_id"/>' is of the wrong type.</sch:assert>
+                        <sch:assert test="(($state_namespace='http://oval.mitre.org/XMLSchema/oval-definitions-5#nxos') and ($state_name='section_state'))">State referenced in filter for <sch:value-of select="name($parent_object)"/> '<sch:value-of select="$parent_object_id"/>' is of the wrong type.</sch:assert>
                     </sch:rule>
                 </sch:pattern>
             </xsd:appinfo>
