@@ -5,6 +5,8 @@ CLASSES=\
 	org.iso.svrl.package-info	\
 	org.joval.scap.diagnostics.ObjectFactory	\
 	org.joval.scap.diagnostics.package-info	\
+	org.joval.scap.oval.metadata.ObjectFactory	\
+	org.joval.scap.oval.metadata.package-info	\
 	org.oasis.address.ObjectFactory	\
 	org.oasis.address.package-info	\
 	org.oasis.catalog.ObjectFactory	\

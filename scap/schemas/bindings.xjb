@@ -847,6 +847,14 @@
       <namespace:prefix name="joval-diag"/>
     </jxb:bindings>
   </jxb:bindings>
+  <jxb:bindings schemaLocation="joval/oval-metadata-schema-1.0.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="org.joval.scap.oval.metadata"/>
+    </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="joval-meta"/>
+    </jxb:bindings>
+  </jxb:bindings>
   <jxb:bindings schemaLocation="ocil-2.0/ocil-diagnostic-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="org.gocil.diagnostics"/>

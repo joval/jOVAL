@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+  Copyright (C) 2020 jOVAL.org.  All rights reserved.
+  This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
+
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://jovalcm.com/oval/metadata" elementFormDefault="qualified" version="1.0">
+    <xsd:element name="cvss">
+        <xsd:complexType>
+            <xsd:attribute name="version" type="xsd:string" use="required"/>
+            <xsd:attribute name="cve" type="xsd:string" use="required"/>
+            <xsd:attribute name="base_score" type="xsd:string" use="required"/>
+            <xsd:attribute name="vector_string" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>
