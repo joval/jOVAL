@@ -101,5 +101,10 @@ $(OVAL_OFFICIAL)/independent-%.xsd: $(OVAL_SRC)/independent-%.xsd
 	sed -i.bak 's/ schemaLocation=.*\//\//g' $@
 	rm $(OVAL_OFFICIAL)/*.bak
 
+$(OVAL_OFFICIAL)/windows-%.xsd: $(OVAL_SRC)/windows-%.xsd
+	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:$(OVAL_SCHEMA)/unofficial/strip-redefined-windows.xsl -o:$@
+	sed -i.bak 's/ schemaLocation=.*\//\//g' $@
+	rm $(OVAL_OFFICIAL)/*.bak
+
 $(OVAL_OFFICIAL)/%.xsd: $(OVAL_SRC)/%.xsd
 	sed 's/ schemaLocation=.*\//\//g' $< > $@
