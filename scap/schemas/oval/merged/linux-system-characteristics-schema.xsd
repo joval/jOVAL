@@ -7,4 +7,5 @@
 	    targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#linux">
       <xsd:include schemaLocation="../official/linux-system-characteristics-schema.xsd"/>
       <xsd:include schemaLocation="../unofficial/linux-alpine-sc-schema.xsd"/>
+      <xsd:include schemaLocation="../unofficial/linux-auditd-sc-schema.xsd"/>
 </xsd:schema>
