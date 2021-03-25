@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-  Copyright (C) 2013 jOVAL.org.  All rights reserved.
+  Copyright (C) 2013-2021 jOVAL.org.  All rights reserved.
   This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
 
 -->
@@ -36,6 +36,7 @@
                         <xsd:element name="objects" type="oval-def:ObjectsType" minOccurs="1" maxOccurs="1"/>
                         <xsd:element name="collected_objects" type="oval-sc:CollectedObjectsType" minOccurs="1" maxOccurs="1"/>
                         <xsd:element name="states" type="oval-def:StatesType" minOccurs="1" maxOccurs="1"/>
+                        <xsd:element name="variables" type="oval-def:VariablesType" minOccurs="1" maxOccurs="1"/>
                         <xsd:element name="items" type="oval-sc:SystemDataType" minOccurs="1" maxOccurs="1"/>
                     </xsd:sequence>
                     <xsd:sequence>
