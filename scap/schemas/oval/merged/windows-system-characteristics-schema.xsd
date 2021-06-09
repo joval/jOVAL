@@ -6,6 +6,4 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	    targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#windows">
       <xsd:include schemaLocation="../official/windows-system-characteristics-schema.xsd"/>
-      <xsd:include schemaLocation="../unofficial/windows-system-characteristics-schema.xsd"/>
-      <xsd:include schemaLocation="../unofficial/windows-iis-sc-schema.xsd"/>
 </xsd:schema>
