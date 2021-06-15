@@ -26,7 +26,7 @@
     <xsd:element name="check_diagnostics">
         <xsd:complexType>
             <xsd:sequence>
-                <xsd:element name="check" type="cdf:checkType" minOccurs="1" maxOccurs="1"/>
+                <xsd:element name="check" type="diag:ExtendedCheckType" minOccurs="1" maxOccurs="1"/>
                 <xsd:choice minOccurs="1" maxOccurs="1">
                     <xsd:sequence>
                         <xsd:element name="definitions" type="oval-def:DefinitionsType" minOccurs="1" maxOccurs="1"/>
@@ -57,4 +57,13 @@
             </xsd:sequence>
         </xsd:complexType>
     </xsd:element>
+    <xsd:complexType name="ExtendedCheckType">
+        <xsd:complexContent>
+            <xsd:extension base="cdf:checkType">
+                <xsd:sequence>
+                    <xsd:element name="check-result" type="cdf:resultEnumType" minOccurs="1" maxOccurs="1"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
 </xsd:schema>
