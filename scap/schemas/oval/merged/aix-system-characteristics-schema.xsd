@@ -6,4 +6,5 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	    targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#aix">
       <xsd:include schemaLocation="../official/aix-system-characteristics-schema.xsd"/>
+      <xsd:include schemaLocation="../unofficial/aix-sc-schema.xsd"/>
 </xsd:schema>
