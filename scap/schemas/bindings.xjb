@@ -835,6 +835,21 @@
     </jxb:bindings>
   </jxb:bindings>
 
+  <!-- ++++++++++++++++++++++++++++++++++++++++    Unofficial Schemas     ++++++++++++++++++++++++++++++++++++++++ -->
+
+  <jxb:bindings schemaLocation="oval/unofficial/linux-apt-def-schema.xsd" node="/xs:schema">
+    <!-- avoid overloading the operation attribute -->
+    <jxb:bindings node="xs:element[@name='apt_state']//xs:element[@name='operation']">
+        <jxb:property name="dpkg_operation" />
+    </jxb:bindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="oval/unofficial/linux-apt-sc-schema.xsd" node="/xs:schema">
+    <!-- avoid overloading the operation attribute -->
+    <jxb:bindings node="xs:element[@name='apt_item']//xs:element[@name='operation']">
+        <jxb:property name="dpkg_operation" />
+    </jxb:bindings>
+  </jxb:bindings>
+
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
   <!-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>          Diagnostic Schema Bindings           <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< -->
   <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->

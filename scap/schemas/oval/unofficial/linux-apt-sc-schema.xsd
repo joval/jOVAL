@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" xmlns:linux-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#linux" xmlns:x-linux-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-linux" xmlns:sch="http://purl.oclc.org/dsdl/schematron" targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-linux" elementFormDefault="qualified" version="5.10.1">
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" xmlns:linux-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#linux" xmlns:sch="http://purl.oclc.org/dsdl/schematron" targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#linux" elementFormDefault="qualified" version="5.10.1">
     <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
-    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#linux"/>
     <xsd:annotation>
         <xsd:documentation>This document outlines the items of the OVAL System Characteristics XML schema that are composed of extensions to the OVAL Linux schema. Each item is an extention of a basic System Characteristics item defined in the core System Characteristics XML schema.</xsd:documentation>
         <xsd:documentation>This schema was originally developed by David Solin at jOVAL.org. The OVAL Schema is maintained by The MITRE Corporation and developed by the public OVAL Community. For more information, including how to get involved in the project and how to submit change requests, please visit the OVAL website at http://oval.mitre.org.</xsd:documentation>
@@ -12,7 +11,7 @@
             <terms_of_use>Copyright (c) 2015, jOVAL.org.  All rights reserved.  The contents of this file are subject to the terms of the OVAL License located at http://oval.mitre.org/oval/about/termsofuse.html. See the OVAL License for the specific language governing permissions and limitations for use of this schema.  When distributing copies of the OVAL Schema, this license header must be included.</terms_of_use>
             <sch:ns prefix="oval-sc" uri="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
             <sch:ns prefix="linux-sc" uri="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#linux"/>
-            <sch:ns prefix="x-linux-sc" uri="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-linux"/>
+            <sch:ns prefix="linux-sc" uri="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#linux"/>
             <sch:ns prefix="xsi" uri="http://www.w3.org/2001/XMLSchema-instance"/>
         </xsd:appinfo>
     </xsd:annotation>
@@ -32,7 +31,7 @@
                                 <xsd:documentation>Specifies the package name.</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
-                        <xsd:element name="operation" type="x-linux-sc:EntityItemDpkgOperationType" minOccurs="1" maxOccurs="unbounded">
+                        <xsd:element name="operation" type="linux-sc:EntityItemDpkgOperationType" minOccurs="1" maxOccurs="unbounded">
                             <xsd:annotation>
                                 <xsd:documentation>Specifies the operation(s) that would be performed on this package during an upgrade.</xsd:documentation>
                             </xsd:annotation>

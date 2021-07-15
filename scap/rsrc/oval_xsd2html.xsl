@@ -32,15 +32,16 @@
 
 		<xsl:for-each select="xsd:include">
 			<xsl:for-each select="document(./@schemaLocation)//xsd:schema">
-				<xsl:call-template name="included"/>
+				<xsl:call-template name="process-schema"/>
 			</xsl:for-each>
 		</xsl:for-each>
+		<xsl:call-template name="process-schema"/>
 
 		</body>
 		</html>
 	</xsl:template>
 
-	<xsl:template name="included">
+	<xsl:template name="process-schema">
 		<xsl:for-each select="xsd:annotation">
 			<h1 align="center">- Open Vulnerability and Assessment Language -<br/>Element Dictionary</h1>
 			<ul>

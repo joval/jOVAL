@@ -51,12 +51,14 @@
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#windows"
                   schemaLocation="../schemas/oval/merged/windows-system-characteristics-schema.xsd"/>
 
-      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-linux"
-                  schemaLocation="../../scap-extensions/schemas/x-linux-system-characteristics-schema.xsd"/>
+      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nxos"
+                  schemaLocation="../../scap-extensions/schemas/x-nxos-system-characteristics-schema.xsd"/>
+      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#panos"
+                  schemaLocation="../../scap-extensions/schemas/x-panos-system-characteristics-schema.xsd"/>
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-net"
                   schemaLocation="../../scap-extensions/schemas/x-protocols-system-characteristics-schema.xsd"/>
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#cmd"
                   schemaLocation="../../scap-extensions/schemas/x-shellcommand-system-characteristics-schema.xsd"/>
-      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-windows"
-                  schemaLocation="../../scap-extensions/schemas/x-windows-system-characteristics-schema.xsd"/>
+      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#esxi"
+                  schemaLocation="../../scap-extensions/schemas/x-vmware-esxi-system-characteristics-schema.xsd"/>
 </xsd:schema>

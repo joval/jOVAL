@@ -1,4 +1,4 @@
-# Copyright (C) 2015 jOVAL.org.  All rights reserved.
+# Copyright (C) 2015-2021 jOVAL.org.  All rights reserved.
 # This software is licensed under the LGPL 3.0 license available at http://www.gnu.org/licenses/lgpl.txt
 
 TOP=..
@@ -20,6 +20,7 @@ OVAL_SCH:=$(foreach file, $(wildcard $(SCHEMATRON)/*.xml), $(SCH)/$(notdir $(bas
 OVAL_OFFICIAL=$(OVAL_SCHEMA)/official
 OVAL_SCHEMA_FILES:=$(foreach schema, $(shell find $(OVAL_SRC) -name *.xsd ! -name xmldsig*), $(OVAL_OFFICIAL)/$(notdir $(schema)))
 OVAL_DOCS:=$(foreach schema, $(shell find $(OVAL_SRC) -name *.xsd ! -name xmldsig*), $(DOCS)/$(notdir $(basename $(schema))).html)
+OVAL_EXT_DOCS:=$(foreach schema, $(shell find $(SCAP_EXT)/$(SCHEMADIR) -name *.xsd ! -name xmldsig*), $(DOCS)/ext/$(notdir $(basename $(schema))).html)
 
 #
 # Make namespaces optional in the episode bindings
@@ -70,11 +71,14 @@ $(BUILD)/%/:
 	mkdir -p $@
 
 $(DOCS)/index.html: $(RSRC)/index.html
-	mkdir -p $(DOCS)
+	mkdir -p $(DOCS)/ext
 	sed 's/\[VERSION\]/$(OVAL_VERSION)/g' $< > $@
 
 ovaldocs:
-	$(MAKE) -j$(NUMPROCS) $(OVAL_DOCS)
+	$(MAKE) -j$(NUMPROCS) $(OVAL_DOCS) $(OVAL_EXT_DOCS)
+
+$(DOCS)/ext/%.html: $(SCAP_EXT)/$(SCHEMADIR)/%.xsd
+	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:rsrc/oval_xsd2html.xsl -o:$@
 
 $(DOCS)/%.html: $(OVAL_SCHEMA)/merged/%.xsd
 	$(JAVA) -jar $(SAXON_LIB) -s:$< -xsl:rsrc/oval_xsd2html.xsl -o:$@

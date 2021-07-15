@@ -15,30 +15,6 @@
 
   <!-- ++++++++++++++++++++++++++++++++++     Experimental Platform Schemas      +++++++++++++++++++++++++++++++++ -->
 
-  <jxb:bindings schemaLocation="x-linux-definitions-schema.xsd" node="/xs:schema">
-    <jxb:schemaBindings>
-      <jxb:package name="scap.oval.def.linux.extended"/>
-    </jxb:schemaBindings>
-    <jxb:bindings>
-      <namespace:prefix name="x-linux-def"/>
-    </jxb:bindings>
-    <!-- avoid overloading the operation attribute -->
-    <jxb:bindings node="xs:element[@name='apt_state']//xs:element[@name='operation']">
-        <jxb:property name="dpkg_operation" />
-    </jxb:bindings>
-  </jxb:bindings>
-  <jxb:bindings schemaLocation="x-linux-system-characteristics-schema.xsd" node="/xs:schema">
-    <jxb:schemaBindings>
-      <jxb:package name="scap.oval.sc.linux.extended"/>
-    </jxb:schemaBindings>
-    <jxb:bindings>
-      <namespace:prefix name="x-linux-sc"/>
-    </jxb:bindings>
-    <!-- avoid overloading the operation attribute -->
-    <jxb:bindings node="xs:element[@name='apt_item']//xs:element[@name='operation']">
-        <jxb:property name="dpkg_operation" />
-    </jxb:bindings>
-  </jxb:bindings>
   <jxb:bindings schemaLocation="x-nxos-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.nxos"/>
@@ -53,6 +29,22 @@
     </jxb:schemaBindings>
     <jxb:bindings>
       <namespace:prefix name="nxos-sc"/>
+    </jxb:bindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="x-panos-definitions-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.def.panos"/>
+    </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="pan-def"/>
+    </jxb:bindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="x-panos-system-characteristics-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.sc.panos"/>
+    </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="pan-sc"/>
     </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="x-protocols-definitions-schema.xsd" node="/xs:schema">
@@ -87,20 +79,24 @@
       <namespace:prefix name="x-cmd-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="x-windows-definitions-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="x-vmware-esxi-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.def.windows.extended"/>
+      <jxb:package name="scap.oval.def.esx.extended"/>
     </jxb:schemaBindings>
     <jxb:bindings>
-      <namespace:prefix name="x-win-def"/>
+      <namespace:prefix name="x-esx-def"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="x-windows-system-characteristics-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="x-vmware-esxi-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="scap.oval.sc.windows.extended"/>
+      <jxb:package name="scap.oval.sc.esx.extended"/>
     </jxb:schemaBindings>
     <jxb:bindings>
-      <namespace:prefix name="x-win-sc"/>
+      <namespace:prefix name="x-esx-sc"/>
+    </jxb:bindings>
+    <!-- avoid overloading the operation attribute -->
+    <jxb:bindings node="xs:element[@name='vmhost_vib_item']//xs:element[@name='status']">
+        <jxb:property name="vib_status" />
     </jxb:bindings>
   </jxb:bindings>
 </jxb:bindings>

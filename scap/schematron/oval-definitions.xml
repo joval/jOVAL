@@ -51,12 +51,14 @@
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows"
                   schemaLocation="../schemas/oval/merged/windows-definitions-schema.xsd"/>
 
-      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#x-linux"
-                  schemaLocation="../../scap-extensions/schemas/x-linux-definitions-schema.xsd"/>
+      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#nxos"
+                  schemaLocation="../../scap-extensions/schemas/x-nxos-definitions-schema.xsd"/>
+      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#panos"
+                  schemaLocation="../../scap-extensions/schemas/x-panos-definitions-schema.xsd"/>
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#x-net"
                   schemaLocation="../../scap-extensions/schemas/x-protocols-definitions-schema.xsd"/>
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#cmd"
                   schemaLocation="../../scap-extensions/schemas/x-shellcommand-definitions-schema.xsd"/>
-      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#x-windows"
-                  schemaLocation="../../scap-extensions/schemas/x-windows-definitions-schema.xsd"/>
+      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#esxi"
+                  schemaLocation="../../scap-extensions/schemas/x-vmware-esxi-definitions-schema.xsd"/>
 </xsd:schema>
