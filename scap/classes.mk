@@ -88,6 +88,8 @@ CLASSES=\
 	scap.oval.def.macos.package-info	\
 	scap.oval.def.netconf.ObjectFactory	\
 	scap.oval.def.netconf.package-info	\
+	scap.oval.def.panos.ObjectFactory	\
+	scap.oval.def.panos.package-info	\
 	scap.oval.def.pixos.ObjectFactory	\
 	scap.oval.def.pixos.package-info	\
 	scap.oval.def.sharepoint.ObjectFactory	\
@@ -138,6 +140,8 @@ CLASSES=\
 	scap.oval.sc.macos.package-info	\
 	scap.oval.sc.netconf.ObjectFactory	\
 	scap.oval.sc.netconf.package-info	\
+	scap.oval.sc.panos.ObjectFactory	\
+	scap.oval.sc.panos.package-info	\
 	scap.oval.sc.pixos.ObjectFactory	\
 	scap.oval.sc.pixos.package-info	\
 	scap.oval.sc.sharepoint.ObjectFactory	\

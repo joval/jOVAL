@@ -73,6 +73,8 @@ PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#macos" "schemas/oval/
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#macos" "schemas/oval/merged/macos-system-characteristics-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#netconf" "schemas/oval/merged/netconf-definitions-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#netconf" "schemas/oval/merged/netconf-system-characteristics-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#panos" "schemas/panos-definitions-schema.xsd"
+PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#panos" "schemas/panos-system-characteristics-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#pixos" "schemas/oval/merged/pixos-definitions-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#pixos" "schemas/oval/merged/pixos-system-characteristics-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#sharepoint" "schemas/oval/merged/sharepoint-definitions-schema.xsd"

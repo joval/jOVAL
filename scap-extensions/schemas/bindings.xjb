@@ -31,22 +31,6 @@
       <namespace:prefix name="nxos-sc"/>
     </jxb:bindings>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="x-panos-definitions-schema.xsd" node="/xs:schema">
-    <jxb:schemaBindings>
-      <jxb:package name="scap.oval.def.panos"/>
-    </jxb:schemaBindings>
-    <jxb:bindings>
-      <namespace:prefix name="pan-def"/>
-    </jxb:bindings>
-  </jxb:bindings>
-  <jxb:bindings schemaLocation="x-panos-system-characteristics-schema.xsd" node="/xs:schema">
-    <jxb:schemaBindings>
-      <jxb:package name="scap.oval.sc.panos"/>
-    </jxb:schemaBindings>
-    <jxb:bindings>
-      <namespace:prefix name="pan-sc"/>
-    </jxb:bindings>
-  </jxb:bindings>
   <jxb:bindings schemaLocation="x-protocols-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.protocols"/>

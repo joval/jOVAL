@@ -701,6 +701,22 @@
       <namespace:prefix name="netconf-sc"/>
     </jxb:bindings>
   </jxb:bindings>
+  <jxb:bindings schemaLocation="oval/official/panos-definitions-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.def.panos"/>
+    </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="pan-def"/>
+    </jxb:bindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="oval/official/panos-system-characteristics-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="scap.oval.sc.panos"/>
+    </jxb:schemaBindings>
+    <jxb:bindings>
+      <namespace:prefix name="pan-sc"/>
+    </jxb:bindings>
+  </jxb:bindings>
   <jxb:bindings schemaLocation="oval/official/pixos-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.oval.def.pixos"/>
