@@ -54,6 +54,11 @@
                          <xsd:documentation>The nexus value describes the Cisco NX-OS operating system.</xsd:documentation>
                     </xsd:annotation>
                </xsd:enumeration>
+               <xsd:enumeration value="panos">
+                    <xsd:annotation>
+                         <xsd:documentation>The panos value describes the PaloAlto Networks operating system.</xsd:documentation>
+                    </xsd:annotation>
+               </xsd:enumeration>
                <xsd:enumeration value="pixos">
                     <xsd:annotation>
                          <xsd:documentation>The pixos value describes the Cisco PIX operating system.</xsd:documentation>
