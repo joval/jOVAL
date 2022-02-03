@@ -282,38 +282,6 @@
     </xsd:element>
     
     <!-- =============================================================================== -->
-    <!-- VMHost SNMP Item -->
-    <!-- =============================================================================== -->
-    <xsd:element name="host_snmp_item" substitutionGroup="oval-sc:item">
-        <xsd:annotation>
-            <xsd:documentation></xsd:documentation>
-        </xsd:annotation>
-        <xsd:complexType>
-            <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMHostItemBaseType">
-                    <xsd:sequence>
-                        <xsd:element name="enabled" type="oval-sc:EntityItemBoolType" minOccurs="0" maxOccurs="1">
-                            <xsd:annotation>
-                                <xsd:documentation></xsd:documentation>
-                            </xsd:annotation>
-                        </xsd:element>
-                        <xsd:element name="port" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
-                            <xsd:annotation>
-                                <xsd:documentation></xsd:documentation>
-                            </xsd:annotation>
-                        </xsd:element>
-                        <xsd:element name="readonly_communities" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
-                            <xsd:annotation>
-                                <xsd:documentation></xsd:documentation>
-                            </xsd:annotation>
-                        </xsd:element>
-                    </xsd:sequence>
-                </xsd:extension>
-            </xsd:complexContent>
-        </xsd:complexType>
-    </xsd:element>
-    
-    <!-- =============================================================================== -->
     <!-- VMHost Advanced Setting Item -->
     <!-- =============================================================================== -->
     <xsd:element name="host_advancedsetting_item" substitutionGroup="oval-sc:item">
@@ -329,7 +297,7 @@
                                 <xsd:documentation>The host_advancedsetting_name element details the name of the VMHost's advanced configuration setting to collect.</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
-                        <xsd:element name="advanced_setting_value" type="oval-sc:EntityItemAnySimpleType" minOccurs="0" maxOccurs="1">
+                        <xsd:element name="advanced_setting_value" type="oval-sc:EntityItemAnySimpleType" minOccurs="0" maxOccurs="unbounded">
                             <xsd:annotation>
                                 <xsd:documentation>The advanced_setting_value element details the value of the VMHost's advanced configuration setting that was collected.</xsd:documentation>
                             </xsd:annotation>
@@ -415,7 +383,7 @@
             <xsd:complexContent>
                 <xsd:extension base="esxi-sc:VMHostItemBaseType">
                     <xsd:sequence>
-                        <xsd:element name="lockdown" type="oval-sc:EntityItemBoolType" minOccurs="0" maxOccurs="1">
+                        <xsd:element name="lockdown" type="esxi-sc:EntityItemLockdownType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
                                 <xsd:documentation>Lockdown Enabled?</xsd:documentation>
                             </xsd:annotation>
@@ -641,7 +609,7 @@
                                 <xsd:documentation>The advanced setting name</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
-                        <xsd:element name="advanced_setting_value" type="oval-sc:EntityItemAnySimpleType" minOccurs="0" maxOccurs="1">
+                        <xsd:element name="advanced_setting_value" type="oval-sc:EntityItemAnySimpleType" minOccurs="0" maxOccurs="unbounded">
                             <xsd:annotation>
                                 <xsd:documentation>The advanced setting value</xsd:documentation>
                             </xsd:annotation>
@@ -722,43 +690,6 @@
                         <xsd:element name="persistence" type="esxi-sc:EntityItemVMDevicePersistenceType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
                                 <xsd:documentation>The persistence policy (Persistent, NonPersistent, Undoable, IndependentPersistent, IndependentNonPersistent, or Unknown</xsd:documentation>
-                            </xsd:annotation>
-                        </xsd:element>
-                    </xsd:sequence>
-                </xsd:extension>
-            </xsd:complexContent>
-        </xsd:complexType>
-    </xsd:element>
-    
-    <!-- =============================================================================== -->
-    <!-- VM Resource Config Item -->
-    <!-- =============================================================================== -->
-    <xsd:element name="vm_resourceconfig_item" substitutionGroup="oval-sc:item">
-        <xsd:annotation>
-            <xsd:documentation></xsd:documentation>
-        </xsd:annotation>
-        <xsd:complexType>
-            <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMItemBaseType">
-                    <xsd:sequence>
-                        <xsd:element name="number_of_cpu_shares" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
-                            <xsd:annotation>
-                                <xsd:documentation></xsd:documentation>
-                            </xsd:annotation>
-                        </xsd:element>
-                        <xsd:element name="cpu_shares_level" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
-                            <xsd:annotation>
-                                <xsd:documentation></xsd:documentation>
-                            </xsd:annotation>
-                        </xsd:element>
-                        <xsd:element name="number_of_mem_shares" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
-                            <xsd:annotation>
-                                <xsd:documentation></xsd:documentation>
-                            </xsd:annotation>
-                        </xsd:element>
-                        <xsd:element name="mem_shares_level" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
-                            <xsd:annotation>
-                                <xsd:documentation></xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
                     </xsd:sequence>
@@ -907,6 +838,31 @@
                 <xsd:enumeration value="Unknown">
                     <xsd:annotation>
                         <xsd:documentation>Unknown</xsd:documentation>
+                    </xsd:annotation>
+                </xsd:enumeration>
+            </xsd:restriction>
+        </xsd:simpleContent>
+    </xsd:complexType>
+    
+    <xsd:complexType name="EntityItemLockdownType">
+        <xsd:annotation>
+            <xsd:documentation></xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleContent>
+            <xsd:restriction base="oval-sc:EntityItemStringType">
+                <xsd:enumeration value="disabled">
+                    <xsd:annotation>
+                        <xsd:documentation>disabled</xsd:documentation>
+                    </xsd:annotation>
+                </xsd:enumeration>
+                <xsd:enumeration value="normal">
+                    <xsd:annotation>
+                        <xsd:documentation>normal</xsd:documentation>
+                    </xsd:annotation>
+                </xsd:enumeration>
+                <xsd:enumeration value="strict">
+                    <xsd:annotation>
+                        <xsd:documentation>strict</xsd:documentation>
                     </xsd:annotation>
                 </xsd:enumeration>
             </xsd:restriction>

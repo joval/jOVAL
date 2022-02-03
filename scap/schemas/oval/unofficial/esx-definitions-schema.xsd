@@ -717,88 +717,6 @@
     </xsd:element>
     
     <!-- =============================================================================== -->
-    <!-- VMHost SNMP Test -->
-    <!-- =============================================================================== -->
-    <xsd:element name="host_snmp_test" substitutionGroup="oval-def:test">
-        <xsd:annotation>
-            <xsd:documentation>
-                The host_snmp_test is used to determine certain aspects of an ESXi host's SNMP configuration.  
-                It extends the standard TestType as defined in the oval-definitions-schema and one should refer 
-                to the TestType description for more information. The required object element references a 
-                host_snmp_object and the optional state element specifies the data to check.
-            </xsd:documentation>
-            <xsd:documentation>
-                PowerCLI Equivalent:
-                
-                Get-VMHostSnmp | Select VMHost, Enabled, Port, ReadOnlyCommunities
-            </xsd:documentation>
-        </xsd:annotation>
-        <xsd:complexType>
-            <xsd:complexContent>
-                <xsd:extension base="oval-def:TestType">
-                    <xsd:sequence>
-                        <xsd:element name="object" type="oval-def:ObjectRefType"/>
-                        <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
-                    </xsd:sequence>
-                </xsd:extension>
-            </xsd:complexContent>
-        </xsd:complexType>
-    </xsd:element>
-    <xsd:element name="host_snmp_object" substitutionGroup="oval-def:object">
-        <xsd:annotation>
-            <xsd:documentation>
-                The host_snmp_object element is used by the host_snmp_test to define the object to be evaluated.  
-                Each object extends the standard ObjectType as defined in the oval-definitions-schema and one should refer to the ObjectType 
-                description for more information.  The common set element allows complex objects to be created using filters and set logic.  
-                Again, please refer to the description of the set element in the oval-definitions-schema.
-            </xsd:documentation>
-            <xsd:documentation>
-                A host_account_object consists of a connection string identifying the host connection information, and is designed to
-                collect ESXi host SNMP configuration information.
-            </xsd:documentation>
-        </xsd:annotation>
-        <xsd:complexType>
-            <xsd:complexContent>
-                <xsd:extension base="esxi-def:VMHostObjectBaseType">
-                    <xsd:sequence>
-                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
-                    </xsd:sequence>
-                </xsd:extension>
-            </xsd:complexContent>
-        </xsd:complexType>
-    </xsd:element>
-    <xsd:element name="host_snmp_state" substitutionGroup="oval-def:state">
-        <xsd:annotation>
-            <xsd:documentation>
-                The host_snmp_state element defines the information that can be used to evaluate the specified ESXi host SNMP configuration information.
-            </xsd:documentation>
-        </xsd:annotation>
-        <xsd:complexType>
-            <xsd:complexContent>
-                <xsd:extension base="esxi-def:VMHostStateBaseType">
-                    <xsd:sequence>
-                        <xsd:element name="enabled" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1">
-                            <xsd:annotation>
-                                <xsd:documentation>true if SNMP is enabled for the ESXi host; false otherwise</xsd:documentation>
-                            </xsd:annotation>
-                        </xsd:element>
-                        <xsd:element name="port" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
-                            <xsd:annotation>
-                                <xsd:documentation>The configured SNMP port</xsd:documentation>
-                            </xsd:annotation>
-                        </xsd:element>
-                        <xsd:element name="readonly_communities" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
-                            <xsd:annotation>
-                                <xsd:documentation>TODO TODO BUGBUGBUG</xsd:documentation>
-                            </xsd:annotation>
-                        </xsd:element>
-                    </xsd:sequence>
-                </xsd:extension>
-            </xsd:complexContent>
-        </xsd:complexType>
-    </xsd:element>
-    
-    <!-- =============================================================================== -->
     <!-- VMHost Advanced Setting Test -->
     <!-- =============================================================================== -->
     <xsd:element name="host_advancedsetting_test" substitutionGroup="oval-def:test">
@@ -1116,9 +1034,9 @@
             <xsd:complexContent>
                 <xsd:extension base="esxi-def:VMHostStateBaseType">
                     <xsd:sequence>
-                        <xsd:element name="lockdown" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1">
+                        <xsd:element name="lockdown" type="esxi-def:EntityStateLockdownType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
-                                <xsd:documentation>true if lockdown mode is active, disabling local access to the ESXi host.  If lockdown mode is active, all management must be done from vCenter to ensure proper permissions and roles are being applied.</xsd:documentation>
+                                <xsd:documentation>If lockdown mode is active, all management must be done from vCenter to ensure proper permissions and roles are being applied.</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
                         <xsd:element name="lockdown_user" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
@@ -1794,93 +1712,6 @@
     </xsd:element>
     
     <!-- =============================================================================== -->
-    <!-- VM Resource Config Test -->
-    <!-- =============================================================================== -->
-    <xsd:element name="vm_resourceconfig_test" substitutionGroup="oval-def:test">
-        <xsd:annotation>
-            <xsd:documentation>
-                The vm_resourceconfig_test is used to collect information about about the resource allocation between the virtual machines.   
-                This test extends the standard TestType as defined in the oval-definitions-schema and one should refer to the 
-                TestType description for more information. The required object element references a vm_resourceconfig_object 
-                and the optional state element specifies the metadata to check.
-            </xsd:documentation>
-            <xsd:documentation>
-                PowerCLI Equivalent:
-                
-                Get-VM | Get-VMResourceConfiguration
-            </xsd:documentation>
-        </xsd:annotation>
-        <xsd:complexType>
-            <xsd:complexContent>
-                <xsd:extension base="oval-def:TestType">
-                    <xsd:sequence>
-                        <xsd:element name="object" type="oval-def:ObjectRefType"/>
-                        <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
-                    </xsd:sequence>
-                </xsd:extension>
-            </xsd:complexContent>
-        </xsd:complexType>
-    </xsd:element>
-    <xsd:element name="vm_resourceconfig_object" substitutionGroup="oval-def:object">
-        <xsd:annotation>
-            <xsd:documentation>
-                The vm_resourceconfig_object element is used by the vm_resourceconfig_test to define the object to be evaluated.  
-                Each object extends the standard ObjectType as defined in the oval-definitions-schema and one should refer to the ObjectType 
-                description for more information.  The common set element allows complex objects to be created using filters and set logic.  
-                Again, please refer to the description of the set element in the oval-definitions-schema.
-            </xsd:documentation>
-            <xsd:documentation>
-                A vm_resourceconfig_object consists of a connection string identifying the host connection information, and a virtual machine name that
-                identifies the VM being probed for resource configuration.
-            </xsd:documentation>
-        </xsd:annotation>
-        <xsd:complexType>
-            <xsd:complexContent>
-                <xsd:extension base="esxi-def:VMObjectBaseType">
-                    <xsd:sequence>
-                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
-                    </xsd:sequence>
-                </xsd:extension>
-            </xsd:complexContent>
-        </xsd:complexType>
-    </xsd:element>
-    <xsd:element name="vm_resourceconfig_state" substitutionGroup="oval-def:state">
-        <xsd:annotation>
-            <xsd:documentation>
-                The vm_resourceconfig_state details the values which may be applied to the resource allocation between the virtual machines.
-            </xsd:documentation>
-        </xsd:annotation>
-        <xsd:complexType>
-            <xsd:complexContent>
-                <xsd:extension base="esxi-def:VMStateBaseType">
-                    <xsd:sequence>
-                        <xsd:element name="number_of_cpu_shares" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
-                            <xsd:annotation>
-                                <xsd:documentation>The number of CPU shares allocated to the Virtual Machine</xsd:documentation>
-                            </xsd:annotation>
-                        </xsd:element>
-                        <xsd:element name="cpu_shares_level" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
-                            <xsd:annotation>
-                                <xsd:documentation>The level of CPU shares (High, Low, Normal, Custom)</xsd:documentation>
-                            </xsd:annotation>
-                        </xsd:element>
-                        <xsd:element name="number_of_mem_shares" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
-                            <xsd:annotation>
-                                <xsd:documentation>The number of memory shares allocated to the Virtual Machine</xsd:documentation>
-                            </xsd:annotation>
-                        </xsd:element>
-                        <xsd:element name="mem_shares_level" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
-                            <xsd:annotation>
-                                <xsd:documentation>The level of memory shares (High, Low, Normal, Custom)</xsd:documentation>
-                            </xsd:annotation>
-                        </xsd:element>
-                    </xsd:sequence>
-                </xsd:extension>
-            </xsd:complexContent>
-        </xsd:complexType>
-    </xsd:element>
-    
-    <!-- =============================================================================== -->
     <!-- Host Port Group Test -->
     <!-- =============================================================================== -->
     <xsd:element name="host_portgroup_test" substitutionGroup="oval-def:test">
@@ -2220,6 +2051,36 @@
                 <xsd:enumeration value="outbound">
                     <xsd:annotation>
                         <xsd:documentation>outbound</xsd:documentation>
+                    </xsd:annotation>
+                </xsd:enumeration>
+                <xsd:enumeration value="">
+                    <xsd:annotation>
+                        <xsd:documentation>The empty string value is permitted here to allow for empty elements associated with variable references.</xsd:documentation>
+                    </xsd:annotation>
+                </xsd:enumeration>
+            </xsd:restriction>
+        </xsd:simpleContent>
+    </xsd:complexType>
+    
+    <xsd:complexType name="EntityStateLockdownType">
+        <xsd:annotation>
+            <xsd:documentation></xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleContent>
+            <xsd:restriction base="oval-def:EntityStateStringType">
+                <xsd:enumeration value="disabled">
+                    <xsd:annotation>
+                        <xsd:documentation>disabled</xsd:documentation>
+                    </xsd:annotation>
+                </xsd:enumeration>
+                <xsd:enumeration value="normal">
+                    <xsd:annotation>
+                        <xsd:documentation>normal</xsd:documentation>
+                    </xsd:annotation>
+                </xsd:enumeration>
+                <xsd:enumeration value="strict">
+                    <xsd:annotation>
+                        <xsd:documentation>strict</xsd:documentation>
                     </xsd:annotation>
                 </xsd:enumeration>
                 <xsd:enumeration value="">
