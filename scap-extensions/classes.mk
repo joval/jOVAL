@@ -12,6 +12,4 @@ CLASSES=\
 	scap.oval.def.nxos.ObjectFactory	\
 	scap.oval.def.nxos.package-info	\
 	scap.oval.def.protocols.ObjectFactory	\
-	scap.oval.def.protocols.package-info	\
-	scap.oval.def.esx.extended.ObjectFactory	\
-	scap.oval.def.esx.extended.package-info
+	scap.oval.def.protocols.package-info

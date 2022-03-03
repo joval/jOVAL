@@ -600,10 +600,10 @@
 	          <table bgcolor="#FCFCFC" border="2" cellpadding="5" cellspacing="0" width="88%">
 	                <tr>
 	                      <td>
-	                            <b><xsl:text>Example:</xsl:text></b><br/>
+	                            <b><xsl:value-of select="./@title" /></b><br/>
 	                            <xsl:value-of select="title"/>
 	                            <hr width="100%"/>
-	                            XML
+	                            <pre><xsl:value-of select="."/></pre>
 	                      </td>
 	                </tr>
 	          </table>
