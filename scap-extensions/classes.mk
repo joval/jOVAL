@@ -5,8 +5,6 @@ CLASSES=\
 	scap.oval.sc.nxos.package-info	\
 	scap.oval.sc.protocols.ObjectFactory	\
 	scap.oval.sc.protocols.package-info	\
-	scap.oval.sc.esx.extended.ObjectFactory	\
-	scap.oval.sc.esx.extended.package-info	\
 	scap.oval.def.independent.extended.ObjectFactory	\
 	scap.oval.def.independent.extended.package-info	\
 	scap.oval.def.nxos.ObjectFactory	\
