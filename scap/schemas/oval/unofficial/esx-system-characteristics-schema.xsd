@@ -24,7 +24,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="oval-sc:item">
+                <xsd:extension base="oval-sc:ItemType">
                     <xsd:sequence>
                         <xsd:element name="acceptance_level" type="esx-sc:EntityItemAcceptanceLevelType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -46,7 +46,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="oval-sc:item">
+                <xsd:extension base="oval-sc:ItemType">
                     <xsd:sequence>
                         <xsd:element name="vib_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -88,7 +88,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="oval-sc:item">
+                <xsd:extension base="oval-sc:ItemType">
                     <xsd:sequence>
                         <xsd:element name="module_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -130,7 +130,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="oval-sc:item">
+                <xsd:extension base="oval-sc:ItemType">
                     <xsd:sequence>
                         <xsd:element name="enabled" type="oval-sc:EntityItemBoolType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -167,7 +167,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="oval-sc:item">
+                <xsd:extension base="oval-sc:ItemType">
                     <xsd:sequence>
                         <xsd:element name="certificate_is_valid" type="oval-sc:EntityItemBoolType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -204,7 +204,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="oval-sc:item">
+                <xsd:extension base="oval-sc:ItemType">
                     <xsd:sequence>
                         <xsd:element name="domain" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -231,7 +231,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="oval-sc:item">
+                <xsd:extension base="oval-sc:ItemType">
                     <xsd:sequence>
                         <xsd:element name="account_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -273,7 +273,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="oval-sc:item">
+                <xsd:extension base="oval-sc:ItemType">
                     <xsd:sequence>
                         <xsd:element name="advanced_setting_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -300,7 +300,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="oval-sc:item">
+                <xsd:extension base="oval-sc:ItemType">
                     <xsd:sequence>
                         <xsd:element name="service_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -342,7 +342,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="oval-sc:item">
+                <xsd:extension base="oval-sc:ItemType">
                     <xsd:sequence>
                         <xsd:element name="ntp_server_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
                             <xsd:annotation>
@@ -364,7 +364,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="oval-sc:item">
+                <xsd:extension base="oval-sc:ItemType">
                     <xsd:sequence>
                         <xsd:element name="lockdown" type="esx-sc:EntityItemLockdownType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -391,7 +391,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="oval-sc:item">
+                <xsd:extension base="oval-sc:ItemType">
                     <xsd:sequence>
                         <xsd:element name="firewall_exception_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -453,7 +453,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="oval-sc:item">
+                <xsd:extension base="oval-sc:ItemType">
                     <xsd:sequence>
                         <xsd:element name="device_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -530,7 +530,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="oval-sc:item">
+                <xsd:extension base="oval-sc:ItemType">
                     <xsd:sequence>
                         <xsd:element name="vswitch_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -690,7 +690,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="oval-sc:item">
+                <xsd:extension base="oval-sc:ItemType">
                     <xsd:sequence>
                         <xsd:element name="port_group_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
