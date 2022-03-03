@@ -1,36 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:sch="http://purl.oclc.org/dsdl/schematron" xmlns:esxi-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#esx" targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#esx" elementFormDefault="qualified" version="5.11.2">
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:sch="http://purl.oclc.org/dsdl/schematron" xmlns:esx-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#esx" targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#esx" elementFormDefault="qualified" version="5.11.2">
     <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
     <xsd:annotation>
-        <xsd:documentation>The following is a proposal for the experimental schemas for VMware ESXi that will support assessment of ESXi hosts and Virtual Machines</xsd:documentation>
+        <xsd:documentation>The following is a proposal for the experimental schemas for VMware ESX that will support assessment of ESX hosts and Virtual Machines</xsd:documentation>
         <xsd:appinfo>
-            <schema>Experimental Schema for VMware ESXi</schema>
+            <schema>Experimental Schema for VMware ESX</schema>
             <version>5.11.2</version>
             <date>4/1/2013 8:00:00 AM</date>
             <terms_of_use>Copyright (c) 2002-2013, The MITRE Corporation. All rights reserved. The contents of this file are subject to the terms of the OVAL License located at http://oval.mitre.org/oval/about/termsofuse.html. See the OVAL License for the specific language governing permissions and limitations for use of this schema. When distributing copies of the OVAL Schema, this license header must be included.</terms_of_use>
             <sch:ns prefix="oval-def" uri="http://oval.mitre.org/XMLSchema/oval-definitions-5"/>
             <sch:ns prefix="oval-sc" uri="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"/>
-            <sch:ns prefix="esxi-sc" uri="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#esx"/>
+            <sch:ns prefix="esx-sc" uri="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#esx"/>
             <sch:ns prefix="xsi" uri="http://www.w3.org/2001/XMLSchema-instance"/>
         </xsd:appinfo>
     </xsd:annotation>
-    
-    <xsd:complexType name="VMHostItemBaseType">
-        <xsd:annotation>
-            <xsd:documentation>Base type for VM-based States</xsd:documentation>
-        </xsd:annotation>
-        <xsd:complexContent>
-            <xsd:extension base="oval-sc:ItemType">
-                <xsd:sequence>
-                    <!--<xsd:element name="host_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
-                        <xsd:annotation>
-                            <xsd:documentation>The name of the ESXi host for which information is collected.</xsd:documentation>
-                        </xsd:annotation>
-                    </xsd:element>-->
-                </xsd:sequence>
-            </xsd:extension>
-        </xsd:complexContent>
-    </xsd:complexType>
     
     <!-- =============================================================================== -->
     <!-- VMHost Acceptance Level Item -->
@@ -41,9 +24,9 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMHostItemBaseType">
+                <xsd:extension base="oval-sc:item">
                     <xsd:sequence>
-                        <xsd:element name="acceptance_level" type="esxi-sc:EntityItemAcceptanceLevelType" minOccurs="0" maxOccurs="1">
+                        <xsd:element name="acceptance_level" type="esx-sc:EntityItemAcceptanceLevelType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
                                 <xsd:documentation>The software acceptance level for the associated ESXi host.</xsd:documentation>
                             </xsd:annotation>
@@ -63,14 +46,14 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMHostItemBaseType">
+                <xsd:extension base="oval-sc:item">
                     <xsd:sequence>
                         <xsd:element name="vib_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
                                 <xsd:documentation>The VIB name</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
-                        <xsd:element name="acceptance_level" type="esxi-sc:EntityItemAcceptanceLevelType" minOccurs="0" maxOccurs="1">
+                        <xsd:element name="acceptance_level" type="esx-sc:EntityItemAcceptanceLevelType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
                                 <xsd:documentation>The software acceptance level for the associated VIB</xsd:documentation>
                             </xsd:annotation>
@@ -105,7 +88,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMHostItemBaseType">
+                <xsd:extension base="oval-sc:item">
                     <xsd:sequence>
                         <xsd:element name="module_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -127,7 +110,7 @@
                                 <xsd:documentation>The kernel module version information.</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
-                        <xsd:element name="acceptance_level" type="esxi-sc:EntityItemAcceptanceLevelType" minOccurs="0" maxOccurs="1">
+                        <xsd:element name="acceptance_level" type="esx-sc:EntityItemAcceptanceLevelType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
                                 <xsd:documentation>The software acceptance level of the kernel module.</xsd:documentation>
                             </xsd:annotation>
@@ -147,7 +130,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMHostItemBaseType">
+                <xsd:extension base="oval-sc:item">
                     <xsd:sequence>
                         <xsd:element name="enabled" type="oval-sc:EntityItemBoolType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -184,7 +167,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMHostItemBaseType">
+                <xsd:extension base="oval-sc:item">
                     <xsd:sequence>
                         <xsd:element name="certificate_is_valid" type="oval-sc:EntityItemBoolType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -221,14 +204,14 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMHostItemBaseType">
+                <xsd:extension base="oval-sc:item">
                     <xsd:sequence>
                         <xsd:element name="domain" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
                                 <xsd:documentation>The name of the domain</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
-                        <xsd:element name="domain_membership_status" type="esxi-sc:EntityItemDomainMembershipStatusType" minOccurs="0" maxOccurs="1">
+                        <xsd:element name="domain_membership_status" type="esx-sc:EntityItemDomainMembershipStatusType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
                                 <xsd:documentation>The status of the ESXi host's membership in the domain</xsd:documentation>
                             </xsd:annotation>
@@ -248,7 +231,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMHostItemBaseType">
+                <xsd:extension base="oval-sc:item">
                     <xsd:sequence>
                         <xsd:element name="account_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -272,7 +255,7 @@
                         </xsd:element>
                         <xsd:element name="role" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
-                                <xsd:documentation>The role assigned to the vmhost account</xsd:documentation>
+                                <xsd:documentation></xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
                     </xsd:sequence>
@@ -290,7 +273,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMHostItemBaseType">
+                <xsd:extension base="oval-sc:item">
                     <xsd:sequence>
                         <xsd:element name="advanced_setting_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -317,7 +300,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMHostItemBaseType">
+                <xsd:extension base="oval-sc:item">
                     <xsd:sequence>
                         <xsd:element name="service_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -359,7 +342,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMHostItemBaseType">
+                <xsd:extension base="oval-sc:item">
                     <xsd:sequence>
                         <xsd:element name="ntp_server_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
                             <xsd:annotation>
@@ -381,11 +364,11 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMHostItemBaseType">
+                <xsd:extension base="oval-sc:item">
                     <xsd:sequence>
-                        <xsd:element name="lockdown" type="esxi-sc:EntityItemLockdownType" minOccurs="0" maxOccurs="1">
+                        <xsd:element name="lockdown" type="esx-sc:EntityItemLockdownType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
-                                <xsd:documentation>Lockdown Enabled?</xsd:documentation>
+                                <xsd:documentation>Lockdown mode type</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
                         <xsd:element name="lockdown_user" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="unbounded">
@@ -408,7 +391,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMHostItemBaseType">
+                <xsd:extension base="oval-sc:item">
                     <xsd:sequence>
                         <xsd:element name="firewall_exception_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -417,7 +400,7 @@
                         </xsd:element>
                         <xsd:element name="exception_enabled" type="oval-sc:EntityItemBoolType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
-                                <xsd:documentation>Whether or not the exception is enabled</xsd:documentation>
+                                <xsd:documentation></xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
                         <xsd:element name="port" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
@@ -430,7 +413,7 @@
                                 <xsd:documentation></xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
-                        <xsd:element name="direction" type="esxi-sc:EntityItemFirewallDirectionType" minOccurs="0" maxOccurs="1">
+                        <xsd:element name="direction" type="esx-sc:EntityItemFirewallDirectionType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
                                 <xsd:documentation></xsd:documentation>
                             </xsd:annotation>
@@ -470,14 +453,14 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMHostItemBaseType">
+                <xsd:extension base="oval-sc:item">
                     <xsd:sequence>
                         <xsd:element name="device_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
                                 <xsd:documentation>Specify the devices of the HBA you want to retrieve.</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
-                        <xsd:element name="busadapter_type" type="esxi-sc:EntityItemBusAdapterType" minOccurs="0" maxOccurs="1">
+                        <xsd:element name="busadapter_type" type="esx-sc:EntityItemBusAdapterType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
                                 <xsd:documentation>Specify the type of the HBAs you want to retrieve. The valid values are Block, FibreChannel, iSCSI, and ParallelSCSI.</xsd:documentation>
                             </xsd:annotation>
@@ -547,26 +530,26 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMHostItemBaseType">
+                <xsd:extension base="oval-sc:item">
                     <xsd:sequence>
                         <xsd:element name="vswitch_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
-                                <xsd:documentation>vSwitch</xsd:documentation>
+                                <xsd:documentation>vSwitch name</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
-                        <xsd:element name="mac_changes" type="esxi-sc:EntityItemAcceptRejectType" minOccurs="0" maxOccurs="1">
+                        <xsd:element name="mac_changes" type="esx-sc:EntityItemAcceptRejectType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
-                                <xsd:documentation>MACChanges</xsd:documentation>
+                                <xsd:documentation>MAC changes allowed</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
-                        <xsd:element name="promiscuous_mode" type="esxi-sc:EntityItemAcceptRejectType" minOccurs="0" maxOccurs="1">
+                        <xsd:element name="promiscuous_mode" type="esx-sc:EntityItemAcceptRejectType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
-                                <xsd:documentation>PromiscuousMode</xsd:documentation>
+                                <xsd:documentation>Promiscuous mode allowed</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
-                        <xsd:element name="forged_transmits" type="esxi-sc:EntityItemAcceptRejectType" minOccurs="0" maxOccurs="1">
+                        <xsd:element name="forged_transmits" type="esx-sc:EntityItemAcceptRejectType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
-                                <xsd:documentation>ForgedTransmits</xsd:documentation>
+                                <xsd:documentation>Forged transmits allowed</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
                     </xsd:sequence>
@@ -602,7 +585,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMItemBaseType">
+                <xsd:extension base="esx-sc:VMItemBaseType">
                     <xsd:sequence>
                         <xsd:element name="advanced_setting_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
@@ -634,9 +617,9 @@
             <xsd:documentation>Base type for VM Devices</xsd:documentation>
         </xsd:annotation>
         <xsd:complexContent>
-            <xsd:extension base="esxi-sc:VMItemBaseType">
+            <xsd:extension base="esx-sc:VMItemBaseType">
                 <xsd:sequence>
-                    <xsd:element name="device_type" type="esxi-sc:EntityItemVMDeviceType" minOccurs="0" maxOccurs="1">
+                    <xsd:element name="device_type" type="esx-sc:EntityItemVMDeviceType" minOccurs="0" maxOccurs="1">
                         <xsd:annotation>
                             <xsd:documentation>The device type; one of the values in the enumeration (floppy, cdrom, parallel, etc).</xsd:documentation>
                         </xsd:annotation>
@@ -674,7 +657,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMDeviceItemType"/>
+                <xsd:extension base="esx-sc:VMDeviceItemType"/>
             </xsd:complexContent>
         </xsd:complexType>
     </xsd:element>
@@ -685,11 +668,11 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMDeviceItemType">
+                <xsd:extension base="esx-sc:VMDeviceItemType">
                     <xsd:sequence>
-                        <xsd:element name="persistence" type="esxi-sc:EntityItemVMDevicePersistenceType" minOccurs="0" maxOccurs="1">
+                        <xsd:element name="persistence" type="esx-sc:EntityItemVMDevicePersistenceType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
-                                <xsd:documentation>The persistence policy (Persistent, NonPersistent, Undoable, IndependentPersistent, IndependentNonPersistent, or Unknown</xsd:documentation>
+                                <xsd:documentation>The persistence policy (Persistent, NonPersistent, Undoable, IndependentPersistent, IndependentNonPersistent, or Unknown)</xsd:documentation>
                             </xsd:annotation>
                         </xsd:element>
                     </xsd:sequence>
@@ -707,7 +690,7 @@
         </xsd:annotation>
         <xsd:complexType>
             <xsd:complexContent>
-                <xsd:extension base="esxi-sc:VMHostItemBaseType">
+                <xsd:extension base="oval-sc:item">
                     <xsd:sequence>
                         <xsd:element name="port_group_name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
                             <xsd:annotation>
