@@ -60,5 +60,5 @@
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#cmd"
                   schemaLocation="../../scap-extensions/schemas/x-shellcommand-system-characteristics-schema.xsd"/>
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#esxi"
-                  schemaLocation="../../scap-extensions/schemas/x-vmware-esxi-system-characteristics-schema.xsd"/>
+                  schemaLocation="../schemas/oval/unofficial/esx-system-characteristics-schema.xsd"/>
 </xsd:schema>
