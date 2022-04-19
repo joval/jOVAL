@@ -59,6 +59,4 @@
                   schemaLocation="../../scap-extensions/schemas/x-protocols-definitions-schema.xsd"/>
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#cmd"
                   schemaLocation="../../scap-extensions/schemas/x-shellcommand-definitions-schema.xsd"/>
-      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#esxi"
-                  schemaLocation="../schemas/oval/unofficial/esx-definitions-schema.xsd"/>
 </xsd:schema>

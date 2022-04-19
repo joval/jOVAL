@@ -19,7 +19,7 @@ $(DODARF_LIB): $(GEN) classes resources $(DOCS)
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 $(DOCS): $(GEN)
-	$(JAVADOC) $(JAVADOCFLAGS) -d $(DOCS) -sourcepath $(GEN) -subpackages gov:mil.disa -classpath ../scap/build/
+	$(JAVADOC) $(JAVADOCFLAGS) -d $(DOCS) -sourcepath $(GEN) -subpackages gov:mil.disa -classpath $(SCAP)/$(BUILD)/
 
 clean:
 	rm -f $(EPISODE)
