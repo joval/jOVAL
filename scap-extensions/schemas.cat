@@ -14,8 +14,6 @@ PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5" "../scap/schemas/ova
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" "../scap/schemas/oval/merged/oval-system-characteristics-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#nxos" "schemas/x-nxos-definitions-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nxos" "schemas/x-nxos-system-characteristics-schema.xsd"
-PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#panos" "schemas/x-panos-definitions-schema.xsd"
-PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#panos" "schemas/x-panos-system-characteristics-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#cmd" "schemas/x-shellcommand-definitions-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#cmd" "schemas/x-shellcommand-system-characteristics-schema.xsd"
 PUBLIC "http://oval.mitre.org/XMLSchema/oval-definitions-5#x-protocols" "schemas/x-protocols-definitions-schema.xsd"
