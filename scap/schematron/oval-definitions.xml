@@ -40,6 +40,8 @@
                   schemaLocation="../schemas/oval/merged/netconf-definitions-schema.xsd"/>
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"
                   schemaLocation="../schemas/oval/merged/oval-definitions-schema.xsd"/>
+      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#panos"
+                  schemaLocation="../schemas/oval/merged/panos-definitions-schema.xsd"/>
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#pixos"
                   schemaLocation="../schemas/oval/merged/pixos-definitions-schema.xsd"/>
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#sharepoint"
@@ -53,8 +55,6 @@
 
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#nxos"
                   schemaLocation="../../scap-extensions/schemas/x-nxos-definitions-schema.xsd"/>
-      <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#panos"
-                  schemaLocation="../../scap-extensions/schemas/x-panos-definitions-schema.xsd"/>
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#x-net"
                   schemaLocation="../../scap-extensions/schemas/x-protocols-definitions-schema.xsd"/>
       <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#cmd"
