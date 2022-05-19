@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!DOCTYPE catalog
+    PUBLIC "-//OASIS//DTD XML Catalogs V1.1//EN"
+        "http://www.oasis-open.org/committees/entity/release/1.1/catalog.dtd">
+
+<catalog prefer="system" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+	<public publicId="http://scap.nist.gov/schema/asset-identification/1.0" uri="schemas/ai-1.0-ea1/asset-identification_1.0.0-ea1.xsd"/>
+	<public publicId="http://scap.nist.gov/schema/asset-reporting-format/1.0" uri="schemas/arf-1.0-ea1/asset-reporting-format_1.0.0-ea1.xsd"/>
+	<public publicId="http://scap.nist.gov/schema/lightweight-asset-summary-results/1.0" uri="schemas/lasr-1.0-ea1/lightweight-asset-summary-results_1.0.0-ea1.xsd"/>
+	<public publicId="urn:oasis:names:tc:ciq:ct:3" uri="schemas/oasis/CommonTypes.xsd"/>
+	<public publicId="urn:oasis:names:tc:ciq:xal:3" uri="schemas/oasis/xAL.xsd"/>
+	<public publicId="urn:oasis:names:tc:ciq:xnl:3" uri="schemas/oasis/xNL.xsd"/>
+	<system systemId="datatypes.dtd" uri="../scap/schemas/xml/datatypes.dtd"/>
+	<public publicId="http://www.w3.org/1999/xlink" uri="../scap/schemas/xml/xlink.xsd"/>
+	<public publicId="http://www.w3.org/XML/1998/namespace" uri="../scap/schemas/xml/xml.xsd"/>
+	<system systemId="XMLSchema.dtd" uri="../scap/schemas/xml/XMLSchema.dtd"/>
+</catalog>

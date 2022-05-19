@@ -4,7 +4,7 @@
 TOP=..
 include $(TOP)/common.mk
 
-CLASSPATH="$(CLASSLIB)$(CLN)$(SCAP_LIB)$(CLN)$(GEN)"
+CLASSPATH="$(JAXB_BIND_API_LIB)$(CLN)$(SCAP_LIB)$(CLN)$(GEN)"
 
 include classes.mk
 include schemas.mk
@@ -20,7 +20,7 @@ $(CYBERSCOPE_LIB): $(GEN) classes resources $(DOCS)
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 $(DOCS): $(GEN)
-	$(JAVADOC) $(JAVADOCFLAGS) -d $(DOCS) -sourcepath $(GEN) -subpackages cyberscope -classpath $(SCAP)/$(BUILD)/
+	$(JAVADOC) $(JAVADOCFLAGS) -d $(DOCS) -sourcepath $(GEN) -subpackages cyberscope -classpath $(JAXB_BIND_API_LIB)$(CLN)$(SCAP)/$(BUILD)
 
 clean:
 	rm -f $(EPISODE)

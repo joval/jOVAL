@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!DOCTYPE catalog
+    PUBLIC "-//OASIS//DTD XML Catalogs V1.1//EN"
+        "http://www.oasis-open.org/committees/entity/release/1.1/catalog.dtd">
+
+<catalog prefer="system" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+	<public publicId="http://metadata.dod.mil/mdr/ns/netops/shared_data/assessment/0.41" uri="schemas/assessment.xsd"/>
+	<public publicId="http://metadata.dod.mil/mdr/ns/netops/shared_data/assessment_report/0.41" uri="schemas/assessment_report.xsd"/>
+	<public publicId="http://scap.nist.gov/schema/cce/0.1" uri="schemas/cce_0.1.xsd"/>
+	<public publicId="http://metadata.dod.mil/mdr/ns/netops/net_defense/cnd-core/0.41" uri="schemas/cnd-core.xsd"/>
+	<public publicId="http://cpe.mitre.org/XMLSchema/cpe/1.0" uri="schemas/cpe-1.0.xsd"/>
+	<public publicId="http://cpe.mitre.org/dictionary/2.0" uri="../scap/schemas/cpe-2.3/cpe-dictionary_2.3.xsd"/>
+	<public publicId="http://cpe.mitre.org/language/2.0" uri="../scap/schemas/cpe-2.3/cpe-language_2.3.xsd"/>
+	<public publicId="http://cpe.mitre.org/naming/2.0" uri="../scap/schemas/cpe-2.3/cpe-naming_2.3.xsd"/>
+	<public publicId="http://scap.nist.gov/schema/cpe-record/0.1" uri="schemas/cpe-record_0.1.xsd"/>
+	<public publicId="http://scap.nist.gov/schema/cve/0.1" uri="schemas/cve_0.1.1.xsd"/>
+	<public publicId="http://scap.nist.gov/schema/cvss-v2/0.2" uri="schemas/cvss-v2_0.2.xsd"/>
+	<system systemId="datatypes.dtd" uri="../scap/schemas/xml/datatypes.dtd"/>
+	<public publicId="http://metadata.dod.mil/mdr/ns/netops/shared_data/device/0.41" uri="schemas/device_record.xsd"/>
+	<public publicId="http://metadata.dod.mil/mdr/ns/netops/shared_data/ext_net_data/0.41" uri="schemas/ext_net_data.xsd"/>
+	<public publicId="http://metadata.dod.mil/mdr/ns/netops/shared_data/geolocation/0.41" uri="schemas/geolocation.xsd"/>
+	<public publicId="http://metadata.dod.mil/mdr/ns/netops/shared_data/global-enumerations/0.41" uri="schemas/global_enumerations.xsd"/>
+	<public publicId="http://scap.nist.gov/schema/feed/vulnerability/2.0" uri="schemas/nvd-cve-feed_2.0.xsd"/>
+	<public publicId="http://scap.nist.gov/schema/patch/0.1" uri="schemas/patch_0.1.xsd"/>
+	<public publicId="http://scap.nist.gov/schema/vulnerability/0.4" uri="schemas/vulnerability_0.4.1.xsd"/>
+	<public publicId="urn:us:gov:ic:ism:v2" uri="schemas/IC-ISM-v2.xsd"/>
+	<public publicId="http://metadata.dod.mil/mdr/ns/netops/shared_data/ops_attributes/0.41" uri="schemas/ops_attributes.xsd"/>
+	<public publicId="http://metadata.dod.mil/mdr/ns/netops/shared_data/organization/0.41" uri="schemas/organization.xsd"/>
+	<public publicId="http://oval.mitre.org/XMLSchema/oval-common-5" uri="../scap/schemas/oval/merged/oval-common-schema.xsd"/>
+	<public publicId="http://oval.mitre.org/XMLSchema/oval-definitions-5" uri="../scap/schemas/oval/merged/oval-definitions-schema.xsd"/>
+	<public publicId="http://oval.mitre.org/XMLSchema/oval-results-5" uri="../scap/schemas/oval/merged/oval-results-schema.xsd"/>
+	<public publicId="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" uri="../scap/schemas/oval/merged/oval-system-characteristics-schema.xsd"/>
+	<public publicId="http://metadata.dod.mil/mdr/ns/netops/shared_data/person/0.41" uri="schemas/person.xsd"/>
+	<public publicId="http://www.cisecurity.org/xccdf/platform/0.2.3" uri="schemas/platform-0.2.3.xsd"/>
+	<public publicId="http://metadata.dod.mil/mdr/ns/netops/shared_data/replication/0.41" uri="schemas/replication.xsd"/>
+	<public publicId="http://metadata.dod.mil/mdr/ns/netops/shared_data/scan_data/0.41" uri="schemas/scan_data.xsd"/>
+	<public publicId="http://scap.nist.gov/schema/scap-core/0.1" uri="schemas/scap-core_0.1.xsd"/>
+	<public publicId="http://metadata.dod.mil/mdr/ns/netops/shared_data/security-marking/0.41" uri="schemas/security_marking.xsd"/>
+	<public publicId="http://purl.org/dc/elements/1.1/" uri="../scap/schemas/dublin/simpledc20021212.xsd"/>
+	<public publicId="http://metadata.dod.mil/mdr/ns/netops/shared_data/tagged_value/0.41" uri="schemas/tagged_value.xsd"/>
+	<public publicId="http://metadata.dod.mil/mdr/ns/ia_cnd/pki/x509_cert/3" uri="schemas/x509_cert.xsd"/>
+	<public publicId="http://checklists.nist.gov/xccdf/1.1" uri="schemas/xccdf-1.1.4.xsd"/>
+	<public publicId="http://checklists.nist.gov/xccdf-p/1.1" uri="schemas/xccdfp-1.1.xsd"/>
+	<public publicId="http://www.w3.org/1999/xlink" uri="../scap/schemas/xml/xlink.xsd"/>
+	<public publicId="http://www.w3.org/XML/1998/namespace" uri="../scap/schemas/xml/xml.xsd"/>
+	<public publicId="http://www.w3.org/2000/09/xmldsig#" uri="../scap/schemas/xml/xmldsig-core-schema.xsd"/>
+	<system systemId="XMLSchema.dtd" uri="../scap/schemas/xml/XMLSchema.dtd"/>
+</catalog>

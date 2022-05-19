@@ -4,7 +4,7 @@
 TOP=..
 include $(TOP)/common.mk
 
-CLASSPATH="$(CLASSLIB)$(CLN)$(SCAP_LIB)$(CLN)$(GEN)"
+CLASSPATH="$(JAXB_BIND_API_LIB)$(CLN)$(SCAP_LIB)$(CLN)$(GEN)"
 
 include classes.mk
 
