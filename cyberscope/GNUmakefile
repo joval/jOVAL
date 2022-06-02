@@ -4,7 +4,13 @@
 TOP=..
 include $(TOP)/common.mk
 
-CLASSPATH="$(JAXB_BIND_API_LIB)$(CLN)$(SCAP_LIB)$(CLN)$(GEN)"
+ifeq (win, $(PLATFORM))
+  CLASSPATH="$(shell cygpath -wp $(JAXB_BIND_API_LIB))$(CLN)$(shell cygpath -wp $(SCAP_LIB))$(CLN)$(shell cygpath -wp $(GEN))"
+  JAVADOCCP="$(shell cygpath -wp $(JAXB_BIND_API_LIB))$(CLN)$(shell cygpath -wp $(SCAP)/$(BUILD))"
+else
+  CLASSPATH="$(JAXB_BIND_API_LIB)$(CLN)$(SCAP_LIB)$(CLN)$(GEN)"
+  JAVADOCCP="$(JAXB_BIND_API_LIB)$(CLN)$(SCAP)/$(BUILD)"
+endif
 
 include classes.mk
 include schemas.mk
@@ -20,7 +26,7 @@ $(CYBERSCOPE_LIB): $(GEN) classes resources $(DOCS)
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 $(DOCS): $(GEN)
-	$(JAVADOC) $(JAVADOCFLAGS) -d $(DOCS) -sourcepath $(GEN) -subpackages cyberscope -classpath $(JAXB_BIND_API_LIB)$(CLN)$(SCAP)/$(BUILD)
+	$(JAVADOC) $(JAVADOCFLAGS) -d $(DOCS) -sourcepath $(GEN) -subpackages cyberscope -classpath $(JAVADOCCP)
 
 clean:
 	rm -f $(EPISODE)

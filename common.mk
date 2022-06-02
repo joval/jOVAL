@@ -40,7 +40,7 @@ else
         NUMPROCS=$(shell nproc)
     endif
 endif
-RAW_JAVA_VERSION:=$(shell $(JAVA_HOME)/bin/java -version 2>&1)
+RAW_JAVA_VERSION:=$(shell "$(JAVA_HOME)/bin/java" -version 2>&1)
 ifeq (11, $(findstring 11, $(findstring "11., $(RAW_JAVA_VERSION))))
     JAVA_VERSION=11
     JAVADOCFLAGS=-Xdoclint:none -J-Xmx512m
@@ -86,7 +86,7 @@ CATALOG=schemas.xml
 EPISODE=schemas.episode
 XJCFLAGS=-enableIntrospection -catalog $(CATALOG) -episode $(EPISODE)
 XJCFLAGS_EXT=$(XJCFLAGS) -extension -Xnamespace-prefix
-XJC=$(JAVA) -Djavax.xml.accessExternalSchema=all -Dcom.sun.tools.xjc.XJCFacade.nohack=true -cp $(XJC_LIBS) com.sun.tools.xjc.XJCFacade
+XJC=$(JAVA) -Djavax.xml.accessExternalSchema=all -Dcom.sun.tools.xjc.XJCFacade.nohack=true -cp "$(XJC_LIBS)" com.sun.tools.xjc.XJCFacade
 
 #
 # Make namespaces optional in the episode bindings
