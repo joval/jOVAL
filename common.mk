@@ -104,6 +104,6 @@ DODARF=$(TOP)/dod-arf
 DODARF_LIB=$(DODARF)/DoD-ARF-schema.jar
 
 THIRDPARTY=$(TOP)/3rd-party
-SAXON_LIB=$(THIRDPARTY)/saxon9he.jar
+SAXON_LIB=$(THIRDPARTY)/Saxon-HE-9.4.jar
 JAXB_BIND_API_LIB=$(THIRDPARTY)/jakarta.xml.bind-api-4.0.0.jar
-XJC_LIBS=$(THIRDPARTY)/jaxb-xjc-3.0.2.jar$(CLN)$(THIRDPARTY)/jaxb-core-3.0.2.jar$(CLN)$(THIRDPARTY)/jaxb-impl-3.0.2.jar$(CLN)$(JAXB_BIND_API_LIB)$(CLN)$(THIRDPARTY)/jakarta.activation-api-2.1.0.jar$(CLN)$(THIRDPARTY)/istack-commons-runtime-4.1.1.jar$(CLN)$(THIRDPARTY)/jaxb2-namespace-prefix-2.0.jar$(CLN)$(THIRDPARTY)/rngom-3.0.2.jar$(CLN)$(THIRDPARTY)/relaxng-datatype-3.0.2.jar$(CLN)$(THIRDPARTY)/dtd-parser-1.5.0.jar$(CLN)$(THIRDPARTY)/xsom-3.0.2.jar$(CLN)$(THIRDPARTY)/codemodel-3.0.2.jar$(CLN)$(THIRDPARTY)/txw2-3.0.2.jar
+XJC_LIBS=$(THIRDPARTY)/jaxb-xjc-3.0.2.jar$(CLN)$(THIRDPARTY)/jaxb-core-3.0.2.jar$(CLN)$(THIRDPARTY)/jaxb-impl-3.0.2.jar$(CLN)$(JAXB_BIND_API_LIB)$(CLN)$(THIRDPARTY)/jakarta.activation-api-2.1.0.jar$(CLN)$(THIRDPARTY)/istack-commons-runtime-4.1.1.jar$(CLN)$(THIRDPARTY)/jaxb2-namespace-prefix-2.0.jar$(CLN)$(THIRDPARTY)/rngom-4.0.0.jar$(CLN)$(THIRDPARTY)/relaxng-datatype-4.0.0.jar$(CLN)$(THIRDPARTY)/dtd-parser-1.5.0.jar$(CLN)$(THIRDPARTY)/xsom-4.0.0.jar$(CLN)$(THIRDPARTY)/codemodel-4.0.0.jar$(CLN)$(THIRDPARTY)/txw2-4.0.0.jar
