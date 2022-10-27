@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+<!--    <parent>
+        <artifactId>jovalng</artifactId>
+        <groupId>com.jovalng</groupId>
+        <version>poc</version>
+    </parent>
+-->
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.joval</groupId>
+    <artifactId>jOVAL</artifactId>
+    <version>poc</version>
+
+    <name>${project.artifactId}</name>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>scap</module>
+        <module>scap-extensions</module>
+        <module>dod-arf</module>
+        <module>cyberscope</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <properties-maven-plugin.version>1.1.0</properties-maven-plugin.version>
+        <jaxb2-maven-plugin.version>3.1.0</jaxb2-maven-plugin.version>
+        <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
+        <xml-maven-plugin-version>1.0.2</xml-maven-plugin-version>
+        <maven-resources-plugin-version>3.3.0</maven-resources-plugin-version>
+
+        <maven-javadoc-plugin.version>3.4.0</maven-javadoc-plugin.version>
+        <jaxws-version>3.0.2</jaxws-version>
+        <jakarta.xml.ws-api.version>3.0.1</jakarta.xml.ws-api.version>
+        <saxon-he-version>9.4</saxon-he-version>
+
+        <SCAP_VERSION>1.3.0.0.0-9</SCAP_VERSION>
+        <OVAL_VERSION>5.11.2</OVAL_VERSION>
+        <GEN>${project.build.directory}/gen-src</GEN>
+        <SCHEMADIR>schemas</SCHEMADIR>
+        <BROKEN>&lt;bindings scd=&quot;x-schema::tns&quot;</BROKEN>
+        <FIXED>&lt;bindings scd=&quot;x-schema::tns&quot; if-exists=&quot;true&quot;</FIXED>
+
+        <jakarta.activation.version>2.1.0</jakarta.activation.version>
+        <jakarta.xml.bind.version>4.0.0</jakarta.xml.bind.version>
+        <jaxb2-namespace-prefix.version>2.0</jaxb2-namespace-prefix.version>
+        <dtd-parser.version>1.5.0</dtd-parser.version>
+        <istack-commons.version>4.1.1</istack-commons.version>
+        <com.sun.xml.bind.external.version>4.0.0</com.sun.xml.bind.external.version>
+        <org.glassfish.jaxb.version>4.0.0</org.glassfish.jaxb.version>
+        <org.glassfish.jaxb.xjc.version>4.0.0</org.glassfish.jaxb.xjc.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.jvnet.jaxb2_commons</groupId>
+            <artifactId>jaxb2-namespace-prefix</artifactId>
+            <version>${jaxb2-namespace-prefix.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.dtd-parser</groupId>
+            <artifactId>dtd-parser</artifactId>
+            <version>${dtd-parser.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.istack</groupId>
+            <artifactId>istack-commons-runtime</artifactId>
+            <version>${istack-commons.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.activation</groupId>
+            <artifactId>jakarta.activation-api</artifactId>
+            <version>${jakarta.activation.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>${jakarta.xml.bind.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind.external</groupId>
+            <artifactId>relaxng-datatype</artifactId>
+            <version>${com.sun.xml.bind.external.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind.external</groupId>
+            <artifactId>rngom</artifactId>
+            <version>${com.sun.xml.bind.external.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>txw2</artifactId>
+            <version>${org.glassfish.jaxb.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>xsom</artifactId>
+            <version>${org.glassfish.jaxb.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>codemodel</artifactId>
+            <version>${org.glassfish.jaxb.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <version>${properties-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>set-system-properties</goal>
+                        </goals>
+                        <configuration>
+                            <properties>
+                                <property>
+                                    <name>javax.xml.accessExternalSchema</name>
+                                    <value>all</value>
+                                </property>
+                                <property>
+                                    <name>javax.xml.accessExternalDTD</name>
+                                    <value>all</value>
+                                </property>
+                                <property>
+                                    <name>com.sun.tools.xjc.XJCFacade.nohack</name>
+                                    <value>true</value>
+                                </property>
+                            </properties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven-javadoc-plugin.version}</version>
+
+                <configuration>
+                    <skip>false</skip>
+                    <doclint>none</doclint>
+                    <show>public</show>
+                    <quiet>false</quiet>
+
+                    <outputDirectory>docs</outputDirectory>
+                    <subpackages>org:scap</subpackages>
+                    <sourcepath>scap/gen-src:scap-extensions/gen-src</sourcepath>
+
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

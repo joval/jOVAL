@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <artifactId>jOVAL</artifactId>
+        <groupId>com.joval</groupId>
+        <version>poc</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.joval</groupId>
+    <artifactId>scap-schema-extensions</artifactId>
+    <name>${project.artifactId}</name>
+    <version>latest</version>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.joval</groupId>
+            <artifactId>scap-schema</artifactId>
+            <version>latest</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>scap-schema-extensions</finalName>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>${maven-antrun-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>Process episode file for scap-extensions</id>
+                        <phase>prepare-package</phase>
+                        <configuration>
+                            <target>
+                                <replaceregexp match="${BROKEN}" replace="${FIXED}" byline="true">
+                                    <fileset dir="${project.build.outputDirectory}/META-INF/JAXB/" includes="episode_xjc-scap*.xjb"/>
+                                </replaceregexp>
+                                <copy todir="${project.build.outputDirectory}/META-INF">
+                                    <fileset dir="${project.build.outputDirectory}/META-INF/JAXB/" includes="episode_xjc-scap*.xjb"/>
+                                    <globmapper from="*" to="sun-jaxb.episode"/>
+                                </copy>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>${maven-resources-plugin-version}</version>
+                <executions>
+                    <execution>
+                        <id>copy catalog file (schemas.xml) for scap-extensions</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/scapx</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}</directory>
+                                    <includes>
+                                        <include>schemas.xml</include>
+                                    </includes>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy registry.ini for scap-extensions</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/scapx</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/rsrc</directory>
+                                    <includes>
+                                        <include>registry.ini</include>
+                                    </includes>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy schemas for scap-extensions</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/scapx/schemas</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${SCHEMADIR}</directory>
+                                    <excludes>
+                                        <exclude>bindings.xjb</exclude>
+                                    </excludes>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jaxb2-maven-plugin</artifactId>
+                <version>${jaxb2-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>xjc-scap-extensions</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>xjc</goal>
+                        </goals>
+                        <configuration>
+                            <verbose>true</verbose>
+                            <enableIntrospection>true</enableIntrospection>
+                            <extension>true</extension>
+                            <arguments>
+                                <argument>-Xnamespace-prefix</argument>
+                            </arguments>
+                            <catalog>schemas.xml</catalog>
+                            <xjbSources>
+                                <xjbSource>${SCHEMADIR}/bindings.xjb</xjbSource>
+                            </xjbSources>
+                            <sourceType>XmlSchema</sourceType>
+                            <sources>
+                                <source>${SCHEMADIR}</source>
+                                <source>../scap/target/scap-schema-${SCAP_VERSION}.jar</source>
+                            </sources>
+                            <xjcSourceExcludeFilters>
+                                <filter implementation="org.codehaus.mojo.jaxb2.shared.filters.pattern.PatternFileFilter">
+                                    <patterns>
+                                        <pattern>\.xjb</pattern>
+                                    </patterns>
+                                </filter>
+                            </xjcSourceExcludeFilters>
+                            <outputDirectory>${GEN}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.glassfish.jaxb</groupId>
+                        <artifactId>jaxb-xjc</artifactId>
+                        <version>${org.glassfish.jaxb.xjc.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>${maven-antrun-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>Deleting core*ObjectFactory.java files for scap-extensions</id>
+                        <phase>process-sources</phase>
+                        <configuration>
+                            <target>
+                                <delete>
+                                    <fileset dir="${GEN}" includes="**/core/**/ObjectFactory.java"/>
+                                </delete>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
