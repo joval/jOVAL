@@ -42,7 +42,7 @@
                 <executions>
                     <execution>
                         <id>Copying schema to OVAL official directory</id>
-                        <phase>generate-sources</phase>
+                        <phase>initialize</phase>
                         <configuration>
                             <target>
                                 <echo message="Making directory ${project.build.directory}/gen-sch"/>
@@ -192,7 +192,7 @@
                 <executions>
                     <execution>
                         <id>Transform OVAL Official files with xslt2</id>
-                        <phase>process-sources</phase>
+                        <phase>initialize</phase>
                         <goals>
                             <goal>transform</goal>
                         </goals>
@@ -219,7 +219,7 @@
                     </execution>
                     <execution>
                         <id>Schematron Transform ExtractSchFromXSD</id>
-                        <phase>generate-resources</phase>
+                        <phase>initialize</phase>
                         <goals>
                             <goal>transform</goal>
                         </goals>
