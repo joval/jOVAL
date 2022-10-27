@@ -41,6 +41,38 @@
                 <version>${maven-antrun-plugin.version}</version>
                 <executions>
                     <execution>
+                        <id>Copying schema to OVAL official directory</id>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <target>
+                                <echo message="Making directory ${project.build.directory}/gen-sch"/>
+                                <mkdir dir="${project.build.directory}/gen-sch"/>
+
+                                <echo message="Making directory ${OVAL_OFFICIAL}"/>
+                                <mkdir dir="${OVAL_OFFICIAL}"/>
+
+                                <echo message="Making directory ${OVAL_OFFICIAL}"/>
+                                <copy todir="${OVAL_OFFICIAL}">
+                                    <fileset dir="${OVAL_SRC}">
+                                        <include name="*.xsd"/>
+                                        <exclude name="xmldsig*"/>
+                                    </fileset>
+                                </copy>
+
+                                <replaceregexp byline="true">
+                                    <regexp pattern=" schemaLocation=.*/"/>
+                                    <substitution expression="/"/>
+                                    <fileset dir="${OVAL_OFFICIAL}">
+                                        <include name="*.xsd"/>
+                                    </fileset>
+                                </replaceregexp>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
                         <id>Process episode file</id>
                         <phase>prepare-package</phase>
                         <configuration>
@@ -154,46 +186,6 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>${maven-antrun-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>Copying schema to OVAL official directory</id>
-                        <phase>generate-sources</phase>
-                        <configuration>
-                            <target>
-                                <echo message="Making directory ${project.build.directory}/gen-sch"/>
-                                <mkdir dir="${project.build.directory}/gen-sch"/>
-
-                                <echo message="Making directory ${OVAL_OFFICIAL}"/>
-                                <mkdir dir="${OVAL_OFFICIAL}"/>
-
-                                <echo message="Making directory ${OVAL_OFFICIAL}"/>
-                                <copy todir="${OVAL_OFFICIAL}">
-                                    <fileset dir="${OVAL_SRC}">
-                                        <include name="*.xsd"/>
-                                        <exclude name="xmldsig*"/>
-                                    </fileset>
-                                </copy>
-
-                                <replaceregexp byline="true">
-                                    <regexp pattern=" schemaLocation=.*/"/>
-                                    <substitution expression="/"/>
-                                    <fileset dir="${OVAL_OFFICIAL}">
-                                        <include name="*.xsd"/>
-                                    </fileset>
-                                </replaceregexp>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>xml-maven-plugin</artifactId>
                 <version>${xml-maven-plugin-version}</version>
@@ -204,28 +196,66 @@
                         <goals>
                             <goal>transform</goal>
                         </goals>
+                        <configuration>
+                            <transformationSets>
+                                <transformationSet>
+                                    <dir>${OVAL_OFFICIAL}</dir>
+                                    <includes>
+                                        <include>oval-common-schema.xsd</include>
+                                    </includes>
+                                    <outputDir>${OVAL_OFFICIAL}</outputDir>
+                                    <stylesheet>${OVAL_SCHEMA}/unofficial/strip-redefined-common.xsl</stylesheet>
+                                </transformationSet>
+                                <transformationSet>
+                                    <dir>${OVAL_OFFICIAL}</dir>
+                                    <includes>
+                                        <include>independent-*.xsd</include>
+                                    </includes>
+                                    <outputDir>${OVAL_OFFICIAL}</outputDir>
+                                    <stylesheet>${OVAL_SCHEMA}/unofficial/strip-redefined-independent.xsl</stylesheet>
+                                </transformationSet>
+                            </transformationSets>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>Schematron Transform ExtractSchFromXSD</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>transform</goal>
+                        </goals>
+                        <configuration>
+                            <forceCreation>true</forceCreation>
+                            <transformationSets>
+                                <transformationSet>
+                                    <dir>${basedir}/schematron</dir>
+                                    <includes>
+                                        <include>*.xml</include>
+                                    </includes>
+                                    <outputDir>${project.build.directory}/gen-sch</outputDir>
+                                    <stylesheet>${basedir}/rsrc/ExtractSchFromXSD.xsl</stylesheet>
+                                    <fileMappers>
+                                        <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                                            <targetExtension>schematron.sch</targetExtension>
+                                        </fileMapper>
+                                    </fileMappers>
+                                </transformationSet>
+                                <transformationSet>
+                                    <dir>${project.build.directory}/gen-sch</dir>
+                                    <includes>
+                                        <include>*.sch</include>
+                                    </includes>
+                                    <outputDir>${project.build.outputDirectory}</outputDir>
+                                    <stylesheet>${basedir}/rsrc/iso_svrl_for_xslt1.xsl</stylesheet>
+                                    <fileMappers>
+                                        <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                                            <targetExtension>xsl</targetExtension>
+                                        </fileMapper>
+                                    </fileMappers>
+                                </transformationSet>
+                            </transformationSets>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <transformationSets>
-                        <transformationSet>
-                            <dir>${OVAL_OFFICIAL}</dir>
-                            <includes>
-                                <include>oval-common-schema.xsd</include>
-                            </includes>
-                            <outputDir>${OVAL_OFFICIAL}</outputDir>
-                            <stylesheet>${OVAL_SCHEMA}/unofficial/strip-redefined-common.xsl</stylesheet>
-                        </transformationSet>
-                        <transformationSet>
-                            <dir>${OVAL_OFFICIAL}</dir>
-                            <includes>
-                                <include>independent-*.xsd</include>
-                            </includes>
-                            <outputDir>${OVAL_OFFICIAL}</outputDir>
-                            <stylesheet>${OVAL_SCHEMA}/unofficial/strip-redefined-independent.xsl</stylesheet>
-                        </transformationSet>
-                    </transformationSets>
-                </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>net.sf.saxon</groupId>
@@ -333,58 +363,6 @@
                 </configuration>
             </plugin>
 -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>xml-maven-plugin</artifactId>
-                <version>${xml-maven-plugin-version}</version>
-                <executions>
-                    <execution>
-                        <id>Schematron Transform ExtractSchFromXSD</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>transform</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <forceCreation>true</forceCreation>
-                    <transformationSets>
-                        <transformationSet>
-                            <dir>${basedir}/schematron</dir>
-                            <includes>
-                                <include>*.xml</include>
-                            </includes>
-                            <outputDir>${project.build.directory}/gen-sch</outputDir>
-                            <stylesheet>${basedir}/rsrc/ExtractSchFromXSD.xsl</stylesheet>
-                            <fileMappers>
-                                <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
-                                    <targetExtension>schematron.sch</targetExtension>
-                                </fileMapper>
-                            </fileMappers>
-                        </transformationSet>
-                        <transformationSet>
-                            <dir>${project.build.directory}/gen-sch</dir>
-                            <includes>
-                                <include>*.sch</include>
-                            </includes>
-                            <outputDir>${project.build.outputDirectory}</outputDir>
-                            <stylesheet>${basedir}/rsrc/iso_svrl_for_xslt1.xsl</stylesheet>
-                            <fileMappers>
-                                <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
-                                    <targetExtension>xsl</targetExtension>
-                                </fileMapper>
-                            </fileMappers>
-                        </transformationSet>
-                    </transformationSets>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>net.sf.saxon</groupId>
-                        <artifactId>Saxon-HE</artifactId>
-                        <version>${saxon-he-version}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
             <!--TODO fix : affects javadoc generation -->
 <!--            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
