@@ -13,7 +13,7 @@ else
   SOURCEPATH=$(SCAP)/$(GEN)$(CLN)$(SCAP_EXT)/$(GEN)
 endif
 
-all: $(SCAP_LIB) $(SCAP_EXT_LIB) $(DOCS)/index.html $(CYBERSCOPE_LIB) $(DODARF_LIB)
+all: $(SCAP_LIB) $(SCAP_EXT_LIB) $(DOCS)/index.html $(DODARF_LIB)
 
 $(DOCS)/index.html: $(SCAP_LIB) $(SCAP_EXT_LIB)
 	mkdir -p $(DOCS)
@@ -25,9 +25,6 @@ $(SCAP_LIB): $(SCAP)/$(BINDINGS)
 $(SCAP_EXT_LIB): $(SCAP_EXT)/$(BINDINGS)
 	@$(MAKE) --directory=$(SCAP_EXT)
 
-$(CYBERSCOPE_LIB): $(CYBERSCOPE)/$(BINDINGS)
-	@$(MAKE) --directory=$(CYBERSCOPE)
-
 $(DODARF_LIB): $(DODARF)/$(BINDINGS)
 	@$(MAKE) --directory=$(DODARF)
 
@@ -35,5 +32,4 @@ clean:
 	rm -rf $(DOCS)
 	@$(MAKE) --directory=$(SCAP) clean
 	@$(MAKE) --directory=$(SCAP_EXT) clean
-	@$(MAKE) --directory=$(CYBERSCOPE) clean
 	@$(MAKE) --directory=$(DODARF) clean

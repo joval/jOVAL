@@ -218,7 +218,7 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>Schematron Transform ExtractSchFromXSD</id>
+                        <id>Generate Schematron XSLTs</id>
                         <phase>initialize</phase>
                         <goals>
                             <goal>transform</goal>
@@ -227,6 +227,7 @@
                             <forceCreation>true</forceCreation>
                             <transformationSets>
                                 <transformationSet>
+                                    <!-- Generate .sch files from combined OVAL XML schemas -->
                                     <dir>${basedir}/schematron</dir>
                                     <includes>
                                         <include>*.xml</include>
@@ -234,18 +235,48 @@
                                     <outputDir>${project.build.directory}/gen-sch</outputDir>
                                     <stylesheet>${basedir}/rsrc/ExtractSchFromXSD.xsl</stylesheet>
                                     <fileMappers>
-                                        <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
-                                            <targetExtension>schematron.sch</targetExtension>
+                                        <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.RegExpFileMapper">
+                                            <pattern>\.xml$</pattern>
+                                            <replacement>-schematron.sch</replacement>
                                         </fileMapper>
                                     </fileMappers>
                                 </transformationSet>
                                 <transformationSet>
+                                    <!-- Transform .sch files generated from combined OVAL XML schemas into XSLTs -->
                                     <dir>${project.build.directory}/gen-sch</dir>
                                     <includes>
                                         <include>*.sch</include>
                                     </includes>
                                     <outputDir>${project.build.outputDirectory}</outputDir>
                                     <stylesheet>${basedir}/rsrc/iso_svrl_for_xslt1.xsl</stylesheet>
+                                    <fileMappers>
+                                        <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                                            <targetExtension>xsl</targetExtension>
+                                        </fileMapper>
+                                    </fileMappers>
+                                </transformationSet>
+                                <transformationSet>
+                                    <!-- Transform XSLT1 .sch files into XSLTs -->
+                                    <dir>${basedir}/schematron/xslt1</dir>
+                                    <includes>
+                                        <include>*.sch</include>
+                                    </includes>
+                                    <outputDir>${project.build.outputDirectory}</outputDir>
+                                    <stylesheet>${basedir}/rsrc/iso_svrl_for_xslt1.xsl</stylesheet>
+                                    <fileMappers>
+                                        <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                                            <targetExtension>xsl</targetExtension>
+                                        </fileMapper>
+                                    </fileMappers>
+                                </transformationSet>
+                                <transformationSet>
+                                    <!-- Transform XSLT2 .sch files into XSLTs -->
+                                    <dir>${basedir}/schematron/xslt2</dir>
+                                    <includes>
+                                        <include>*.sch</include>
+                                    </includes>
+                                    <outputDir>${project.build.outputDirectory}</outputDir>
+                                    <stylesheet>${basedir}/rsrc/iso_svrl_for_xslt2.xsl</stylesheet>
                                     <fileMappers>
                                         <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
                                             <targetExtension>xsl</targetExtension>
