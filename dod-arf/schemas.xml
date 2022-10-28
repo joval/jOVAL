@@ -36,7 +36,7 @@
 	<public publicId="http://metadata.dod.mil/mdr/ns/netops/shared_data/scan_data/0.41" uri="schemas/scan_data.xsd"/>
 	<public publicId="http://scap.nist.gov/schema/scap-core/0.1" uri="schemas/scap-core_0.1.xsd"/>
 	<public publicId="http://metadata.dod.mil/mdr/ns/netops/shared_data/security-marking/0.41" uri="schemas/security_marking.xsd"/>
-	<public publicId="http://purl.org/dc/elements/1.1/" uri="../scap/schemas/dublin/simpledc20021212.xsd"/>
+	<public publicId="http://purl.org/dc/elements/1.1/" uri="../scap/schemas/dublin/dc.xsd"/>
 	<public publicId="http://metadata.dod.mil/mdr/ns/netops/shared_data/tagged_value/0.41" uri="schemas/tagged_value.xsd"/>
 	<public publicId="http://metadata.dod.mil/mdr/ns/ia_cnd/pki/x509_cert/3" uri="schemas/x509_cert.xsd"/>
 	<public publicId="http://checklists.nist.gov/xccdf/1.1" uri="schemas/xccdf-1.1.4.xsd"/>

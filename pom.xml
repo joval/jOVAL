@@ -21,7 +21,6 @@
         <module>scap</module>
         <module>scap-extensions</module>
         <module>dod-arf</module>
-        <module>cyberscope</module>
     </modules>
 
     <properties>
