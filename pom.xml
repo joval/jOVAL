@@ -3,12 +3,6 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-<!--    <parent>
-        <artifactId>jovalng</artifactId>
-        <groupId>com.jovalng</groupId>
-        <version>poc</version>
-    </parent>
--->
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.joval</groupId>
     <artifactId>jOVAL</artifactId>
@@ -28,11 +22,8 @@
         <maven.compiler.target>11</maven.compiler.target>
         <properties-maven-plugin.version>1.1.0</properties-maven-plugin.version>
         <jaxb2-maven-plugin.version>3.1.0</jaxb2-maven-plugin.version>
-        <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
         <xml-maven-plugin-version>1.0.2</xml-maven-plugin-version>
-        <maven-resources-plugin-version>3.3.0</maven-resources-plugin-version>
 
-        <maven-javadoc-plugin.version>3.4.0</maven-javadoc-plugin.version>
         <jaxws-version>3.0.2</jaxws-version>
         <jakarta.xml.ws-api.version>3.0.1</jakarta.xml.ws-api.version>
         <saxon-he-version>9.4</saxon-he-version>
