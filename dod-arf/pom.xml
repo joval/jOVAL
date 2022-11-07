@@ -6,7 +6,7 @@
     <parent>
         <artifactId>jOVAL</artifactId>
         <groupId>com.joval</groupId>
-        <version>poc</version>
+        <version>latest</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -29,7 +29,27 @@
 
         <resources>
             <resource>
-                <directory>src/main/resources</directory>
+                <directory>${basedir}/rsrc</directory>
+                <includes>
+                    <include>registry.ini</include>
+                </includes>
+                <targetPath>${project.build.outputDirectory}/dodarf</targetPath>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>${basedir}</directory>
+                <includes>
+                    <include>schemas.xml</include>
+                </includes>
+                <targetPath>${project.build.outputDirectory}/dodarf</targetPath>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>${SCHEMADIR}</directory>
+                <excludes>
+                    <exclude>bindings.xjb</exclude>
+                </excludes>
+                <targetPath>${project.build.outputDirectory}/dodarf/schemas</targetPath>
                 <filtering>false</filtering>
             </resource>
         </resources>
@@ -54,87 +74,23 @@
                             <goal>run</goal>
                         </goals>
                     </execution>
-                    <execution>
+<!--                    <execution>
                         <id>Process episode file for DoD-ARF</id>
-                        <phase>prepare-package</phase>
+                        <phase>process-classes</phase>
                         <configuration>
                             <target>
-                                <replaceregexp match="${BROKEN}" replace="${FIXED}" byline="true">
-                                    <fileset dir="${project.build.outputDirectory}/META-INF/JAXB/" includes="episode_xjc-*.xjb"/>
-                                </replaceregexp>
-                                <copy todir="${project.build.outputDirectory}/META-INF">
+                                <copy todir="${project.build.outputDirectory}/META-INF" overwrite="true" verbose="true">
                                     <fileset dir="${project.build.outputDirectory}/META-INF/JAXB/" includes="episode_xjc-*.xjb"/>
                                     <globmapper from="*" to="sun-jaxb.episode"/>
                                 </copy>
+                                <replaceregexp match="${BROKEN}" replace="${FIXED}" byline="true" file="${project.build.outputDirectory}/META-INF/sun-jaxb.episode"/>
                             </target>
                         </configuration>
                         <goals>
                             <goal>run</goal>
                         </goals>
                     </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>${maven-resources-plugin-version}</version>
-                <executions>
-                    <execution>
-                        <id>copy catalog file (schemas.xml) for DoD-ARF</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.outputDirectory}/dodarf</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${basedir}</directory>
-                                    <includes>
-                                        <include>schemas.xml</include>
-                                    </includes>
-                                    <filtering>false</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>copy registry.ini for DoD-ARF</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.outputDirectory}/dodarf</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${basedir}/rsrc</directory>
-                                    <includes>
-                                        <include>registry.ini</include>
-                                    </includes>
-                                    <filtering>false</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>copy schemas for DoD-ARF</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.outputDirectory}/dodarf/schemas</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${SCHEMADIR}</directory>
-                                    <excludes>
-                                        <exclude>bindings.xjb</exclude>
-                                    </excludes>
-                                    <filtering>false</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
+-->
                 </executions>
             </plugin>
             <plugin>

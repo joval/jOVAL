@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.joval</groupId>
     <artifactId>jOVAL</artifactId>
-    <version>poc</version>
+    <version>latest</version>
 
     <name>${project.artifactId}</name>
     <packaging>pom</packaging>
