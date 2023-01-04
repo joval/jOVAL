@@ -6,8 +6,10 @@ TOP=$(realpath .)
 include $(TOP)/common.mk
 
 ifeq (win, $(PLATFORM))
+  CLASSPATH="$(shell cygpath -wp $(JAXB_BIND_API_LIB))"
   SOURCEPATH="$(shell cygpath -w $(SCAP)/$(GEN))$(CLN)$(shell cygpath -w $(SCAP_EXT)/$(GEN))"
 else
+  CLASSPATH=$(JAXB_BIND_API_LIB)
   SOURCEPATH=$(SCAP)/$(GEN)$(CLN)$(SCAP_EXT)/$(GEN)
 endif
 
@@ -15,7 +17,7 @@ all: $(SCAP_LIB) $(SCAP_EXT_LIB) $(DOCS)/index.html $(CYBERSCOPE_LIB) $(DODARF_L
 
 $(DOCS)/index.html: $(SCAP_LIB) $(SCAP_EXT_LIB)
 	mkdir -p $(DOCS)
-	$(JAVADOC) $(JAVADOCFLAGS) -d $(DOCS) -sourcepath $(SOURCEPATH) -subpackages org:scap
+	$(JAVADOC) $(JAVADOCFLAGS) -cp $(CLASSPATH) -d $(DOCS) -sourcepath $(SOURCEPATH) -subpackages org:scap
 
 $(SCAP_LIB): $(SCAP)/$(BINDINGS)
 	@$(MAKE) --directory=$(SCAP)

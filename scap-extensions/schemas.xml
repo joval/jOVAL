@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!DOCTYPE catalog
+    PUBLIC "-//OASIS//DTD XML Catalogs V1.1//EN"
+        "http://www.oasis-open.org/committees/entity/release/1.1/catalog.dtd">
+
+<catalog prefer="system" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+	<public publicId="http://oval.mitre.org/XMLSchema/oval-common-5" uri="../scap/schemas/oval/merged/oval-common-schema.xsd"/>
+	<public publicId="http://oval.mitre.org/XMLSchema/oval-definitions-5" uri="../scap/schemas/oval/merged/oval-definitions-schema.xsd"/>
+	<public publicId="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" uri="../scap/schemas/oval/merged/oval-system-characteristics-schema.xsd"/>
+	<public publicId="http://oval.mitre.org/XMLSchema/oval-definitions-5#nxos" uri="schemas/x-nxos-definitions-schema.xsd"/>
+	<public publicId="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#nxos" uri="schemas/x-nxos-system-characteristics-schema.xsd"/>
+	<public publicId="http://oval.mitre.org/XMLSchema/oval-definitions-5#cmd" uri="schemas/x-shellcommand-definitions-schema.xsd"/>
+	<public publicId="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#cmd" uri="schemas/x-shellcommand-system-characteristics-schema.xsd"/>
+	<public publicId="http://oval.mitre.org/XMLSchema/oval-definitions-5#x-protocols" uri="schemas/x-protocols-definitions-schema.xsd"/>
+	<public publicId="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#x-protocols" uri="schemas/x-protocols-system-characteristics-schema.xsd"/>
+	<public publicId="http://www.w3.org/2000/09/xmldsig#" uri="../scap/schemas/xml/xmldsig-core-schema.xsd"/>
+</catalog>

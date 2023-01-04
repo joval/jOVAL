@@ -12,3 +12,7 @@ scap/scap-schema-*.jar
 scap/schemas/oval/official
 scap-extensions/schemas.episode
 scap-extensions/scap-schema-extensions.jar
+cyberscope/target
+dod-arf/target
+scap/target
+scap-extensions/target

@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <artifactId>jOVAL</artifactId>
+        <groupId>com.joval</groupId>
+        <version>poc</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.joval</groupId>
+    <artifactId>scap-schema</artifactId>
+    <name>${project.artifactId}</name>
+    <version>latest</version>
+    <packaging>jar</packaging>
+
+    <properties>
+        <TOP>..</TOP>
+        <THIRDPARTY>${TOP}/3rd-party</THIRDPARTY>
+        <OVAL_SRC>${THIRDPARTY}/OVAL/oval-schemas</OVAL_SRC>
+        <OVAL_SCHEMA>${SCHEMADIR}/oval</OVAL_SCHEMA>
+        <OVAL_OFFICIAL>${OVAL_SCHEMA}/official</OVAL_OFFICIAL>
+    </properties>
+
+    <build>
+        <finalName>scap-schema-${SCAP_VERSION}</finalName>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>${maven-antrun-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>Copying schema to OVAL official directory</id>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <target>
+                                <echo message="Making directory ${project.build.directory}/gen-sch"/>
+                                <mkdir dir="${project.build.directory}/gen-sch"/>
+
+                                <echo message="Making directory ${OVAL_OFFICIAL}"/>
+                                <mkdir dir="${OVAL_OFFICIAL}"/>
+
+                                <echo message="Making directory ${OVAL_OFFICIAL}"/>
+                                <copy todir="${OVAL_OFFICIAL}">
+                                    <fileset dir="${OVAL_SRC}">
+                                        <include name="*.xsd"/>
+                                        <exclude name="xmldsig*"/>
+                                    </fileset>
+                                </copy>
+
+                                <replaceregexp byline="true">
+                                    <regexp pattern=" schemaLocation=.*/"/>
+                                    <substitution expression="/"/>
+                                    <fileset dir="${OVAL_OFFICIAL}">
+                                        <include name="*.xsd"/>
+                                    </fileset>
+                                </replaceregexp>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>Process episode file</id>
+                        <phase>prepare-package</phase>
+                        <configuration>
+                            <target>
+                                <replaceregexp match="${BROKEN}" replace="${FIXED}" byline="true">
+                                    <fileset dir="${project.build.outputDirectory}/META-INF/JAXB/" includes="episode_xjc-scap*.xjb"/>
+                                </replaceregexp>
+                                <copy todir="${project.build.outputDirectory}/META-INF">
+                                    <fileset dir="${project.build.outputDirectory}/META-INF/JAXB/" includes="episode_xjc-scap*.xjb"/>
+                                    <globmapper from="*" to="sun-jaxb.episode"/>
+                                </copy>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>${maven-resources-plugin-version}</version>
+                <executions>
+                    <execution>
+                        <id>copy catalog file (schemas.xml)</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/scap</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}</directory>
+                                    <includes>
+                                        <include>schemas.xml</include>
+                                    </includes>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy registry.ini</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/scap</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/rsrc</directory>
+                                    <includes>
+                                        <include>registry.ini</include>
+                                    </includes>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy schemas</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/scap/schemas</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${SCHEMADIR}</directory>
+                                    <excludes>
+                                        <exclude>bindings.xjb</exclude>
+                                    </excludes>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <version>${properties-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>set-system-properties</goal>
+                        </goals>
+                        <configuration>
+                            <properties>
+                                <property>
+                                    <name>javax.xml.accessExternalSchema</name>
+                                    <value>all</value>
+                                </property>
+                                <property>
+                                    <name>javax.xml.accessExternalDTD</name>
+                                    <value>all</value>
+                                </property>
+                                <property>
+                                    <name>com.sun.tools.xjc.XJCFacade.nohack</name>
+                                    <value>true</value>
+                                </property>
+                            </properties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>xml-maven-plugin</artifactId>
+                <version>${xml-maven-plugin-version}</version>
+                <executions>
+                    <execution>
+                        <id>Transform OVAL Official files with xslt2</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>transform</goal>
+                        </goals>
+                        <configuration>
+                            <transformationSets>
+                                <transformationSet>
+                                    <dir>${OVAL_OFFICIAL}</dir>
+                                    <includes>
+                                        <include>oval-common-schema.xsd</include>
+                                    </includes>
+                                    <outputDir>${OVAL_OFFICIAL}</outputDir>
+                                    <stylesheet>${OVAL_SCHEMA}/unofficial/strip-redefined-common.xsl</stylesheet>
+                                </transformationSet>
+                                <transformationSet>
+                                    <dir>${OVAL_OFFICIAL}</dir>
+                                    <includes>
+                                        <include>independent-*.xsd</include>
+                                    </includes>
+                                    <outputDir>${OVAL_OFFICIAL}</outputDir>
+                                    <stylesheet>${OVAL_SCHEMA}/unofficial/strip-redefined-independent.xsl</stylesheet>
+                                </transformationSet>
+                            </transformationSets>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>Schematron Transform ExtractSchFromXSD</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>transform</goal>
+                        </goals>
+                        <configuration>
+                            <forceCreation>true</forceCreation>
+                            <transformationSets>
+                                <transformationSet>
+                                    <dir>${basedir}/schematron</dir>
+                                    <includes>
+                                        <include>*.xml</include>
+                                    </includes>
+                                    <outputDir>${project.build.directory}/gen-sch</outputDir>
+                                    <stylesheet>${basedir}/rsrc/ExtractSchFromXSD.xsl</stylesheet>
+                                    <fileMappers>
+                                        <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                                            <targetExtension>schematron.sch</targetExtension>
+                                        </fileMapper>
+                                    </fileMappers>
+                                </transformationSet>
+                                <transformationSet>
+                                    <dir>${project.build.directory}/gen-sch</dir>
+                                    <includes>
+                                        <include>*.sch</include>
+                                    </includes>
+                                    <outputDir>${project.build.outputDirectory}</outputDir>
+                                    <stylesheet>${basedir}/rsrc/iso_svrl_for_xslt1.xsl</stylesheet>
+                                    <fileMappers>
+                                        <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                                            <targetExtension>xsl</targetExtension>
+                                        </fileMapper>
+                                    </fileMappers>
+                                </transformationSet>
+                            </transformationSets>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>net.sf.saxon</groupId>
+                        <artifactId>Saxon-HE</artifactId>
+                        <version>${saxon-he-version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jaxb2-maven-plugin</artifactId>
+                <version>${jaxb2-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>xjc-scap</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>xjc</goal>
+                        </goals>
+                        <configuration>
+                            <verbose>true</verbose>
+                            <enableIntrospection>true</enableIntrospection>
+                            <extension>true</extension>
+                            <arguments>
+                                <argument>-Xnamespace-prefix</argument>
+                            </arguments>
+                            <catalog>schemas.xml</catalog>
+                            <xjbSources>
+                                <xjbSource>${SCHEMADIR}/bindings.xjb</xjbSource>
+                            </xjbSources>
+                            <sourceType>XmlSchema</sourceType>
+                            <sources>
+                                <source>${SCHEMADIR}/oasis</source>
+                                <source>${SCHEMADIR}/cce-v5</source>
+                                <source>${SCHEMADIR}/dublin</source>
+                                <source>${SCHEMADIR}/sce-1.0</source>
+                                <source>${SCHEMADIR}/ai-1.1</source>
+                                <source>${SCHEMADIR}/arf-1.1</source>
+                                <source>${SCHEMADIR}/cpe-2.3</source>
+                                <source>${SCHEMADIR}/svrl</source>
+                                <source>${SCHEMADIR}/xml/xhtml1-strict.xsd</source>
+                                <source>${SCHEMADIR}/xml/xlink.xsd</source>
+                                <source>${SCHEMADIR}/xml/xmldsig-core-schema.xsd</source>
+                                <source>${SCHEMADIR}/oval/merged</source>
+                                <source>${SCHEMADIR}/ds-1.2</source>
+                                <source>${SCHEMADIR}/constructs-1.2</source>
+                                <source>${SCHEMADIR}/tmsad-1.0</source>
+                                <source>${SCHEMADIR}/xccdf-1.2</source>
+                                <source>${SCHEMADIR}/joval</source>
+                                <source>${SCHEMADIR}/ocil-2.0</source>
+                            </sources>
+                            <outputDirectory>${GEN}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.glassfish.jaxb</groupId>
+                        <artifactId>jaxb-xjc</artifactId>
+                        <version>${org.glassfish.jaxb.xjc.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <!--javadoc-->
+<!--            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven-javadoc-plugin.version}</version>
+
+                <configuration>
+                    <skip>false</skip>
+                    <doclint>all,-missing</doclint>
+                    <show>public</show>
+                    <quiet>false</quiet>
+
+                    <subpackages>
+                        mil.disa:org.gocil.diagnostics:org.joval.scap.diagnostics:org.oasis.address:org.oasis.catalog:org.oasis.name:org.openscap.sce.results:org.openscap.sce.xccdf:org.purl.dc:org.purl.dc.terms:org.w3c.xml.signature:scap.ai:scap.arf.core:scap.arf.reporting:scap.cce.list:scap.constructs:scap.cpe.dictionary:scap.cpe.dictionary.ext:scap.cpe.language:scap.datastream:scap.ocil.core:scap.ocil.variables:scap.oval.common:scap.oval.def.aix:scap.oval.def.android:scap.oval.def.apache:scap.oval.def.appleios:scap.oval.def.asa:scap.oval.def.catos:scap.oval.def.core:scap.oval.def.esx:scap.oval.def.freebsd:scap.oval.def.hpux:scap.oval.def.independent:scap.oval.def.independent.extended:scap.oval.def.ios:scap.oval.def.iosxe:scap.oval.def.junos:scap.oval.def.linux:scap.oval.def.macos:scap.oval.def.netconf:scap.oval.def.nxos:scap.oval.def.panos:scap.oval.def.pixos:scap.oval.def.sharepoint:scap.oval.def.solaris:scap.oval.def.unix:scap.oval.def.windows:scap.oval.directives:scap.oval.evaluation:scap.oval.results:scap.oval.sc.aix:scap.oval.sc.android:scap.oval.sc.apache:scap.oval.sc.appleios:scap.oval.sc.asa:scap.oval.sc.catos:scap.oval.sc.core:scap.oval.sc.esx:scap.oval.sc.freebsd:scap.oval.sc.hpux:scap.oval.sc.independent:scap.oval.sc.independent.extended:scap.oval.sc.ios:scap.oval.sc.iosxe
+                    </subpackages>
+
+                    <groups>
+                        <group>
+                            <title>mil.disa</title>
+                            <packages>mil.disa.*</packages>
+                        </group>
+                        <group>
+                            <title>org.purl</title>
+                            <packages>org.purl.*</packages>
+                        </group>
+                        <group>
+                            <title>org.oasis</title>
+                            <packages>org.oasis.*</packages>
+                        </group>
+                        <group>
+                            <title>org.openscap</title>
+                            <packages>org.openscap.*</packages>
+                        </group>
+                        <group>
+                            <title>scap</title>
+                            <packages>scap.*</packages>
+                        </group>
+                    </groups>
+
+                </configuration>
+            </plugin>
+-->
+            <!--TODO fix : affects javadoc generation -->
+<!--            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>xml-maven-plugin</artifactId>
+                <version>${xml-maven-plugin-version}</version>
+                <executions>
+                    <execution>
+                        <id>Schematron transform files with xslt2</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>transform</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <transformationSets>
+                        <transformationSet>
+                            <dir>src/main/resources/scapx/schemas</dir>
+                            <outputDir>${maven.multiModuleProjectDirectory}/docs/generated/ext</outputDir>
+                            <stylesheet>src/main/resources/schematron/rsrc/oval_xsd2html.xsl</stylesheet>
+                            <fileMappers>
+                                <fileMapper
+                                        implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                                    <targetExtension>html</targetExtension>
+                                </fileMapper>
+                            </fileMappers>
+                        </transformationSet>
+
+                        <transformationSet>
+                            <dir>src/main/resources/scap/schemas/oval/merged</dir>
+                            <outputDir>${maven.multiModuleProjectDirectory}/docs/generated</outputDir>
+                            <stylesheet>src/main/resources/schematron/rsrc/oval_xsd2html.xsl</stylesheet>
+                            <fileMappers>
+                                <fileMapper
+                                        implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                                    <targetExtension>html</targetExtension>
+                                </fileMapper>
+                            </fileMappers>
+                        </transformationSet>
+                    </transformationSets>
+                </configuration>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>net.sf.saxon</groupId>
+                        <artifactId>saxon</artifactId>
+                        <version>${saxon-he-version}</version>
+                    </dependency>
+                </dependencies>
+
+            </plugin>
+-->
+        </plugins>
+    </build>
+
+</project>

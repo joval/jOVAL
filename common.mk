@@ -28,30 +28,43 @@ ifeq (win, $(PLATFORM))
     JAR=$(WIN_JAVA_HOME)/bin/jar.exe
     JAVADOC=$(WIN_JAVA_HOME)/bin/javadoc.exe
     JAVAC=$(WIN_JAVA_HOME)/bin/javac.exe
-    CLASSLIB=$(shell cygpath -w $(JAVA_HOME))\jre\lib\rt.jar
     NUMPROCS=1
 else
     JAVA=$(JAVA_HOME)/bin/java
     JAR=$(JAVA_HOME)/bin/jar
     JAVADOC=$(JAVA_HOME)/bin/javadoc
     JAVAC=$(JAVA_HOME)/bin/javac
-    CLASSLIB=$(JAVA_HOME)/jre/lib/rt.jar
     ifeq (mac, $(PLATFORM))
         NUMPROCS=$(shell sysctl -n hw.ncpu)
     else
         NUMPROCS=$(shell nproc)
     endif
 endif
-RAW_JAVA_VERSION:=$(shell $(JAVA_HOME)/bin/java -version 2>&1)
-ifeq (1.8, $(findstring 1.8, $(RAW_JAVA_VERSION)))
-    JAVA_VERSION=1.8
+RAW_JAVA_VERSION:=$(shell "$(JAVA_HOME)/bin/java" -version 2>&1)
+ifeq (11, $(findstring 11, $(findstring "11., $(RAW_JAVA_VERSION))))
+    JAVA_VERSION=11
     JAVADOCFLAGS=-Xdoclint:none -J-Xmx512m
-else ifeq (1.7, $(findstring 1.7, $(RAW_JAVA_VERSION)))
-    JAVA_VERSION=1.7
-    JAVADOCFLAGS=-J-Xmx512m
-else ifeq (1.6, $(findstring 1.6, $(RAW_JAVA_VERSION)))
-    JAVA_VERSION=1.6
-    JAVADOCFLAGS=-J-Xmx512m
+else ifeq (12, $(findstring 12, $(findstring "12., $(RAW_JAVA_VERSION))))
+    JAVA_VERSION=12
+    JAVADOCFLAGS=-Xdoclint:none -J-Xmx512m
+else ifeq (13, $(findstring 13, $(findstring "13., $(RAW_JAVA_VERSION))))
+    JAVA_VERSION=13
+    JAVADOCFLAGS=-Xdoclint:none -J-Xmx512m
+else ifeq (14, $(findstring 14, $(findstring "14., $(RAW_JAVA_VERSION))))
+    JAVA_VERSION=14
+    JAVADOCFLAGS=-Xdoclint:none -J-Xmx512m
+else ifeq (15, $(findstring 15, $(findstring "15., $(RAW_JAVA_VERSION))))
+    JAVA_VERSION=15
+    JAVADOCFLAGS=-Xdoclint:none -J-Xmx512m
+else ifeq (16, $(findstring 16, $(findstring "16., $(RAW_JAVA_VERSION))))
+    JAVA_VERSION=16
+    JAVADOCFLAGS=-Xdoclint:none -J-Xmx512m
+else ifeq (17, $(findstring 17, $(findstring "17., $(RAW_JAVA_VERSION))))
+    JAVA_VERSION=17
+    JAVADOCFLAGS=-Xdoclint:none -J-Xmx512m
+else ifeq (18, $(findstring 18, $(findstring "18., $(RAW_JAVA_VERSION))))
+    JAVA_VERSION=18
+    JAVADOCFLAGS=-Xdoclint:none -J-Xmx512m
 else
     $(error "Unsupported Java version: $(RAW_JAVA_VERSION)")
 endif
@@ -69,11 +82,11 @@ SCHEMADIR=schemas
 OVAL_SRC=$(THIRDPARTY)/OVAL/oval-schemas
 OVAL_SCHEMA=$(SCHEMADIR)/oval
 BINDINGS=$(SCHEMADIR)/bindings.xjb
-CATALOG=schemas.cat
+CATALOG=schemas.xml
 EPISODE=schemas.episode
 XJCFLAGS=-enableIntrospection -catalog $(CATALOG) -episode $(EPISODE)
-XJCFLAGS_EXT=-classpath "$(NAMESPACE_PLUGIN)" $(XJCFLAGS) -extension -Xnamespace-prefix
-XJC=$(JAVA) -Djavax.xml.accessExternalSchema=all -Dcom.sun.tools.xjc.XJCFacade.nohack=true -cp $(XJC_LIB) com.sun.tools.xjc.XJCFacade
+XJCFLAGS_EXT=$(XJCFLAGS) -extension -Xnamespace-prefix
+XJC=$(JAVA) -Djavax.xml.accessExternalSchema=all -Dcom.sun.tools.xjc.XJCFacade.nohack=true -cp "$(XJC_LIBS)" com.sun.tools.xjc.XJCFacade
 
 #
 # Make namespaces optional in the episode bindings
@@ -91,6 +104,6 @@ DODARF=$(TOP)/dod-arf
 DODARF_LIB=$(DODARF)/DoD-ARF-schema.jar
 
 THIRDPARTY=$(TOP)/3rd-party
-SAXON_LIB=$(THIRDPARTY)/saxon9he.jar
-XJC_LIB=$(THIRDPARTY)/jaxb-xjc-2.2.6.jar
-NAMESPACE_PLUGIN=$(THIRDPARTY)/jaxb2-namespace-prefix-1.3.jar
+SAXON_LIB=$(THIRDPARTY)/Saxon-HE-9.4.jar
+JAXB_BIND_API_LIB=$(THIRDPARTY)/jakarta.xml.bind-api-4.0.0.jar
+XJC_LIBS=$(THIRDPARTY)/jaxb-xjc-3.0.2.jar$(CLN)$(THIRDPARTY)/jaxb-core-3.0.2.jar$(CLN)$(THIRDPARTY)/jaxb-impl-3.0.2.jar$(CLN)$(JAXB_BIND_API_LIB)$(CLN)$(THIRDPARTY)/jakarta.activation-api-2.1.0.jar$(CLN)$(THIRDPARTY)/istack-commons-runtime-4.1.1.jar$(CLN)$(THIRDPARTY)/jaxb2-namespace-prefix-2.0.jar$(CLN)$(THIRDPARTY)/rngom-4.0.0.jar$(CLN)$(THIRDPARTY)/relaxng-datatype-4.0.0.jar$(CLN)$(THIRDPARTY)/dtd-parser-1.5.0.jar$(CLN)$(THIRDPARTY)/xsom-4.0.0.jar$(CLN)$(THIRDPARTY)/codemodel-4.0.0.jar$(CLN)$(THIRDPARTY)/txw2-4.0.0.jar
