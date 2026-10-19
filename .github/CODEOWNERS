@@ -1,8 +1,0 @@
-# Default CODEOWNERS - update with your team
-# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
-#
-# IMPORTANT: Replace @org/CHANGEME with your actual team before merging.
-* @org/CHANGEME
-
-# WARNING: Do not edit this rule, it is managed by Repo Guardian.
-.wiz @joval/security_champions @joval/application_security
